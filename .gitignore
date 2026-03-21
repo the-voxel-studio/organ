@@ -1,0 +1,36 @@
+# Environments
+.env
+.env.*
+!.env.example
+!.env.dist
+
+# Vendor
+/vendor/
+/api/vendor/
+/front/vendor/
+
+# Node modules
+/node_modules/
+/api/node_modules/
+/front/node_modules/
+
+# Logs
+*.log
+/logs/
+/api/var/log/
+/front/var/log/
+
+# Cache
+/var/cache/
+/api/var/cache/
+/front/var/cache/
+
+# Build
+/build/
+/public/build/
+/api/public/build/
+/front/public/build/
+
+# Docker
+!/docker/
+!/docker-compose.yml

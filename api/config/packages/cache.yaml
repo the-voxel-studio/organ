@@ -1,0 +1,11 @@
+framework:
+    cache:
+        prefix_seed: organ_app
+
+        # Redis
+        app: cache.adapter.redis
+        
+        default_redis_provider: '%env(resolve:REDIS_URL)%'
+
+        # Cache système (les routes, les attributs API Platform) dans Valkey
+        system: cache.adapter.redis
