@@ -3,6 +3,7 @@
 -- =========================================================================
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) UNIQUE,
     first_name VARCHAR(100) NULL,
     last_name VARCHAR(100) NULL,
     email VARCHAR(180) NOT NULL UNIQUE,
@@ -12,6 +13,33 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     deleted_at DATETIME NULL -- [SOFT DELETE]
 );
+
+-- =========================================================================
+-- SESSIONS UTILISATEURS (Refresh Tokens & Appareils connectés)
+-- =========================================================================
+CREATE TABLE user_sessions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    refresh_token VARCHAR(128) NOT NULL UNIQUE,
+    username VARCHAR(255) NOT NULL, -- Requis par Gesdinet
+    valid DATETIME NOT NULL, -- Requis par Gesdinet
+    
+    -- Métadonnées de sécurité et d'affichage
+    ip_address VARCHAR(45) NULL, 
+    user_agent VARCHAR(500) NULL, 
+    device_name VARCHAR(100) NULL, 
+    browser_name VARCHAR(100) NULL, 
+    location VARCHAR(100) NULL, 
+    
+    -- Cycle de vie de la session
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_sessions_user ON user_sessions(user_id);
+CREATE INDEX idx_sessions_expires ON user_sessions(valid);
 
 -- =========================================================================
 -- PROJETS (Niveau Global)
