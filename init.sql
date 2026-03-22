@@ -11,7 +11,7 @@ CREATE TABLE users (
     google_id VARCHAR(255) NULL UNIQUE,
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL -- [SOFT DELETE]
+    deleted_at DATETIME NULL
 );
 
 -- =========================================================================
@@ -21,17 +21,13 @@ CREATE TABLE user_sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     refresh_token VARCHAR(128) NOT NULL UNIQUE,
-    username VARCHAR(255) NOT NULL, -- Requis par Gesdinet
-    valid DATETIME NOT NULL, -- Requis par Gesdinet
-    
-    -- Métadonnées de sécurité et d'affichage
+    username VARCHAR(255) NOT NULL,
+    valid DATETIME NOT NULL,
     ip_address VARCHAR(45) NULL, 
     user_agent VARCHAR(500) NULL, 
     device_name VARCHAR(100) NULL, 
     browser_name VARCHAR(100) NULL, 
-    location VARCHAR(100) NULL, 
-    
-    -- Cycle de vie de la session
+    location VARCHAR(100) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
@@ -46,14 +42,14 @@ CREATE INDEX idx_sessions_expires ON user_sessions(valid);
 -- =========================================================================
 CREATE TABLE projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) UNIQUE, -- [CORRECTION] Virgule manquante ajoutée
+    uuid VARCHAR(36) UNIQUE,
     title VARCHAR(150) NOT NULL,
     description TEXT NULL,
-    status ENUM('ACTIVE', 'ARCHIVED') DEFAULT 'ACTIVE',
+    status ENUM('ACTIVE', 'ARCHIVED', 'INACTIVE') DEFAULT 'ACTIVE',
     icon_type ENUM('svg', 'blob', 'emoji') DEFAULT 'emoji',
     icon_data TEXT NULL, 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL -- [SOFT DELETE]
+    deleted_at DATETIME NULL
 );
 
 CREATE TABLE project_drive_configs (
@@ -81,7 +77,7 @@ CREATE TABLE project_members (
 -- =========================================================================
 CREATE TABLE organs (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) UNIQUE, -- [CORRECTION] Virgule manquante ajoutée
+    uuid VARCHAR(36) UNIQUE,
     project_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
     description TEXT NULL,
@@ -161,7 +157,7 @@ CREATE TABLE tasks (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     validated_at DATETIME NULL,
-    deleted_at DATETIME NULL, -- [SOFT DELETE]
+    deleted_at DATETIME NULL,
     
     FOREIGN KEY (organ_id) REFERENCES organs(id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
@@ -215,7 +211,7 @@ CREATE TABLE task_comments (
     content TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL, -- [SOFT DELETE] (Optionnel, utile si on peut supprimer un com)
+    deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -266,7 +262,7 @@ CREATE TABLE task_attachments (
     file_size INT NULL,
     file_type VARCHAR(50) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL, -- [SOFT DELETE] (Important pour nettoyer S3 plus tard)
+    deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -290,8 +286,6 @@ CREATE INDEX idx_tasks_organ_status ON tasks(organ_id, status);
 CREATE INDEX idx_tasks_manager_status ON tasks(manager_id, status);
 CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read);
 CREATE INDEX idx_task_history_timeline ON task_history(task_id, created_at);
-
--- Nouveaux index pour optimiser les requêtes de Soft Delete (filtrage classique)
 CREATE INDEX idx_projects_deleted_at ON projects(deleted_at);
 CREATE INDEX idx_organs_deleted_at ON organs(deleted_at);
 CREATE INDEX idx_tasks_deleted_at ON tasks(deleted_at);
