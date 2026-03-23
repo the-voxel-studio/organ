@@ -3,7 +3,7 @@
 -- =========================================================================
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) UNIQUE,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     first_name VARCHAR(100) NULL,
     last_name VARCHAR(100) NULL,
     email VARCHAR(180) NOT NULL UNIQUE,
@@ -19,6 +19,7 @@ CREATE TABLE users (
 -- =========================================================================
 CREATE TABLE user_sessions (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     user_id INT NOT NULL,
     refresh_token VARCHAR(128) NOT NULL UNIQUE,
     username VARCHAR(255) NOT NULL,
@@ -42,7 +43,7 @@ CREATE INDEX idx_sessions_expires ON user_sessions(valid);
 -- =========================================================================
 CREATE TABLE projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) UNIQUE,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     title VARCHAR(150) NOT NULL,
     description TEXT NULL,
     status ENUM('ACTIVE', 'ARCHIVED', 'INACTIVE') DEFAULT 'ACTIVE',
@@ -53,7 +54,9 @@ CREATE TABLE projects (
 );
 
 CREATE TABLE project_drive_configs (
-    project_id INT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    project_id INT NOT NULL UNIQUE,
     drive_folder_id VARCHAR(255) NOT NULL,
     encrypted_refresh_token TEXT NOT NULL,
     is_active BOOLEAN DEFAULT TRUE,
@@ -64,10 +67,12 @@ CREATE TABLE project_drive_configs (
 -- MEMBRES DU PROJET (Rôles Globaux Fixes)
 -- =========================================================================
 CREATE TABLE project_members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL,
     user_id INT NOT NULL,
     global_role ENUM('ADMIN', 'MEMBER') DEFAULT 'MEMBER', 
-    PRIMARY KEY (project_id, user_id),
+    UNIQUE KEY (project_id, user_id),
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -77,7 +82,7 @@ CREATE TABLE project_members (
 -- =========================================================================
 CREATE TABLE organs (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) UNIQUE,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
     description TEXT NULL,
@@ -94,6 +99,7 @@ CREATE TABLE organs (
 -- =========================================================================
 CREATE TABLE organ_links (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     organ_id INT NOT NULL,
     url VARCHAR(2083) NOT NULL,
     description VARCHAR(255) NULL,
@@ -105,11 +111,13 @@ CREATE TABLE organ_links (
 -- =========================================================================
 CREATE TABLE permissions (
     id SMALLINT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
 CREATE TABLE organ_roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     organ_id INT NOT NULL,
     name VARCHAR(50) NOT NULL,
     INDEX idx_organ (organ_id), 
@@ -117,17 +125,21 @@ CREATE TABLE organ_roles (
 );
 
 CREATE TABLE organ_role_permissions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     role_id INT NOT NULL,
     permission_id SMALLINT NOT NULL,
-    PRIMARY KEY (role_id, permission_id),
+    UNIQUE KEY (role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES organ_roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
 );
 
 CREATE TABLE user_organ_roles (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     user_id INT NOT NULL,
     role_id INT NOT NULL,
-    PRIMARY KEY (user_id, role_id),
+    UNIQUE KEY (user_id, role_id),
     INDEX idx_role_user (role_id, user_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES organ_roles(id) ON DELETE CASCADE
@@ -169,9 +181,11 @@ CREATE TABLE tasks (
 -- ASSIGNÉS AUX TÂCHES
 -- =========================================================================
 CREATE TABLE task_assignees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     user_id INT NOT NULL,
-    PRIMARY KEY (task_id, user_id),
+    UNIQUE KEY (task_id, user_id),
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -181,6 +195,7 @@ CREATE TABLE task_assignees (
 -- =========================================================================
 CREATE TABLE task_links (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     url VARCHAR(2083) NOT NULL,
     description VARCHAR(255) NULL,
@@ -192,6 +207,7 @@ CREATE TABLE task_links (
 -- =========================================================================
 CREATE TABLE notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     user_id INT NOT NULL,
     task_id INT NULL,
     message VARCHAR(255) NOT NULL,
@@ -206,6 +222,7 @@ CREATE TABLE notifications (
 -- =========================================================================
 CREATE TABLE task_comments (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     user_id INT NOT NULL,
     content TEXT NOT NULL,
@@ -221,6 +238,7 @@ CREATE TABLE task_comments (
 -- =========================================================================
 CREATE TABLE task_history (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     user_id INT NULL,
     action VARCHAR(50) NOT NULL,
@@ -236,6 +254,7 @@ CREATE TABLE task_history (
 -- =========================================================================
 CREATE TABLE tags (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL,
     name VARCHAR(50) NOT NULL,
     color VARCHAR(7) DEFAULT '#808080',
@@ -243,9 +262,11 @@ CREATE TABLE tags (
 );
 
 CREATE TABLE task_tags (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     tag_id INT NOT NULL,
-    PRIMARY KEY (task_id, tag_id),
+    UNIQUE KEY (task_id, tag_id),
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
@@ -255,6 +276,7 @@ CREATE TABLE task_tags (
 -- =========================================================================
 CREATE TABLE task_attachments (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     uploaded_by INT NOT NULL,
     file_name VARCHAR(255) NOT NULL,
@@ -271,9 +293,11 @@ CREATE TABLE task_attachments (
 -- DÉPENDANCES ENTRE TÂCHES
 -- =========================================================================
 CREATE TABLE task_dependencies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     depends_on_task_id INT NOT NULL,
-    PRIMARY KEY (task_id, depends_on_task_id),
+    UNIQUE KEY (task_id, depends_on_task_id),
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (depends_on_task_id) REFERENCES tasks(id) ON DELETE CASCADE
 );
