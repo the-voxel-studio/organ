@@ -9,8 +9,8 @@ CREATE TABLE users (
     email VARCHAR(180) NOT NULL UNIQUE,
     password VARCHAR(255) NULL,
     google_id VARCHAR(255) NULL UNIQUE,
-    is_verified BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_verified TINYINT(1) DEFAULT 0 NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at DATETIME NULL
 );
 
@@ -29,8 +29,8 @@ CREATE TABLE user_sessions (
     device_name VARCHAR(100) NULL, 
     browser_name VARCHAR(100) NULL, 
     location VARCHAR(100) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_used_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -45,11 +45,11 @@ CREATE TABLE projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL UNIQUE,
     title VARCHAR(150) NOT NULL,
-    description TEXT NULL,
-    status ENUM('ACTIVE', 'ARCHIVED', 'INACTIVE') DEFAULT 'ACTIVE',
-    icon_type ENUM('svg', 'blob', 'emoji') DEFAULT 'emoji',
-    icon_data TEXT NULL, 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    description LONGTEXT NULL,
+    status VARCHAR(255) NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE, ARCHIVED, INACTIVE', -- ACTIVE ARCHIVED INACTIVE
+    icon_type VARCHAR(255) NOT NULL DEFAULT 'EMOJI' COMMENT 'SVG, BLOB, EMOJI', -- EMOJI SVG BLOB
+    icon_data LONGTEXT NULL, 
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at DATETIME NULL
 );
 
@@ -58,8 +58,8 @@ CREATE TABLE project_drive_configs (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL UNIQUE,
     drive_folder_id VARCHAR(255) NOT NULL,
-    encrypted_refresh_token TEXT NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
+    encrypted_refresh_token LONGTEXT NOT NULL,
+    is_active TINYINT(1) DEFAULT 1 NOT NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -71,8 +71,9 @@ CREATE TABLE project_members (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL,
     user_id INT NOT NULL,
-    global_role ENUM('ADMIN', 'MEMBER') DEFAULT 'MEMBER', 
+    global_role VARCHAR(255) NOT NULL DEFAULT 'MEMBER', -- ADMIN MEMBER
     UNIQUE KEY (project_id, user_id),
+    deleted_at DATETIME NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -85,12 +86,12 @@ CREATE TABLE organs (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
-    description TEXT NULL,
-    icon_type ENUM('svg', 'blob', 'emoji') DEFAULT 'emoji',
-    icon_data TEXT NULL,
-    highlight_color VARCHAR(7) DEFAULT '#000000', 
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL, -- [SOFT DELETE]
+    description LONGTEXT NULL,
+    icon_type VARCHAR(255) NOT NULL DEFAULT 'emoji',
+    icon_data LONGTEXT NULL,
+    highlight_color VARCHAR(9) DEFAULT '#000000' NOT NULL, 
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at DATETIME NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
@@ -103,6 +104,7 @@ CREATE TABLE organ_links (
     organ_id INT NOT NULL,
     url VARCHAR(2083) NOT NULL,
     description VARCHAR(255) NULL,
+    deleted_at DATETIME NULL,
     FOREIGN KEY (organ_id) REFERENCES organs(id) ON DELETE CASCADE
 );
 
@@ -120,7 +122,8 @@ CREATE TABLE organ_roles (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     organ_id INT NOT NULL,
     name VARCHAR(50) NOT NULL,
-    INDEX idx_organ (organ_id), 
+    deleted_at DATETIME NULL,
+    INDEX idx_organ (organ_id),
     FOREIGN KEY (organ_id) REFERENCES organs(id) ON DELETE CASCADE
 );
 
@@ -140,37 +143,39 @@ CREATE TABLE user_organ_roles (
     user_id INT NOT NULL,
     role_id INT NOT NULL,
     UNIQUE KEY (user_id, role_id),
+    deleted_at DATETIME NULL,
     INDEX idx_role_user (role_id, user_id),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES organ_roles(id) ON DELETE CASCADE
 );
 
 -- =========================================================================
--- TÂCHES 
+-- TÂCHES
 -- =========================================================================
 CREATE TABLE tasks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL UNIQUE,
     organ_id INT NOT NULL,
-    
+
     created_by INT NULL,
     manager_id INT NULL,
     validated_by INT NULL,
-    
+
     title VARCHAR(200) NOT NULL,
-    description TEXT NULL,
-    
-    status ENUM('TODO', 'IN_PROGRESS', 'WAITING', 'DONE', 'CANCELED') DEFAULT 'TODO',
-    status_message TEXT NULL,
-    priority TINYINT NOT NULL DEFAULT 1 CHECK (priority BETWEEN 1 AND 10),
-    
+    description LONGTEXT NULL,
+
+    status VARCHAR(255) NOT NULL DEFAULT 'TODO' COMMENT 'TODO, IN_PROGRESS, WAITING, DONE, CANCELED', -- TODO IN_PROGRESS WAITING DONE CANCELED
+    status_message LONGTEXT NULL,
+    estimated_hours DECIMAL(10, 2) NULL,
+    priority SMALLINT NOT NULL DEFAULT 1,
+
     start_date DATETIME NULL,
     expires_at DATETIME NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     validated_at DATETIME NULL,
     deleted_at DATETIME NULL,
-    
+
     FOREIGN KEY (organ_id) REFERENCES organs(id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL,
@@ -186,6 +191,7 @@ CREATE TABLE task_assignees (
     task_id INT NOT NULL,
     user_id INT NOT NULL,
     UNIQUE KEY (task_id, user_id),
+    deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -199,22 +205,26 @@ CREATE TABLE task_links (
     task_id INT NOT NULL,
     url VARCHAR(2083) NOT NULL,
     description VARCHAR(255) NULL,
+    deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
 );
 
 -- =========================================================================
--- NOTIFICATIONS IN-APP
+-- PIÈCES JOINTES DES TÂCHES
 -- =========================================================================
-CREATE TABLE notifications (
+CREATE TABLE task_attachments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL UNIQUE,
-    user_id INT NOT NULL,
-    task_id INT NULL,
-    message VARCHAR(255) NOT NULL,
-    is_read BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+    task_id INT NOT NULL,
+    uploaded_by INT NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    file_size INT NOT NULL,
+    file_type VARCHAR(100) NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at DATETIME NULL,
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- =========================================================================
@@ -225,72 +235,43 @@ CREATE TABLE task_comments (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     user_id INT NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    content LONGTEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- =========================================================================
--- HISTORIQUE DES TÂCHES
--- =========================================================================
-CREATE TABLE task_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
-    task_id INT NOT NULL,
-    user_id INT NULL,
-    action VARCHAR(50) NOT NULL,
-    old_value TEXT NULL,
-    new_value TEXT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- =========================================================================
--- TAGS & ÉTIQUETTES
+-- TAGS (Étiquettes personnalisables par projet)
 -- =========================================================================
 CREATE TABLE tags (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL,
     name VARCHAR(50) NOT NULL,
-    color VARCHAR(7) DEFAULT '#808080',
+    color VARCHAR(9) DEFAULT '#808080' NOT NULL,
+    deleted_at DATETIME NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
 );
 
+-- =========================================================================
+-- ASSOCIATION TÂCHES <-> TAGS
+-- =========================================================================
 CREATE TABLE task_tags (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     tag_id INT NOT NULL,
     UNIQUE KEY (task_id, tag_id),
+    deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
 );
 
 -- =========================================================================
--- PIÈCES JOINTES
--- =========================================================================
-CREATE TABLE task_attachments (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
-    task_id INT NOT NULL,
-    uploaded_by INT NOT NULL,
-    file_name VARCHAR(255) NOT NULL,
-    file_path VARCHAR(2083) NOT NULL,
-    file_size INT NULL,
-    file_type VARCHAR(50) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE
-);
-
--- =========================================================================
--- DÉPENDANCES ENTRE TÂCHES
+-- DÉPENDANCES ENTRE TÂCHES (A bloqué B)
 -- =========================================================================
 CREATE TABLE task_dependencies (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -298,14 +279,48 @@ CREATE TABLE task_dependencies (
     task_id INT NOT NULL,
     depends_on_task_id INT NOT NULL,
     UNIQUE KEY (task_id, depends_on_task_id),
+    deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (depends_on_task_id) REFERENCES tasks(id) ON DELETE CASCADE
 );
 
 -- =========================================================================
--- INDEX D'OPTIMISATION
+-- HISTORIQUE DES TÂCHES (Audit Log)
 -- =========================================================================
+CREATE TABLE task_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    task_id INT NOT NULL,
+    user_id INT NULL,
+    action_type VARCHAR(50) NOT NULL,
+    field_name VARCHAR(50) NULL,
+    old_value LONGTEXT NULL,
+    new_value LONGTEXT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+);
 
+-- =========================================================================
+-- NOTIFICATIONS UTILISATEURS
+-- =========================================================================
+CREATE TABLE notifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    user_id INT NOT NULL,
+    task_id INT NULL,
+    type VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    is_read TINYINT(1) DEFAULT 0 NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    deleted_at DATETIME NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE SET NULL
+);
+
+-- =========================================================================
+-- INDEXES ADDITIONNELS POUR OPTIMISATIONS
+-- =========================================================================
 CREATE INDEX idx_tasks_organ_status ON tasks(organ_id, status);
 CREATE INDEX idx_tasks_manager_status ON tasks(manager_id, status);
 CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read);
