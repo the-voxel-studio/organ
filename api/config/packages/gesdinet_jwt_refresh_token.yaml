@@ -1,12 +1,12 @@
 gesdinet_jwt_refresh_token:
     refresh_token_class: App\Entity\UserSession
     manager_type: orm
-    ttl: 2592000 # 30 days
+    ttl: 2592000 # 1 month
     ttl_update: true
     cookie:
         enabled: true
         same_site: lax
-        path: /
+        path: /api/auth/refresh
         domain: null
         http_only: true
         secure: true

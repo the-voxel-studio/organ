@@ -28,10 +28,10 @@ class Project
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255, enumType: ProjectStatus::class, options: ['default' => ProjectStatus::ACTIVE])]
+    #[ORM\Column(length: 255, enumType: ProjectStatus::class, options: ['default' => ProjectStatus::ACTIVE, 'comment' => 'ACTIVE, ARCHIVED, INACTIVE'])]
     private ProjectStatus $status = ProjectStatus::ACTIVE;
 
-    #[ORM\Column(length: 255, enumType: IconType::class, options: ['default' => IconType::EMOJI])]
+    #[ORM\Column(length: 255, enumType: IconType::class, options: ['default' => IconType::EMOJI, 'comment' => 'SVG, BLOB, EMOJI'])]
     private IconType $iconType = IconType::EMOJI;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]

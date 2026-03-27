@@ -10,7 +10,9 @@ use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Uid\Uuid;
 
-#[ORM\Entity]
+use App\Repository\UserSessionRepository;
+
+#[ORM\Entity(repositoryClass: UserSessionRepository::class)]
 #[ORM\Table(name: 'user_sessions')]
 class UserSession implements RefreshTokenInterface
 {

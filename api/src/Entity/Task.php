@@ -45,7 +45,7 @@ class Task
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(length: 255, enumType: TaskStatus::class, options: ['default' => TaskStatus::TODO])]
+    #[ORM\Column(length: 255, enumType: TaskStatus::class, options: ['default' => TaskStatus::TODO, 'comment' => 'TODO, IN_PROGRESS, WAITING, DONE, CANCELED'])]
     private TaskStatus $status = TaskStatus::TODO;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]

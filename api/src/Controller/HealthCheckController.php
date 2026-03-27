@@ -7,17 +7,17 @@ namespace App\Controller;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/health', name: 'health_')]
 class HealthCheckController extends AbstractController
 {
-    #[Route('/', name: 'check', methods: ['GET'])]
+    #[Route('', name: 'check', methods: ['GET'])]
     public function index(EntityManagerInterface $entityManager): JsonResponse
     {
         $dbStatus = 'OK';
         try {
-            $entityManager->getConnection()->connect();
+            $entityManager->getConnection()->getNativeConnection();
         } catch (\Exception $e) {
             $dbStatus = 'Error: ' . $e->getMessage();
         }

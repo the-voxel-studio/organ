@@ -14,18 +14,18 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         
-        login:
-            pattern: ^/api/login
+        # Auth firewall handles login, register, refresh, and logout
+        auth:
+            pattern: ^/api/auth/(login|register|refresh|logout)
             stateless: true
             json_login:
-                check_path: /api/login
+                check_path: /api/auth/login
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
-
-        #api_token_refresh:
-        #    pattern: ^/api/token/refresh
-        #    stateless: true
-        #    refresh_jwt: ~
+            refresh_jwt:
+                check_path: /api/auth/refresh
+            logout:
+                path: /api/auth/logout
 
         api:
             pattern: ^/api
@@ -35,10 +35,9 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
-        - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
-        - { path: ^/api/users, roles: PUBLIC_ACCESS, methods: [POST] }
-        - { path: ^/api/docs, roles: PUBLIC_ACCESS, methods: [GET]}
+        - { path: ^/api/auth/, roles: PUBLIC_ACCESS }
+        - { path: ^/api/doc, roles: PUBLIC_ACCESS, methods: [GET]}
+        - { path: ^/api/health, roles: PUBLIC_ACCESS, methods: [GET]}
         - { path: ^/api,       roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
