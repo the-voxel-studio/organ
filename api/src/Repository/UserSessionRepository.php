@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\UserSession;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Gesdinet\JWTRefreshTokenBundle\Doctrine\RefreshTokenRepositoryInterface;
@@ -54,5 +55,22 @@ class UserSessionRepository extends ServiceEntityRepository implements RefreshTo
         }
 
         return $queryBuilder->getQuery()->getResult();
+    }
+
+    public function findExistingSession(User $user, string $location, string $deviceName, string $browserName): ?UserSession
+    {
+        return $this->createQueryBuilder('s')
+            ->where('s.user = :user')
+            ->andWhere('s.location = :location')
+            ->andWhere('s.deviceName = :deviceName')
+            ->andWhere('s.browserName = :browserName')
+            ->andWhere('s.valid > :now')
+            ->setParameter('user', $user)
+            ->setParameter('location', $location)
+            ->setParameter('deviceName', $deviceName)
+            ->setParameter('browserName', $browserName)
+            ->setParameter('now', new \DateTime())
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

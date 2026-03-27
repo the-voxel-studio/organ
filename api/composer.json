@@ -12,6 +12,7 @@
         "doctrine/orm": "^3.6",
         "gesdinet/jwt-refresh-token-bundle": "*",
         "lexik/jwt-authentication-bundle": "*",
+        "matomo/device-detector": "^6.5",
         "nelmio/api-doc-bundle": "*",
         "nelmio/cors-bundle": "^2.6",
         "phpdocumentor/reflection-docblock": "*",
