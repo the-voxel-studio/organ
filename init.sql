@@ -224,7 +224,7 @@ CREATE TABLE task_attachments (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE RESTRICT
 );
 
 -- =========================================================================
