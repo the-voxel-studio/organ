@@ -6,16 +6,22 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Entity\UserSession;
+use App\Service\UserCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/users', name: 'users_')]
 class UserController extends AbstractController
 {
+    public function __construct(
+        private readonly UserCacheService $userCacheService
+    ) {}
+
     #[Route('/me', name: 'me', methods: ['GET'])]
     public function me(): JsonResponse
     {
@@ -23,8 +29,11 @@ class UserController extends AbstractController
         $user = $this->getUser();
 
         if (!$user) {
-            return $this->json(['message' => 'Not authenticated'], 401);
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
+
+        // Pre-warm cache for current user if needed
+        $this->userCacheService->getUserSummary($user);
 
         return $this->json([
             'id' => $user->getId(),
@@ -33,7 +42,7 @@ class UserController extends AbstractController
             'firstName' => $user->getFirstName(),
             'lastName' => $user->getLastName(),
             'isVerified' => $user->isVerified(),
-            'createdAt' => $user->getCreatedAt(),
+            'createdAt' => $user->getCreatedAt()->format(\DateTimeInterface::ATOM),
             'authWithGoogle' => (bool) $user->getGoogleId(),
         ]);
     }
@@ -48,30 +57,33 @@ class UserController extends AbstractController
         $user = $this->getUser();
 
         if (!$user) {
-            return $this->json(['message' => 'Not authenticated'], 401);
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $data = $request->toArray();
         } catch (\Exception $e) {
-            return $this->json(['message' => 'Invalid JSON'], 400);
+            return $this->json(['message' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
         }
 
         if (empty($data)) {
-            return $this->json(['message' => 'No data provided'], 400);
+            return $this->json(['message' => 'No data provided'], Response::HTTP_BAD_REQUEST);
         }
 
         $hasChanged = false;
         $emailChanged = false;
+        $profileChanged = false;
 
         if (isset($data['firstName'])) {
             $user->setFirstName($data['firstName']);
             $hasChanged = true;
+            $profileChanged = true;
         }
 
         if (isset($data['lastName'])) {
             $user->setLastName($data['lastName']);
             $hasChanged = true;
+            $profileChanged = true;
         }
 
         if (isset($data['email']) && $data['email'] !== $user->getEmail()) {
@@ -81,20 +93,16 @@ class UserController extends AbstractController
         }
 
         if (!$hasChanged) {
-            return $this->json(['message' => 'No data to update'], 400);
+            return $this->json(['message' => 'No data to update'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Validate the entity with new values
+        // Validate
         $errors = $validator->validate($user);
         if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
-            }
-            return $this->json(['message' => 'Validation failed', 'errors' => $errorMessages], 400);
+            return $this->json($errors, Response::HTTP_BAD_REQUEST);
         }
 
-        // If email changed, we MUST update all associated refresh tokens (UserSession)
+        // Handle email change sessions
         if ($emailChanged) {
             $sessions = $entityManager->getRepository(UserSession::class)->findBy(['user' => $user]);
             foreach ($sessions as $session) {
@@ -103,6 +111,11 @@ class UserController extends AbstractController
         }
 
         $entityManager->flush();
+
+        // Refresh cache if profile changed
+        if ($profileChanged) {
+            $this->userCacheService->refresh($user);
+        }
 
         return $this->json([
             'message' => 'Profile updated successfully',
@@ -122,14 +135,15 @@ class UserController extends AbstractController
         $user = $this->getUser();
 
         if (!$user) {
-            return $this->json(['message' => 'Not authenticated'], 401);
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // 1. Soft delete the user
+        $uuid = $user->getUuid();
+
+        // Soft delete user
         $user->setDeletedAt(new \DateTime());
 
-        // 2. IMPORTANT: Invalidate all refresh tokens immediately
-        // This ensures the user cannot use /auth/refresh to bypass the block
+        // Invalidate sessions
         $sessions = $entityManager->getRepository(UserSession::class)->findBy(['user' => $user]);
         foreach ($sessions as $session) {
             $entityManager->remove($session);
@@ -137,9 +151,12 @@ class UserController extends AbstractController
 
         $entityManager->flush();
 
+        // Invalidate cache
+        $this->userCacheService->invalidate($uuid);
+
         return $this->json([
-            'message' => 'Account scheduled for deletion. All sessions have been invalidated. Log in again to reactivate.',
-            'deletedAt' => $user->getDeletedAt()
+            'message' => 'Account scheduled for deletion. All sessions have been invalidated.',
+            'deletedAt' => $user->getDeletedAt()->format(\DateTimeInterface::ATOM)
         ]);
     }
 }

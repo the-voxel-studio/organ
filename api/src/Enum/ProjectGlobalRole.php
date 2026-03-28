@@ -7,5 +7,6 @@ namespace App\Enum;
 enum ProjectGlobalRole: string
 {
     case ADMIN = 'ADMIN';
+    case MANAGER = 'MANAGER';
     case MEMBER = 'MEMBER';
 }

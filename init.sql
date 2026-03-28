@@ -71,7 +71,7 @@ CREATE TABLE project_members (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL,
     user_id INT NOT NULL,
-    global_role VARCHAR(255) NOT NULL DEFAULT 'MEMBER', -- ADMIN MEMBER
+    global_role VARCHAR(255) NOT NULL DEFAULT 'MEMBER', -- ADMIN MANAGER MEMBER 
     UNIQUE KEY (project_id, user_id),
     deleted_at DATETIME NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
@@ -328,3 +328,42 @@ CREATE INDEX idx_task_history_timeline ON task_history(task_id, created_at);
 CREATE INDEX idx_projects_deleted_at ON projects(deleted_at);
 CREATE INDEX idx_organs_deleted_at ON organs(deleted_at);
 CREATE INDEX idx_tasks_deleted_at ON tasks(deleted_at);
+
+-- =========================================================================
+-- PERMISSIONS GENERALES
+-- =========================================================================
+INSERT INTO permissions (uuid, name) VALUES 
+(UUID(), 'ORGAN_VIEW'),
+(UUID(), 'ORGAN_EDIT'),
+(UUID(), 'ORGAN_MANAGE_ROLES'),
+(UUID(), 'ORGAN_LINK_MANAGE'),
+(UUID(), 'TASK_CREATE'),
+(UUID(), 'TASK_EDIT_OWN'),
+(UUID(), 'TASK_EDIT_ALL'),
+(UUID(), 'TASK_DELETE_OWN'),
+(UUID(), 'TASK_DELETE_ALL'),
+(UUID(), 'TASK_STATUS_CHANGE_OWN'),
+(UUID(), 'TASK_STATUS_CHANGE_ALL'),
+(UUID(), 'TASK_PRIORITY_CHANGE_OWN'),
+(UUID(), 'TASK_PRIORITY_CHANGE_ALL'),
+(UUID(), 'TASK_DATES_MANAGE_OWN'),
+(UUID(), 'TASK_DATES_MANAGE_ALL'),
+(UUID(), 'TASK_ESTIMATE_MANAGE_OWN'),
+(UUID(), 'TASK_ESTIMATE_MANAGE_ALL'),
+(UUID(), 'TASK_ASSIGN_SELF'),
+(UUID(), 'TASK_ASSIGN_OTHERS'),
+(UUID(), 'TASK_VALIDATE'),
+(UUID(), 'TASK_LINK_MANAGE_OWN'),
+(UUID(), 'TASK_LINK_MANAGE_ALL'),
+(UUID(), 'TASK_TAG_MANAGE_OWN'),
+(UUID(), 'TASK_TAG_MANAGE_ALL'),
+(UUID(), 'TASK_DEPENDENCY_MANAGE_OWN'),
+(UUID(), 'TASK_DEPENDENCY_MANAGE_ALL'),
+(UUID(), 'COMMENT_CREATE'),
+(UUID(), 'COMMENT_EDIT_OWN'),
+(UUID(), 'COMMENT_EDIT_ALL'),
+(UUID(), 'COMMENT_DELETE_OWN'),
+(UUID(), 'COMMENT_DELETE_ALL'),
+(UUID(), 'ATTACHMENT_ADD'),
+(UUID(), 'ATTACHMENT_DELETE_OWN'),
+(UUID(), 'ATTACHMENT_DELETE_ALL');
