@@ -189,6 +189,22 @@ class OrganController extends AbstractController
         return $this->json(['message' => 'Organ updated']);
     }
 
+    #[Route('/{organUuid}/permissions', name: 'permissions', methods: ['GET'])]
+    public function permissions(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+
+        if (!$organ) return $this->json(['message' => 'Organ not found'], Response::HTTP_NOT_FOUND);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        
+        return $this->json([
+            'permissions' => $this->permissionService->getOrganPermissions($user, $organ),
+        ]);
+    }
+
     #[Route('/{organUuid}', name: 'delete', methods: ['DELETE'])]
     public function delete(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
     {

@@ -22,7 +22,8 @@ class OrganPermissionService
 
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly CacheInterface $cache
+        private readonly CacheInterface $cache,
+        private readonly ProjectMembershipService $membershipService
     ) {}
 
     /**
@@ -30,15 +31,15 @@ class OrganPermissionService
      */
     public function hasPermission(User $user, Organ $organ, string $permissionName): bool
     {
-        // 1. Project ADMIN has all permissions (Master key)
-        $projectMember = $this->entityManager->getRepository(ProjectMember::class)->findOneBy([
-            'project' => $organ->getProject(),
-            'user' => $user,
-            'deletedAt' => null
-        ]);
+        // 1. Project ADMIN has all permissions (Master key) - NOW CACHED
+        $globalRole = $this->membershipService->getGlobalRole($user, $organ->getProject());
 
-        if ($projectMember?->getGlobalRole() === ProjectGlobalRole::ADMIN) {
+        if ($globalRole === ProjectGlobalRole::ADMIN) {
             return true;
+        }
+
+        if ($globalRole === null) {
+            return false;
         }
 
         // 2. Aggregate permissions from all user's roles in this organ

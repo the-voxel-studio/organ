@@ -8,6 +8,7 @@ use App\Entity\Project;
 use App\Entity\ProjectMember;
 use App\Entity\User;
 use App\Enum\ProjectGlobalRole;
+use App\Service\ProjectMembershipService;
 use App\Service\UserCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,7 +21,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class ProjectMemberController extends AbstractController
 {
     public function __construct(
-        private readonly UserCacheService $userCacheService
+        private readonly UserCacheService $userCacheService,
+        private readonly ProjectMembershipService $membershipService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -68,12 +70,10 @@ class ProjectMemberController extends AbstractController
 
         $roleRequest = isset($data['role']) ? ProjectGlobalRole::tryFrom($data['role']) : ProjectGlobalRole::MEMBER;
         
-        // Pyramidal Rule: Only ADMIN can add a MANAGER. MANAGER can only add MEMBER.
         if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $roleRequest !== ProjectGlobalRole::MEMBER) {
             return $this->json(['message' => 'Managers can only add members with MEMBER role'], Response::HTTP_FORBIDDEN);
         }
 
-        // Only one ADMIN rule: cannot add someone as ADMIN directly if one exists (must use update/transfer)
         if ($roleRequest === ProjectGlobalRole::ADMIN) {
             return $this->json(['message' => 'Cannot add a new ADMIN. Use role transfer instead.'], Response::HTTP_BAD_REQUEST);
         }
@@ -97,6 +97,9 @@ class ProjectMemberController extends AbstractController
 
         $entityManager->flush();
 
+        // Invalidate cache for the added/restored user
+        $this->membershipService->invalidate($userToAdd->getUuid(), $project->getUuid());
+
         return $this->json([
             'uuid' => $member->getUuid(),
             'user' => $this->userCacheService->getUserSummary($userToAdd),
@@ -115,7 +118,6 @@ class ProjectMemberController extends AbstractController
             return $this->json(['message' => 'Member not found'], Response::HTTP_NOT_FOUND);
         }
 
-        // Pyramidal Rule: MANAGER cannot update other MANAGERS or the ADMIN
         if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER) {
             if ($targetMember->getGlobalRole() !== ProjectGlobalRole::MEMBER) {
                 return $this->json(['message' => 'Managers can only manage users with MEMBER role'], Response::HTTP_FORBIDDEN);
@@ -129,20 +131,23 @@ class ProjectMemberController extends AbstractController
                 return $this->json(['message' => 'Invalid role'], Response::HTTP_BAD_REQUEST);
             }
 
-            // Transfer of Ownership (Single ADMIN rule)
             if ($newRole === ProjectGlobalRole::ADMIN) {
                 if ($currentUserMember->getGlobalRole() !== ProjectGlobalRole::ADMIN) {
                     return $this->json(['message' => 'Only the current ADMIN can transfer the administrator role'], Response::HTTP_FORBIDDEN);
                 }
-                // Current ADMIN becomes MANAGER
                 $currentUserMember->setGlobalRole(ProjectGlobalRole::MANAGER);
                 $targetMember->setGlobalRole(ProjectGlobalRole::ADMIN);
+                
+                // Invalidate cache for BOTH (old admin and new admin)
+                $this->membershipService->invalidate($currentUserMember->getUser()->getUuid(), $project->getUuid());
+                $this->membershipService->invalidate($targetMember->getUser()->getUuid(), $project->getUuid());
             } else {
-                // Pyramidal Rule: MANAGER can only promote to MANAGER if they are ADMIN
                 if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $newRole !== ProjectGlobalRole::MEMBER) {
                     return $this->json(['message' => 'Managers cannot promote members to MANAGER'], Response::HTTP_FORBIDDEN);
                 }
                 $targetMember->setGlobalRole($newRole);
+                // Invalidate cache for the updated user
+                $this->membershipService->invalidate($targetMember->getUser()->getUuid(), $project->getUuid());
             }
         }
 
@@ -174,7 +179,6 @@ class ProjectMemberController extends AbstractController
 
         $isSelf = ($targetMember->getUser() === $currentUser);
 
-        // Pyramidal Rule: MANAGER can only remove MEMBERS
         if (!$isSelf) {
             if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MEMBER) {
                 return $this->json(['message' => 'Insufficient permissions'], Response::HTTP_FORBIDDEN);
@@ -184,13 +188,16 @@ class ProjectMemberController extends AbstractController
             }
         }
 
-        // Single ADMIN Safety: cannot leave or be removed if last admin (must transfer first)
         if ($targetMember->getGlobalRole() === ProjectGlobalRole::ADMIN) {
             return $this->json(['message' => 'The ADMIN cannot leave the project. Transfer the role to someone else first.'], Response::HTTP_BAD_REQUEST);
         }
 
+        $targetUserUuid = $targetMember->getUser()->getUuid();
         $targetMember->setDeletedAt(new \DateTime());
         $entityManager->flush();
+
+        // Invalidate cache for the removed user
+        $this->membershipService->invalidate($targetUserUuid, $project->getUuid());
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

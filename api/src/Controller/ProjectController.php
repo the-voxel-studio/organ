@@ -217,6 +217,24 @@ class ProjectController extends AbstractController
         ]);
     }
 
+    #[Route('/{uuid}/permissions', name: 'permissions', methods: ['GET'])]
+    public function permissions(string $uuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user) return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project, 'deletedAt' => null]);
+        if (!$membership) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+
+        return $this->json([
+            'role' => $membership->getGlobalRole()->value,
+        ]);
+    }
+
     #[Route('/{uuid}', name: 'delete', methods: ['DELETE'])]
     public function delete(string $uuid, EntityManagerInterface $entityManager, CacheInterface $cache): JsonResponse
     {
