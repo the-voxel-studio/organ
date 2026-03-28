@@ -12,6 +12,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity]
 #[ORM\Table(name: 'project_members')]
 #[ORM\UniqueConstraint(columns: ['project_id', 'user_id'])]
+#[ORM\Index(name: 'idx_project_members_deleted_at', columns: ['deleted_at'])]
 class ProjectMember
 {
     #[ORM\Id]
@@ -30,7 +31,7 @@ class ProjectMember
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
-    #[ORM\Column(length: 255, enumType: ProjectGlobalRole::class, options: ['default' => ProjectGlobalRole::MEMBER, 'comment' => 'ADMIN, MEMBER'])]
+    #[ORM\Column(length: 255, enumType: ProjectGlobalRole::class, options: ['default' => ProjectGlobalRole::MEMBER, 'comment' => 'ADMIN, MANAGER, MEMBER'])]
     private ProjectGlobalRole $globalRole = ProjectGlobalRole::MEMBER;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]

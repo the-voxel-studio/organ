@@ -14,6 +14,8 @@ use App\Repository\UserSessionRepository;
 
 #[ORM\Entity(repositoryClass: UserSessionRepository::class)]
 #[ORM\Table(name: 'user_sessions')]
+#[ORM\Index(name: 'idx_sessions_user', columns: ['user_id'])]
+#[ORM\Index(name: 'idx_sessions_expires', columns: ['valid'])]
 class UserSession implements RefreshTokenInterface
 {
     #[ORM\Id]

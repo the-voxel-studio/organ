@@ -78,6 +78,22 @@ CREATE TABLE project_members (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE project_invitations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    project_id INT NOT NULL,
+    email VARCHAR(180) NOT NULL,
+    role VARCHAR(255) NOT NULL DEFAULT 'MEMBER',
+    token VARCHAR(64) NOT NULL UNIQUE,
+    invited_by INT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    expires_at DATETIME NOT NULL,
+    accepted_at DATETIME NULL,
+    
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL
+);
+
 -- =========================================================================
 -- ORGANS (Groupes de tâches au sein d'un projet)
 -- =========================================================================
@@ -221,7 +237,7 @@ CREATE TABLE task_attachments (
     file_path VARCHAR(500) NOT NULL,
     file_size INT NOT NULL,
     file_type VARCHAR(100) NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at DATETIME NOT NULL,
     deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE RESTRICT
@@ -236,8 +252,8 @@ CREATE TABLE task_comments (
     task_id INT NOT NULL,
     user_id INT NOT NULL,
     content LONGTEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
     deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -310,7 +326,7 @@ CREATE TABLE notifications (
     user_id INT NOT NULL,
     task_id INT NULL,
     type VARCHAR(50) NOT NULL,
-    message TEXT NOT NULL,
+    message LONGTEXT NOT NULL,
     is_read TINYINT(1) DEFAULT 0 NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at DATETIME NULL,
@@ -328,6 +344,7 @@ CREATE INDEX idx_task_history_timeline ON task_history(task_id, created_at);
 CREATE INDEX idx_projects_deleted_at ON projects(deleted_at);
 CREATE INDEX idx_organs_deleted_at ON organs(deleted_at);
 CREATE INDEX idx_tasks_deleted_at ON tasks(deleted_at);
+CREATE INDEX idx_project_members_deleted_at ON project_members (deleted_at);
 
 -- =========================================================================
 -- PERMISSIONS GENERALES

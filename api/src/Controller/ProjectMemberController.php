@@ -6,10 +6,12 @@ namespace App\Controller;
 
 use App\Entity\Project;
 use App\Entity\ProjectMember;
+use App\Entity\ProjectInvitation;
 use App\Entity\User;
 use App\Enum\ProjectGlobalRole;
 use App\Service\ProjectMembershipService;
 use App\Service\UserCacheService;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,16 +24,15 @@ class ProjectMemberController extends AbstractController
 {
     public function __construct(
         private readonly UserCacheService $userCacheService,
-        private readonly ProjectMembershipService $membershipService
+        private readonly ProjectMembershipService $membershipService,
+        private readonly NotificationService $notificationService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(string $projectUuid, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
-        if (!$project) {
-            return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
-        }
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
 
         $this->checkAccess($project, $entityManager);
 
@@ -52,58 +53,67 @@ class ProjectMemberController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('', name: 'add', methods: ['POST'])]
-    public function add(string $projectUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/invite', name: 'invite', methods: ['POST'])]
+    public function invite(string $projectUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $currentUserMember = $this->checkAccess($project, $entityManager, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER]);
 
         $data = json_decode($request->getContent(), true);
-        if (!isset($data['userUuid'])) {
-            return $this->json(['message' => 'User UUID is required'], Response::HTTP_BAD_REQUEST);
+        if (!isset($data['email'])) {
+            return $this->json(['message' => 'Email is required'], Response::HTTP_BAD_REQUEST);
         }
 
-        $userToAdd = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $data['userUuid'], 'deletedAt' => null]);
-        if (!$userToAdd) {
-            return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+        $email = $data['email'];
+        $role = isset($data['role']) ? ProjectGlobalRole::tryFrom($data['role']) : ProjectGlobalRole::MEMBER;
+
+        if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $role !== ProjectGlobalRole::MEMBER) {
+            return $this->json(['message' => 'Managers can only invite members with MEMBER role'], Response::HTTP_FORBIDDEN);
         }
 
-        $roleRequest = isset($data['role']) ? ProjectGlobalRole::tryFrom($data['role']) : ProjectGlobalRole::MEMBER;
-        
-        if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $roleRequest !== ProjectGlobalRole::MEMBER) {
-            return $this->json(['message' => 'Managers can only add members with MEMBER role'], Response::HTTP_FORBIDDEN);
+        // Check if already member
+        $existingUser = $entityManager->getRepository(User::class)->findOneBy(['email' => $email, 'deletedAt' => null]);
+        if ($existingUser) {
+            $existingMember = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $existingUser, 'deletedAt' => null]);
+            if ($existingMember) {
+                return $this->json(['message' => 'User is already a member'], Response::HTTP_CONFLICT);
+            }
         }
 
-        if ($roleRequest === ProjectGlobalRole::ADMIN) {
-            return $this->json(['message' => 'Cannot add a new ADMIN. Use role transfer instead.'], Response::HTTP_BAD_REQUEST);
+        // Check if already invited (active invitation)
+        $existingInv = $entityManager->getRepository(ProjectInvitation::class)->findOneBy([
+            'project' => $project,
+            'email' => $email,
+            'acceptedAt' => null
+        ]);
+
+        if ($existingInv && $existingInv->getExpiresAt() > new \DateTime()) {
+            return $this->json(['message' => 'User is already invited'], Response::HTTP_CONFLICT);
         }
 
-        $existingMember = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $userToAdd]);
-        if ($existingMember && $existingMember->getDeletedAt() === null) {
-            return $this->json(['message' => 'User is already a member'], Response::HTTP_CONFLICT);
-        }
+        $invitation = new ProjectInvitation();
+        $invitation->setProject($project);
+        $invitation->setEmail($email);
+        $invitation->setRole($role);
+        $invitation->setInvitedBy($this->getUser());
 
-        if ($existingMember) {
-            $existingMember->setDeletedAt(null);
-            $existingMember->setGlobalRole($roleRequest);
-            $member = $existingMember;
-        } else {
-            $member = new ProjectMember();
-            $member->setProject($project);
-            $member->setUser($userToAdd);
-            $member->setGlobalRole($roleRequest);
-            $entityManager->persist($member);
-        }
-
+        $entityManager->persist($invitation);
         $entityManager->flush();
 
-        // Invalidate cache for the added/restored user
-        $this->membershipService->invalidate($userToAdd->getUuid(), $project->getUuid());
+        // Notify user if they already exist on the platform
+        if ($existingUser) {
+            $this->notificationService->notify(
+                $existingUser, 
+                'PROJECT_INVITATION', 
+                sprintf('Vous avez été invité à rejoindre le projet "%s"', $project->getTitle())
+            );
+        }
+
+        // TODO: Send real email via Mailer service here
 
         return $this->json([
-            'uuid' => $member->getUuid(),
-            'user' => $this->userCacheService->getUserSummary($userToAdd),
-            'role' => $member->getGlobalRole()->value,
+            'uuid' => $invitation->getUuid(),
+            'message' => 'Invitation sent successfully'
         ], Response::HTTP_CREATED);
     }
 
@@ -114,115 +124,68 @@ class ProjectMemberController extends AbstractController
         $currentUserMember = $this->checkAccess($project, $entityManager, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER]);
 
         $targetMember = $entityManager->getRepository(ProjectMember::class)->findOneBy(['uuid' => $memberUuid, 'project' => $project, 'deletedAt' => null]);
-        if (!$targetMember) {
-            return $this->json(['message' => 'Member not found'], Response::HTTP_NOT_FOUND);
-        }
+        if (!$targetMember) return $this->json(['message' => 'Member not found'], Response::HTTP_NOT_FOUND);
 
-        if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER) {
-            if ($targetMember->getGlobalRole() !== ProjectGlobalRole::MEMBER) {
-                return $this->json(['message' => 'Managers can only manage users with MEMBER role'], Response::HTTP_FORBIDDEN);
-            }
+        if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $targetMember->getGlobalRole() !== ProjectGlobalRole::MEMBER) {
+            return $this->json(['message' => 'Managers can only manage users with MEMBER role'], Response::HTTP_FORBIDDEN);
         }
 
         $data = json_decode($request->getContent(), true);
         if (isset($data['role'])) {
             $newRole = ProjectGlobalRole::tryFrom($data['role']);
-            if (!$newRole) {
-                return $this->json(['message' => 'Invalid role'], Response::HTTP_BAD_REQUEST);
-            }
+            if (!$newRole) return $this->json(['message' => 'Invalid role'], Response::HTTP_BAD_REQUEST);
 
             if ($newRole === ProjectGlobalRole::ADMIN) {
-                if ($currentUserMember->getGlobalRole() !== ProjectGlobalRole::ADMIN) {
-                    return $this->json(['message' => 'Only the current ADMIN can transfer the administrator role'], Response::HTTP_FORBIDDEN);
-                }
+                if ($currentUserMember->getGlobalRole() !== ProjectGlobalRole::ADMIN) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
                 $currentUserMember->setGlobalRole(ProjectGlobalRole::MANAGER);
                 $targetMember->setGlobalRole(ProjectGlobalRole::ADMIN);
-                
-                // Invalidate cache for BOTH (old admin and new admin)
                 $this->membershipService->invalidate($currentUserMember->getUser()->getUuid(), $project->getUuid());
                 $this->membershipService->invalidate($targetMember->getUser()->getUuid(), $project->getUuid());
             } else {
-                if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $newRole !== ProjectGlobalRole::MEMBER) {
-                    return $this->json(['message' => 'Managers cannot promote members to MANAGER'], Response::HTTP_FORBIDDEN);
-                }
+                if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $newRole !== ProjectGlobalRole::MEMBER) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
                 $targetMember->setGlobalRole($newRole);
-                // Invalidate cache for the updated user
                 $this->membershipService->invalidate($targetMember->getUser()->getUuid(), $project->getUuid());
             }
         }
 
         $entityManager->flush();
-
-        return $this->json(['message' => 'Member updated', 'newRole' => $targetMember->getGlobalRole()->value]);
+        return $this->json(['message' => 'Member updated']);
     }
 
     #[Route('/{memberUuid}', name: 'remove', methods: ['DELETE'])]
     public function remove(string $projectUuid, string $memberUuid, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
-        if (!$project) {
-            return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        /** @var User $currentUser */
-        $currentUser = $this->getUser();
-        $currentUserMember = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $currentUser, 'deletedAt' => null]);
-
-        if (!$currentUserMember) {
-            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
-        }
+        $currentUserMember = $this->checkAccess($project, $entityManager);
 
         $targetMember = $entityManager->getRepository(ProjectMember::class)->findOneBy(['uuid' => $memberUuid, 'project' => $project, 'deletedAt' => null]);
-        if (!$targetMember) {
-            return $this->json(['message' => 'Member not found'], Response::HTTP_NOT_FOUND);
-        }
+        if (!$targetMember) return $this->json(['message' => 'Member not found'], Response::HTTP_NOT_FOUND);
 
-        $isSelf = ($targetMember->getUser() === $currentUser);
-
+        $isSelf = ($targetMember->getUser() === $this->getUser());
         if (!$isSelf) {
-            if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MEMBER) {
-                return $this->json(['message' => 'Insufficient permissions'], Response::HTTP_FORBIDDEN);
-            }
-            if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $targetMember->getGlobalRole() !== ProjectGlobalRole::MEMBER) {
-                return $this->json(['message' => 'Managers can only remove users with MEMBER role'], Response::HTTP_FORBIDDEN);
-            }
+            if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MEMBER) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $targetMember->getGlobalRole() !== ProjectGlobalRole::MEMBER) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        if ($targetMember->getGlobalRole() === ProjectGlobalRole::ADMIN) {
-            return $this->json(['message' => 'The ADMIN cannot leave the project. Transfer the role to someone else first.'], Response::HTTP_BAD_REQUEST);
-        }
+        if ($targetMember->getGlobalRole() === ProjectGlobalRole::ADMIN) return $this->json(['message' => 'Cannot remove ADMIN'], Response::HTTP_BAD_REQUEST);
 
         $targetUserUuid = $targetMember->getUser()->getUuid();
         $targetMember->setDeletedAt(new \DateTime());
         $entityManager->flush();
-
-        // Invalidate cache for the removed user
         $this->membershipService->invalidate($targetUserUuid, $project->getUuid());
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 
-    private function checkAccess(?Project $project, EntityManagerInterface $entityManager, array $allowedRoles = null): ProjectMember
+    private function checkAccess(?Project $project, EntityManagerInterface $entityManager, ?array $allowedRoles = null): ProjectMember
     {
-        if (!$project) {
-            throw $this->createNotFoundException('Project not found');
-        }
-
-        /** @var User|null $user */
+        if (!$project) throw $this->createNotFoundException('Project not found');
         $user = $this->getUser();
-        if (!$user) {
-            throw $this->createAccessDeniedException('Not authenticated');
-        }
+        if (!$user instanceof User) throw $this->createAccessDeniedException();
 
         $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $user, 'deletedAt' => null]);
-        
-        if (!$membership) {
-            throw $this->createAccessDeniedException('Access denied');
-        }
-
-        if ($allowedRoles !== null && !in_array($membership->getGlobalRole(), $allowedRoles, true)) {
-            throw $this->createAccessDeniedException('Insufficient permissions');
-        }
+        if (!$membership) throw $this->createAccessDeniedException();
+        if ($allowedRoles !== null && !in_array($membership->getGlobalRole(), $allowedRoles, true)) throw $this->createAccessDeniedException();
 
         return $membership;
     }

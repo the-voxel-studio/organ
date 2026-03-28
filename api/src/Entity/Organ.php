@@ -11,6 +11,7 @@ use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'organs')]
+#[ORM\Index(name: 'idx_organs_deleted_at', columns: ['deleted_at'])]
 class Organ
 {
     #[ORM\Id]

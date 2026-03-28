@@ -13,6 +13,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Table(name: 'tasks')]
 #[ORM\Index(name: 'idx_tasks_organ_status', columns: ['organ_id', 'status'])]
 #[ORM\Index(name: 'idx_tasks_manager_status', columns: ['manager_id', 'status'])]
+#[ORM\Index(name: 'idx_tasks_deleted_at', columns: ['deleted_at'])]
 class Task
 {
     #[ORM\Id]
