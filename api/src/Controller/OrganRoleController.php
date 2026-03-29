@@ -56,6 +56,41 @@ class OrganRoleController extends AbstractController
         return $this->json($data);
     }
 
+    #[Route('/trash', name: 'trash', methods: ['GET'])]
+    public function trash(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+
+        if (!$organ) {
+            return $this->json(['message' => 'Organ not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_MANAGE_ROLES')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $roles = $entityManager->getRepository(OrganRole::class)->createQueryBuilder('r')
+            ->where('r.organ = :organ')
+            ->andWhere('r.deletedAt IS NOT NULL')
+            ->setParameter('organ', $organ)
+            ->getQuery()
+            ->getResult();
+        
+        $data = [];
+        foreach ($roles as $role) {
+            $data[] = [
+                'uuid' => $role->getUuid(),
+                'name' => $role->getName(),
+                'deletedAt' => $role->getDeletedAt()->format(\DateTimeInterface::ATOM),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(string $projectUuid, string $organUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -172,5 +207,38 @@ class OrganRoleController extends AbstractController
         $this->permissionService->invalidateRoleDefinition($role->getUuid());
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/{roleUuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $projectUuid, string $organUuid, string $roleUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $role = $entityManager->getRepository(OrganRole::class)->findOneBy(['uuid' => $roleUuid, 'organ' => $organ]);
+
+        if (!$role) {
+            return $this->json(['message' => 'Role not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($role->getDeletedAt() === null) {
+            return $this->json(['message' => 'Role is not deleted'], Response::HTTP_BAD_REQUEST);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_MANAGE_ROLES')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $role->setDeletedAt(null);
+        $entityManager->flush();
+
+        // Invalidate role definition
+        $this->permissionService->invalidateRoleDefinition($role->getUuid());
+
+        return $this->json([
+            'uuid' => $role->getUuid(),
+            'name' => $role->getName()
+        ]);
     }
 }

@@ -116,6 +116,51 @@ class OrganController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
+    #[Route('/trash', name: 'trash', methods: ['GET'])]
+    public function trash(string $projectUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        if (!$project) {
+            return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $projectMember = $entityManager->getRepository(ProjectMember::class)->findOneBy([
+            'project' => $project,
+            'user' => $user,
+            'deletedAt' => null
+        ]);
+
+        if (!$projectMember) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        // We show trashed organs if user is ADMIN or MANAGER of the project
+        if (!in_array($projectMember->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return $this->json(['message' => 'Insufficient permissions'], Response::HTTP_FORBIDDEN);
+        }
+
+        $organs = $entityManager->getRepository(Organ::class)->createQueryBuilder('o')
+            ->where('o.project = :project')
+            ->andWhere('o.deletedAt IS NOT NULL')
+            ->setParameter('project', $project)
+            ->getQuery()
+            ->getResult();
+        
+        $data = [];
+        foreach ($organs as $organ) {
+            $data[] = [
+                'uuid' => $organ->getUuid(),
+                'title' => $organ->getTitle(),
+                'description' => $organ->getDescription(),
+                'deletedAt' => $organ->getDeletedAt()->format(\DateTimeInterface::ATOM),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
     #[Route('/{organUuid}', name: 'show', methods: ['GET'])]
     public function show(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -147,10 +192,14 @@ class OrganController extends AbstractController
     public function update(string $projectUuid, string $organUuid, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
-        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project]);
 
         if (!$organ) {
             return $this->json(['message' => 'Organ not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($organ->getDeletedAt() !== null) {
+            return $this->json(['message' => 'Organ is deleted and cannot be updated'], Response::HTTP_FORBIDDEN);
         }
 
         /** @var User $user */
@@ -187,6 +236,43 @@ class OrganController extends AbstractController
         $entityManager->flush();
 
         return $this->json(['message' => 'Organ updated']);
+    }
+
+    #[Route('/{organUuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project]);
+
+        if (!$organ) {
+            return $this->json(['message' => 'Organ not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($organ->getDeletedAt() === null) {
+            return $this->json(['message' => 'Organ is not deleted'], Response::HTTP_BAD_REQUEST);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        
+        // Only Project ADMIN or MANAGER can restore an organ
+        $projectMember = $entityManager->getRepository(ProjectMember::class)->findOneBy([
+            'project' => $project,
+            'user' => $user,
+            'deletedAt' => null
+        ]);
+
+        if (!$projectMember || !in_array($projectMember->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return $this->json(['message' => 'Insufficient permissions'], Response::HTTP_FORBIDDEN);
+        }
+
+        $organ->setDeletedAt(null);
+        $entityManager->flush();
+
+        return $this->json([
+            'uuid' => $organ->getUuid(),
+            'title' => $organ->getTitle()
+        ]);
     }
 
     #[Route('/{organUuid}/permissions', name: 'permissions', methods: ['GET'])]

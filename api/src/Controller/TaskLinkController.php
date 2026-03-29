@@ -64,6 +64,10 @@ class TaskLinkController extends AbstractController
 
         if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
 
+        if ($task->getDeletedAt() !== null) {
+            return $this->json(['message' => 'Task is deleted and cannot be modified'], Response::HTTP_FORBIDDEN);
+        }
+
         /** @var User $user */
         $user = $this->getUser();
         if (!$this->taskService->can($user, $task, 'TASK_LINK_MANAGE')) {
@@ -110,5 +114,66 @@ class TaskLinkController extends AbstractController
         $entityManager->flush();
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/trash', name: 'trash', methods: ['GET'], priority: 1)]
+    public function trash(string $projectUuid, string $organUuid, string $taskUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+
+        if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $links = $entityManager->getRepository(TaskLink::class)->createQueryBuilder('l')
+            ->where('l.task = :task')
+            ->andWhere('l.deletedAt IS NOT NULL')
+            ->setParameter('task', $task)
+            ->getQuery()
+            ->getResult();
+        
+        $data = [];
+        foreach ($links as $link) {
+            $data[] = [
+                'uuid' => $link->getUuid(),
+                'url' => $link->getUrl(),
+                'description' => $link->getDescription(),
+                'deletedAt' => $link->getDeletedAt()->format(\DateTimeInterface::ATOM),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/{linkUuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $projectUuid, string $organUuid, string $taskUuid, string $linkUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+        $link = $entityManager->getRepository(TaskLink::class)->findOneBy(['uuid' => $linkUuid, 'task' => $task]);
+
+        if (!$link) return $this->json(['message' => 'Link not found'], Response::HTTP_NOT_FOUND);
+        if ($link->getDeletedAt() === null) return $this->json(['message' => 'Link is not deleted'], Response::HTTP_BAD_REQUEST);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->taskService->can($user, $task, 'TASK_LINK_MANAGE')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $link->setDeletedAt(null);
+        $entityManager->flush();
+
+        return $this->json([
+            'uuid' => $link->getUuid(),
+            'url' => $link->getUrl()
+        ]);
     }
 }

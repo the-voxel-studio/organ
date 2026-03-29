@@ -49,14 +49,75 @@ class TaskDependencyController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('', name: 'add', methods: ['POST'])]
-    public function add(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/trash', name: 'trash', methods: ['GET'])]
+    public function trash(string $projectUuid, string $organUuid, string $taskUuid, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
         $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
 
         if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+
+        $dependencies = $entityManager->getRepository(TaskDependency::class)->createQueryBuilder('d')
+            ->where('d.task = :task')
+            ->andWhere('d.deletedAt IS NOT NULL')
+            ->setParameter('task', $task)
+            ->getQuery()
+            ->getResult();
+        
+        $data = [];
+        foreach ($dependencies as $dep) {
+            $depOn = $dep->getDependsOnTask();
+            $data[] = [
+                'uuid' => $dep->getUuid(),
+                'dependsOnTaskUuid' => $depOn->getUuid(),
+                'title' => $depOn->getTitle(),
+                'status' => $depOn->getStatus()->value,
+                'deletedAt' => $dep->getDeletedAt()->format(\DateTimeInterface::ATOM),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/{depUuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $projectUuid, string $organUuid, string $taskUuid, string $depUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+        $dep = $entityManager->getRepository(TaskDependency::class)->findOneBy(['uuid' => $depUuid, 'task' => $task]);
+
+        if (!$dep) return $this->json(['message' => 'Dependency not found'], Response::HTTP_NOT_FOUND);
+
+        if ($dep->getDeletedAt() === null) {
+            return $this->json(['message' => 'Dependency is not deleted'], Response::HTTP_BAD_REQUEST);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->taskService->can($user, $task, 'TASK_DEPENDENCY_MANAGE')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $dep->setDeletedAt(null);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Dependency restored successfully']);
+    }
+
+    #[Route('', name: 'add', methods: ['POST'])]
+    public function add(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ]);
+
+        if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+
+        if ($task->getDeletedAt() !== null) {
+            return $this->json(['message' => 'Task is deleted and cannot be modified'], Response::HTTP_FORBIDDEN);
+        }
 
         /** @var User $user */
         $user = $this->getUser();

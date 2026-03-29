@@ -70,4 +70,115 @@ class TagController extends AbstractController
             'color' => $tag->getColor(),
         ], Response::HTTP_CREATED);
     }
+
+    #[Route('/trash', name: 'trash', methods: ['GET'])]
+    public function trash(string $projectUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $user, 'deletedAt' => null]);
+
+        if (!$membership || !in_array($membership->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $tags = $entityManager->getRepository(Tag::class)->findBy(['project' => $project]);
+        
+        $data = [];
+        foreach ($tags as $tag) {
+            if ($tag->getDeletedAt() !== null) {
+                $data[] = [
+                    'uuid' => $tag->getUuid(),
+                    'name' => $tag->getName(),
+                    'color' => $tag->getColor(),
+                    'deletedAt' => $tag->getDeletedAt()->format(\DateTimeInterface::ATOM),
+                ];
+            }
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/{tagUuid}', name: 'update', methods: ['PUT', 'PATCH'])]
+    public function update(string $projectUuid, string $tagUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        $tag = $entityManager->getRepository(Tag::class)->findOneBy(['uuid' => $tagUuid, 'project' => $project]);
+        if (!$tag) return $this->json(['message' => 'Tag not found'], Response::HTTP_NOT_FOUND);
+
+        if ($tag->getDeletedAt() !== null) {
+            return $this->json(['message' => 'Tag is deleted and cannot be updated'], Response::HTTP_FORBIDDEN);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $user, 'deletedAt' => null]);
+
+        if (!$membership || !in_array($membership->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (isset($data['name'])) $tag->setName($data['name']);
+        if (isset($data['color'])) $tag->setColor($data['color']);
+
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Tag updated']);
+    }
+
+    #[Route('/{tagUuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $projectUuid, string $tagUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        $tag = $entityManager->getRepository(Tag::class)->findOneBy(['uuid' => $tagUuid, 'project' => $project]);
+        if (!$tag) return $this->json(['message' => 'Tag not found'], Response::HTTP_NOT_FOUND);
+
+        if ($tag->getDeletedAt() === null) {
+            return $this->json(['message' => 'Tag is not deleted'], Response::HTTP_BAD_REQUEST);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $user, 'deletedAt' => null]);
+
+        if (!$membership || !in_array($membership->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $tag->setDeletedAt(null);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Tag restored']);
+    }
+
+    #[Route('/{tagUuid}', name: 'delete', methods: ['DELETE'])]
+    public function delete(string $projectUuid, string $tagUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        $tag = $entityManager->getRepository(Tag::class)->findOneBy(['uuid' => $tagUuid, 'project' => $project, 'deletedAt' => null]);
+        if (!$tag) return $this->json(['message' => 'Tag not found'], Response::HTTP_NOT_FOUND);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $user, 'deletedAt' => null]);
+
+        if (!$membership || !in_array($membership->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $tag->setDeletedAt(new \DateTime());
+        $entityManager->flush();
+
+        return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
 }

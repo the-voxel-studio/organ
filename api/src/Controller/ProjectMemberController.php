@@ -53,6 +53,37 @@ class ProjectMemberController extends AbstractController
         return $this->json($data);
     }
 
+    #[Route('/trash', name: 'trash', methods: ['GET'])]
+    public function trash(string $projectUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        $this->checkAccess($project, $entityManager, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER]);
+
+        $memberships = $entityManager->getRepository(ProjectMember::class)->createQueryBuilder('pm')
+            ->where('pm.project = :project')
+            ->andWhere('pm.deletedAt IS NOT NULL')
+            ->setParameter('project', $project)
+            ->getQuery()
+            ->getResult();
+        
+        $data = [];
+        foreach ($memberships as $membership) {
+            $user = $membership->getUser();
+            if ($user) {
+                $data[] = [
+                    'uuid' => $membership->getUuid(),
+                    'user' => $this->userCacheService->getUserSummary($user),
+                    'role' => $membership->getGlobalRole()->value,
+                    'deletedAt' => $membership->getDeletedAt()->format(\DateTimeInterface::ATOM),
+                ];
+            }
+        }
+
+        return $this->json($data);
+    }
+
     #[Route('/invite', name: 'invite', methods: ['POST'])]
     public function invite(string $projectUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -123,8 +154,12 @@ class ProjectMemberController extends AbstractController
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $currentUserMember = $this->checkAccess($project, $entityManager, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER]);
 
-        $targetMember = $entityManager->getRepository(ProjectMember::class)->findOneBy(['uuid' => $memberUuid, 'project' => $project, 'deletedAt' => null]);
+        $targetMember = $entityManager->getRepository(ProjectMember::class)->findOneBy(['uuid' => $memberUuid, 'project' => $project]);
         if (!$targetMember) return $this->json(['message' => 'Member not found'], Response::HTTP_NOT_FOUND);
+
+        if ($targetMember->getDeletedAt() !== null) {
+            return $this->json(['message' => 'Member is deleted and cannot be updated'], Response::HTTP_FORBIDDEN);
+        }
 
         if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $targetMember->getGlobalRole() !== ProjectGlobalRole::MEMBER) {
             return $this->json(['message' => 'Managers can only manage users with MEMBER role'], Response::HTTP_FORBIDDEN);
@@ -175,6 +210,32 @@ class ProjectMemberController extends AbstractController
         $this->membershipService->invalidate($targetUserUuid, $project->getUuid());
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/{memberUuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $projectUuid, string $memberUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        $currentUserMember = $this->checkAccess($project, $entityManager, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER]);
+
+        $targetMember = $entityManager->getRepository(ProjectMember::class)->findOneBy(['uuid' => $memberUuid, 'project' => $project]);
+        if (!$targetMember) return $this->json(['message' => 'Member not found'], Response::HTTP_NOT_FOUND);
+
+        if ($targetMember->getDeletedAt() === null) {
+            return $this->json(['message' => 'Member is not deleted'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $targetMember->getGlobalRole() !== ProjectGlobalRole::MEMBER) {
+            return $this->json(['message' => 'Managers can only restore users with MEMBER role'], Response::HTTP_FORBIDDEN);
+        }
+
+        $targetMember->setDeletedAt(null);
+        $entityManager->flush();
+        $this->membershipService->invalidate($targetMember->getUser()->getUuid(), $project->getUuid());
+
+        return $this->json(['message' => 'Member restored successfully']);
     }
 
     private function checkAccess(?Project $project, EntityManagerInterface $entityManager, ?array $allowedRoles = null): ProjectMember

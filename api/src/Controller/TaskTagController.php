@@ -34,6 +34,10 @@ class TaskTagController extends AbstractController
 
         if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
 
+        if ($task->getDeletedAt() !== null) {
+            return $this->json(['message' => 'Task is deleted and cannot be modified'], Response::HTTP_FORBIDDEN);
+        }
+
         /** @var User $user */
         $user = $this->getUser();
         if (!$this->taskService->can($user, $task, 'TASK_TAG_MANAGE')) {
@@ -63,6 +67,63 @@ class TaskTagController extends AbstractController
         $entityManager->flush();
 
         return $this->json(['message' => 'Tag added successfully']);
+    }
+
+    #[Route('/trash', name: 'trash', methods: ['GET'])]
+    public function trash(string $projectUuid, string $organUuid, string $taskUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+
+        if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+
+        $taskTags = $entityManager->getRepository(TaskTag::class)->createQueryBuilder('tt')
+            ->join('tt.tag', 't')
+            ->where('tt.task = :task')
+            ->andWhere('tt.deletedAt IS NOT NULL')
+            ->setParameter('task', $task)
+            ->getQuery()
+            ->getResult();
+        
+        $data = [];
+        foreach ($taskTags as $tt) {
+            $data[] = [
+                'uuid' => $tt->getTag()->getUuid(),
+                'name' => $tt->getTag()->getName(),
+                'color' => $tt->getTag()->getColor(),
+                'deletedAt' => $tt->getDeletedAt()->format(\DateTimeInterface::ATOM),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/{tagUuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $projectUuid, string $organUuid, string $taskUuid, string $tagUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+        $tag = $entityManager->getRepository(Tag::class)->findOneBy(['uuid' => $tagUuid, 'project' => $project]);
+
+        if (!$task || !$tag) return $this->json(['message' => 'Resource not found'], Response::HTTP_NOT_FOUND);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->taskService->can($user, $task, 'TASK_TAG_MANAGE')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $taskTag = $entityManager->getRepository(TaskTag::class)->findOneBy(['task' => $task, 'tag' => $tag]);
+        if (!$taskTag || $taskTag->getDeletedAt() === null) {
+            return $this->json(['message' => 'Tag not deleted from this task'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $taskTag->setDeletedAt(null);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Tag restored successfully']);
     }
 
     #[Route('/{tagUuid}', name: 'remove', methods: ['DELETE'])]

@@ -143,6 +143,38 @@ class ProjectController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
+    #[Route('/trash', name: 'trash', methods: ['GET'])]
+    public function trash(EntityManagerInterface $entityManager, CacheInterface $cache): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // We find projects where the user is an ADMIN but the project is deleted
+        $queryBuilder = $entityManager->getRepository(ProjectMember::class)->createQueryBuilder('pm')
+            ->join('pm.project', 'p')
+            ->where('pm.user = :user')
+            ->andWhere('p.deletedAt IS NOT NULL')
+            ->andWhere('pm.globalRole = :role')
+            ->setParameter('user', $user)
+            ->setParameter('role', ProjectGlobalRole::ADMIN);
+        
+        $memberships = $queryBuilder->getQuery()->getResult();
+        
+        $projects = [];
+        foreach ($memberships as $membership) {
+            $project = $membership->getProject();
+            $projects[] = array_merge($this->getProjectSummary($project, $cache), [
+                'deletedAt' => $project->getDeletedAt()->format(\DateTimeInterface::ATOM)
+            ]);
+        }
+
+        return $this->json($projects);
+    }
+
     #[Route('/{uuid}', name: 'update', methods: ['PUT', 'PATCH'])]
     public function update(string $uuid, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, CacheInterface $cache): JsonResponse
     {
@@ -153,10 +185,14 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid]);
 
         if (!$project) {
             return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($project->getDeletedAt() !== null) {
+            return $this->json(['message' => 'Project is deleted and cannot be updated'], Response::HTTP_FORBIDDEN);
         }
 
         $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project, 'deletedAt' => null]);
@@ -215,6 +251,46 @@ class ProjectController extends AbstractController
             'title' => $project->getTitle(),
             'status' => $project->getStatus()->value,
         ]);
+    }
+
+    #[Route('/{uuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $uuid, EntityManagerInterface $entityManager, CacheInterface $cache): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid]);
+
+        if (!$project) {
+            return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        if ($project->getDeletedAt() === null) {
+            return $this->json(['message' => 'Project is not deleted'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // To restore, we need an ADMIN membership, but since the project is deleted, the membership might be deleted too
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project]);
+
+        if (!$membership || $membership->getGlobalRole() !== ProjectGlobalRole::ADMIN) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $project->setDeletedAt(null);
+        
+        // Restore ADMIN membership if it was deleted during project deletion
+        if ($membership->getDeletedAt() !== null) {
+            $membership->setDeletedAt(null);
+        }
+
+        $entityManager->flush();
+        $cache->delete(self::CACHE_PREFIX . $uuid);
+
+        return $this->json($this->getProjectSummary($project, $cache));
     }
 
     #[Route('/{uuid}/permissions', name: 'permissions', methods: ['GET'])]

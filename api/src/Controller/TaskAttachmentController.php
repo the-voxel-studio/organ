@@ -70,6 +70,10 @@ class TaskAttachmentController extends AbstractController
 
         if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
 
+        if ($task->getDeletedAt() !== null) {
+            return $this->json(['message' => 'Task is deleted and cannot be modified'], Response::HTTP_FORBIDDEN);
+        }
+
         /** @var User $user */
         $user = $this->getUser();
         if (!$this->taskService->can($user, $task, 'ATTACHMENT_ADD')) {
@@ -123,5 +127,73 @@ class TaskAttachmentController extends AbstractController
         $entityManager->flush();
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[Route('/trash', name: 'trash', methods: ['GET'], priority: 1)]
+    public function trash(string $projectUuid, string $organUuid, string $taskUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+
+        if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $attachments = $entityManager->getRepository(TaskAttachment::class)->createQueryBuilder('a')
+            ->where('a.task = :task')
+            ->andWhere('a.deletedAt IS NOT NULL')
+            ->setParameter('task', $task)
+            ->getQuery()
+            ->getResult();
+        
+        $data = [];
+        foreach ($attachments as $att) {
+            $data[] = [
+                'uuid' => $att->getUuid(),
+                'fileName' => $att->getFileName(),
+                'fileSize' => $att->getFileSize(),
+                'fileType' => $att->getFileType(),
+                'uploadedBy' => $this->userCacheService->getUserSummary($att->getUploadedBy()),
+                'deletedAt' => $att->getDeletedAt()->format(\DateTimeInterface::ATOM),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    #[Route('/{attachmentUuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $projectUuid, string $organUuid, string $taskUuid, string $attachmentUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+        $attachment = $entityManager->getRepository(TaskAttachment::class)->findOneBy(['uuid' => $attachmentUuid, 'task' => $task]);
+
+        if (!$attachment) return $this->json(['message' => 'Attachment not found'], Response::HTTP_NOT_FOUND);
+        if ($attachment->getDeletedAt() === null) return $this->json(['message' => 'Attachment is not deleted'], Response::HTTP_BAD_REQUEST);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        
+        $isOwner = ($attachment->getUploadedBy() === $user);
+        $permAll = $this->permissionService->hasPermission($user, $organ, 'ATTACHMENT_DELETE_ALL');
+        $permOwn = $isOwner && $this->permissionService->hasPermission($user, $organ, 'ATTACHMENT_DELETE_OWN');
+
+        if (!$permAll && !$permOwn) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $attachment->setDeletedAt(null);
+        $entityManager->flush();
+
+        return $this->json([
+            'uuid' => $attachment->getUuid(),
+            'fileName' => $attachment->getFileName()
+        ]);
     }
 }
