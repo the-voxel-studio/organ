@@ -31,10 +31,14 @@ class OrganPermissionService
      */
     public function hasPermission(User $user, Organ $organ, string $permissionName): bool
     {
-        // 1. Project ADMIN has all permissions (Master key) - NOW CACHED
         $globalRole = $this->membershipService->getGlobalRole($user, $organ->getProject());
 
         if ($globalRole === ProjectGlobalRole::ADMIN) {
+            return true;
+        }
+
+        // 2. Project MANAGER has VIEW permission (indiscreet viewer)
+        if ($globalRole === ProjectGlobalRole::MANAGER && $permissionName === 'ORGAN_VIEW') {
             return true;
         }
 
@@ -42,7 +46,7 @@ class OrganPermissionService
             return false;
         }
 
-        // 2. Aggregate permissions from all user's roles in this organ
+        // 3. Aggregate permissions from all user's roles in this organ
         $userRoles = $this->getUserRolesInOrgan($user, $organ);
         
         foreach ($userRoles as $role) {
@@ -53,6 +57,30 @@ class OrganPermissionService
         }
 
         return false;
+    }
+
+    /**
+     * Get all permissions for a user in an organ.
+     */
+    public function getOrganPermissions(User $user, Organ $organ): array
+    {
+        $globalRole = $this->membershipService->getGlobalRole($user, $organ->getProject());
+
+        if ($globalRole === ProjectGlobalRole::ADMIN) {
+            return ['ALL']; // Or list all possible permissions
+        }
+
+        $permissions = [];
+        if ($globalRole === ProjectGlobalRole::MANAGER) {
+            $permissions[] = 'ORGAN_VIEW';
+        }
+
+        $userRoles = $this->getUserRolesInOrgan($user, $organ);
+        foreach ($userRoles as $role) {
+            $permissions = array_merge($permissions, $this->getRolePermissions($role));
+        }
+
+        return array_values(array_unique($permissions));
     }
 
     /**
