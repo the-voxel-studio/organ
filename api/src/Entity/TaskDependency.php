@@ -6,7 +6,6 @@ namespace App\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'task_dependencies')]
@@ -17,9 +16,6 @@ class TaskDependency
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
-    #[ORM\Column(length: 36, unique: true)]
-    private string $uuid;
 
     #[ORM\ManyToOne(targetEntity: Task::class)]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -32,25 +28,9 @@ class TaskDependency
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $deletedAt = null;
 
-    public function __construct()
-    {
-        $this->uuid = Uuid::v4()->toRfc4122();
-    }
-
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getUuid(): string
-    {
-        return $this->uuid;
-    }
-
-    public function setUuid(string $uuid): static
-    {
-        $this->uuid = $uuid;
-        return $this;
     }
 
     public function getTask(): ?Task

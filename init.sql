@@ -71,7 +71,7 @@ CREATE TABLE project_members (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL,
     user_id INT NOT NULL,
-    global_role VARCHAR(255) NOT NULL DEFAULT 'MEMBER', -- ADMIN MANAGER MEMBER 
+    global_role VARCHAR(255) DEFAULT 'MEMBER' NOT NULL COMMENT 'ADMIN, MANAGER, MEMBER', -- ADMIN MANAGER MEMBER 
     UNIQUE KEY (project_id, user_id),
     deleted_at DATETIME NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
@@ -103,7 +103,7 @@ CREATE TABLE organs (
     project_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
     description LONGTEXT NULL,
-    icon_type VARCHAR(255) NOT NULL DEFAULT 'emoji',
+    icon_type VARCHAR(255) DEFAULT 'EMOJI' NOT NULL COMMENT 'SVG, BLOB, EMOJI',
     icon_data LONGTEXT NULL,
     highlight_color VARCHAR(9) DEFAULT '#000000' NOT NULL, 
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -129,7 +129,6 @@ CREATE TABLE organ_links (
 -- =========================================================================
 CREATE TABLE permissions (
     id SMALLINT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
@@ -144,18 +143,15 @@ CREATE TABLE organ_roles (
 );
 
 CREATE TABLE organ_role_permissions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     role_id INT NOT NULL,
     permission_id SMALLINT NOT NULL,
-    UNIQUE KEY (role_id, permission_id),
+    PRIMARY KEY(role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES organ_roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
 );
 
 CREATE TABLE user_organ_roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     user_id INT NOT NULL,
     role_id INT NOT NULL,
     UNIQUE KEY (user_id, role_id),
@@ -203,7 +199,6 @@ CREATE TABLE tasks (
 -- =========================================================================
 CREATE TABLE task_assignees (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     user_id INT NOT NULL,
     UNIQUE KEY (task_id, user_id),
@@ -277,7 +272,6 @@ CREATE TABLE tags (
 -- =========================================================================
 CREATE TABLE task_tags (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     tag_id INT NOT NULL,
     UNIQUE KEY (task_id, tag_id),
@@ -291,7 +285,6 @@ CREATE TABLE task_tags (
 -- =========================================================================
 CREATE TABLE task_dependencies (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     depends_on_task_id INT NOT NULL,
     UNIQUE KEY (task_id, depends_on_task_id),
@@ -349,38 +342,38 @@ CREATE INDEX idx_project_members_deleted_at ON project_members (deleted_at);
 -- =========================================================================
 -- PERMISSIONS GENERALES
 -- =========================================================================
-INSERT INTO permissions (uuid, name) VALUES 
-(UUID(), 'ORGAN_VIEW'),
-(UUID(), 'ORGAN_EDIT'),
-(UUID(), 'ORGAN_MANAGE_ROLES'),
-(UUID(), 'ORGAN_LINK_MANAGE'),
-(UUID(), 'TASK_CREATE'),
-(UUID(), 'TASK_EDIT_OWN'),
-(UUID(), 'TASK_EDIT_ALL'),
-(UUID(), 'TASK_DELETE_OWN'),
-(UUID(), 'TASK_DELETE_ALL'),
-(UUID(), 'TASK_STATUS_CHANGE_OWN'),
-(UUID(), 'TASK_STATUS_CHANGE_ALL'),
-(UUID(), 'TASK_PRIORITY_CHANGE_OWN'),
-(UUID(), 'TASK_PRIORITY_CHANGE_ALL'),
-(UUID(), 'TASK_DATES_MANAGE_OWN'),
-(UUID(), 'TASK_DATES_MANAGE_ALL'),
-(UUID(), 'TASK_ESTIMATE_MANAGE_OWN'),
-(UUID(), 'TASK_ESTIMATE_MANAGE_ALL'),
-(UUID(), 'TASK_ASSIGN_SELF'),
-(UUID(), 'TASK_ASSIGN_OTHERS'),
-(UUID(), 'TASK_VALIDATE'),
-(UUID(), 'TASK_LINK_MANAGE_OWN'),
-(UUID(), 'TASK_LINK_MANAGE_ALL'),
-(UUID(), 'TASK_TAG_MANAGE_OWN'),
-(UUID(), 'TASK_TAG_MANAGE_ALL'),
-(UUID(), 'TASK_DEPENDENCY_MANAGE_OWN'),
-(UUID(), 'TASK_DEPENDENCY_MANAGE_ALL'),
-(UUID(), 'COMMENT_CREATE'),
-(UUID(), 'COMMENT_EDIT_OWN'),
-(UUID(), 'COMMENT_EDIT_ALL'),
-(UUID(), 'COMMENT_DELETE_OWN'),
-(UUID(), 'COMMENT_DELETE_ALL'),
-(UUID(), 'ATTACHMENT_ADD'),
-(UUID(), 'ATTACHMENT_DELETE_OWN'),
-(UUID(), 'ATTACHMENT_DELETE_ALL');
+INSERT INTO permissions (name) VALUES 
+('ORGAN_VIEW'),
+('ORGAN_EDIT'),
+('ORGAN_MANAGE_ROLES'),
+('ORGAN_LINK_MANAGE'),
+('TASK_CREATE'),
+('TASK_EDIT_OWN'),
+('TASK_EDIT_ALL'),
+('TASK_DELETE_OWN'),
+('TASK_DELETE_ALL'),
+('TASK_STATUS_CHANGE_OWN'),
+('TASK_STATUS_CHANGE_ALL'),
+('TASK_PRIORITY_CHANGE_OWN'),
+('TASK_PRIORITY_CHANGE_ALL'),
+('TASK_DATES_MANAGE_OWN'),
+('TASK_DATES_MANAGE_ALL'),
+('TASK_ESTIMATE_MANAGE_OWN'),
+('TASK_ESTIMATE_MANAGE_ALL'),
+('TASK_ASSIGN_SELF'),
+('TASK_ASSIGN_OTHERS'),
+('TASK_VALIDATE'),
+('TASK_LINK_MANAGE_OWN'),
+('TASK_LINK_MANAGE_ALL'),
+('TASK_TAG_MANAGE_OWN'),
+('TASK_TAG_MANAGE_ALL'),
+('TASK_DEPENDENCY_MANAGE_OWN'),
+('TASK_DEPENDENCY_MANAGE_ALL'),
+('COMMENT_CREATE'),
+('COMMENT_EDIT_OWN'),
+('COMMENT_EDIT_ALL'),
+('COMMENT_DELETE_OWN'),
+('COMMENT_DELETE_ALL'),
+('ATTACHMENT_ADD'),
+('ATTACHMENT_DELETE_OWN'),
+('ATTACHMENT_DELETE_ALL');

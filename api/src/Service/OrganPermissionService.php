@@ -64,8 +64,8 @@ class OrganPermissionService
             $item->expiresAfter(self::CACHE_TTL);
             
             $permissions = [];
-            foreach ($role->getPermissions() as $rolePerm) {
-                $permissions[] = $rolePerm->getPermission()->getName();
+            foreach ($role->getPermissions() as $permission) {
+                $permissions[] = $permission->getName();
             }
             
             return $permissions;

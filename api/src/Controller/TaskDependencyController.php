@@ -39,7 +39,6 @@ class TaskDependencyController extends AbstractController
         foreach ($dependencies as $dep) {
             $depOn = $dep->getDependsOnTask();
             $data[] = [
-                'uuid' => $dep->getUuid(),
                 'dependsOnTaskUuid' => $depOn->getUuid(),
                 'title' => $depOn->getTitle(),
                 'status' => $depOn->getStatus()->value,
@@ -69,7 +68,6 @@ class TaskDependencyController extends AbstractController
         foreach ($dependencies as $dep) {
             $depOn = $dep->getDependsOnTask();
             $data[] = [
-                'uuid' => $dep->getUuid(),
                 'dependsOnTaskUuid' => $depOn->getUuid(),
                 'title' => $depOn->getTitle(),
                 'status' => $depOn->getStatus()->value,
@@ -80,13 +78,17 @@ class TaskDependencyController extends AbstractController
         return $this->json($data);
     }
 
-    #[Route('/{depUuid}/restore', name: 'restore', methods: ['POST'])]
-    public function restore(string $projectUuid, string $organUuid, string $taskUuid, string $depUuid, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/{targetTaskUuid}/restore', name: 'restore', methods: ['POST'])]
+    public function restore(string $projectUuid, string $organUuid, string $taskUuid, string $targetTaskUuid, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
         $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
-        $dep = $entityManager->getRepository(TaskDependency::class)->findOneBy(['uuid' => $depUuid, 'task' => $task]);
+        
+        $targetTask = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $targetTaskUuid, 'organ' => $organ]);
+        if (!$targetTask) return $this->json(['message' => 'Target task not found'], Response::HTTP_NOT_FOUND);
+
+        $dep = $entityManager->getRepository(TaskDependency::class)->findOneBy(['task' => $task, 'dependsOnTask' => $targetTask]);
 
         if (!$dep) return $this->json(['message' => 'Dependency not found'], Response::HTTP_NOT_FOUND);
 
@@ -152,13 +154,17 @@ class TaskDependencyController extends AbstractController
         return $this->json(['message' => 'Dependency added successfully']);
     }
 
-    #[Route('/{depUuid}', name: 'remove', methods: ['DELETE'])]
-    public function remove(string $projectUuid, string $organUuid, string $taskUuid, string $depUuid, EntityManagerInterface $entityManager): JsonResponse
+    #[Route('/{targetTaskUuid}', name: 'remove', methods: ['DELETE'])]
+    public function remove(string $projectUuid, string $organUuid, string $taskUuid, string $targetTaskUuid, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
         $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
-        $dep = $entityManager->getRepository(TaskDependency::class)->findOneBy(['uuid' => $depUuid, 'task' => $task, 'deletedAt' => null]);
+
+        $targetTask = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $targetTaskUuid, 'organ' => $organ]);
+        if (!$targetTask) return $this->json(['message' => 'Target task not found'], Response::HTTP_NOT_FOUND);
+
+        $dep = $entityManager->getRepository(TaskDependency::class)->findOneBy(['task' => $task, 'dependsOnTask' => $targetTask, 'deletedAt' => null]);
 
         if (!$dep) return $this->json(['message' => 'Dependency not found'], Response::HTTP_NOT_FOUND);
 

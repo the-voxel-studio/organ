@@ -21,7 +21,6 @@ class PermissionController extends AbstractController
         $data = [];
         foreach ($permissions as $perm) {
             $data[] = [
-                'uuid' => $perm->getUuid(),
                 'name' => $perm->getName(),
             ];
         }

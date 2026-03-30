@@ -6,7 +6,6 @@ namespace App\Controller;
 
 use App\Entity\Organ;
 use App\Entity\OrganRole;
-use App\Entity\OrganRolePermission;
 use App\Entity\Permission;
 use App\Entity\Project;
 use App\Entity\User;
@@ -122,10 +121,7 @@ class OrganRoleController extends AbstractController
             foreach ($data['permissions'] as $permName) {
                 $permission = $entityManager->getRepository(Permission::class)->findOneBy(['name' => $permName]);
                 if ($permission) {
-                    $rp = new OrganRolePermission();
-                    $rp->setRole($role);
-                    $rp->setPermission($permission);
-                    $entityManager->persist($rp);
+                    $role->addPermission($permission);
                 }
             }
         }

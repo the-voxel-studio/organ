@@ -36,7 +36,6 @@ class UserController extends AbstractController
         $this->userCacheService->getUserSummary($user);
 
         return $this->json([
-            'id' => $user->getId(),
             'uuid' => $user->getUuid(),
             'email' => $user->getEmail(),
             'firstName' => $user->getFirstName(),
