@@ -48,28 +48,38 @@ class OrganController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $fetcher = function () use ($entityManager, $project, $projectMember, $user) {
+        $fetcher = function () use ($entityManager, $project) {
             $organs = $entityManager->getRepository(Organ::class)->findBy(['project' => $project, 'deletedAt' => null]);
             
             $data = [];
             foreach ($organs as $organ) {
-                // Optional: only show organs where user has ORGAN_VIEW or is Project ADMIN/MANAGER
-                if ($projectMember->getGlobalRole() !== ProjectGlobalRole::MEMBER || $this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
-                    $data[] = [
-                        'uuid' => $organ->getUuid(),
-                        'title' => $organ->getTitle(),
-                        'description' => $organ->getDescription(),
-                        'iconType' => $organ->getIconType()->value,
-                        'iconData' => $organ->getIconData(),
-                        'highlightColor' => $organ->getHighlightColor(),
-                    ];
-                }
+                $data[] = [
+                    'uuid' => $organ->getUuid(),
+                    'title' => $organ->getTitle(),
+                    'description' => $organ->getDescription(),
+                    'iconType' => $organ->getIconType()->value,
+                    'iconData' => $organ->getIconData(),
+                    'highlightColor' => $organ->getHighlightColor(),
+                ];
             }
             return $data;
         };
 
-        // Cache the full list (warning: this is project-wide, if permissions change frequently it might be better to cache individual organ summaries)
-        return $this->json($this->organCacheService->getOrganList($project, $fetcher));
+        // Cache the full list (project-wide)
+        $fullList = $this->organCacheService->getOrganList($project, $fetcher);
+
+        // Filter the list based on user permissions
+        $filteredData = [];
+        foreach ($fullList as $organData) {
+            // We need to re-fetch the organ entity or use a proxy to check permissions if we don't want to rely on the cache alone
+            // But for performance, we can assume the entity is needed for hasPermission
+            $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organData['uuid']]);
+            if ($organ && ($projectMember->getGlobalRole() !== ProjectGlobalRole::MEMBER || $this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW'))) {
+                $filteredData[] = $organData;
+            }
+        }
+
+        return $this->json($filteredData);
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
@@ -337,6 +347,19 @@ class OrganController extends AbstractController
                   AND pr.uuid = :projectUuid 
                   AND pm.global_role = 'ADMIN' 
                   AND pm.deleted_at IS NULL
+
+                UNION
+
+                -- Check Project MANAGER for ORGAN_VIEW
+                SELECT 1 
+                FROM project_members pm
+                JOIN projects pr ON pm.project_id = pr.id
+                JOIN users u ON pm.user_id = u.id
+                WHERE u.uuid = :userUuid 
+                  AND pr.uuid = :projectUuid 
+                  AND pm.global_role = 'MANAGER' 
+                  AND :permName = 'ORGAN_VIEW'
+                  AND pm.deleted_at IS NULL
                 
                 UNION
                 
@@ -370,14 +393,18 @@ class OrganController extends AbstractController
     #[Route('/{organUuid}/ready-tasks', name: 'ready_tasks', methods: ['GET'])]
     public function readyTasks(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
     {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+
+        if (!$organ) {
+            return $this->json(['message' => 'Organ not found'], Response::HTTP_NOT_FOUND);
+        }
+
         /** @var User $user */
         $user = $this->getUser();
-
-        /*
-        // VERSION SYMFONY PROPRE (ORM) :
-        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid]);
-        $tasks = $entityManager->getRepository(Task::class)->findBy(['organ' => $organ, 'status' => 'TODO']);
-        */
+        if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
 
         // VERSION SQL PURE (SI40 PRE-REQUIS : NOT EXISTS + AUTO-JOINTURE + JOIN UUID) :
         $conn = $entityManager->getConnection();

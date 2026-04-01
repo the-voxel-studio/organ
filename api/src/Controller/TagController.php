@@ -30,6 +30,14 @@ class TagController extends AbstractController
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
 
+        /** @var User $user */
+        $user = $this->getUser();
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $user, 'deletedAt' => null]);
+
+        if (!$membership) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
         $fetcher = function () use ($entityManager, $project) {
             $tags = $entityManager->getRepository(Tag::class)->findBy(['project' => $project, 'deletedAt' => null]);
             

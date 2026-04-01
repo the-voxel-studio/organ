@@ -110,7 +110,7 @@ class ProjectDriveConfigController extends AbstractController
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 
-    private function checkAccess(?Project $project, EntityManagerInterface $entityManager, array $allowedRoles = null): void
+    private function checkAccess(?Project $project, EntityManagerInterface $entityManager, ?array $allowedRoles = null): void
     {
         if (!$project) {
             throw $this->createNotFoundException('Project not found');
