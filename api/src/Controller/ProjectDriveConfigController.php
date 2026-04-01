@@ -9,6 +9,7 @@ use App\Entity\ProjectDriveConfig;
 use App\Entity\ProjectMember;
 use App\Entity\User;
 use App\Enum\ProjectGlobalRole;
+use App\Service\ProjectDriveCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,24 +20,37 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/projects/{projectUuid}/drive-config', name: 'project_drive_config_')]
 class ProjectDriveConfigController extends AbstractController
 {
+    public function __construct(
+        private readonly ProjectDriveCacheService $driveCacheService
+    ) {}
+
     #[Route('', name: 'show', methods: ['GET'])]
     public function show(string $projectUuid, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $this->checkAccess($project, $entityManager, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER]);
 
-        $config = $entityManager->getRepository(ProjectDriveConfig::class)->findOneBy(['project' => $project]);
+        $fetcher = function () use ($entityManager, $project) {
+            $config = $entityManager->getRepository(ProjectDriveConfig::class)->findOneBy(['project' => $project]);
 
-        if (!$config) {
-            return $this->json(['message' => 'No Drive configuration found'], Response::HTTP_NOT_FOUND);
+            if (!$config) {
+                return ['message' => 'No Drive configuration found', 'status' => Response::HTTP_NOT_FOUND];
+            }
+
+            return [
+                'uuid' => $config->getUuid(),
+                'driveFolderId' => $config->getDriveFolderId(),
+                'isActive' => $config->isActive(),
+            ];
+        };
+
+        $result = $this->driveCacheService->getDriveConfig($project, $fetcher);
+
+        if (isset($result['status']) && $result['status'] === Response::HTTP_NOT_FOUND) {
+            return $this->json(['message' => $result['message']], Response::HTTP_NOT_FOUND);
         }
 
-        return $this->json([
-            'uuid' => $config->getUuid(),
-            'driveFolderId' => $config->getDriveFolderId(),
-            'isActive' => $config->isActive(),
-            // We do NOT return the encrypted refresh token for security reasons
-        ]);
+        return $this->json($result);
     }
 
     #[Route('', name: 'update', methods: ['PUT', 'POST'])]
@@ -68,6 +82,9 @@ class ProjectDriveConfigController extends AbstractController
 
         $entityManager->flush();
 
+        // Invalidate cache
+        $this->driveCacheService->invalidate($projectUuid);
+
         return $this->json([
             'uuid' => $config->getUuid(),
             'message' => 'Drive configuration saved successfully'
@@ -86,6 +103,9 @@ class ProjectDriveConfigController extends AbstractController
             $entityManager->remove($config);
             $entityManager->flush();
         }
+
+        // Invalidate cache
+        $this->driveCacheService->invalidate($projectUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

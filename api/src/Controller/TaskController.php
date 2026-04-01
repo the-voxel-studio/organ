@@ -13,6 +13,7 @@ use App\Enum\TaskStatus;
 use App\Service\OrganPermissionService;
 use App\Service\TaskService;
 use App\Service\UserCacheService;
+use App\Service\TaskCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,7 +28,8 @@ class TaskController extends AbstractController
     public function __construct(
         private readonly TaskService $taskService,
         private readonly OrganPermissionService $permissionService,
-        private readonly UserCacheService $userCacheService
+        private readonly UserCacheService $userCacheService,
+        private readonly TaskCacheService $taskCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -46,14 +48,17 @@ class TaskController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $tasks = $entityManager->getRepository(Task::class)->findBy(['organ' => $organ, 'deletedAt' => null]);
-        
-        $data = [];
-        foreach ($tasks as $task) {
-            $data[] = $this->taskService->getTaskData($task, $this->userCacheService);
-        }
+        $fetcher = function () use ($entityManager, $organ) {
+            $tasks = $entityManager->getRepository(Task::class)->findBy(['organ' => $organ, 'deletedAt' => null]);
+            
+            $data = [];
+            foreach ($tasks as $task) {
+                $data[] = $this->taskService->getTaskData($task, $this->userCacheService);
+            }
+            return $data;
+        };
 
-        return $this->json($data);
+        return $this->json($this->taskCacheService->getTaskList($organ, $fetcher));
     }
 
     #[Route('/trash', name: 'trash', methods: ['GET'])]
@@ -131,6 +136,9 @@ class TaskController extends AbstractController
         $entityManager->persist($task);
         $entityManager->flush();
 
+        // Invalidate list cache
+        $this->taskCacheService->invalidateList($organUuid);
+
         return $this->json($this->taskService->getTaskData($task, $this->userCacheService), Response::HTTP_CREATED);
     }
 
@@ -151,7 +159,11 @@ class TaskController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        return $this->json($this->taskService->getTaskData($task, $this->userCacheService));
+        $summary = $this->taskCacheService->getTaskSummary($task, function () use ($task) {
+            return $this->taskService->getTaskData($task, $this->userCacheService);
+        });
+
+        return $this->json($summary);
     }
 
     #[Route('/{taskUuid}', name: 'update', methods: ['PUT', 'PATCH'])]
@@ -226,6 +238,10 @@ class TaskController extends AbstractController
         $task->setUpdatedAt(new \DateTime());
         $entityManager->flush();
 
+        // Invalidate cache
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
+
         return $this->json($this->taskService->getTaskData($task, $this->userCacheService));
     }
 
@@ -248,6 +264,10 @@ class TaskController extends AbstractController
 
         $task->setDeletedAt(new \DateTime());
         $entityManager->flush();
+
+        // Invalidate cache
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(['message' => 'Task deleted successfully']);
     }
@@ -277,6 +297,10 @@ class TaskController extends AbstractController
         $task->setDeletedAt(null);
         $task->setUpdatedAt(new \DateTime());
         $entityManager->flush();
+
+        // Invalidate cache
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json($this->taskService->getTaskData($task, $this->userCacheService));
     }
@@ -378,6 +402,10 @@ class TaskController extends AbstractController
         }
 
         $entityManager->flush();
+
+        // Invalidate cache
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(['message' => 'User assigned successfully']);
     }

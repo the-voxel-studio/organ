@@ -10,6 +10,7 @@ use App\Entity\ProjectMember;
 use App\Enum\IconType;
 use App\Enum\ProjectGlobalRole;
 use App\Enum\ProjectStatus;
+use App\Service\ProjectCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,17 +18,16 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 
 #[Route('/projects', name: 'projects_')]
 class ProjectController extends AbstractController
 {
-    private const CACHE_PREFIX = 'project_summary_';
-    private const CACHE_TTL = 3600; // 1 hour
+    public function __construct(
+        private readonly ProjectCacheService $projectCacheService
+    ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(EntityManagerInterface $entityManager, CacheInterface $cache): JsonResponse
+    public function index(EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -43,7 +43,7 @@ class ProjectController extends AbstractController
             $project = $membership->getProject();
             if ($project && $project->getDeletedAt() === null) {
                 // Fetch summary from cache or DB
-                $projects[] = $this->getProjectSummary($project, $cache);
+                $projects[] = $this->getProjectSummary($project);
             }
         }
 
@@ -51,7 +51,7 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{uuid}', name: 'show', methods: ['GET'])]
-    public function show(string $uuid, EntityManagerInterface $entityManager, CacheInterface $cache): JsonResponse
+    public function show(string $uuid, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -72,7 +72,7 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $summary = $this->getProjectSummary($project, $cache);
+        $summary = $this->getProjectSummary($project);
         
         // Detailed view adds description, createdAt and role
         return $this->json(array_merge($summary, [
@@ -83,7 +83,7 @@ class ProjectController extends AbstractController
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, CacheInterface $cache): JsonResponse
+    public function create(Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -134,7 +134,7 @@ class ProjectController extends AbstractController
         $entityManager->flush();
 
         // Optional: pre-warm cache
-        $this->getProjectSummary($project, $cache);
+        $this->getProjectSummary($project);
 
         return $this->json([
             'uuid' => $project->getUuid(),
@@ -144,7 +144,7 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/trash', name: 'trash', methods: ['GET'])]
-    public function trash(EntityManagerInterface $entityManager, CacheInterface $cache): JsonResponse
+    public function trash(EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -167,7 +167,7 @@ class ProjectController extends AbstractController
         $projects = [];
         foreach ($memberships as $membership) {
             $project = $membership->getProject();
-            $projects[] = array_merge($this->getProjectSummary($project, $cache), [
+            $projects[] = array_merge($this->getProjectSummary($project), [
                 'deletedAt' => $project->getDeletedAt()->format(\DateTimeInterface::ATOM)
             ]);
         }
@@ -176,7 +176,7 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{uuid}', name: 'update', methods: ['PUT', 'PATCH'])]
-    public function update(string $uuid, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator, CacheInterface $cache): JsonResponse
+    public function update(string $uuid, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -241,9 +241,9 @@ class ProjectController extends AbstractController
         $entityManager->flush();
 
         if ($needsInvalidation) {
-            $cache->delete(self::CACHE_PREFIX . $project->getUuid());
+            $this->projectCacheService->invalidate($project->getUuid());
             // Re-warm
-            $this->getProjectSummary($project, $cache);
+            $this->getProjectSummary($project);
         }
 
         return $this->json([
@@ -254,7 +254,7 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{uuid}/restore', name: 'restore', methods: ['POST'])]
-    public function restore(string $uuid, EntityManagerInterface $entityManager, CacheInterface $cache): JsonResponse
+    public function restore(string $uuid, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -288,9 +288,9 @@ class ProjectController extends AbstractController
         }
 
         $entityManager->flush();
-        $cache->delete(self::CACHE_PREFIX . $uuid);
+        $this->projectCacheService->invalidate($uuid);
 
-        return $this->json($this->getProjectSummary($project, $cache));
+        return $this->json($this->getProjectSummary($project));
     }
 
     #[Route('/{uuid}/permissions', name: 'permissions', methods: ['GET'])]
@@ -312,7 +312,7 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{uuid}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $uuid, EntityManagerInterface $entityManager, CacheInterface $cache): JsonResponse
+    public function delete(string $uuid, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -347,7 +347,7 @@ class ProjectController extends AbstractController
         $entityManager->flush();
 
         // Invalidate cache
-        $cache->delete(self::CACHE_PREFIX . $uuid);
+        $this->projectCacheService->invalidate($uuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
@@ -355,11 +355,9 @@ class ProjectController extends AbstractController
     /**
      * Get or set the project summary in cache.
      */
-    private function getProjectSummary(Project $project, CacheInterface $cache): array
+    private function getProjectSummary(Project $project): array
     {
-        return $cache->get(self::CACHE_PREFIX . $project->getUuid(), function (ItemInterface $item) use ($project) {
-            $item->expiresAfter(self::CACHE_TTL);
-            
+        return $this->projectCacheService->getProjectSummary($project, function () use ($project) {
             return [
                 'uuid' => $project->getUuid(),
                 'title' => $project->getTitle(),

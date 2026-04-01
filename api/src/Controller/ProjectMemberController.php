@@ -36,21 +36,24 @@ class ProjectMemberController extends AbstractController
 
         $this->checkAccess($project, $entityManager);
 
-        $memberships = $entityManager->getRepository(ProjectMember::class)->findBy(['project' => $project, 'deletedAt' => null]);
-        
-        $data = [];
-        foreach ($memberships as $membership) {
-            $user = $membership->getUser();
-            if ($user) {
-                $data[] = [
-                    'uuid' => $membership->getUuid(),
-                    'user' => $this->userCacheService->getUserSummary($user),
-                    'role' => $membership->getGlobalRole()->value,
-                ];
+        $fetcher = function () use ($entityManager, $project) {
+            $memberships = $entityManager->getRepository(ProjectMember::class)->findBy(['project' => $project, 'deletedAt' => null]);
+            
+            $data = [];
+            foreach ($memberships as $membership) {
+                $user = $membership->getUser();
+                if ($user) {
+                    $data[] = [
+                        'uuid' => $membership->getUuid(),
+                        'user' => $this->userCacheService->getUserSummary($user),
+                        'role' => $membership->getGlobalRole()->value,
+                    ];
+                }
             }
-        }
+            return $data;
+        };
 
-        return $this->json($data);
+        return $this->json($this->membershipService->getMemberList($project, $fetcher));
     }
 
     #[Route('/trash', name: 'trash', methods: ['GET'])]

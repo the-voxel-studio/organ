@@ -10,6 +10,7 @@ use App\Entity\ProjectMember;
 use App\Entity\User;
 use App\Enum\IconType;
 use App\Enum\ProjectGlobalRole;
+use App\Service\OrganCacheService;
 use App\Service\OrganPermissionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,7 +24,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class OrganController extends AbstractController
 {
     public function __construct(
-        private readonly OrganPermissionService $permissionService
+        private readonly OrganPermissionService $permissionService,
+        private readonly OrganCacheService $organCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -46,24 +48,28 @@ class OrganController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $organs = $entityManager->getRepository(Organ::class)->findBy(['project' => $project, 'deletedAt' => null]);
-        
-        $data = [];
-        foreach ($organs as $organ) {
-            // Optional: only show organs where user has ORGAN_VIEW or is Project ADMIN/MANAGER
-            if ($projectMember->getGlobalRole() !== ProjectGlobalRole::MEMBER || $this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
-                $data[] = [
-                    'uuid' => $organ->getUuid(),
-                    'title' => $organ->getTitle(),
-                    'description' => $organ->getDescription(),
-                    'iconType' => $organ->getIconType()->value,
-                    'iconData' => $organ->getIconData(),
-                    'highlightColor' => $organ->getHighlightColor(),
-                ];
+        $fetcher = function () use ($entityManager, $project, $projectMember, $user) {
+            $organs = $entityManager->getRepository(Organ::class)->findBy(['project' => $project, 'deletedAt' => null]);
+            
+            $data = [];
+            foreach ($organs as $organ) {
+                // Optional: only show organs where user has ORGAN_VIEW or is Project ADMIN/MANAGER
+                if ($projectMember->getGlobalRole() !== ProjectGlobalRole::MEMBER || $this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
+                    $data[] = [
+                        'uuid' => $organ->getUuid(),
+                        'title' => $organ->getTitle(),
+                        'description' => $organ->getDescription(),
+                        'iconType' => $organ->getIconType()->value,
+                        'iconData' => $organ->getIconData(),
+                        'highlightColor' => $organ->getHighlightColor(),
+                    ];
+                }
             }
-        }
+            return $data;
+        };
 
-        return $this->json($data);
+        // Cache the full list (warning: this is project-wide, if permissions change frequently it might be better to cache individual organ summaries)
+        return $this->json($this->organCacheService->getOrganList($project, $fetcher));
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
@@ -109,6 +115,9 @@ class OrganController extends AbstractController
 
         $entityManager->persist($organ);
         $entityManager->flush();
+
+        // Invalidate list cache
+        $this->organCacheService->invalidateList($projectUuid);
 
         return $this->json([
             'uuid' => $organ->getUuid(),
@@ -177,15 +186,19 @@ class OrganController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        return $this->json([
-            'uuid' => $organ->getUuid(),
-            'title' => $organ->getTitle(),
-            'description' => $organ->getDescription(),
-            'iconType' => $organ->getIconType()->value,
-            'iconData' => $organ->getIconData(),
-            'highlightColor' => $organ->getHighlightColor(),
-            'createdAt' => $organ->getCreatedAt()->format(\DateTimeInterface::ATOM),
-        ]);
+        $summary = $this->organCacheService->getOrganSummary($organ, function () use ($organ) {
+            return [
+                'uuid' => $organ->getUuid(),
+                'title' => $organ->getTitle(),
+                'description' => $organ->getDescription(),
+                'iconType' => $organ->getIconType()->value,
+                'iconData' => $organ->getIconData(),
+                'highlightColor' => $organ->getHighlightColor(),
+                'createdAt' => $organ->getCreatedAt()->format(\DateTimeInterface::ATOM),
+            ];
+        });
+
+        return $this->json($summary);
     }
 
     #[Route('/{organUuid}', name: 'update', methods: ['PUT', 'PATCH'])]
@@ -235,6 +248,10 @@ class OrganController extends AbstractController
 
         $entityManager->flush();
 
+        // Invalidate cache
+        $this->organCacheService->invalidateSummary($organUuid);
+        $this->organCacheService->invalidateList($projectUuid);
+
         return $this->json(['message' => 'Organ updated']);
     }
 
@@ -268,6 +285,9 @@ class OrganController extends AbstractController
 
         $organ->setDeletedAt(null);
         $entityManager->flush();
+
+        // Invalidate list cache
+        $this->organCacheService->invalidateList($projectUuid);
 
         return $this->json([
             'uuid' => $organ->getUuid(),
@@ -309,6 +329,10 @@ class OrganController extends AbstractController
 
         $organ->setDeletedAt(new \DateTime());
         $entityManager->flush();
+
+        // Invalidate cache
+        $this->organCacheService->invalidateSummary($organUuid);
+        $this->organCacheService->invalidateList($projectUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

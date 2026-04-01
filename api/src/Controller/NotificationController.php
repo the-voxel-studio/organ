@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\Notification;
 use App\Entity\User;
+use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +19,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 class NotificationController extends AbstractController
 {
     public function __construct(
+        private readonly NotificationService $notificationService,
         #[Autowire('%notification_base_url%')]
         private readonly string $baseUrl
     ) {}
@@ -29,25 +31,28 @@ class NotificationController extends AbstractController
         $user = $this->getUser();
         if (!$user) return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
 
-        $notifications = $entityManager->getRepository(Notification::class)->findBy(
-            ['user' => $user, 'deletedAt' => null],
-            ['createdAt' => 'DESC'],
-            50
-        );
+        $fetcher = function () use ($entityManager, $user) {
+            $notifications = $entityManager->getRepository(Notification::class)->findBy(
+                ['user' => $user, 'deletedAt' => null],
+                ['createdAt' => 'DESC'],
+                50
+            );
 
-        $data = [];
-        foreach ($notifications as $n) {
-            $data[] = [
-                'uuid' => $n->getUuid(),
-                'type' => $n->getType(),
-                'message' => $n->getMessage(),
-                'isRead' => $n->isRead(),
-                'taskUuid' => $n->getTask()?->getUuid(),
-                'createdAt' => $n->getCreatedAt()->format(\DateTimeInterface::ATOM),
-            ];
-        }
+            $data = [];
+            foreach ($notifications as $n) {
+                $data[] = [
+                    'uuid' => $n->getUuid(),
+                    'type' => $n->getType(),
+                    'message' => $n->getMessage(),
+                    'isRead' => $n->isRead(),
+                    'taskUuid' => $n->getTask()?->getUuid(),
+                    'createdAt' => $n->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                ];
+            }
+            return $data;
+        };
 
-        return $this->json($data);
+        return $this->json($this->notificationService->getNotificationList($user, $fetcher));
     }
 
     #[Route('/subscribe', name: 'subscribe_url', methods: ['GET'])]
@@ -121,6 +126,9 @@ class NotificationController extends AbstractController
         $notification->setDeletedAt(null);
         $entityManager->flush();
 
+        // Invalidate cache
+        $this->notificationService->invalidate($user->getUuid());
+
         return $this->json(['message' => 'Notification restored']);
     }
 
@@ -140,6 +148,9 @@ class NotificationController extends AbstractController
         $notification->setIsRead(true);
         $entityManager->flush();
 
+        // Invalidate cache
+        $this->notificationService->invalidate($user->getUuid());
+
         return $this->json(['message' => 'Notification marked as read']);
     }
 
@@ -154,6 +165,9 @@ class NotificationController extends AbstractController
 
         $notification->setDeletedAt(new \DateTime());
         $entityManager->flush();
+
+        // Invalidate cache
+        $this->notificationService->invalidate($user->getUuid());
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

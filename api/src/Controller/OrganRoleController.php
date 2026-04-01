@@ -10,6 +10,7 @@ use App\Entity\Permission;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Entity\UserOrganRole;
+use App\Service\OrganCacheService;
 use App\Service\OrganPermissionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,7 +23,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class OrganRoleController extends AbstractController
 {
     public function __construct(
-        private readonly OrganPermissionService $permissionService
+        private readonly OrganPermissionService $permissionService,
+        private readonly OrganCacheService $organCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -41,18 +43,21 @@ class OrganRoleController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $roles = $entityManager->getRepository(OrganRole::class)->findBy(['organ' => $organ, 'deletedAt' => null]);
-        
-        $data = [];
-        foreach ($roles as $role) {
-            $data[] = [
-                'uuid' => $role->getUuid(),
-                'name' => $role->getName(),
-                'permissions' => $this->permissionService->getRolePermissions($role),
-            ];
-        }
+        $fetcher = function () use ($entityManager, $organ) {
+            $roles = $entityManager->getRepository(OrganRole::class)->findBy(['organ' => $organ, 'deletedAt' => null]);
+            
+            $data = [];
+            foreach ($roles as $role) {
+                $data[] = [
+                    'uuid' => $role->getUuid(),
+                    'name' => $role->getName(),
+                    'permissions' => $this->permissionService->getRolePermissions($role),
+                ];
+            }
+            return $data;
+        };
 
-        return $this->json($data);
+        return $this->json($this->organCacheService->getRoleList($organ, $fetcher));
     }
 
     #[Route('/trash', name: 'trash', methods: ['GET'])]
@@ -128,6 +133,9 @@ class OrganRoleController extends AbstractController
 
         $entityManager->flush();
 
+        // Invalidate role list cache
+        $this->organCacheService->invalidateRoleList($organUuid);
+
         return $this->json([
             'uuid' => $role->getUuid(),
             'name' => $role->getName()
@@ -175,6 +183,8 @@ class OrganRoleController extends AbstractController
 
         // Invalidate user roles list for this organ
         $this->permissionService->invalidateUserRoles($targetUser->getUuid(), $organ->getUuid());
+        // Also invalidate role list as it might contain permissions summary
+        $this->organCacheService->invalidateRoleList($organUuid);
 
         return $this->json(['message' => 'Role assigned successfully']);
     }
@@ -201,6 +211,8 @@ class OrganRoleController extends AbstractController
 
         // Invalidate role definition
         $this->permissionService->invalidateRoleDefinition($role->getUuid());
+        // Invalidate role list cache
+        $this->organCacheService->invalidateRoleList($organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
@@ -231,6 +243,8 @@ class OrganRoleController extends AbstractController
 
         // Invalidate role definition
         $this->permissionService->invalidateRoleDefinition($role->getUuid());
+        // Invalidate role list cache
+        $this->organCacheService->invalidateRoleList($organUuid);
 
         return $this->json([
             'uuid' => $role->getUuid(),

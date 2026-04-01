@@ -12,14 +12,40 @@ use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
+
 class NotificationService
 {
+    private const LIST_CACHE_PREFIX = 'user_notifications_';
+    private const CACHE_TTL = 3600; // 1 hour
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly HubInterface $hub,
+        private readonly CacheInterface $cache,
         #[Autowire('%notification_base_url%')]
         private readonly string $baseUrl
     ) {}
+
+    /**
+     * Get user notifications list (Cached).
+     */
+    public function getNotificationList(User $user, callable $fetcher): array
+    {
+        return $this->cache->get(self::LIST_CACHE_PREFIX . $user->getUuid(), function (ItemInterface $item) use ($fetcher) {
+            $item->expiresAfter(self::CACHE_TTL);
+            return $fetcher();
+        });
+    }
+
+    /**
+     * Invalidate user notifications list cache.
+     */
+    public function invalidate(string $userUuid): void
+    {
+        $this->cache->delete(self::LIST_CACHE_PREFIX . $userUuid);
+    }
 
     /**
      * Create and send a notification.
@@ -32,6 +58,7 @@ class NotificationService
         $this->entityManager->flush();
 
         $this->sendToMercure($notification);
+        $this->invalidate($user->getUuid());
     }
 
     /**

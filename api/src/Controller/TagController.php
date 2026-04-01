@@ -9,6 +9,7 @@ use App\Entity\ProjectMember;
 use App\Entity\Tag;
 use App\Entity\User;
 use App\Enum\ProjectGlobalRole;
+use App\Service\TagCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,24 +20,31 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/projects/{projectUuid}/tags', name: 'tags_')]
 class TagController extends AbstractController
 {
+    public function __construct(
+        private readonly TagCacheService $tagCacheService
+    ) {}
+
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(string $projectUuid, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
 
-        $tags = $entityManager->getRepository(Tag::class)->findBy(['project' => $project, 'deletedAt' => null]);
-        
-        $data = [];
-        foreach ($tags as $tag) {
-            $data[] = [
-                'uuid' => $tag->getUuid(),
-                'name' => $tag->getName(),
-                'color' => $tag->getColor(),
-            ];
-        }
+        $fetcher = function () use ($entityManager, $project) {
+            $tags = $entityManager->getRepository(Tag::class)->findBy(['project' => $project, 'deletedAt' => null]);
+            
+            $data = [];
+            foreach ($tags as $tag) {
+                $data[] = [
+                    'uuid' => $tag->getUuid(),
+                    'name' => $tag->getName(),
+                    'color' => $tag->getColor(),
+                ];
+            }
+            return $data;
+        };
 
-        return $this->json($data);
+        return $this->json($this->tagCacheService->getTagList($project, $fetcher));
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
@@ -63,6 +71,9 @@ class TagController extends AbstractController
 
         $entityManager->persist($tag);
         $entityManager->flush();
+
+        // Invalidate cache
+        $this->tagCacheService->invalidateList($projectUuid);
 
         return $this->json([
             'uuid' => $tag->getUuid(),
@@ -129,6 +140,9 @@ class TagController extends AbstractController
 
         $entityManager->flush();
 
+        // Invalidate cache
+        $this->tagCacheService->invalidateList($projectUuid);
+
         return $this->json(['message' => 'Tag updated']);
     }
 
@@ -156,6 +170,9 @@ class TagController extends AbstractController
         $tag->setDeletedAt(null);
         $entityManager->flush();
 
+        // Invalidate cache
+        $this->tagCacheService->invalidateList($projectUuid);
+
         return $this->json(['message' => 'Tag restored']);
     }
 
@@ -178,6 +195,9 @@ class TagController extends AbstractController
 
         $tag->setDeletedAt(new \DateTime());
         $entityManager->flush();
+
+        // Invalidate cache
+        $this->tagCacheService->invalidateList($projectUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
