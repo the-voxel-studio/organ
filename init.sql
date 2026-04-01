@@ -1,4 +1,11 @@
 -- =========================================================================
+-- INITIALISATION DE LA BASE DE TEST (Nécessaire pour PHPUnit / Foundry)
+-- =========================================================================
+CREATE DATABASE IF NOT EXISTS app_database_test;
+GRANT ALL PRIVILEGES ON app_database_test.* TO 'app_user'@'%';
+FLUSH PRIVILEGES;
+
+-- =========================================================================
 -- UTILISATEURS (Comptes locaux JWT + Google OAuth)
 -- =========================================================================
 CREATE TABLE users (
