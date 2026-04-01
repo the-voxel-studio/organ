@@ -31,6 +31,8 @@
 /api/public/build/
 /front/public/build/
 
+.idea/
+
 # Docker
 !/docker/
 !/docker-compose.yml
