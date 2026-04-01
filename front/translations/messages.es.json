@@ -1,15 +1,10 @@
 {
-  "version": "24.03.2026",
+  "version": "1.0.0",
   "title": "Organ",
-  "login": "Iniciar sesión",
-  "logout": "Cerrar sesión",
-  "loginMessage": "Tu equipo te espera!",
+  "loginMessage": "Tu necesitas estar presente en tu equipo.",
   "inscriptionMessage": "¿Quieres organizar mejor?",
-  "error": "Error al cargar.",
-  "accessDenied": "Acceso denegado. Verifica tu identificador y/o contraseña.",
   "settings": "Ajustes",
   "notification": "Notificación",
-
   "task": "Tareas pendientes",
   "newProject": "Crear un nuevo proyecto",
   "nameProject": "Nombre del proyecto",
@@ -20,27 +15,15 @@
   "recentActivity": "Actividades recientes",
   "projectDescription": "Descripción del proyecto",
   "projectSummary": "Resumen del proyecto",
-  "securityLogs": "Registro de seguridad",
-  "infoSecurityLogs": "Accesos, modificaciones de datos, acciones administrativas",
-  "back": "Volver",
+  "back": "Atrás",
   "search": "Buscar",
   "abandon": "Abandonar",
   "create": "Crear",
-
   "admin": "Administrador",
   "member": "Miembro",
   "members": "Miembros",
   "invite": "Invitar",
-
-  "add": "Añadir",
-  "modify": "Modificar",
-  "remove": "Eliminar",
-
-  "mail": "Tu dirección de correo electrónico",
-  "password": "Tu contraseña",
-  "googleConnexion": "Conectarse con Google",
-
   "whoWeAre": "¿Quiénes somos?",
   "explanation": "/Explicación de Organ/",
-  "slogan": "Organ — En el corazón de tus proyectos"
+  "slogan": "Organ - En el corazón de tus proyectos"
 }

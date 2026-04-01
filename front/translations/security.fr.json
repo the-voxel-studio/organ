@@ -1,0 +1,6 @@
+{
+  "error": "Erreur lors du chargement.",
+  "accessDenied": "Accès refusé. Vérifiez votre identifiant et/ou votre mot de passe.",
+  "securityLogs": "Journal",
+  "infoSecurityLogs": "Accès, Modifications, Actions administratives"
+}

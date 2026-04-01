@@ -1,0 +1,6 @@
+{
+  "error": "Fehler beim Laden.",
+  "accessDenied": "Zugriff verweigert. Überprüfen Sie Ihr Benutzerkonto und/oder Ihr Passwort.",
+  "securityLogs": "Sicherheitsprotokoll",
+  "infoSecurityLogs": "Zugriffe, Änderungen, administrative Aktionen"
+}

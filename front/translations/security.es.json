@@ -1,0 +1,6 @@
+{
+  "error": "Error al cargar.",
+  "accessDenied": "Acceso denegado. Verifica tu identificador y/o contraseña.",
+  "securityLogs": "Registro de seguridad",
+  "infoSecurityLogs": "Accesos, modificaciones, acciones administrativas"
+}
