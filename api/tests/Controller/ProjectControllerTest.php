@@ -162,4 +162,48 @@ class ProjectControllerTest extends ApiTestCase
         $client->request('GET', '/api/projects/' . $project->getUuid());
         $this->assertResponseStatusCodeSame(404);
     }
+
+    public function testGetProjectStatsSqlSuccess(): void
+    {
+        $client = static::createClient();
+        $user = UserFactory::createOne();
+        $project = ProjectFactory::createOne();
+        ProjectMemberFactory::createOne([
+            'user' => $user, 
+            'project' => $project,
+            'globalRole' => ProjectGlobalRole::ADMIN
+        ]);
+
+        $organ = \App\Factory\OrganFactory::createOne(['project' => $project, 'title' => 'Organ A']);
+        \App\Factory\TaskFactory::createMany(2, [
+            'organ' => $organ, 
+            'status' => \App\Enum\TaskStatus::TODO,
+            'estimatedHours' => '2.5'
+        ]);
+        \App\Factory\TaskFactory::createOne([
+            'organ' => $organ, 
+            'status' => \App\Enum\TaskStatus::DONE,
+            'estimatedHours' => '1.0'
+        ]);
+
+        $this->login($client, $user);
+        $client->request('GET', '/api/projects/' . $project->getUuid() . '/stats');
+
+        $this->assertResponseIsSuccessful();
+        $data = $this->getResponseContent($client);
+        
+        $this->assertCount(2, $data); // TODO and DONE groups
+        
+        // Find TODO stats
+        $todoStats = null;
+        foreach ($data as $s) {
+            if ($s['status'] === 'TODO') {
+                $todoStats = $s;
+                break;
+            }
+        }
+        $this->assertNotNull($todoStats);
+        $this->assertEquals(2, $todoStats['task_count']);
+        $this->assertEquals(5.0, (float)$todoStats['total_hours']);
+    }
 }

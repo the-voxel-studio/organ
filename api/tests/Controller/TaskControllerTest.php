@@ -139,5 +139,45 @@ class TaskControllerTest extends ApiTestCase
         ]));
         $this->assertResponseIsSuccessful();
         $this->assertEquals('Restored and Updated', $this->getResponseContent($client)['title']);
-    }
-}
+        }
+
+        public function testGetTaskTimelineSqlSuccess(): void
+        {
+        $client = static::createClient();
+        $user = UserFactory::createOne();
+        $project = ProjectFactory::createOne();
+        ProjectMemberFactory::createOne([
+            'user' => $user, 
+            'project' => $project,
+            'globalRole' => ProjectGlobalRole::ADMIN
+        ]);
+        $organ = OrganFactory::createOne(['project' => $project]);
+        $task = TaskFactory::createOne(['organ' => $organ]);
+
+        // Create some events
+        \App\Factory\TaskCommentFactory::createOne(['task' => $task, 'user' => $user, 'content' => 'First comment']);
+        // Skip history and attachment factories as they do not exist
+
+        $this->login($client, $user);
+        $client->request('GET', sprintf('/api/projects/%s/organs/%s/tasks/%s/timeline', $project->getUuid(), $organ->getUuid(), $task->getUuid()));
+
+        $this->assertResponseIsSuccessful();
+        $data = $this->getResponseContent($client);
+
+        $this->assertCount(2, $data); // 1 comment + 1 auto-generated 'CREATE' history
+
+        $types = array_column($data, 'type');
+        $this->assertContains('COMMENT', $types);
+        $this->assertContains('HISTORY', $types);
+
+        // Find the comment in results
+        $comment = null;
+        foreach ($data as $item) {
+            if ($item['type'] === 'COMMENT') {
+                $comment = $item;
+                break;
+            }
+        }
+        $this->assertNotNull($comment);
+        $this->assertEquals('First comment', $comment['detail']);
+        }        }
