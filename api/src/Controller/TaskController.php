@@ -358,6 +358,58 @@ class TaskController extends AbstractController
         ]);
     }
 
+    #[Route('/{taskUuid}/timeline', name: 'timeline', methods: ['GET'])]
+    public function timeline(string $projectUuid, string $organUuid, string $taskUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+
+        if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        /*
+        // VERSION SYMFONY PROPRE (ORM) :
+        $comments = $task->getComments();
+        $history = $task->getTaskHistories();
+        $attachments = $task->getTaskAttachments();
+        // fusionner et trier en PHP...
+        */
+
+        // VERSION SQL PURE (SI40 PRE-REQUIS : UNION + JOIN par UUID) :
+        $conn = $entityManager->getConnection();
+        $sql = "
+            SELECT 'COMMENT' as type, tc.content as detail, tc.created_at 
+            FROM task_comments tc
+            JOIN tasks t ON tc.task_id = t.id
+            WHERE t.uuid = :taskUuid AND tc.deleted_at IS NULL
+            
+            UNION ALL
+            
+            SELECT 'HISTORY' as type, CONCAT(th.action_type, ' ', COALESCE(th.field_name, '')) as detail, th.created_at 
+            FROM task_history th
+            JOIN tasks t ON th.task_id = t.id
+            WHERE t.uuid = :taskUuid
+            
+            UNION ALL
+            
+            SELECT 'ATTACHMENT' as type, ta.file_name as detail, ta.created_at 
+            FROM task_attachments ta
+            JOIN tasks t ON ta.task_id = t.id
+            WHERE t.uuid = :taskUuid AND ta.deleted_at IS NULL
+            
+            ORDER BY created_at DESC
+        ";
+
+        $resultSet = $conn->executeQuery($sql, ['taskUuid' => $taskUuid]);
+        return $this->json($resultSet->fetchAllAssociative());
+    }
+
     #[Route('/{taskUuid}/assignees', name: 'add_assignee', methods: ['POST'])]
     public function addAssignee(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {

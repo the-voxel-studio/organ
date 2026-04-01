@@ -311,6 +311,97 @@ class OrganController extends AbstractController
         ]);
     }
 
+    #[Route('/{organUuid}/check-permission/{permissionName}', name: 'check_permission', methods: ['GET'])]
+    public function checkPermission(string $projectUuid, string $organUuid, string $permissionName, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        /*
+        // VERSION SYMFONY PROPRE (SERVICE) :
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid]);
+        $hasPermission = $this->permissionService->hasPermission($user, $organ, $permissionName);
+        */
+
+        // VERSION SQL PURE (SI40 PRE-REQUIS : EXISTS + JOINTURES MULTIPLES PAR UUID) :
+        $conn = $entityManager->getConnection();
+        $sql = "
+            SELECT EXISTS (
+                -- Check Project ADMIN (via UUIDs)
+                SELECT 1 
+                FROM project_members pm
+                JOIN projects pr ON pm.project_id = pr.id
+                JOIN users u ON pm.user_id = u.id
+                WHERE u.uuid = :userUuid 
+                  AND pr.uuid = :projectUuid 
+                  AND pm.global_role = 'ADMIN' 
+                  AND pm.deleted_at IS NULL
+                
+                UNION
+                
+                -- Check Organ Specific Permission (via UUIDs)
+                SELECT 1 
+                FROM user_organ_roles uor
+                JOIN users u ON uor.user_id = u.id
+                JOIN organ_roles orole ON uor.role_id = orole.id
+                JOIN organs o ON orole.organ_id = o.id
+                JOIN organ_role_permissions orp ON orole.id = orp.role_id
+                JOIN permissions p ON orp.permission_id = p.id
+                WHERE u.uuid = :userUuid 
+                  AND o.uuid = :organUuid 
+                  AND p.name = :permName
+                  AND uor.deleted_at IS NULL
+                  AND orole.deleted_at IS NULL
+                  AND o.deleted_at IS NULL
+            ) as allowed
+        ";
+
+        $result = $conn->executeQuery($sql, [
+            'userUuid' => $user->getUuid(),
+            'projectUuid' => $projectUuid,
+            'organUuid' => $organUuid,
+            'permName' => $permissionName
+        ])->fetchOne();
+
+        return $this->json(['allowed' => (bool)$result]);
+    }
+
+    #[Route('/{organUuid}/ready-tasks', name: 'ready_tasks', methods: ['GET'])]
+    public function readyTasks(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        /*
+        // VERSION SYMFONY PROPRE (ORM) :
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid]);
+        $tasks = $entityManager->getRepository(Task::class)->findBy(['organ' => $organ, 'status' => 'TODO']);
+        */
+
+        // VERSION SQL PURE (SI40 PRE-REQUIS : NOT EXISTS + AUTO-JOINTURE + JOIN UUID) :
+        $conn = $entityManager->getConnection();
+        $sql = "
+            SELECT t.uuid, t.title, t.priority
+            FROM tasks t
+            JOIN organs o ON t.organ_id = o.id
+            WHERE o.uuid = :organUuid 
+              AND t.status = 'TODO'
+              AND t.deleted_at IS NULL
+              AND NOT EXISTS (
+                  SELECT 1 
+                  FROM task_dependencies td
+                  JOIN tasks dep ON td.depends_on_task_id = dep.id
+                  WHERE td.task_id = t.id 
+                    AND dep.status != 'DONE'
+                    AND dep.deleted_at IS NULL
+              )
+        ";
+
+        $resultSet = $conn->executeQuery($sql, ['organUuid' => $organUuid]);
+        return $this->json($resultSet->fetchAllAssociative());
+    }
+
     #[Route('/{organUuid}', name: 'delete', methods: ['DELETE'])]
     public function delete(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
     {

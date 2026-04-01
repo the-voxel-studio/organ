@@ -352,6 +352,47 @@ class ProjectController extends AbstractController
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 
+    #[Route('/{uuid}/stats', name: 'stats', methods: ['GET'])]
+    public function stats(string $uuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user) return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        /* 
+        // VERSION SYMFONY PROPRE (ORM) :
+        $organs = $project->getOrgans();
+        $stats = [];
+        foreach ($organs as $organ) {
+            foreach ($organ->getTasks() as $task) {
+                $stats[$organ->getTitle()][$task->getStatus()->value] = ($stats[$organ->getTitle()][$task->getStatus()->value] ?? 0) + 1;
+            }
+        }
+        */
+
+        // VERSION SQL PURE (SI40 PRE-REQUIS) :
+        $conn = $entityManager->getConnection();
+        $sql = '
+            SELECT 
+                o.title as organ_name,
+                t.status,
+                COUNT(t.id) as task_count,
+                SUM(t.estimated_hours) as total_hours
+            FROM projects p
+            JOIN organs o ON p.id = o.project_id
+            LEFT JOIN tasks t ON o.id = t.organ_id AND t.deleted_at IS NULL
+            WHERE p.uuid = :uuid
+            GROUP BY o.id, t.status
+            ORDER BY o.title, t.status
+        ';
+        
+        $resultSet = $conn->executeQuery($sql, ['uuid' => $uuid]);
+        return $this->json($resultSet->fetchAllAssociative());
+    }
+
     /**
      * Get or set the project summary in cache.
      */
