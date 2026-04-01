@@ -1,0 +1,46 @@
+{
+  "version": "24.03.2026",
+  "title": "Organ",
+  "login": "Se connecter",
+  "logout": "Déconnexion",
+  "loginMessage": "Ton équipe a besoin de toi !",
+  "inscriptionMessage": "Envie de mieux s'organiser ?",
+  "error": "Erreur lors du chargement.",
+  "accessDenied": "Accès refusé. Vérifiez votre identifiant et/ou votre mot de passe.",
+  "settings": "Paramètres",
+  "notification": "Notification",
+
+  "task": "Tâches à faire",
+  "newProject": "Créer un nouveau projet",
+  "nameProject": "Nom du projet",
+  "projectIdentity": "Identité du projet",
+  "projectColor": "Couleurs associées au projet",
+  "newOrgan": "Nouvel Organ",
+  "project": "Projet",
+  "recentActivity": "Activités récentes",
+  "projectDescription": "Description du projet",
+  "projectSummary": "Résumé du projet",
+  "securityLogs": "Journal",
+  "infoSecurityLogs": "Accès, Modifications, Actions administratives",
+  "back": "Retour",
+  "search": "Chercher",
+  "abandon": "Abandon",
+  "create": "Créer",
+
+  "admin": "Administrateur",
+  "member": "Membre",
+  "members": "Membres",
+  "invite": "Inviter",
+
+  "add": "Ajouter",
+  "modify": "Modifier",
+  "remove": "Supprimer",
+
+  "mail": "Votre adresse mail",
+  "password": "Votre mot de passe",
+  "googleConnexion": "Connexion via google",
+
+  "whoWeAre": "Qui sommes-nous ?",
+  "explanation": "/Explication de organ/",
+  "slogan": "Organ - Au coeur de vos projets"
+}

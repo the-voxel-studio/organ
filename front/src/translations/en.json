@@ -1,0 +1,47 @@
+{
+"version": "24.03.2026",
+
+"title": "Organ",
+"login": "Sign in",
+"logout": "Log out",
+"loginMessage": "Your team needs you!",
+"inscriptionMessage": "Want to organize better?",
+"error": "Error loading.",
+"accessDenied": "Access denied. Check your username and/or password.",
+"settings": "Settings",
+"notification": "Notification",
+
+"task": "Tasks to do",
+"newProject": "Create a new project",
+"nameProject": "Project name",
+"projectIdentity": "Project identity",
+"projectColor": "Colors associated with the project",
+"newOrgan": "New Organ",
+"project": "Project",
+"recentActivity": "Recent activities",
+"projectDescription": "Project description",
+"projectSummary": "Project summary",
+"securityLogs": "Security log",
+"infoSecurityLogs": "Accesses, Data modifications, Administrative actions",
+"back": "Back",
+"search": "Search",
+"abandon": "Abandon",
+"create": "Create",
+
+"admin": "Administrator",
+"member": "Member",
+"members": "Members",
+"invite": "Invite",
+
+"add": "Add",
+"modify": "Modify",
+"remove": "Remove",
+
+"mail": "Your email address",
+"password": "Your password",
+"googleConnexion": "Sign in with Google",
+
+"whoWeAre": "Who are we?",
+"explanation": "/Explanation of Organ/",
+"slogan": "Organ — At the heart of your projects"
+}

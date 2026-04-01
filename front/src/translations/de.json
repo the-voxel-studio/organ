@@ -1,0 +1,46 @@
+{
+  "version": "24.03.2026",
+  "title": "Organ",
+  "login": "Anmelden",
+  "logout": "Abmelden",
+  "loginMessage": "Ihr Team wartet auf dich!",
+  "inscriptionMessage": "Möchtest du besser organisieren?",
+  "error": "Fehler beim Laden.",
+  "accessDenied": "Zugriff verweigert. Prüfe Benutzername und/oder Passwort.",
+  "settings": "Einstellungen",
+  "notification": "Benachrichtigung",
+
+  "task": "Aufgaben",
+  "newProject": "Neues Projekt erstellen",
+  "nameProject": "Projektname",
+  "projectIdentity": "Projektkennung",
+  "projectColor": "Farben des Projekts",
+  "newOrgan": "Neuer Organ",
+  "project": "Projekt",
+  "recentActivity": "Letzte Aktivitäten",
+  "projectDescription": "Projektbeschreibung",
+  "projectSummary": "Projektübersicht",
+  "securityLogs": "Sicherheitsprotokoll",
+  "infoSecurityLogs": "Zugriffe, Datenänderungen, administrative Aktionen",
+  "back": "Zurück",
+  "search": "Suche",
+  "abandon": "Abbrechen",
+  "create": "Erstellen",
+
+  "admin": "Administrator",
+  "member": "Mitglied",
+  "members": "Mitglieder",
+  "invite": "Einladen",
+
+  "add": "Hinzufügen",
+  "modify": "Bearbeiten",
+  "remove": "Entfernen",
+
+  "mail": "Ihre E-Mail-Adresse",
+  "password": "Ihr Passwort",
+  "googleConnexion": "Mit Google anmelden",
+
+  "whoWeAre": "Wer sind wir?",
+  "explanation": "/Erklärung von Organ/",
+  "slogan": "Organ — Im Herzen deiner Projekte"
+}
