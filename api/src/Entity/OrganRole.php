@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Enum\IconType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -30,6 +31,12 @@ class OrganRole
     #[ORM\Column(length: 50)]
     private ?string $name = null;
 
+    #[ORM\Column(length: 255, enumType: IconType::class, options: ['default' => IconType::EMOJI, 'comment' => 'SVG, BLOB, EMOJI'])]
+    private IconType $iconType = IconType::EMOJI;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true, columnDefinition: 'LONGTEXT')]
+    private ?string $iconData = null;
+
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $deletedAt = null;
 
@@ -46,6 +53,7 @@ class OrganRole
     {
         $this->uuid = Uuid::v4()->toRfc4122();
         $this->permissions = new ArrayCollection();
+        $this->iconType = IconType::EMOJI;
     }
 
     public function getId(): ?int
@@ -83,6 +91,28 @@ class OrganRole
     public function setName(string $name): static
     {
         $this->name = $name;
+        return $this;
+    }
+
+    public function getIconType(): IconType
+    {
+        return $this->iconType;
+    }
+
+    public function setIconType(IconType $iconType): static
+    {
+        $this->iconType = $iconType;
+        return $this;
+    }
+
+    public function getIconData(): ?string
+    {
+        return $this->iconData;
+    }
+
+    public function setIconData(?string $iconData): static
+    {
+        $this->iconData = $iconData;
         return $this;
     }
 

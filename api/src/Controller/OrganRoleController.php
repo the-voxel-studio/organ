@@ -10,6 +10,7 @@ use App\Entity\Permission;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Entity\UserOrganRole;
+use App\Enum\IconType;
 use App\Service\OrganCacheService;
 use App\Service\OrganPermissionService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -18,6 +19,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/projects/{projectUuid}/organs/{organUuid}/roles', name: 'organ_roles_')]
 class OrganRoleController extends AbstractController
@@ -51,6 +53,8 @@ class OrganRoleController extends AbstractController
                 $data[] = [
                     'uuid' => $role->getUuid(),
                     'name' => $role->getName(),
+                    'iconType' => $role->getIconType()->value,
+                    'iconData' => $role->getIconData(),
                     'permissions' => $this->permissionService->getRolePermissions($role),
                 ];
             }
@@ -88,6 +92,8 @@ class OrganRoleController extends AbstractController
             $data[] = [
                 'uuid' => $role->getUuid(),
                 'name' => $role->getName(),
+                'iconType' => $role->getIconType()->value,
+                'iconData' => $role->getIconData(),
                 'deletedAt' => $role->getDeletedAt()->format(\DateTimeInterface::ATOM),
             ];
         }
@@ -96,7 +102,7 @@ class OrganRoleController extends AbstractController
     }
 
     #[Route('', name: 'create', methods: ['POST'])]
-    public function create(string $projectUuid, string $organUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function create(string $projectUuid, string $organUuid, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
@@ -119,7 +125,20 @@ class OrganRoleController extends AbstractController
         $role = new OrganRole();
         $role->setOrgan($organ);
         $role->setName($data['name']);
+
+        if (isset($data['iconType'])) {
+            $iconType = IconType::tryFrom($data['iconType']);
+            if ($iconType) {
+                $role->setIconType($iconType);
+            }
+        }
+        $role->setIconData($data['iconData'] ?? null);
         
+        $errors = $validator->validate($role);
+        if (count($errors) > 0) {
+            return $this->json($errors, Response::HTTP_BAD_REQUEST);
+        }
+
         $entityManager->persist($role);
 
         if (isset($data['permissions']) && is_array($data['permissions'])) {
@@ -140,6 +159,76 @@ class OrganRoleController extends AbstractController
             'uuid' => $role->getUuid(),
             'name' => $role->getName()
         ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/{roleUuid}', name: 'update', methods: ['PUT', 'PATCH'])]
+    public function update(string $projectUuid, string $organUuid, string $roleUuid, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $role = $entityManager->getRepository(OrganRole::class)->findOneBy(['uuid' => $roleUuid, 'organ' => $organ, 'deletedAt' => null]);
+
+        if (!$role) {
+            return $this->json(['message' => 'Role not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_MANAGE_ROLES')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (!$data) {
+            return $this->json(['message' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (isset($data['name'])) {
+            $role->setName($data['name']);
+        }
+
+        if (isset($data['iconType'])) {
+            $iconType = IconType::tryFrom($data['iconType']);
+            if ($iconType) {
+                $role->setIconType($iconType);
+            }
+        }
+        if (array_key_exists('iconData', $data)) {
+            $role->setIconData($data['iconData']);
+        }
+
+        if (isset($data['permissions']) && is_array($data['permissions'])) {
+            // Clear existing permissions
+            foreach ($role->getPermissions() as $permission) {
+                $role->removePermission($permission);
+            }
+            // Add new ones
+            foreach ($data['permissions'] as $permName) {
+                $permission = $entityManager->getRepository(Permission::class)->findOneBy(['name' => $permName]);
+                if ($permission) {
+                    $role->addPermission($permission);
+                }
+            }
+        }
+
+        $errors = $validator->validate($role);
+        if (count($errors) > 0) {
+            return $this->json($errors, Response::HTTP_BAD_REQUEST);
+        }
+
+        $entityManager->flush();
+
+        // Invalidate role definition
+        $this->permissionService->invalidateRoleDefinition($role->getUuid());
+        // Invalidate role list cache
+        $this->organCacheService->invalidateRoleList($organUuid);
+
+        return $this->json([
+            'uuid' => $role->getUuid(),
+            'name' => $role->getName(),
+            'iconType' => $role->getIconType()->value,
+            'iconData' => $role->getIconData(),
+        ]);
     }
 
     #[Route('/{roleUuid}/assign', name: 'assign', methods: ['POST'])]

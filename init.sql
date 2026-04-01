@@ -137,6 +137,8 @@ CREATE TABLE organ_roles (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     organ_id INT NOT NULL,
     name VARCHAR(50) NOT NULL,
+    icon_type VARCHAR(255) DEFAULT 'EMOJI' NOT NULL COMMENT 'SVG, BLOB, EMOJI',
+    icon_data LONGTEXT NULL,
     deleted_at DATETIME NULL,
     INDEX idx_organ (organ_id),
     FOREIGN KEY (organ_id) REFERENCES organs(id) ON DELETE CASCADE

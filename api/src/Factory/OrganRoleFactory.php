@@ -2,6 +2,7 @@
 
 namespace App\Factory;
 
+use App\Enum\IconType;
 use App\Entity\OrganRole;
 use Zenstruck\Foundry\Persistence\PersistentObjectFactory;
 
@@ -36,7 +37,10 @@ final class OrganRoleFactory extends PersistentObjectFactory
         return [
             'name' => self::faker()->text(50),
             'organ' => OrganFactory::new(),
-            'uuid' => self::faker()->text(36),
+            'uuid' => self::faker()->uuid(),
+            'iconType' => IconType::EMOJI,
+            'iconData' => '👤',
+            'permissions' => [],
         ];
     }
 
