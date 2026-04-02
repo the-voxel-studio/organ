@@ -9,3 +9,9 @@ framework:
 
         # Cache système (les routes, les attributs API Platform) dans Valkey
         system: cache.adapter.redis
+
+when@test:
+    framework:
+        cache:
+            app: cache.adapter.array
+            system: cache.adapter.array

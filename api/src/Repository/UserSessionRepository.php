@@ -24,7 +24,7 @@ class UserSessionRepository extends ServiceEntityRepository implements RefreshTo
      * @param \DateTimeInterface|null $datetime
      * @return UserSession[]
      */
-    public function findInvalid(\DateTimeInterface $datetime = null): array
+    public function findInvalid(?\DateTimeInterface $datetime = null): array
     {
         $datetime = $datetime ?: new \DateTime();
 
@@ -41,7 +41,7 @@ class UserSessionRepository extends ServiceEntityRepository implements RefreshTo
      * @param int $offset
      * @return \Traversable|array
      */
-    public function findInvalidBatch(\DateTimeInterface $datetime = null, ?int $batchSize = null, int $offset = 0): \Traversable|array
+    public function findInvalidBatch(?\DateTimeInterface $datetime = null, ?int $batchSize = null, int $offset = 0): \Traversable|array
     {
         $datetime = $datetime ?: new \DateTime();
 
