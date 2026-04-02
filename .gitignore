@@ -31,7 +31,7 @@
 /api/public/build/
 /front/public/build/
 
-.idea/
+/.idea/
 
 # Docker
 !/docker/

@@ -1,5 +1,0 @@
-Est ce qu'on met prénom et nom ?
-est ce que le titre "organ" peux changer en fonction de la langue
-Est ce qu'on précide "nouvel organ (nouveau sous-groupe)"
-ProjectDescription et projectSummary ?
-On met JSON5 pour mettre des commentaires ?
