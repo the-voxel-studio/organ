@@ -110,6 +110,7 @@ Pour configurer le projet localement, vous aurez besoin de [Git](https://git-scm
     Le répertoire `vendor` de l'API n'étant pas suivi par Git, vous devez installer les dépendances PHP à l'intérieur du conteneur.
     ```bash
     docker-compose exec api-php composer install
+    docker-compose exec front-php composer install
     ```
 
 5.  **Accédez aux Services :**
