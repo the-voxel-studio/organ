@@ -9,5 +9,5 @@ lexik_jwt_authentication:
             samesite: lax
             path: /
             domain: null
-            secure: true
+            secure: '%env(bool:COOKIE_SECURE)%'
             httpOnly: true

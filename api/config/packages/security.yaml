@@ -16,8 +16,9 @@ security:
         
         # Auth firewall handles login, register, refresh, and logout
         auth:
-            pattern: ^/api/auth/(login|register|refresh|logout)
+            pattern: ^/api/auth/(login|register|refresh|logout|login/google)
             stateless: true
+            user_checker: App\Security\UserChecker
             json_login:
                 check_path: /api/auth/login
                 success_handler: lexik_jwt_authentication.handler.authentication_success

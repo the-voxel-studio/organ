@@ -8,6 +8,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     notification_base_url: '%env(resolve:NOTIFICATION_BASE_URL)%'
+    google_client_id: '%env(resolve:GOOGLE_CLIENT_ID)%'
 
 services:
     # default configuration for services in *this* file
@@ -19,6 +20,13 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+    
+    App\Service\GoogleAuthService:
+        arguments:
+            $googleClientId: '%google_client_id%'
+
+    # Alias to tell Symfony which success handler to use for the interface
+    Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface: '@lexik_jwt_authentication.handler.authentication_success'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
