@@ -1,4 +1,11 @@
 -- =========================================================================
+-- INITIALISATION DE LA BASE DE TEST (Nécessaire pour PHPUnit / Foundry)
+-- =========================================================================
+CREATE DATABASE IF NOT EXISTS app_database_test;
+GRANT ALL PRIVILEGES ON app_database_test.* TO 'app_user'@'%';
+FLUSH PRIVILEGES;
+
+-- =========================================================================
 -- UTILISATEURS (Comptes locaux JWT + Google OAuth)
 -- =========================================================================
 CREATE TABLE users (
@@ -71,11 +78,27 @@ CREATE TABLE project_members (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     project_id INT NOT NULL,
     user_id INT NOT NULL,
-    global_role VARCHAR(255) NOT NULL DEFAULT 'MEMBER', -- ADMIN MEMBER
+    global_role VARCHAR(255) DEFAULT 'MEMBER' NOT NULL COMMENT 'ADMIN, MANAGER, MEMBER', -- ADMIN MANAGER MEMBER 
     UNIQUE KEY (project_id, user_id),
     deleted_at DATETIME NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE project_invitations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    uuid VARCHAR(36) NOT NULL UNIQUE,
+    project_id INT NOT NULL,
+    email VARCHAR(180) NOT NULL,
+    role VARCHAR(255) NOT NULL DEFAULT 'MEMBER',
+    token VARCHAR(64) NOT NULL UNIQUE,
+    invited_by INT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    expires_at DATETIME NOT NULL,
+    accepted_at DATETIME NULL,
+    
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- =========================================================================
@@ -87,7 +110,7 @@ CREATE TABLE organs (
     project_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
     description LONGTEXT NULL,
-    icon_type VARCHAR(255) NOT NULL DEFAULT 'emoji',
+    icon_type VARCHAR(255) DEFAULT 'EMOJI' NOT NULL COMMENT 'SVG, BLOB, EMOJI',
     icon_data LONGTEXT NULL,
     highlight_color VARCHAR(9) DEFAULT '#000000' NOT NULL, 
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -113,7 +136,6 @@ CREATE TABLE organ_links (
 -- =========================================================================
 CREATE TABLE permissions (
     id SMALLINT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
@@ -122,24 +144,23 @@ CREATE TABLE organ_roles (
     uuid VARCHAR(36) NOT NULL UNIQUE,
     organ_id INT NOT NULL,
     name VARCHAR(50) NOT NULL,
+    icon_type VARCHAR(255) DEFAULT 'EMOJI' NOT NULL COMMENT 'SVG, BLOB, EMOJI',
+    icon_data LONGTEXT NULL,
     deleted_at DATETIME NULL,
     INDEX idx_organ (organ_id),
     FOREIGN KEY (organ_id) REFERENCES organs(id) ON DELETE CASCADE
 );
 
 CREATE TABLE organ_role_permissions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     role_id INT NOT NULL,
     permission_id SMALLINT NOT NULL,
-    UNIQUE KEY (role_id, permission_id),
+    PRIMARY KEY(role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES organ_roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
 );
 
 CREATE TABLE user_organ_roles (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     user_id INT NOT NULL,
     role_id INT NOT NULL,
     UNIQUE KEY (user_id, role_id),
@@ -187,7 +208,6 @@ CREATE TABLE tasks (
 -- =========================================================================
 CREATE TABLE task_assignees (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     user_id INT NOT NULL,
     UNIQUE KEY (task_id, user_id),
@@ -221,10 +241,10 @@ CREATE TABLE task_attachments (
     file_path VARCHAR(500) NOT NULL,
     file_size INT NOT NULL,
     file_type VARCHAR(100) NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at DATETIME NOT NULL,
     deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE RESTRICT
 );
 
 -- =========================================================================
@@ -236,8 +256,8 @@ CREATE TABLE task_comments (
     task_id INT NOT NULL,
     user_id INT NOT NULL,
     content LONGTEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
     deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -261,7 +281,6 @@ CREATE TABLE tags (
 -- =========================================================================
 CREATE TABLE task_tags (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     tag_id INT NOT NULL,
     UNIQUE KEY (task_id, tag_id),
@@ -275,7 +294,6 @@ CREATE TABLE task_tags (
 -- =========================================================================
 CREATE TABLE task_dependencies (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
     task_id INT NOT NULL,
     depends_on_task_id INT NOT NULL,
     UNIQUE KEY (task_id, depends_on_task_id),
@@ -310,7 +328,7 @@ CREATE TABLE notifications (
     user_id INT NOT NULL,
     task_id INT NULL,
     type VARCHAR(50) NOT NULL,
-    message TEXT NOT NULL,
+    message LONGTEXT NOT NULL,
     is_read TINYINT(1) DEFAULT 0 NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at DATETIME NULL,
@@ -328,3 +346,43 @@ CREATE INDEX idx_task_history_timeline ON task_history(task_id, created_at);
 CREATE INDEX idx_projects_deleted_at ON projects(deleted_at);
 CREATE INDEX idx_organs_deleted_at ON organs(deleted_at);
 CREATE INDEX idx_tasks_deleted_at ON tasks(deleted_at);
+CREATE INDEX idx_project_members_deleted_at ON project_members (deleted_at);
+
+-- =========================================================================
+-- PERMISSIONS GENERALES
+-- =========================================================================
+INSERT INTO permissions (name) VALUES 
+('ORGAN_VIEW'),
+('ORGAN_EDIT'),
+('ORGAN_MANAGE_ROLES'),
+('ORGAN_LINK_MANAGE'),
+('TASK_CREATE'),
+('TASK_EDIT_OWN'),
+('TASK_EDIT_ALL'),
+('TASK_DELETE_OWN'),
+('TASK_DELETE_ALL'),
+('TASK_STATUS_CHANGE_OWN'),
+('TASK_STATUS_CHANGE_ALL'),
+('TASK_PRIORITY_CHANGE_OWN'),
+('TASK_PRIORITY_CHANGE_ALL'),
+('TASK_DATES_MANAGE_OWN'),
+('TASK_DATES_MANAGE_ALL'),
+('TASK_ESTIMATE_MANAGE_OWN'),
+('TASK_ESTIMATE_MANAGE_ALL'),
+('TASK_ASSIGN_SELF'),
+('TASK_ASSIGN_OTHERS'),
+('TASK_VALIDATE'),
+('TASK_LINK_MANAGE_OWN'),
+('TASK_LINK_MANAGE_ALL'),
+('TASK_TAG_MANAGE_OWN'),
+('TASK_TAG_MANAGE_ALL'),
+('TASK_DEPENDENCY_MANAGE_OWN'),
+('TASK_DEPENDENCY_MANAGE_ALL'),
+('COMMENT_CREATE'),
+('COMMENT_EDIT_OWN'),
+('COMMENT_EDIT_ALL'),
+('COMMENT_DELETE_OWN'),
+('COMMENT_DELETE_ALL'),
+('ATTACHMENT_ADD'),
+('ATTACHMENT_DELETE_OWN'),
+('ATTACHMENT_DELETE_ALL');

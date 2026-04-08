@@ -1,0 +1,66 @@
+<section id="collaboration" class="py-24 bg-white/10 text-gray-900 overflow-hidden">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col lg:flex-row items-center gap-16">
+            <div class="lg:w-1/2">
+                <h2 class="text-bubblegum font-bold tracking-widest uppercase text-sm mb-3">{{ 'collaboration.badge'|trans({}, 'landing') }}</h2>
+                <h3 class="text-4xl lg:text-5xl font-extrabold mb-8">{{ 'collaboration.title'|trans({}, 'landing') }}</h3>
+                <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+                    {{ 'collaboration.subtitle'|trans({}, 'landing') }}
+                </p>
+
+                <div class="space-y-6">
+                    <div class="flex gap-4 p-4 rounded-2xl hover:bg-white/50 transition-colors">
+                        <div class="flex-shrink-0 w-12 h-12 bg-bubblegum/20 rounded-xl flex items-center justify-center text-bubblegum">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl mb-1 text-black">{{ 'collaboration.item1.title'|trans({}, 'landing') }}</h4>
+                            <p class="text-gray-500 text-sm">{{ 'collaboration.item1.desc'|trans({}, 'landing') }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-4 p-4 rounded-2xl hover:bg-white/50 transition-colors">
+                        <div class="flex-shrink-0 w-12 h-12 bg-highlight/10 rounded-xl flex items-center justify-center text-highlight">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-xl mb-1 text-black">{{ 'collaboration.item2.title'|trans({}, 'landing') }}</h4>
+                            <p class="text-gray-500 text-sm">{{ 'collaboration.item2.desc'|trans({}, 'landing') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:w-1/2 relative">
+                <!-- Visual representation of flow -->
+                <div class="relative bg-white border border-bubblegum/10 rounded-[2rem] p-8 shadow-xl">
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                            <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                            <div class="text-[10px] font-mono text-gray-400">14:02</div>
+                            <div class="text-xs font-medium">{{ 'collaboration.visual.lucas'|trans({}, 'landing')|raw }}</div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 opacity-80">
+                            <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <div class="text-[10px] font-mono text-gray-400">14:05</div>
+                            <div class="text-xs font-medium">{{ 'collaboration.visual.sophie'|trans({}, 'landing')|raw }}</div>
+                        </div>
+                        <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 opacity-50">
+                            <div class="w-2 h-2 rounded-full bg-gray-300"></div>
+                            <div class="text-[10px] font-mono text-gray-400">--:--</div>
+                            <div class="text-xs text-gray-400">{{ 'collaboration.visual.waiting'|trans({}, 'landing') }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute -bottom-6 -right-6 bg-bubblegum p-4 rounded-2xl shadow-xl transform rotate-3 text-white">
+                        <p class="text-xs font-bold">{{ 'collaboration.visual.visibility'|trans({}, 'landing') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,21 @@
+<nav {{ attributes.defaults({
+    class: 'bg-indigo-600 text-white shadow-md'
+}) }}>
+    <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+        <div class="font-bold text-2xl flex items-center">
+            <a href="{{ path('app_home') }}" class="flex items-center gap-2">
+                <twig:DynamicLogo id="nav-logo" size="48px" />
+                <span>Organ</span>
+            </a>
+        </div>
+        <div class="space-x-4">
+            <a href="{{ path('app_home') }}" class="hover:underline">Home</a>
+            {% if app.user %}
+                <a href="{{ path('app_dashboard') }}" class="hover:underline">Dashboard</a>
+                <a href="{{ path('app_logout') }}" class="bg-white text-indigo-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition">Logout</a>
+            {% else %}
+                <a href="{{ path('app_login') }}" class="bg-white text-indigo-600 px-4 py-2 rounded-md font-medium hover:bg-gray-100 transition">Login</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>

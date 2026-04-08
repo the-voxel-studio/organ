@@ -5,6 +5,11 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+    http_client:
+        scoped_clients:
+            api.client:
+                base_uri: '%env(API_URL)%'
+
     #esi: true
     #fragments: true
 
