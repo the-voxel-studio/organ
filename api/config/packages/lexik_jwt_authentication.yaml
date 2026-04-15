@@ -2,12 +2,12 @@ lexik_jwt_authentication:
     secret_key: '%kernel.project_dir%/config/jwt/private.pem'
     public_key: '%kernel.project_dir%/config/jwt/public.pem'
     pass_phrase: '%env(JWT_PASSPHRASE)%'
-    token_ttl: 1800 # half an hour
+    token_ttl: 1800 # 30 min
     set_cookies:
         BEARER:
-            lifetime: null
+            lifetime: 1800
             samesite: lax
             path: /
             domain: null
-            secure: true
+            secure: '%env(bool:COOKIE_SECURE)%'
             httpOnly: true

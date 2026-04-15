@@ -5,6 +5,9 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+    trusted_proxies: '%env(TRUSTED_PROXIES)%'
+    trusted_headers: '%env(TRUSTED_HEADERS)%'
+
     #esi: true
     #fragments: true
 

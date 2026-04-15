@@ -12,6 +12,7 @@
         "doctrine/orm": "^3.6",
         "gesdinet/jwt-refresh-token-bundle": "*",
         "lexik/jwt-authentication-bundle": "*",
+        "matomo/device-detector": "^6.5",
         "nelmio/api-doc-bundle": "*",
         "nelmio/cors-bundle": "^2.6",
         "phpdocumentor/reflection-docblock": "*",
@@ -22,12 +23,14 @@
         "symfony/expression-language": "8.0.*",
         "symfony/flex": "^2",
         "symfony/framework-bundle": "8.0.*",
+        "symfony/mercure-bundle": "*",
         "symfony/property-access": "8.0.*",
         "symfony/property-info": "8.0.*",
         "symfony/runtime": "8.0.*",
         "symfony/security-bundle": "8.0.*",
         "symfony/serializer": "8.0.*",
         "symfony/twig-bundle": "8.0.*",
+        "symfony/uid": "8.0.*",
         "symfony/validator": "8.0.*",
         "symfony/yaml": "8.0.*"
     },
@@ -79,9 +82,17 @@
     },
     "extra": {
         "symfony": {
-            "allow-contrib": false,
+            "allow-contrib": true,
             "require": "8.0.*",
             "docker": false
         }
+    },
+    "require-dev": {
+        "dama/doctrine-test-bundle": ">=8.6",
+        "phpunit/phpunit": "^13.0",
+        "symfony/browser-kit": "8.0.*",
+        "symfony/css-selector": "8.0.*",
+        "symfony/maker-bundle": "^1.67",
+        "zenstruck/foundry": "*"
     }
 }
