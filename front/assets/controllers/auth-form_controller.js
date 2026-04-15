@@ -2,7 +2,7 @@ import { Controller } from '@hotwired/stimulus';
 import { trans } from '../translator.js';
 
 export default class extends Controller {
-    static targets = ['error', 'errorMessage', 'submitButton', 'spinner', 'form'];
+    static targets = ['error', 'errorMessage', 'submitButton', 'spinner', 'form', 'agreement'];
     static values = {
         url: String,
         redirectUrl: String,
@@ -12,11 +12,11 @@ export default class extends Controller {
     async submit(event) {
         event.preventDefault();
         
-        // Reset state
-        this.errorTarget.classList.add('hidden');
-        this.submitButtonTarget.disabled = true;
-        this.spinnerTarget.classList.remove('hidden');
-        this.formTarget.classList.add('opacity-50', 'pointer-events-none');
+        // Check agreement
+        if (this.hasAgreementTarget && !this.agreementTarget.checked) {
+            this.showError(trans('errors.must_agree', {}, 'auth'));
+            return;
+        }
 
         const formData = new FormData(this.formTarget);
         let data = Object.fromEntries(formData.entries());

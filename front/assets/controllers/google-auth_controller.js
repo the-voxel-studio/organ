@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['buttonContainer', 'spinner', 'button', 'icon'];
+    static targets = ['buttonContainer', 'spinner', 'button', 'icon', 'agreement'];
     static values = {
         clientId: String,
         loginUrl: String,
@@ -35,6 +35,12 @@ export default class extends Controller {
     login(event) {
         if (event) event.preventDefault();
         
+        // Check agreement
+        if (this.hasAgreementTarget && !this.agreementTarget.checked) {
+            this.dispatch('error', { detail: 'Vous devez accepter les conditions pour continuer' });
+            return;
+        }
+
         this.startLoading();
 
         const googleButton = this.buttonContainerTarget.querySelector('div[role="button"]') 
