@@ -43,11 +43,11 @@ Le diagramme suivant illustre l'architecture générale de l'API backend :
 
 ## Configuration de l'Environnement
 
-Avant de lancer l'application, vous devez configurer les variables d'environnement. Le projet utilise deux fichiers `.env` qui sont ignorés par Git et doivent être créés manuellement.
+Avant de lancer l'application, vous devez configurer les variables d'environnement. Le projet utilise plusieurs fichiers `.env` qui sont ignorés par Git et doivent être créés manuellement.
 
 ### 1. Fichier `.env` à la racine
 
-Ce fichier configure les services de base de `docker-compose`. Créez un fichier nommé `.env` à la racine du projet et remplissez-le comme suit. Les valeurs fournies ici sont des exemples pour un environnement de développement local.
+Ce fichier configure les services de base de `docker-compose`. Créez un fichier nommé `.env` à la racine du projet.
 
 ```dotenv
 # Identifiants pour le service MySQL
@@ -61,67 +61,71 @@ PMA_USER=root
 PMA_PASSWORD=root_password
 ```
 
-### 2. Fichier `.env.local` pour l'API
+### 2. Fichier `.env.local` pour l'API Backend
 
-Ce fichier configure l'application Symfony (le backend). Conformément aux bonnes pratiques de Symfony, il est recommandé de créer un fichier `.env.local` dans le dossier `/api` pour surcharger les valeurs par défaut du fichier `.env` de l'API.
-
-Créez le fichier `api/.env.local` et ajoutez les variables suivantes. La plus importante est `DATABASE_URL`, qui doit correspondre aux identifiants définis dans le fichier `.env` de la racine.
+Créez le fichier `api/.env.local` pour surcharger les valeurs par défaut.
 
 ```dotenv
 # api/.env.local
 
-# Clé secrète pour la sécurité de l'application (à changer pour une chaîne aléatoire)
+# Clé secrète Symfony
 APP_SECRET=votre_super_secret_a_remplacer
 
-# URL de connexion à la base de données
-# Assurez-vous que les identifiants correspondent à ceux du .env à la racine
+# URL de connexion à la base de données (doit correspondre au .env racine)
 DATABASE_URL="mysql://app_user:app_password@database:3306/app_database?serverVersion=8.0&charset=utf8mb4"
 
 # URL du service de cache (Valkey/Redis)
 REDIS_URL=redis://organ_valkey:6379
 
-# Origines autorisées pour les requêtes CORS (Cross-Origin)
-# Permet à votre frontend (ex: http://localhost:8000) de communiquer avec l'API
+# Origines autorisées pour les requêtes CORS
 CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
+
+# Configuration Google Auth
+GOOGLE_CLIENT_ID=votre_client_id_google.apps.googleusercontent.com
+
+# Configuration Mercure
+MERCURE_URL=http://mercure/.well-known/mercure
+MERCURE_PUBLIC_URL=http://localhost:9090/.well-known/mercure
+MERCURE_JWT_TOKEN="!ChangeThisMercureHubJWTSecretKey!"
+NOTIFICATION_BASE_URL=http://localhost:8000
+
+# Configuration JWT (LexikJWT)
+JWT_PASSPHRASE=organ_passphrase
 ```
 
-### 3. Fichier `.env` pour le Front
+### 3. Fichier `.env.local` pour le Frontend
 
-Ce fichier configure l'application Symfony (le frontend). Créez un fichier `.env` dans le dossier `/front`.
+Créez le fichier `front/.env.local`.
 
 ```dotenv
-# front/.env
+# front/.env.local
 
-###> symfony/framework-bundle ###
 APP_ENV=dev
-APP_SECRET=9214736f860136209ed889248737f5d0
-###< symfony/framework-bundle ###
+APP_SECRET=votre_secret_front
 
-###> symfony/routing ###
-# URL de base du front pour la génération d'URL (CLI/Notifications)
+# URL de base du front
 DEFAULT_URI=http://localhost:8000
-###< symfony/routing ###
 
-###> Configuration API ###
-# URL de l'API pour les appels HttpClient
-API_URL=http://localhost:8001
-###< Configuration API ###
+# URL de l'API (nom du service Docker)
+API_URL=http://api-nginx
+
+# Configuration Google Auth (doit être le même que l'API)
+GOOGLE_CLIENT_ID=votre_client_id_google.apps.googleusercontent.com
 ```
 
 ---
 
-## Installation Locale
+## Installation et Lancement
 
-Pour configurer le projet localement, vous aurez besoin de [Git](https://git-scm.com/) et [Docker](https://www.docker.com/) installés sur votre machine.
+Pour configurer le projet localement :
 
 1.  **Clonez le dépôt :**
     ```bash
     git clone <repository-url>
     cd organ
     ```
-    *(N'oubliez pas de remplacer `<repository-url>` par l'URL réelle du dépôt Git.)*
 
-2.  **Configurez les variables d'environnement** comme décrit dans la section "Configuration de l'Environnement" ci-dessus.
+2.  **Configurez les fichiers `.env`** comme décrit ci-dessus.
 
 3.  **Construisez et Démarrez les Conteneurs :**
     ```bash
@@ -129,16 +133,32 @@ Pour configurer le projet localement, vous aurez besoin de [Git](https://git-scm
     docker-compose up -d
     ```
 
-4.  **Installez les dépendances de l'API :**
-    Le répertoire `vendor` de l'API n'étant pas suivi par Git, vous devez installer les dépendances PHP à l'intérieur du conteneur.
+4.  **Installation des dépendances et initialisation :**
+
+    *   **Installer Composer pour les deux services :**
+        ```bash
+        docker-compose exec api-php composer install
+        docker-compose exec front-php composer install
+        ```
+
+    *   **Générer les clés JWT (API) :**
+        ```bash
+        docker-compose exec api-php php bin/console lexik:jwt:generate-keypair
+        ```
+
+    *   **Initialiser la Base de Données :**
+        ```bash
+        docker-compose exec api-php php bin/console doctrine:migrations:migrate --no-interaction
+        ```
+
+5.  **Build des Assets (Tailwind) :**
+    Si vous êtes sur Windows ou si le mode `watch` ne fonctionne pas, vous devez recompiler manuellement les styles Tailwind après chaque modification CSS :
     ```bash
-    docker-compose exec api-php composer install
-    docker-compose exec front-php composer install
+    docker-compose exec front-php php bin/console tailwind:build
     ```
 
-5.  **Accédez aux Services :**
+6.  **Accès aux Services :**
     *   **Frontend :** [http://localhost:8000](http://localhost:8000)
     *   **API Backend :** [http://localhost:8001](http://localhost:8001)
     *   **phpMyAdmin :** [http://localhost:8080](http://localhost:8080)
-    *   **Mailpit (Visualiseur d'emails) :** [http://localhost:8025](http://localhost:8025)
-    *   **Hub Mercure :** [http://localhost:9090](http://localhost:9090)
+    *   **Mailpit :** [http://localhost:8025](http://localhost:8025)
