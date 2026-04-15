@@ -121,6 +121,21 @@ services:
     networks:
       - app_network
 
+  front-tailwind-watch:
+    build: 
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: organ_front_tailwind
+    volumes:
+      - ./front:/var/www/html
+    working_dir: /var/www/html
+    command: php bin/console tailwind:build --watch
+    restart: unless-stopped
+    depends_on:
+      - front-php
+    networks:
+      - app_network
+
 volumes:
   db_data:
 

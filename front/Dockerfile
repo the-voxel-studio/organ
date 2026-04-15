@@ -4,8 +4,7 @@ RUN apk add --no-cache \
     icu-dev \
     zlib-dev \
     libzip-dev \
-    nodejs \
-    npm
+    inotify-tools
 
 RUN docker-php-ext-install intl opcache pdo_mysql zip
 

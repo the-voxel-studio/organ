@@ -1,0 +1,13 @@
+{% props title = null %}
+
+<div {{ attributes.defaults({
+    class: 'bg-white p-6 rounded-lg shadow-sm border border-gray-100'
+}) }}>
+    {% if title %}
+        <h3 class="text-lg font-bold text-gray-800 mb-4">{{ title }}</h3>
+    {% endif %}
+    
+    <div class="card-content">
+        {{ block('content') }}
+    </div>
+</div>

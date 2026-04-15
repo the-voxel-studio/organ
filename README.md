@@ -85,6 +85,29 @@ REDIS_URL=redis://organ_valkey:6379
 CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
 ```
 
+### 3. Fichier `.env` pour le Front
+
+Ce fichier configure l'application Symfony (le frontend). Créez un fichier `.env` dans le dossier `/front`.
+
+```dotenv
+# front/.env
+
+###> symfony/framework-bundle ###
+APP_ENV=dev
+APP_SECRET=9214736f860136209ed889248737f5d0
+###< symfony/framework-bundle ###
+
+###> symfony/routing ###
+# URL de base du front pour la génération d'URL (CLI/Notifications)
+DEFAULT_URI=http://localhost:8000
+###< symfony/routing ###
+
+###> Configuration API ###
+# URL de l'API pour les appels HttpClient
+API_URL=http://localhost:8001
+###< Configuration API ###
+```
+
 ---
 
 ## Installation Locale

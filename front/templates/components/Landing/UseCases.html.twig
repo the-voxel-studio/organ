@@ -1,0 +1,46 @@
+<section id="use-cases" class="py-24 bg-gray-50/50 overflow-hidden">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-20">
+            <h2 class="text-bubblegum font-bold tracking-widest uppercase text-sm mb-3">{{ 'use_cases.badge'|trans({}, 'landing') }}</h2>
+            <h3 class="text-4xl lg:text-5xl font-extrabold text-black italic">{{ 'use_cases.title'|trans({}, 'landing') }}</h3>
+            <div class="mt-6 h-1 w-24 bg-bubblegum mx-auto rounded-full"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <!-- Step 1 -->
+            <div class="relative flex flex-col items-center text-center group">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-2xl font-bold mb-6 border border-gray-100 group-hover:bg-bubblegum group-hover:text-white transition-all shadow-sm">1</div>
+                <h4 class="text-xl font-bold mb-4">{{ 'use_cases.step1.title'|trans({}, 'landing') }}</h4>
+                <p class="text-gray-500 text-sm">{{ 'use_cases.step1.desc'|trans({}, 'landing') }}</p>
+                <div class="hidden md:block absolute top-8 -right-6 text-gray-200">
+                    <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="relative flex flex-col items-center text-center group">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-2xl font-bold mb-6 border border-gray-100 group-hover:bg-highlight group-hover:text-white transition-all shadow-sm">2</div>
+                <h4 class="text-xl font-bold mb-4">{{ 'use_cases.step2.title'|trans({}, 'landing') }}</h4>
+                <p class="text-gray-500 text-sm">{{ 'use_cases.step2.desc'|trans({}, 'landing')|raw }}</p>
+                <div class="hidden md:block absolute top-8 -right-6 text-gray-200">
+                    <svg class="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="relative flex flex-col items-center text-center group">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-2xl font-bold mb-6 border border-gray-100 group-hover:bg-black group-hover:text-white transition-all shadow-sm">3</div>
+                <h4 class="text-xl font-bold mb-4">{{ 'use_cases.step3.title'|trans({}, 'landing') }}</h4>
+                <p class="text-gray-500 text-sm">{{ 'use_cases.step3.desc'|trans({}, 'landing') }}</p>
+            </div>
+        </div>
+
+        <div class="mt-20 p-8 bg-bubblegum/5 rounded-3xl border border-bubblegum/10 text-center max-w-3xl mx-auto">
+            <p class="text-bubblegum font-bold italic text-lg">{{ 'use_cases.quote'|trans({}, 'landing') }}</p>
+        </div>
+    </div>
+</section>

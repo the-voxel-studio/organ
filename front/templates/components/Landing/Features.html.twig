@@ -1,0 +1,56 @@
+<section id="features" class="py-24 bg-gray-50/50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+            <h2 class="text-bubblegum font-bold tracking-widest uppercase text-sm mb-3">{{ 'features.badge'|trans({}, 'landing') }}</h2>
+            <h3 class="text-4xl lg:text-5xl font-extrabold text-black">{{ 'features.title'|trans({}, 'landing') }}</h3>
+            <div class="mt-6 h-1.5 w-24 bg-bubblegum mx-auto rounded-full"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Feature 1: BYOS / Google -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-bubblegum/5 transition-all group">
+                <div class="w-14 h-14 bg-bubblegum/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-bubblegum group-hover:rotate-6 transition-all">
+                    <svg class="w-8 h-8 text-bubblegum group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                </div>
+                <h4 class="text-xl font-bold text-black mb-3 text-left">{{ 'features.item1.title'|trans({}, 'landing') }}</h4>
+                <p class="text-gray-600 text-left text-sm italic mb-2">{{ 'features.item1.subtitle'|trans({}, 'landing') }}</p>
+                <p class="text-gray-600 text-left text-sm text-balance">{{ 'features.item1.desc'|trans({}, 'landing') }}</p>
+            </div>
+
+            <!-- Feature 2: Hierarchy -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-highlight/5 transition-all group">
+                <div class="w-14 h-14 bg-highlight/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-highlight group-hover:-rotate-6 transition-all">
+                    <svg class="w-8 h-8 text-highlight group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                </div>
+                <h4 class="text-xl font-bold text-black mb-3 text-left">{{ 'features.item2.title'|trans({}, 'landing') }}</h4>
+                <p class="text-gray-600 text-left text-sm text-balance">{{ 'features.item2.desc'|trans({}, 'landing') }}</p>
+            </div>
+
+            <!-- Feature 3: Priorities & Deadlines -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-pastel-pink/5 transition-all group">
+                <div class="w-14 h-14 bg-pastel-pink/20 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-pastel-pink group-hover:scale-110 transition-all">
+                    <svg class="w-8 h-8 text-bubblegum group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h4 class="text-xl font-bold text-black mb-3 text-left">{{ 'features.item3.title'|trans({}, 'landing') }}</h4>
+                <p class="text-gray-600 text-left text-sm text-balance">{{ 'features.item3.desc'|trans({}, 'landing') }}</p>
+            </div>
+
+            <!-- Feature 4: Roles -->
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-background-blue/5 transition-all group">
+                <div class="w-14 h-14 bg-background-blue/20 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-light-blue group-hover:rotate-12 transition-all">
+                    <svg class="w-8 h-8 text-light-blue group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+                <h4 class="text-xl font-bold text-black mb-3 text-left">{{ 'features.item4.title'|trans({}, 'landing') }}</h4>
+                <p class="text-gray-600 text-left text-sm text-balance">{{ 'features.item4.desc'|trans({}, 'landing') }}</p>
+            </div>
+        </div>
+    </div>
+</section>
