@@ -10,9 +10,11 @@ use App\Service\NotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Mercure\Authorization;
+use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 #[Route('/notifications', name: 'notifications_')]
@@ -20,6 +22,7 @@ class NotificationController extends AbstractController
 {
     public function __construct(
         private readonly NotificationService $notificationService,
+        private readonly HubInterface $hub,
         #[Autowire('%notification_base_url%')]
         private readonly string $baseUrl
     ) {}
@@ -56,7 +59,7 @@ class NotificationController extends AbstractController
     }
 
     #[Route('/subscribe', name: 'subscribe_url', methods: ['GET'])]
-    public function getSubscribeUrl(Authorization $authorization): JsonResponse
+    public function getSubscribeUrl(Request $request, Authorization $authorization): JsonResponse
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -65,20 +68,19 @@ class NotificationController extends AbstractController
         $topic = sprintf('%s/users/%s/notifications', rtrim($this->baseUrl, '/'), $user->getUuid());
         
         // Generate the JWT for Mercure subscription
-        $token = $authorization->createCookie($this->getHubRequest($topic));
+        // We pass the current request and the topic we want to subscribe to.
+        // If createCookie still fails because of localhost, we'll try another way.
+        $cookie = $authorization->createCookie($request, [$topic]);
 
-        return $this->json([
-            'hubUrl' => $this->getParameter('mercure.default_hub'),
+        $response = $this->json([
+            'hubUrl' => $this->hub->getPublicUrl(),
             'topic' => $topic,
-            'token' => $token->getValue()
+            'token' => $cookie->getValue()
         ]);
-    }
 
-    private function getHubRequest(string $topic): \Symfony\Component\HttpFoundation\Request
-    {
-        $request = new \Symfony\Component\HttpFoundation\Request();
-        $request->attributes->set('_mercure_subscribe', [$topic]);
-        return $request;
+        $response->headers->setCookie($cookie);
+
+        return $response;
     }
 
     #[Route('/trash', name: 'trash', methods: ['GET'])]

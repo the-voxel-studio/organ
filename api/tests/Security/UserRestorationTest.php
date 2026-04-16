@@ -34,13 +34,38 @@ class UserRestorationTest extends ApiTestCase
         // If UserRestoreListener works, this should be 200
         $this->assertResponseIsSuccessful();
         
-        // $data = $this->getResponseContent($client);
-        // $this->assertArrayHasKey('token', $data);
-
         // 3. Verify user is restored in database
         $em = self::getContainer()->get('doctrine')->getManager();
         $em->clear();
         $updatedUser = $em->getRepository(\App\Entity\User::class)->findOneBy(['email' => 'deleted@example.com']);
         $this->assertNull($updatedUser->getDeletedAt());
+    }
+
+    public function testSoftDeletedUserIsBlockedFromOtherRoutes(): void
+    {
+        $client = static::createClient();
+        
+        // 1. Create an active user
+        $user = UserFactory::createOne([
+            'email' => 'deleted_blocked@example.com',
+            'password' => '$2y$13$X3K6/9xG6vP5r6p1vHhW1.O8k0y1z6p1vHhW1.O8k0y1z6p1vHhW1', // 'password'
+        ]);
+
+        // 2. Generate a token (using helper)
+        $this->login($client, $user);
+        
+        // 3. Manually soft-delete them
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $userEntity = $em->getRepository(\App\Entity\User::class)->find($user->getId());
+        $userEntity->setDeletedAt(new \DateTime('-1 day'));
+        $em->flush();
+        $em->clear();
+
+        // 4. Try to access a protected route
+        $client->request('GET', '/api/users/me');
+
+        // Should be 401 because UserChecker::checkPreAuth throws CustomUserMessageAccountStatusException
+        $this->assertResponseStatusCodeSame(401);
+        $this->assertStringContainsString('Your account is scheduled for deletion. Please log in again to reactivate it.', $client->getResponse()->getContent());
     }
 }

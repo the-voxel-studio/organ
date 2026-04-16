@@ -31,9 +31,8 @@ class ExternalJwtAuthenticator extends AbstractAuthenticator implements Authenti
 
     public function supports(Request $request): ?bool
     {
-        // On supporte toutes les requêtes, on vérifiera si le cookie est là
-        // Mais on pourrait limiter à certaines routes si besoin.
-        return true;
+        // On ne s'active que si au moins un des cookies d'authentification est présent
+        return $request->cookies->has('BEARER') || $request->cookies->has('refresh_token');
     }
 
     public function authenticate(Request $request): Passport
@@ -41,6 +40,7 @@ class ExternalJwtAuthenticator extends AbstractAuthenticator implements Authenti
         $accessToken = $request->cookies->get('BEARER');
         $refreshToken = $request->cookies->get('refresh_token');
 
+        // Normalement redondant avec supports() mais sécurise la méthode
         if (!$accessToken && !$refreshToken) {
             throw new AuthenticationException('No authentication tokens found.');
         }
@@ -76,7 +76,11 @@ class ExternalJwtAuthenticator extends AbstractAuthenticator implements Authenti
 
         return new SelfValidatingPassport(
             new UserBadge($accessToken, function (string $token) {
-                return $this->userProvider->loadUserByToken($token);
+                try {
+                    return $this->userProvider->loadUserByToken($token);
+                } catch (\Exception $e) {
+                    throw new AuthenticationException($e->getMessage());
+                }
             })
         );
     }
@@ -89,8 +93,11 @@ class ExternalJwtAuthenticator extends AbstractAuthenticator implements Authenti
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        // Si c'est une page publique, on laisse passer sans authentification (le contrôleur fera le job)
-        // Mais si on est dans l'access_control, Symfony redirigera vers start()
-        return null;
+        // En cas d'échec d'authentification (ex: token 401), on vide les cookies et on redirige
+        $response = new RedirectResponse($this->urlGenerator->generate('app_login'));
+        $response->headers->clearCookie('BEARER');
+        $response->headers->clearCookie('refresh_token');
+
+        return $response;
     }
 }

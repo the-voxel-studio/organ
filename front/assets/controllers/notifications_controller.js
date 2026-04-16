@@ -49,7 +49,11 @@ export default class extends Controller {
             });
             if (response.ok) {
                 const data = await response.json();
-                this.eventSource = new EventSource(`${data.hubUrl}?topic=${encodeURIComponent(data.topic)}`);
+                const hubUrl = new URL(data.hubUrl);
+                hubUrl.searchParams.set('topic', data.topic);
+                hubUrl.searchParams.set('authorization', data.token);
+
+                this.eventSource = new EventSource(hubUrl.toString());
                 this.eventSource.onmessage = (event) => {
                     const notification = JSON.parse(event.data);
                     this.addNotification(notification);

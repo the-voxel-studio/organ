@@ -24,13 +24,15 @@ class UserChecker implements UserCheckerInterface
             return;
         }
 
-        if ($user->getDeletedAt() !== null) {
+        $request = $this->requestStack->getCurrentRequest();
+        $isLoginRoute = $request && $request->attributes->get('_route') === 'auth_login';
+
+        if ($user->getDeletedAt() !== null && !$isLoginRoute) {
             throw new CustomUserMessageAccountStatusException('Your account is scheduled for deletion. Please log in again to reactivate it.');
         }
 
         // Only block if we are on the traditional login route (password login)
-        $request = $this->requestStack->getCurrentRequest();
-        if ($request && $request->attributes->get('_route') === 'auth_login') {
+        if ($isLoginRoute) {
             if ($user->getPassword() === null && $user->getGoogleId() !== null) {
                 throw new CustomUserMessageAccountStatusException('This account uses Google Login. Please use the "Sign in with Google" button.');
             }
