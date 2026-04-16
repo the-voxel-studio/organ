@@ -1,5 +1,6 @@
 {
     "home": "Accueil",
     "dashboard": "Tableau de bord",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "back": "Retour"
 }

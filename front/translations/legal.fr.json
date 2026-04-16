@@ -1,0 +1,69 @@
+{
+    "legal_notice.title": "Mentions Légales",
+    "legal_notice.editor.title": "1. Édition du site",
+    "legal_notice.editor.content": "Le présent site, accessible à l'URL [URL_DU_SITE], est édité par l'équipe du projet Organ. En l'absence de structure juridique formelle (projet étudiant), le traitement est réalisé sous la responsabilité collective des membres du projet. [NOM_DU_RESPONSABLE] est désigné comme interlocuteur principal.",
+    "legal_notice.editor.publication_director": "Le Directeur de la publication du Site est [NOM_DIRECTEUR_PUBLICATION].",
+    "legal_notice.hosting.title": "2. Hébergement",
+    "legal_notice.hosting.content": "Le Site est hébergé par [NOM_HEBERGEUR], situé [ADRESSE_HEBERGEUR] (Contact : [CONTACT_HEBERGEUR]).",
+    "legal_notice.intellectual_property.title": "3. Propriété intellectuelle",
+    "legal_notice.intellectual_property.content": "L'ensemble de ce site relève de la législation française et internationale sur le droit d'auteur et la propriété intellectuelle. Tous les droits de reproduction sont réservés, y compris pour les documents téléchargeables et les représentations iconographiques et photographiques. Toute reproduction, représentation, modification, publication, adaptation de tout ou partie des éléments du site, quel que soit le moyen ou le procédé utilisé, est interdite, sauf autorisation écrite préalable.",
+    "legal_notice.responsibility.title": "4. Responsabilité",
+    "legal_notice.responsibility.content": "L'éditeur s'efforce de fournir des informations précises mais ne saurait être tenu responsable des erreurs ou omissions, ainsi que des dommages directs ou indirects résultant de l'accès ou de l'utilisation du site. Le site peut contenir des liens vers d'autres sites dont l'éditeur n'exerce aucun contrôle.",
+    
+    "privacy_policy.title": "Politique de Confidentialité",
+    "privacy_policy.intro": "La protection de vos données à caractère personnel est une priorité pour Organ. Conformément au Règlement Général sur la Protection des Données (RGPD) et à la Loi Informatique et Libertés, cette politique vous informe sur la manière dont nous traitons vos données.",
+    
+    "privacy_policy.controller.title": "1. Responsable du traitement",
+    "privacy_policy.controller.content": "Le responsable du traitement des données est l'équipe du projet Organ. En l'absence de structure juridique formelle (projet étudiant), le traitement est réalisé sous la responsabilité collective des membres du projet.",
+    
+    "privacy_policy.data_collected.title": "2. Données collectées",
+    "privacy_policy.data_collected.content": "Nous collectons les données suivantes :",
+    "privacy_policy.data_collected.list": "<ul><li>Identité : Prénom, Nom.</li><li>Contact : Adresse e-mail.</li><li>Données techniques : Google ID (en cas de connexion via Google), adresses IP (pour la sécurité).</li><li>Données d'utilisation : Projets, tâches, dates de création et d'échéance.</li><li>Fichiers : Identifiants de dossiers Google Drive (les fichiers eux-mêmes restent sur votre stockage personnel).</li></ul>",
+    
+    "privacy_policy.purposes.title": "3. Finalités du traitement",
+    "privacy_policy.purposes.content": "Vos données sont traitées pour les finalités suivantes :",
+    "privacy_policy.purposes.list": "<ul><li>Fourniture et gestion du service Organ.</li><li>Authentification sécurisée des utilisateurs (incluant Google OAuth).</li><li>Synchronisation avec votre stockage Google Drive (Bring Your Own Storage).</li><li>Suivi de l'historique des modifications des tâches.</li><li>Sécurité du site (détection des fraudes).</li></ul>",
+
+    "privacy_policy.legal_basis.title": "4. Base légale du traitement",
+    "privacy_policy.legal_basis.content": "Le traitement de vos données est nécessaire à l'exécution du contrat qui nous lie à vous (fourniture du service Organ) conformément à l'article 6.1.b du RGPD.",
+
+    "privacy_policy.cookies.title": "5. Cookies et Traceurs",
+    "privacy_policy.cookies.content": "Organ utilise des cookies techniques strictement nécessaires au fonctionnement du service (session, authentification Google). Aucun cookie publicitaire ou de profilage n'est utilisé par Organ. L'utilisation de l'authentification Google peut entraîner le dépôt de cookies par Google Inc.",
+    
+    "privacy_policy.rights.title": "6. Vos droits",
+    "privacy_policy.rights.content": "Conformément à la réglementation, vous disposez des droits suivants :",
+    "privacy_policy.rights.list": "<ul><li>Droit d'accès : obtenir une copie de vos données.</li><li>Droit de rectification : modifier vos données inexactes.</li><li>Droit à l'effacement (Droit à l'oubli) : supprimer vos données.</li><li>Droit à la portabilité : recevoir vos données dans un format structuré.</li><li>Droit d'opposition : vous opposer au traitement de vos données pour motifs légitimes.</li></ul>",
+    
+    "privacy_policy.retention.title": "7. Durée de conservation",
+    "privacy_policy.retention.content": "Vos données sont conservées tant que votre compte est actif. En cas de suppression du compte, les données sont supprimées sans délai, sauf obligation légale contraire ou nécessité technique de clôture.",
+    
+    "privacy_policy.google.title": "8. Services tiers (Google)",
+    "privacy_policy.google.content": "Organ utilise les services d'API Google pour l'authentification et le stockage Drive. En utilisant ces fonctionnalités, vous acceptez également les conditions de service et la politique de confidentialité de Google. Vos données de fichiers Drive ne sont pas stockées sur nos serveurs.",
+    
+    "privacy_policy.contact.title": "9. Contact et Réclamation",
+    "privacy_policy.contact.content": "Pour toute question relative à vos données, vous pouvez nous contacter via l'application. Vous disposez également du droit d'introduire une réclamation auprès de la CNIL (cnil.fr).",
+
+    "terms.title": "Conditions Générales d'Utilisation",
+    "terms.intro": "Les présentes Conditions Générales d'Utilisation (CGU) encadrent l'accès et l'utilisation de l'application Organ. L'inscription au service implique l'acceptation sans réserve de ces conditions.",
+    
+    "terms.service.title": "1. Description du service",
+    "terms.service.content": "Organ est une plateforme d'organisation de projets permettant la gestion de tâches et la synchronisation de fichiers via Google Drive.",
+    
+    "terms.access.title": "2. Accès et inscription",
+    "terms.access.content": "L'accès au service est réservé aux personnes physiques âgées de 15 ans ou plus. L'utilisateur s'engage à fournir des informations exactes lors de son inscription.",
+    
+    "terms.responsibility_user.title": "3. Responsabilité de l'utilisateur",
+    "terms.responsibility_user.content": "L'utilisateur est seul responsable du contenu qu'il publie sur Organ. Il s'engage à ne pas utiliser le service pour stocker ou partager des contenus illicites, haineux ou portant atteinte aux droits de tiers. L'utilisateur est responsable de la sécurité de ses identifiants.",
+    
+    "terms.responsibility_editor.title": "4. Responsabilité de l'éditeur",
+    "terms.responsibility_editor.content": "L'éditeur met tout en œuvre pour assurer la disponibilité du service. Toutefois, le service est fourni \"en l'état\" sans garantie de performance, de disponibilité ou de continuité. L'éditeur ne pourra être tenu responsable des pertes de données liées à l'utilisation du service ou à une défaillance de Google Drive.",
+    
+    "terms.property.title": "5. Propriété intellectuelle",
+    "terms.property.content": "La structure du site, les textes, graphismes, logos et icônes sont la propriété exclusive de l'éditeur, sous réserve des droits des tiers (notamment Google).",
+    
+    "terms.termination.title": "6. Résiliation",
+    "terms.termination.content": "L'utilisateur peut supprimer son compte à tout moment depuis son espace personnel. L'éditeur se réserve le droit de suspendre ou de supprimer un compte en cas de non-respect des présentes CGU.",
+    
+    "terms.law.title": "7. Droit applicable",
+    "terms.law.content": "Les présentes CGU sont soumises au droit français. En cas de litige, une solution amiable sera recherchée avant toute action judiciaire."
+}

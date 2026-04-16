@@ -45,6 +45,9 @@ Le diagramme suivant illustre l'architecture générale de l'API backend :
 
 Avant de lancer l'application, vous devez configurer les variables d'environnement. Le projet utilise plusieurs fichiers `.env` qui sont ignorés par Git et doivent être créés manuellement.
 
+> [IMPORTANT]
+> Les valeurs entourées de `< >` (ex: `<VOTRE_APP_SECRET>`) sont des **placeholders**. Vous devez impérativement les remplacer par vos propres valeurs réelles pour que l'application fonctionne.
+
 ### 1. Fichier `.env` à la racine
 
 Ce fichier configure les services de base de `docker-compose`. Créez un fichier nommé `.env` à la racine du projet.
@@ -61,56 +64,66 @@ PMA_USER=root
 PMA_PASSWORD=root_password
 ```
 
-### 2. Fichier `.env.local` pour l'API Backend
+### 2. Fichier `.env` pour l'API Backend
 
-Créez le fichier `api/.env.local` pour surcharger les valeurs par défaut.
+Créez le fichier `api/.env`. Ce template contient toutes les variables nécessaires, y compris la configuration réseau et sécurité.
 
 ```dotenv
-# api/.env.local
+###> SYMFONY CORE ###
+APP_ENV=dev
+APP_SECRET=<VOTRE_APP_SECRET_32_CHARS>
+APP_SHARE_DIR=var/share
+DEFAULT_URI=http://localhost:8001
+###< SYMFONY CORE ###
 
-# Clé secrète Symfony
-APP_SECRET=votre_super_secret_a_remplacer
-
-# URL de connexion à la base de données (doit correspondre au .env racine)
-DATABASE_URL="mysql://app_user:app_password@database:3306/app_database?serverVersion=8.0&charset=utf8mb4"
-
-# URL du service de cache (Valkey/Redis)
-REDIS_URL=redis://organ_valkey:6379
-
-# Origines autorisées pour les requêtes CORS
+###> INFRASTRUCTURE (Docker/Network) ###
+TRUSTED_PROXIES=127.0.0.1,REMOTE_ADDR
+TRUSTED_HEADERS=x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port
 CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
+###< INFRASTRUCTURE ###
 
-# Configuration Google Auth
-GOOGLE_CLIENT_ID=votre_client_id_google.apps.googleusercontent.com
+###> DATABASE & CACHE ###
+DATABASE_URL="mysql://app_user:app_password@database:3306/app_database?serverVersion=8.0.32&charset=utf8mb4"
+REDIS_URL=redis://organ_valkey:6379
+###< DATABASE & CACHE ###
 
-# Configuration Mercure
+###> AUTHENTICATION (JWT & Google) ###
+JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
+JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
+JWT_PASSPHRASE=<VOTRE_JWT_PASSPHRASE>
+GOOGLE_CLIENT_ID=<VOTRE_GOOGLE_CLIENT_ID>.apps.googleusercontent.com
+COOKIE_SECURE=false
+###< AUTHENTICATION ###
+
+###> REALTIME (Mercure) ###
 MERCURE_URL=http://mercure/.well-known/mercure
-MERCURE_PUBLIC_URL=http://localhost:9090/.well-known/mercure
-MERCURE_JWT_TOKEN="!ChangeThisMercureHubJWTSecretKey!"
+MERCURE_PUBLIC_URL=http://localhost:8000/hub
+MERCURE_JWT_SECRET='<VOTRE_MERCURE_JWT_SECRET>'
 NOTIFICATION_BASE_URL=http://localhost:8000
-
-# Configuration JWT (LexikJWT)
-JWT_PASSPHRASE=organ_passphrase
+###< REALTIME ###
 ```
 
-### 3. Fichier `.env.local` pour le Frontend
+### 3. Fichier `.env` pour le Frontend
 
-Créez le fichier `front/.env.local`.
+Créez le fichier `front/.env`.
 
 ```dotenv
-# front/.env.local
-
+###> SYMFONY CORE ###
 APP_ENV=dev
-APP_SECRET=votre_secret_front
-
-# URL de base du front
+APP_SECRET=<VOTRE_APP_SECRET_FRONT>
 DEFAULT_URI=http://localhost:8000
+###< SYMFONY CORE ###
 
-# URL de l'API (nom du service Docker)
+###> API CONFIG ###
+# URL de l'API pour les appels serveur (nom du service docker)
 API_URL=http://api-nginx
+# URL publique de l'API (pour le JS client si besoin)
+PUBLIC_API_URL=http://localhost:8001
+###< API CONFIG ###
 
-# Configuration Google Auth (doit être le même que l'API)
-GOOGLE_CLIENT_ID=votre_client_id_google.apps.googleusercontent.com
+###> AUTHENTICATION ###
+GOOGLE_CLIENT_ID=<VOTRE_GOOGLE_CLIENT_ID>.apps.googleusercontent.com
+###< AUTHENTICATION ###
 ```
 
 ---
@@ -145,12 +158,7 @@ Pour configurer le projet localement :
         ```bash
         docker-compose exec api-php php bin/console lexik:jwt:generate-keypair
         ```
-
-    *   **Initialiser la Base de Données :**
-        ```bash
-        docker-compose exec api-php php bin/console doctrine:migrations:migrate --no-interaction
-        ```
-
+        
 5.  **Build des Assets (Tailwind) :**
     Si vous êtes sur Windows ou si le mode `watch` ne fonctionne pas, vous devez recompiler manuellement les styles Tailwind après chaque modification CSS :
     ```bash

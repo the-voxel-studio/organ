@@ -26,8 +26,11 @@
     "errors.generic_error": "Une erreur est survenue.",
     "errors.user_exists": "Cet utilisateur existe déjà.",
     "errors.google_only_account": "Ce compte utilise la connexion Google. Veuillez utiliser le bouton Google pour vous connecter.",
-    "register.agreement": "J'ai au moins 13 ans et j'accepte la <a href=\"#\" class=\"text-bubblegum hover:underline decoration-2 underline-offset-4 transition-all\">politique de confidentialité</a>",
-    "errors.must_agree": "Vous devez accepter la politique de confidentialité pour continuer.",
+    "register.agreement_prefix": "J'ai au moins 15 ans et j'accepte les",
+    "register.agreement_link_terms": "conditions générales d'utilisation",
+    "register.agreement_and": "et la",
+    "register.agreement_link_privacy": "politique de confidentialité",
+    "errors.must_agree": "Vous devez accepter les conditions pour continuer.",
     "slogan.login": "Ton équipe a <span class=\"text-bubblegum italic\">besoin de toi !</span>",
     "slogan.register": "Envie de mieux <span class=\"text-bubblegum italic\">s'Organ iser ?</span>"
 }

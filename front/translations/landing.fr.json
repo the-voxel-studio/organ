@@ -81,11 +81,12 @@
     "social_proof.item4.desc": "Sans publicités",
     "social_proof.cta_github": "Explorer le Code (GitHub)",
     "social_proof.cta_association": "Découvrir l'Association",
-    "footer.link_features": "Fonctionnalités",
     "footer.link_about": "Qui sommes-nous ?",
     "footer.link_register": "S'inscrire",
+    "footer.link_login": "Connexion",
     "footer.rights": "Tous droits réservés.",
     "footer.privacy_p1": "Nous ne vendons ni ne transmettons vos données à des tiers.",
     "footer.link_legal": "Mentions légales",
+    "footer.link_terms": "Conditions d'utilisation (CGU)",
     "footer.link_privacy": "Politique de confidentialité"
 }

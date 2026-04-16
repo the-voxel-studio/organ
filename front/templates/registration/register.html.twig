@@ -92,8 +92,16 @@
 
                         <!-- Label Text (Full Legal Version) -->
                         <span class="ml-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed select-none group-hover:text-gray-600 transition-colors">
-                            {{ 'register.agreement'|trans({}, 'auth')|raw }}
+                            {{ 'register.agreement_prefix'|trans({}, 'auth') }}
+                            <a href="{{ path('app_terms') }}" class="text-bubblegum hover:underline decoration-2 underline-offset-4 transition-all">
+                                {{ 'register.agreement_link_terms'|trans({}, 'auth') }}
+                            </a>
+                            {{ 'register.agreement_and'|trans({}, 'auth') }}
+                            <a href="{{ path('app_privacy_policy') }}" class="text-bubblegum hover:underline decoration-2 underline-offset-4 transition-all">
+                                {{ 'register.agreement_link_privacy'|trans({}, 'auth') }}
+                            </a>
                         </span>
+
                     </label>
                 </div>
 

@@ -30,6 +30,9 @@ security:
         - { path: ^/about, roles: PUBLIC_ACCESS }
         - { path: ^/privacy, roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
+        - { path: ^/legal-notice, roles: PUBLIC_ACCESS }
+        - { path: ^/privacy-policy, roles: PUBLIC_ACCESS }
+        - { path: ^/terms, roles: PUBLIC_ACCESS }
 
         # Tout le reste nécessite ROLE_USER (ex: /dashboard)
         - { path: ^/, roles: ROLE_USER }
