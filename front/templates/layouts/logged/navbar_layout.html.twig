@@ -1,0 +1,11 @@
+{% extends "layouts/empty_layout.html.twig" %}
+
+{% block content_layout %}
+
+	<twig:Dashboard:Navbar />
+
+	<main class="w-full px-4 mt-4">
+		{% block content %}{% endblock %}
+	</main>
+
+{% endblock %}
