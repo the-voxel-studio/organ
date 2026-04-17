@@ -48,6 +48,14 @@ export declare const messages: {
     "errors.server_error": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.generic_error": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.user_exists": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.password_too_short": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.email_invalid": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.email_taken": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.token_required": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.invalid_google_token": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.account_deleted": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.validation_failed": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "register.success": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.google_only_account": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "register.agreement_prefix": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "register.agreement_link_terms": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
@@ -56,6 +64,12 @@ export declare const messages: {
     "errors.must_agree": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "slogan.login": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "slogan.register": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "title": Message<{ 'get_the_app': { parameters: NoParametersType } }, 'fr'>;
+    "header": Message<{ 'get_the_app': { parameters: NoParametersType } }, 'fr'>;
+    "description": Message<{ 'get_the_app': { parameters: NoParametersType } }, 'fr'>;
+    "play_store": Message<{ 'get_the_app': { parameters: NoParametersType } }, 'fr'>;
+    "desktop_prompt": Message<{ 'get_the_app': { parameters: NoParametersType } }, 'fr'>;
+    "web_version_link": Message<{ 'get_the_app': { parameters: NoParametersType } }, 'fr'>;
     "meta.title": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "navbar.features": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "navbar.collaboration": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
@@ -68,6 +82,7 @@ export declare const messages: {
     "hero.title": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "hero.subtitle": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "hero.cta_register": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
+    "hero.cta_get_the_app": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "hero.cta_features": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "features.badge": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "features.title": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
@@ -139,6 +154,7 @@ export declare const messages: {
     "social_proof.cta_github": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "social_proof.cta_association": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "footer.link_about": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
+    "footer.link_get_the_app": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "footer.link_register": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "footer.link_login": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;
     "footer.rights": Message<{ 'landing': { parameters: NoParametersType } }, 'fr'>;

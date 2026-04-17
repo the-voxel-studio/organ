@@ -2,7 +2,7 @@
 <html lang="{{ app.request.locale }}" class="scroll-smooth">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Organ - Légales{% endblock %}</title>
+        <title>{% block title %}Organ{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
         {% block stylesheets %}{% endblock %}
         {% block javascripts %}
@@ -15,19 +15,19 @@
             <twig:block name="desktop_actions">
                 <a href="{{ app.user ? path('app_dashboard') : path('app_home') }}" 
                    class="bg-bubblegum hover:bg-bubblegum/90 text-white font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-bubblegum/20 transition-all transform hover:-translate-y-0.5">
-                    {{ app.user ? 'dashboard'|trans : 'home'|trans }}
+                    {{ app.user ? 'navbar.dashboard'|trans({}, 'landing') : 'home'|trans }}
                 </a>
             </twig:block>
 
             <twig:block name="mobile_links">
                 <a href="{{ app.user ? path('app_dashboard') : path('app_home') }}" 
                    class="text-3xl text-black hover:text-bubblegum font-black uppercase tracking-[0.2em] transition-all transform hover:scale-110">
-                    {{ app.user ? 'dashboard'|trans : 'home'|trans }}
+                    {{ app.user ? 'navbar.dashboard'|trans({}, 'landing') : 'home'|trans }}
                 </a>
             </twig:block>
 
             <twig:block name="mobile_actions">
-                {# Vide pour les pages légales en mobile #}
+                
             </twig:block>
 
         </twig:Navbar>
