@@ -86,6 +86,9 @@ class UserController extends AbstractController
         }
 
         if (isset($data['email']) && $data['email'] !== $user->getEmail()) {
+            if ($user->getGoogleId()) {
+                return $this->json(['message' => 'Email cannot be changed for Google accounts'], Response::HTTP_BAD_REQUEST);
+            }
             $user->setEmail($data['email']);
             $hasChanged = true;
             $emailChanged = true;
@@ -125,6 +128,66 @@ class UserController extends AbstractController
                 'email' => $user->getEmail(),
             ]
         ]);
+    }
+
+    #[Route('/me/connections', name: 'connections', methods: ['GET'])]
+    public function connections(EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $sessions = $entityManager->getRepository(UserSession::class)->findBy(
+            ['user' => $user],
+            ['lastUsedAt' => 'DESC']
+        );
+
+        $data = array_map(function (UserSession $session) {
+            return [
+                'uuid' => $session->getUuid(),
+                'deviceName' => $session->getDeviceName() ?? 'Appareil inconnu',
+                'browserName' => $session->getBrowserName() ?? 'Navigateur inconnu',
+                'location' => $session->getLocation() ?? 'Position inconnue',
+                'ipAddress' => $session->getIpAddress(),
+                'lastUsedAt' => $session->getLastUsedAt()->format(\DateTimeInterface::ATOM),
+                'createdAt' => $session->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'isCurrent' => false, // We'll handle this in front if possible or just ignore
+            ];
+        }, $sessions);
+
+        return $this->json($data);
+    }
+
+    #[Route('/me/connections/{uuid}', name: 'delete_connection', methods: ['DELETE'])]
+    public function deleteConnection(string $uuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $session = $entityManager->getRepository(UserSession::class)->findOneBy([
+            'uuid' => $uuid,
+            'user' => $user
+        ]);
+
+        if (!$session) {
+            return $this->json(['message' => 'Connection not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $entityManager->remove($session);
+
+        // Force other sessions to refresh their access tokens
+        $user->incrementJwtVersion();
+        
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Connection invalidated successfully']);
     }
 
     #[Route('/me', name: 'delete_me', methods: ['DELETE'])]

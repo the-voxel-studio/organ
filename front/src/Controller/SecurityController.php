@@ -19,6 +19,7 @@ class SecurityController extends AbstractController
     #[Route('/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
+        // On ne redirige QUE si l'utilisateur est réellement authentifié par l'Authenticator
         if ($this->getUser()) {
             return $this->redirectToRoute('app_dashboard');
         }

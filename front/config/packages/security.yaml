@@ -33,6 +33,7 @@ security:
         - { path: ^/legal-notice, roles: PUBLIC_ACCESS }
         - { path: ^/privacy-policy, roles: PUBLIC_ACCESS }
         - { path: ^/terms, roles: PUBLIC_ACCESS }
+        - { path: ^/get-the-app, roles: PUBLIC_ACCESS }
 
         # Tout le reste nécessite ROLE_USER (ex: /dashboard)
         - { path: ^/, roles: ROLE_USER }

@@ -17,6 +17,7 @@ CREATE TABLE users (
     password VARCHAR(255) NULL,
     google_id VARCHAR(255) NULL UNIQUE,
     is_verified TINYINT(1) DEFAULT 0 NOT NULL,
+    jwt_version INT DEFAULT 1 NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     deleted_at DATETIME NULL
 );

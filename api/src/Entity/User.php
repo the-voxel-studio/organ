@@ -55,6 +55,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $deletedAt = null;
 
+    #[ORM\Column(options: ['default' => 1])]
+    private int $jwtVersion = 1;
+
     public function __construct()
     {
         $this->uuid = Uuid::v4()->toRfc4122();
@@ -198,5 +201,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->deletedAt = null;
         return $this;
+    }
+
+    public function getJwtVersion(): int
+    {
+        return $this->jwtVersion;
+    }
+
+    public function incrementJwtVersion(): void
+    {
+        $this->jwtVersion++;
     }
 }

@@ -41,5 +41,24 @@ class UserChecker implements UserCheckerInterface
 
     public function checkPostAuth(UserInterface $user, ?TokenInterface $token = null): void
     {
+        if (!$user instanceof User || !$token) {
+            return;
+        }
+
+        // Check JWT version if available in payload
+        // Note: For LexikJWT, the payload is usually available via getAttributes() or similar
+        // but it's cleaner to handle this in a dedicated listener or by extracting it from the request attribute
+        
+        $request = $this->requestStack->getCurrentRequest();
+        if (!$request) {
+            return;
+        }
+
+        $payload = $request->attributes->get('jwt_payload');
+        if ($payload && isset($payload['jwt_version'])) {
+            if ($payload['jwt_version'] < $user->getJwtVersion()) {
+                throw new CustomUserMessageAccountStatusException('Token has been invalidated. Please refresh your session.');
+            }
+        }
     }
 }

@@ -10,14 +10,9 @@ export default class extends Controller {
     connect() {
         this.loadNotifications();
         this.setupMercure();
-        
-        // Close menu on click outside
-        this.clickOutsideHandler = this.clickOutside.bind(this);
-        document.addEventListener('click', this.clickOutsideHandler);
     }
 
     disconnect() {
-        document.removeEventListener('click', this.clickOutsideHandler);
         if (this.eventSource) {
             this.eventSource.close();
         }
@@ -25,6 +20,7 @@ export default class extends Controller {
 
     async loadNotifications() {
         try {
+            if (!this.apiUrlValue) return;
             const response = await fetch(this.apiUrlValue, {
                 credentials: 'include',
                 headers: {
@@ -68,7 +64,7 @@ export default class extends Controller {
         this.menuTarget.classList.toggle('hidden');
     }
 
-    clickOutside(event) {
+    hide(event) {
         if (!this.element.contains(event.target) && !this.menuTarget.classList.contains('hidden')) {
             this.menuTarget.classList.add('hidden');
         }
@@ -137,22 +133,59 @@ export default class extends Controller {
     notificationTemplate(n) {
         const date = new Date(n.createdAt);
         const relativeDate = this.formatRelativeDate(date);
-        const unreadClass = n.isRead ? '' : 'bg-bubblegum/5 border-l-4 border-l-bubblegum';
-        const dotClass = n.isRead ? 'hidden' : 'block';
+        const isRead = n.isRead;
         
+        if (n.type === 'PROJECT_INVITATION') {
+            const unreadClass = isRead ? 'bg-white border-gray-100' : 'bg-bubblegum/5 border-bubblegum/20';
+            const dotClass = isRead ? 'hidden' : '';
+            
+            return `
+                <div class="p-3 ${unreadClass} rounded-xl border relative mb-2" data-uuid="${n.uuid}" data-is-read="${isRead}">
+                    <div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-bubblegum ${dotClass}"></div> 
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-light-blue flex-shrink-0 flex items-center justify-center text-white font-bold text-sm ring-2 ring-white">
+                            ${n.senderInitials || 'PJ'}
+                        </div>
+                        <div class="flex-1 pt-0.5">
+                            <p class="text-sm text-black leading-snug">
+                                ${n.message}
+                            </p>
+                            <span class="text-xs text-black/50 mt-1 block font-medium">${relativeDate}</span>
+                            
+                            <div class="flex gap-2 mt-3">
+                                <button data-action="click->notifications#markAsRead" data-uuid="${n.uuid}" class="flex-1 px-3 py-1.5 bg-bubblegum text-white text-xs font-bold rounded-lg hover:bg-bubblegum/90 transition-all shadow-sm active:scale-95">
+                                    Accepter
+                                </button>
+                                <button class="flex-1 px-3 py-1.5 bg-white text-black/70 border border-gray-200 text-xs font-bold rounded-lg hover:bg-gray-50 hover:text-black transition-all shadow-sm active:scale-95">
+                                    Refuser
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Standard notification (Info)
+        const hoverClass = isRead ? 'hover:bg-white border-transparent hover:border-gray-100' : 'bg-bubblegum/5 border-bubblegum/10';
         return `
-            <div class="p-4 border-b border-gray-100 hover:bg-bubblegum/[0.08] transition-all cursor-pointer ${unreadClass}" 
+            <div class="p-3 ${hoverClass} rounded-xl transition-colors cursor-pointer border mb-1" 
                  data-action="click->notifications#markAsRead" 
                  data-uuid="${n.uuid}"
-                 data-is-read="${n.isRead}">
-                <div class="flex justify-between items-start mb-1 gap-2">
-                    <div class="flex items-center gap-2">
-                        <span class="w-2 h-2 bg-bubblegum rounded-full ${dotClass}"></span>
-                        <span class="text-[11px] font-bold text-bubblegum uppercase tracking-wider">${n.type.replace('_', ' ')}</span>
+                 data-is-read="${isRead}">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gray-100 flex-shrink-0 flex items-center justify-center text-black/40 ring-2 ring-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 0 1 9 9v.375M10.125 2.25A3.375 3.375 0 0 1 13.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 0 1 3.375 3.375M9 15l2.25 2.25L15 12" />
+                        </svg>
                     </div>
-                    <span class="text-[10px] text-gray-400 whitespace-nowrap font-medium">${relativeDate}</span>
+                    <div class="flex-1 pt-0.5">
+                        <p class="text-sm text-black/80 leading-snug">
+                            ${n.message}
+                        </p>
+                        <span class="text-xs text-black/40 mt-1 block">${relativeDate}</span>
+                    </div>
                 </div>
-                <p class="text-sm text-gray-700 leading-snug">${n.message}</p>
             </div>
         `;
     }

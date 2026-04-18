@@ -32,6 +32,9 @@ class ApiUserProvider implements UserProviderInterface
             ]);
 
             if (200 !== $response->getStatusCode()) {
+                if (401 === $response->getStatusCode()) {
+                    throw new ExpiredTokenException('Token expired');
+                }
                 $content = $response->getContent(false);
                 throw new \Exception('Invalid token (API returned ' . $response->getStatusCode() . '): ' . $content);
             }
@@ -45,6 +48,8 @@ class ApiUserProvider implements UserProviderInterface
                 $data['firstName'] ?? null,
                 $data['lastName'] ?? null,
             );
+        } catch (ExpiredTokenException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new \Exception('Could not load user from API: ' . $e->getMessage());
         }

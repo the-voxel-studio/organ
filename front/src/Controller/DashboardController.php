@@ -11,10 +11,29 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class DashboardController extends AbstractController
 {
     #[Route('/dashboard', name: 'app_dashboard')]
-    public function index(): Response
+    public function index(\Symfony\Contracts\HttpClient\HttpClientInterface $apiClient, \Symfony\Component\HttpFoundation\RequestStack $requestStack): Response
     {
+        $projects = [];
+        try {
+            $request = $requestStack->getCurrentRequest();
+            $bearer = $request?->cookies->get('BEARER');
+
+            $response = $apiClient->request('GET', '/api/projects', [
+                'headers' => [
+                    'Cookie' => 'BEARER=' . $bearer
+                ]
+            ]);
+            
+            if ($response->getStatusCode() === 200) {
+                $projects = $response->toArray();
+            }
+        } catch (\Exception $e) {
+            // Log error or handle silently
+        }
+
         return $this->render('dashboard/index.html.twig', [
             'user' => $this->getUser(),
+            'projects' => $projects,
         ]);
     }
 }
