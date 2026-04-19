@@ -1,5 +1,0 @@
-Explication de la structure :
-
-Data + Domain : Model
-Ui : View
-Ui/screens : ViewModel
