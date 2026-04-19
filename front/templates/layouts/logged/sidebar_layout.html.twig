@@ -3,7 +3,7 @@
 {% block content_layout %}
 
 	<div class="flex h-screen overflow-hidden">
-		<twig:Dashboard:Sidebar />
+		<twig:Dashboard:Sidebar :projects="projects|default([])" />
 
 		<main class="flex-grow-1 px-5 py-8 overflow-y-auto w-full bg-off-white">
 			{% block content %}{% endblock %}

@@ -1,11 +1,11 @@
 {% extends "layouts/empty_layout.html.twig" %}
 
 {% block content_layout %}
+	<div class="flex flex-col h-screen overflow-hidden bg-off-white">
+		<twig:Dashboard:Navbar />
 
-	<twig:Dashboard:Navbar />
-
-	<main class="w-full px-4 mt-4 bg-off-white">
-		{% block content %}{% endblock %}
-	</main>
-
+		<main class="flex-grow overflow-y-auto px-4 py-4 pb-12">
+			{% block content %}{% endblock %}
+		</main>
+	</div>
 {% endblock %}

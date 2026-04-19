@@ -35,6 +35,9 @@ class Project
     #[ORM\Column(length: 255, enumType: IconType::class, options: ['default' => IconType::EMOJI, 'comment' => 'SVG, BLOB, EMOJI'])]
     private IconType $iconType = IconType::EMOJI;
 
+    #[ORM\Column(length: 9, options: ['default' => '#FF7EB6'])]
+    private string $color = '#FF7EB6';
+
     #[ORM\Column(type: Types::TEXT, nullable: true, columnDefinition: 'LONGTEXT')]
     private ?string $iconData = null;
 
@@ -107,6 +110,17 @@ class Project
     public function setIconType(IconType $iconType): static
     {
         $this->iconType = $iconType;
+        return $this;
+    }
+
+    public function getColor(): string
+    {
+        return $this->color;
+    }
+
+    public function setColor(string $color): static
+    {
+        $this->color = $color;
         return $this;
     }
 

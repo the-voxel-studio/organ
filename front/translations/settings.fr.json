@@ -52,5 +52,17 @@
         "text": "Cet appareil sera immédiatement déconnecté. Vous devrez vous reconnecter pour accéder de nouveau à votre compte sur ce terminal.",
         "confirm": "Déconnecter",
         "cancel": "Annuler"
+    },
+    "errors": {
+        "generic": "Une erreur est survenue.",
+        "server": "Le serveur est indisponible.",
+        "invalid_current_password": "Le mot de passe actuel est incorrect.",
+        "password_too_short": "Le nouveau mot de passe doit faire au moins 8 caractères.",
+        "link_google_already_linked": "Ce compte Google est déjà lié à un autre profil.",
+        "link_google_email_taken": "L'adresse e-mail fournie par Google est déjà utilisée par un autre compte."
+    },
+    "success": {
+        "profile_updated": "Profil mis à jour avec succès.",
+        "password_updated": "Mot de passe mis à jour avec succès."
     }
 }

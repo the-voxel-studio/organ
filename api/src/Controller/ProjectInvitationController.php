@@ -64,13 +64,24 @@ class ProjectInvitationController extends AbstractController
             return $this->json(['message' => 'Invitation not found or expired'], Response::HTTP_NOT_FOUND);
         }
 
-        // Create Project Member
-        $member = new ProjectMember();
-        $member->setProject($invitation->getProject());
-        $member->setUser($user);
-        $member->setGlobalRole($invitation->getRole());
+        // Check if user was already in the project (possibly deleted)
+        $existingMember = $entityManager->getRepository(ProjectMember::class)->findOneBy([
+            'project' => $invitation->getProject(),
+            'user' => $user
+        ]);
 
-        $entityManager->persist($member);
+        if ($existingMember) {
+            // Restore presence
+            $existingMember->setDeletedAt(null);
+            $existingMember->setGlobalRole($invitation->getRole());
+        } else {
+            // Create new Project Member
+            $member = new ProjectMember();
+            $member->setProject($invitation->getProject());
+            $member->setUser($user);
+            $member->setGlobalRole($invitation->getRole());
+            $entityManager->persist($member);
+        }
 
         // Mark invitation as accepted
         $invitation->setAcceptedAt(new \DateTime());

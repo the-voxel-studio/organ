@@ -25,6 +25,10 @@ services:
         arguments:
             $googleClientId: '%google_client_id%'
 
+    App\Service\NotificationService:
+        arguments:
+            $baseUrl: '%notification_base_url%'
+
     # Alias to tell Symfony which success handler to use for the interface
     Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface: '@lexik_jwt_authentication.handler.authentication_success'
 

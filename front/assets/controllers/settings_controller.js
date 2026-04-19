@@ -1,10 +1,12 @@
 import { Controller } from '@hotwired/stimulus';
+import { trans } from '../translator.js';
 
 export default class extends Controller {
     static targets = [
         'form', 'submitButton', 'spinner', 'error', 'errorMessage', 'success', 'successMessage', 
         'deleteModal', 'deleteSpinner', 'connectionsList', 'disconnectModal', 'disconnectSpinner',
-        'passwordForm', 'passwordSubmitButton', 'passwordSpinner'
+        'passwordForm', 'passwordSubmitButton', 'passwordSpinner', 'passwordError', 'passwordErrorMessage', 'passwordSuccess', 'passwordSuccessMessage',
+        'googleError', 'googleErrorMessage', 'googleSuccess', 'googleSuccessMessage'
     ];
     static values = {
         apiUrl: String,
@@ -149,15 +151,15 @@ export default class extends Controller {
             const result = await response.json();
 
             if (response.ok) {
-                this.showSuccess(result.message || 'Profil mis à jour avec succès');
+                this.showSuccess(trans('success.profile_updated', {}, 'settings'));
                 if (result.refresh) {
                     setTimeout(() => window.location.reload(), 1500);
                 }
             } else {
-                this.showError(result.message || result[0]?.message || 'Une erreur est survenue');
+                this.showError(this.mapErrorMessage(result.message || result[0]?.message));
             }
         } catch (error) {
-            this.showError('Erreur de connexion au serveur');
+            this.showError(trans('errors.server', {}, 'settings'));
         } finally {
             this.stopLoading();
         }
@@ -165,7 +167,7 @@ export default class extends Controller {
 
     async submitPassword(event) {
         event.preventDefault();
-        this.clearMessages();
+        this.clearPasswordMessages();
         this.startPasswordLoading();
 
         const formData = new FormData(this.passwordFormTarget);
@@ -185,16 +187,32 @@ export default class extends Controller {
             const result = await response.json();
 
             if (response.ok) {
-                this.showSuccess(result.message || 'Mot de passe mis à jour avec succès');
+                this.showPasswordSuccess(trans('success.password_updated', {}, 'settings'));
                 this.passwordFormTarget.reset();
             } else {
-                this.showError(result.message || result[0]?.message || 'Une erreur est survenue');
+                this.showPasswordError(this.mapErrorMessage(result.message || result[0]?.message));
             }
         } catch (error) {
-            this.showError('Erreur de connexion au serveur');
+            this.showPasswordError(trans('errors.server', {}, 'settings'));
         } finally {
             this.stopPasswordLoading();
         }
+    }
+
+    mapErrorMessage(message) {
+        if (!message) return trans('errors.generic', {}, 'settings');
+        
+        const map = {
+            'Invalid current password': 'errors.invalid_current_password',
+            'New password must be at least 8 characters': 'errors.password_too_short',
+            'Current and new passwords are required': 'errors.generic',
+            'Not authenticated': 'errors.generic',
+            'This Google account is already linked to another profile': 'errors.link_google_already_linked',
+            'The email address provided by Google is already used by another account.': 'errors.link_google_email_taken'
+        };
+
+        const key = map[message];
+        return key ? trans(key, {}, 'settings') : message;
     }
 
     startPasswordLoading() {
@@ -232,12 +250,51 @@ export default class extends Controller {
     }
 
     clearMessages() {
-        this.errorTarget.classList.add('hidden');
-        this.successTarget.classList.add('hidden');
+        if (this.hasErrorTarget) this.errorTarget.classList.add('hidden');
+        if (this.hasSuccessTarget) this.successTarget.classList.add('hidden');
+    }
+
+    showPasswordError(message) {
+        this.passwordErrorMessageTarget.innerText = message;
+        this.passwordErrorTarget.classList.remove('hidden');
+    }
+
+    showPasswordSuccess(message) {
+        this.passwordSuccessMessageTarget.innerText = message;
+        this.passwordSuccessTarget.classList.remove('hidden');
+    }
+
+    clearPasswordMessages() {
+        if (this.hasPasswordErrorTarget) this.passwordErrorTarget.classList.add('hidden');
+        if (this.hasPasswordSuccessTarget) this.passwordSuccessTarget.classList.add('hidden');
+    }
+
+    showGoogleError(message) {
+        this.googleErrorMessageTarget.innerText = message;
+        this.googleErrorTarget.classList.remove('hidden');
+    }
+
+    showGoogleSuccess(message) {
+        this.googleSuccessMessageTarget.innerText = message;
+        this.googleSuccessTarget.classList.remove('hidden');
+    }
+
+    clearGoogleMessages() {
+        if (this.hasGoogleErrorTarget) this.googleErrorTarget.classList.add('hidden');
+        if (this.hasGoogleSuccessTarget) this.googleSuccessTarget.classList.add('hidden');
     }
 
     showErrorFromEvent(event) {
-        this.showError(event.detail);
+        const mappedMessage = this.mapErrorMessage(event.detail);
+        
+        // If the error is related to Google linking, show it in the Google section
+        if (event.detail.includes('Google') || event.detail.includes('google')) {
+            this.clearGoogleMessages();
+            this.showGoogleError(mappedMessage);
+        } else {
+            this.clearMessages();
+            this.showError(mappedMessage);
+        }
     }
 
     openDeleteModal() {
@@ -263,11 +320,11 @@ export default class extends Controller {
                 window.location.href = '/logout';
             } else {
                 const result = await response.json();
-                this.showError(result.message || 'Échec de la désactivation du compte');
+                this.showError(result.message || trans('errors.generic', {}, 'settings'));
                 this.closeDeleteModal();
             }
         } catch (error) {
-            this.showError('Erreur de connexion au serveur');
+            this.showError(trans('errors.server', {}, 'settings'));
             this.closeDeleteModal();
         } finally {
             if (this.hasDeleteSpinnerTarget) this.deleteSpinnerTarget.classList.add('hidden');

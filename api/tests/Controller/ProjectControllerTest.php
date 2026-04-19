@@ -38,6 +38,7 @@ class ProjectControllerTest extends ApiTestCase
         $this->assertCount(3, $data);
         $this->assertArrayHasKey('uuid', $data[0]);
         $this->assertArrayHasKey('title', $data[0]);
+        $this->assertArrayHasKey('color', $data[0]);
     }
 
     public function testGetProjectShowSuccess(): void
@@ -87,6 +88,7 @@ class ProjectControllerTest extends ApiTestCase
             'title' => 'New Project via API',
             'description' => 'Test description',
             'status' => ProjectStatus::ACTIVE->value,
+            'color' => '#FF0000',
             'iconType' => IconType::EMOJI->value,
             'iconData' => '🚀'
         ]));
@@ -113,7 +115,8 @@ class ProjectControllerTest extends ApiTestCase
         $this->login($client, $user);
         $client->request('PUT', '/api/projects/' . $project->getUuid(), [], [], [], json_encode([
             'title' => 'Updated Title',
-            'status' => ProjectStatus::ARCHIVED->value
+            'status' => ProjectStatus::ARCHIVED->value,
+            'color' => '#00FF00'
         ]));
 
         $this->assertResponseIsSuccessful();

@@ -7,10 +7,13 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Entity\Project;
 use App\Entity\ProjectMember;
+use App\Entity\Organ;
+use App\Entity\Notification;
 use App\Enum\IconType;
 use App\Enum\ProjectGlobalRole;
 use App\Enum\ProjectStatus;
 use App\Service\ProjectCacheService;
+use App\Service\UserCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,7 +26,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class ProjectController extends AbstractController
 {
     public function __construct(
-        private readonly ProjectCacheService $projectCacheService
+        private readonly ProjectCacheService $projectCacheService,
+        private readonly UserCacheService $userCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -42,7 +46,6 @@ class ProjectController extends AbstractController
         foreach ($memberships as $membership) {
             $project = $membership->getProject();
             if ($project && $project->getDeletedAt() === null) {
-                // Fetch summary from cache or DB
                 $projects[] = $this->getProjectSummary($project);
             }
         }
@@ -74,7 +77,6 @@ class ProjectController extends AbstractController
 
         $summary = $this->getProjectSummary($project);
         
-        // Detailed view adds description, createdAt and role
         return $this->json(array_merge($summary, [
             'description' => $project->getDescription(),
             'createdAt' => $project->getCreatedAt()->format(\DateTimeInterface::ATOM),
@@ -101,6 +103,7 @@ class ProjectController extends AbstractController
         $project = new Project();
         $project->setTitle($data['title']);
         $project->setDescription($data['description'] ?? null);
+        $project->setColor($data['color'] ?? '#FF7EB6');
         
         if (isset($data['status'])) {
             $status = ProjectStatus::tryFrom($data['status']);
@@ -133,7 +136,6 @@ class ProjectController extends AbstractController
         $entityManager->persist($member);
         $entityManager->flush();
 
-        // Optional: pre-warm cache
         $this->getProjectSummary($project);
 
         return $this->json([
@@ -141,6 +143,95 @@ class ProjectController extends AbstractController
             'title' => $project->getTitle(),
             'role' => ProjectGlobalRole::ADMIN->value,
         ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/{uuid}/detailed', name: 'detailed', methods: ['GET'])]
+    public function detailed(
+        string $uuid, 
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user) return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project, 'deletedAt' => null]);
+        if (!$membership) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+
+        // 1. Project Info
+        $summary = $this->getProjectSummary($project);
+
+        // 2. Organs
+        $organs = $entityManager->getRepository(Organ::class)->findBy(['project' => $project, 'deletedAt' => null]);
+        $organsData = [];
+        foreach ($organs as $organ) {
+            $organsData[] = [
+                'uuid' => $organ->getUuid(),
+                'title' => $organ->getTitle(),
+                'iconType' => $organ->getIconType()->value,
+                'iconData' => $organ->getIconData(),
+                'highlightColor' => $organ->getHighlightColor(),
+            ];
+        }
+
+        // 3. Members
+        $memberships = $entityManager->getRepository(ProjectMember::class)->findBy(['project' => $project, 'deletedAt' => null]);
+        $membersData = [];
+        foreach ($memberships as $ms) {
+            $membersData[] = [
+                'uuid' => $ms->getUuid(),
+                'user' => $this->userCacheService->getUserSummary($ms->getUser()),
+                'globalRole' => $ms->getGlobalRole()->value,
+            ];
+        }
+
+        // 4. Project Notifications (Activities & Security)
+        // We filter notifications by project via task -> organ
+        $notifications = $entityManager->getRepository(Notification::class)->createQueryBuilder('n')
+            ->leftJoin('n.task', 't')
+            ->leftJoin('t.organ', 'o')
+            ->where('o.project = :project')
+            ->andWhere('n.deletedAt IS NULL')
+            ->setParameter('project', $project)
+            ->orderBy('n.createdAt', 'DESC')
+            ->setMaxResults(50)
+            ->getQuery()
+            ->getResult();
+        
+        $activities = [];
+        $securityLogs = [];
+
+        foreach ($notifications as $n) {
+            $log = [
+                'uuid' => $n->getUuid(),
+                'type' => $n->getType(),
+                'message' => $n->getMessage(),
+                'createdAt' => $n->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'task' => $n->getTask() ? [
+                    'uuid' => $n->getTask()->getUuid(),
+                    'title' => $n->getTask()->getTitle()
+                ] : null
+            ];
+
+            if (in_array($n->getType(), ['TASK_DELETE', 'SECURITY_ALERT', 'MEMBER_REMOVED'], true)) {
+                $securityLogs[] = $log;
+            } else {
+                $activities[] = $log;
+            }
+        }
+
+        return $this->json([
+            'project' => array_merge($summary, [
+                'description' => $project->getDescription(),
+                'role' => $membership->getGlobalRole()->value,
+            ]),
+            'organs' => $organsData,
+            'members' => $membersData,
+            'activities' => array_slice($activities, 0, 10),
+            'securityLogs' => array_slice($securityLogs, 0, 10)
+        ]);
     }
 
     #[Route('/trash', name: 'trash', methods: ['GET'])]
@@ -153,7 +244,6 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // We find projects where the user is an ADMIN but the project is deleted
         $queryBuilder = $entityManager->getRepository(ProjectMember::class)->createQueryBuilder('pm')
             ->join('pm.project', 'p')
             ->where('pm.user = :user')
@@ -221,6 +311,10 @@ class ProjectController extends AbstractController
                 $needsInvalidation = true;
             }
         }
+        if (isset($data['color'])) {
+            $project->setColor($data['color']);
+            $needsInvalidation = true;
+        }
         if (isset($data['iconType'])) {
             $iconType = IconType::tryFrom($data['iconType']);
             if ($iconType) {
@@ -242,7 +336,6 @@ class ProjectController extends AbstractController
 
         if ($needsInvalidation) {
             $this->projectCacheService->invalidate($project->getUuid());
-            // Re-warm
             $this->getProjectSummary($project);
         }
 
@@ -250,6 +343,7 @@ class ProjectController extends AbstractController
             'uuid' => $project->getUuid(),
             'title' => $project->getTitle(),
             'status' => $project->getStatus()->value,
+            'color' => $project->getColor(),
         ]);
     }
 
@@ -273,7 +367,6 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Project is not deleted'], Response::HTTP_BAD_REQUEST);
         }
 
-        // To restore, we need an ADMIN membership, but since the project is deleted, the membership might be deleted too
         $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project]);
 
         if (!$membership || $membership->getGlobalRole() !== ProjectGlobalRole::ADMIN) {
@@ -282,7 +375,6 @@ class ProjectController extends AbstractController
 
         $project->setDeletedAt(null);
         
-        // Restore ADMIN membership if it was deleted during project deletion
         if ($membership->getDeletedAt() !== null) {
             $membership->setDeletedAt(null);
         }
@@ -333,10 +425,8 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        // Soft delete project
         $project->setDeletedAt(new \DateTime());
         
-        // Soft delete memberships
         $projectMembers = $entityManager->getRepository(ProjectMember::class)->findBy(['project' => $project]);
         foreach ($projectMembers as $pm) {
             if ($pm->getDeletedAt() === null) {
@@ -346,7 +436,6 @@ class ProjectController extends AbstractController
 
         $entityManager->flush();
 
-        // Invalidate cache
         $this->projectCacheService->invalidate($uuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
@@ -362,18 +451,6 @@ class ProjectController extends AbstractController
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
         if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
 
-        /* 
-        // VERSION SYMFONY PROPRE (ORM) :
-        $organs = $project->getOrgans();
-        $stats = [];
-        foreach ($organs as $organ) {
-            foreach ($organ->getTasks() as $task) {
-                $stats[$organ->getTitle()][$task->getStatus()->value] = ($stats[$organ->getTitle()][$task->getStatus()->value] ?? 0) + 1;
-            }
-        }
-        */
-
-        // VERSION SQL PURE (SI40 PRE-REQUIS) :
         $conn = $entityManager->getConnection();
         $sql = '
             SELECT 
@@ -393,9 +470,6 @@ class ProjectController extends AbstractController
         return $this->json($resultSet->fetchAllAssociative());
     }
 
-    /**
-     * Get or set the project summary in cache.
-     */
     private function getProjectSummary(Project $project): array
     {
         return $this->projectCacheService->getProjectSummary($project, function () use ($project) {
@@ -403,8 +477,10 @@ class ProjectController extends AbstractController
                 'uuid' => $project->getUuid(),
                 'title' => $project->getTitle(),
                 'status' => $project->getStatus()->value,
+                'color' => $project->getColor(),
                 'iconType' => $project->getIconType()->value,
                 'iconData' => $project->getIconData(),
+                'createdAt' => $project->getCreatedAt()->format(\DateTimeInterface::ATOM),
             ];
         });
     }

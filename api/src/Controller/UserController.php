@@ -234,6 +234,75 @@ class UserController extends AbstractController
         return $this->json(['message' => 'Password updated successfully']);
     }
 
+    #[Route('/me/link-google', name: 'link_google', methods: ['POST'])]
+    public function linkGoogle(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        \App\Service\GoogleAuthService $googleAuthService
+    ): JsonResponse {
+        /** @var User|null $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        try {
+            $data = $request->toArray();
+        } catch (\Exception $e) {
+            return $this->json(['message' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $idToken = $data['idToken'] ?? $data['token'] ?? null;
+        if (!$idToken) {
+            return $this->json(['message' => 'Google token is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $googleUser = $googleAuthService->verifyToken($idToken);
+        if (!$googleUser) {
+            return $this->json(['message' => 'Invalid Google token'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Check if this googleId is already linked to another user
+        $existingUser = $entityManager->getRepository(User::class)->findOneBy(['googleId' => $googleUser['googleId']]);
+        if ($existingUser && $existingUser->getUuid() !== $user->getUuid()) {
+            return $this->json(['message' => 'This Google account is already linked to another profile'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $user->setGoogleId($googleUser['googleUser']['googleId'] ?? $googleUser['googleId']);
+        
+        $oldEmail = $user->getEmail();
+        $newEmail = $googleUser['email'];
+        $emailChanged = $oldEmail !== $newEmail;
+
+        if ($emailChanged) {
+            // Check if another user already has this email
+            $userWithNewEmail = $entityManager->getRepository(User::class)->findOneBy(['email' => $newEmail]);
+            if ($userWithNewEmail && $userWithNewEmail->getUuid() !== $user->getUuid()) {
+                 return $this->json(['message' => 'The email address provided by Google is already used by another account.'], Response::HTTP_BAD_REQUEST);
+            }
+            $user->setEmail($newEmail);
+
+            // Update session identifiers to match new email
+            $sessions = $entityManager->getRepository(UserSession::class)->findBy(['user' => $user]);
+            foreach ($sessions as $session) {
+                $session->setUsername($newEmail);
+            }
+        }
+
+        $entityManager->flush();
+        $this->userCacheService->refresh($user);
+
+        return $this->json([
+            'message' => 'Google account linked successfully',
+            'refresh' => $emailChanged,
+            'user' => [
+                'email' => $user->getEmail(),
+                'authWithGoogle' => true
+            ]
+        ]);
+    }
+
     #[Route('/me', name: 'delete_me', methods: ['DELETE'])]
     public function deleteMe(EntityManagerInterface $entityManager): JsonResponse
     {
