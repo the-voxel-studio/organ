@@ -1,6 +1,24 @@
 {
     "home": "Accueil",
-    "dashboard": "Tableau de bord",
-    "logout": "Déconnexion",
-    "back": "Retour"
+    "sidebar": {
+        "help": "Aide",
+        "notifications": "Notifications",
+        "mark_all_read": "Tout marquer comme lu",
+        "no_notifications": "Aucune notification",
+        "view_all_notifications": "Voir toutes les notifications",
+        "dashboard": "Dashboard",
+        "my_projects": "Mes Projets",
+        "admin_role": "Administrateur",
+        "user_role": "Utilisateur",
+        "settings": "Paramètres",
+        "logout": "Se déconnecter"
+    },
+    "dashboard": {
+        "title": "Dashboard",
+        "subtitle": "Ceci est votre squelette de dashboard."
+    },
+    "auth": {
+        "slogan": "L'organisation devient <span class=\"text-bubblegum italic text-balance\">un réflexe.</span>",
+        "subtitle": "Rejoignez la structure qui s'adapte à votre vie."
+    }
 }

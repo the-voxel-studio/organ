@@ -24,7 +24,7 @@
     <twig:block name="desktop_actions">
         {% if app.user %}
             <a href="{{ path('app_dashboard') }}" class="bg-bubblegum hover:bg-bubblegum/90 text-white font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-bubblegum/20 transition-all transform hover:-translate-y-0.5">
-                Aller au Dashboard
+                {{ 'navbar.dashboard'|trans({}, 'landing') }}
             </a>
         {% else %}
             <a href="{{ path('app_login') }}" class="text-gray-600 hover:text-black font-semibold px-4 py-2 transition-colors">
@@ -49,7 +49,7 @@
     <twig:block name="mobile_actions">
         {% if app.user %}
             <a href="{{ path('app_dashboard') }}" class="text-center bg-bubblegum hover:bg-bubblegum/90 text-white font-black py-5 rounded-2xl shadow-xl shadow-bubblegum/20 text-xl uppercase tracking-widest transition-transform active:scale-95">
-                Aller au Dashboard
+                {{ 'navbar.dashboard'|trans({}, 'landing') }}
             </a>
         {% else %}
             <a href="{{ path('app_login') }}" class="text-center text-gray-800 hover:text-black font-bold py-4 border-2 border-gray-200 rounded-2xl transition-colors text-lg bg-white">

@@ -34,8 +34,14 @@ export default class extends Controller {
         const formData = new FormData(this.formTarget);
         let data = Object.fromEntries(formData.entries());
 
-        // Map keys if register
+        // Map keys and validations if register
         if (this.typeValue === 'register') {
+            // Client-side check for password matching
+            if (data.password !== data.confirm_password) {
+                this.showError(trans('errors.password_mismatch', {}, 'auth'));
+                return;
+            }
+
             data = {
                 email: data.email,
                 password: data.password,

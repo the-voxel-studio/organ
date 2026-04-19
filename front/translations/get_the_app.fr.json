@@ -3,6 +3,7 @@
     "header": "Organ sur votre mobile",
     "description": "L'application web n'est pas optimisée pour les petits écrans. Pour une expérience optimale sur votre téléphone, utilisez notre application mobile.",
     "play_store": "Play Store (Bientôt)",
+    "ios_not_available": "L'application iOS n'est pas disponible pour le moment. Nous privilégions une expérience web sur ordinateur ou l'application Android pour votre mobile.",
     "desktop_prompt": "Vous êtes sur un ordinateur ?",
     "web_version_link": "Accédez à la version web"
 }
