@@ -3,7 +3,8 @@ import { Controller } from '@hotwired/stimulus';
 export default class extends Controller {
     static targets = [
         'form', 'submitButton', 'spinner', 'error', 'errorMessage', 'success', 'successMessage', 
-        'deleteModal', 'deleteSpinner', 'connectionsList', 'disconnectModal', 'disconnectSpinner'
+        'deleteModal', 'deleteSpinner', 'connectionsList', 'disconnectModal', 'disconnectSpinner',
+        'passwordForm', 'passwordSubmitButton', 'passwordSpinner'
     ];
     static values = {
         apiUrl: String,
@@ -103,6 +104,7 @@ export default class extends Controller {
             if (response.ok) {
                 this.loadConnections();
                 this.closeDisconnectModal();
+                window.location.reload();
             } else {
                 alert('Échec de la déconnexion de l\'appareil');
             }
@@ -159,6 +161,52 @@ export default class extends Controller {
         } finally {
             this.stopLoading();
         }
+    }
+
+    async submitPassword(event) {
+        event.preventDefault();
+        this.clearMessages();
+        this.startPasswordLoading();
+
+        const formData = new FormData(this.passwordFormTarget);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(`${this.apiUrlValue}/password`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(data),
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                this.showSuccess(result.message || 'Mot de passe mis à jour avec succès');
+                this.passwordFormTarget.reset();
+            } else {
+                this.showError(result.message || result[0]?.message || 'Une erreur est survenue');
+            }
+        } catch (error) {
+            this.showError('Erreur de connexion au serveur');
+        } finally {
+            this.stopPasswordLoading();
+        }
+    }
+
+    startPasswordLoading() {
+        this.passwordSubmitButtonTarget.disabled = true;
+        this.passwordSpinnerTarget.classList.remove('hidden');
+        this.passwordSubmitButtonTarget.classList.add('opacity-70', 'cursor-wait');
+    }
+
+    stopPasswordLoading() {
+        this.passwordSubmitButtonTarget.disabled = false;
+        this.passwordSpinnerTarget.classList.add('hidden');
+        this.passwordSubmitButtonTarget.classList.remove('opacity-70', 'cursor-wait');
     }
 
     startLoading() {

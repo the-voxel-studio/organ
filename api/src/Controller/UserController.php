@@ -190,6 +190,50 @@ class UserController extends AbstractController
         return $this->json(['message' => 'Connection invalidated successfully']);
     }
 
+    #[Route('/me/password', name: 'update_password', methods: ['PUT'])]
+    public function updatePassword(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        /** @var User|null $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($user->getGoogleId()) {
+            return $this->json(['message' => 'Password cannot be changed for Google accounts'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $data = $request->toArray();
+        } catch (\Exception $e) {
+            return $this->json(['message' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $currentPassword = $data['currentPassword'] ?? '';
+        $newPassword = $data['newPassword'] ?? '';
+
+        if (empty($currentPassword) || empty($newPassword)) {
+            return $this->json(['message' => 'Current and new passwords are required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!$passwordHasher->isPasswordValid($user, $currentPassword)) {
+            return $this->json(['message' => 'Invalid current password'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (strlen($newPassword) < 8) {
+            return $this->json(['message' => 'New password must be at least 8 characters'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $user->setPassword($passwordHasher->hashPassword($user, $newPassword));
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Password updated successfully']);
+    }
+
     #[Route('/me', name: 'delete_me', methods: ['DELETE'])]
     public function deleteMe(EntityManagerInterface $entityManager): JsonResponse
     {
