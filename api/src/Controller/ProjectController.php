@@ -53,6 +53,38 @@ class ProjectController extends AbstractController
         return $this->json($projects);
     }
 
+    #[Route('/trash', name: 'trash', methods: ['GET'])]
+    public function trash(EntityManagerInterface $entityManager): JsonResponse
+    {
+        /** @var User|null $user */
+        $user = $this->getUser();
+
+        if (!$user) {
+            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // On cherche les membres (actifs ou supprimés) liés à un projet supprimé, avec le rôle ADMIN
+        $queryBuilder = $entityManager->getRepository(ProjectMember::class)->createQueryBuilder('pm')
+            ->join('pm.project', 'p')
+            ->where('pm.user = :user')
+            ->andWhere('p.deletedAt IS NOT NULL')
+            ->andWhere('pm.globalRole = :role')
+            ->setParameter('user', $user)
+            ->setParameter('role', ProjectGlobalRole::ADMIN);
+        
+        $memberships = $queryBuilder->getQuery()->getResult();
+        
+        $projects = [];
+        foreach ($memberships as $membership) {
+            $project = $membership->getProject();
+            $projects[] = array_merge($this->getProjectSummary($project), [
+                'deletedAt' => $project->getDeletedAt()->format(\DateTimeInterface::ATOM)
+            ]);
+        }
+
+        return $this->json($projects);
+    }
+
     #[Route('/{uuid}', name: 'show', methods: ['GET'])]
     public function show(string $uuid, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -232,37 +264,6 @@ class ProjectController extends AbstractController
             'activities' => array_slice($activities, 0, 10),
             'securityLogs' => array_slice($securityLogs, 0, 10)
         ]);
-    }
-
-    #[Route('/trash', name: 'trash', methods: ['GET'])]
-    public function trash(EntityManagerInterface $entityManager): JsonResponse
-    {
-        /** @var User|null $user */
-        $user = $this->getUser();
-
-        if (!$user) {
-            return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        $queryBuilder = $entityManager->getRepository(ProjectMember::class)->createQueryBuilder('pm')
-            ->join('pm.project', 'p')
-            ->where('pm.user = :user')
-            ->andWhere('p.deletedAt IS NOT NULL')
-            ->andWhere('pm.globalRole = :role')
-            ->setParameter('user', $user)
-            ->setParameter('role', ProjectGlobalRole::ADMIN);
-        
-        $memberships = $queryBuilder->getQuery()->getResult();
-        
-        $projects = [];
-        foreach ($memberships as $membership) {
-            $project = $membership->getProject();
-            $projects[] = array_merge($this->getProjectSummary($project), [
-                'deletedAt' => $project->getDeletedAt()->format(\DateTimeInterface::ATOM)
-            ]);
-        }
-
-        return $this->json($projects);
     }
 
     #[Route('/{uuid}', name: 'update', methods: ['PUT', 'PATCH'])]
@@ -476,6 +477,7 @@ class ProjectController extends AbstractController
             return [
                 'uuid' => $project->getUuid(),
                 'title' => $project->getTitle(),
+                'description' => $project->getDescription(),
                 'status' => $project->getStatus()->value,
                 'color' => $project->getColor(),
                 'iconType' => $project->getIconType()->value,

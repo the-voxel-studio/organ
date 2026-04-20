@@ -13,6 +13,8 @@ use Symfony\Component\DependencyInjection\Attribute\Target;
 #[IsGranted('ROLE_USER')]
 class DashboardController extends AbstractController
 {
+    use ProjectIdentityTrait;
+
     #[Route('/dashboard', name: 'app_dashboard')]
     public function index(
         #[Target('api.client')] HttpClientInterface $apiClient, 
@@ -52,18 +54,5 @@ class DashboardController extends AbstractController
             'projects' => $projects,
             'tasks' => $tasks,
         ]);
-    }
-
-    private function extractIdentity(array $project): array
-    {
-        $default = ['color' => '#FF7EB6', 'iconName' => 'icon_1'];
-        if ($project['iconType'] === 'SVG' && isset($project['iconData']) && str_starts_with($project['iconData'], '{')) {
-            $data = json_decode($project['iconData'], true);
-            return [
-                'color' => $data['color'] ?? $default['color'],
-                'iconName' => $data['icon'] ?? $default['iconName']
-            ];
-        }
-        return $default;
     }
 }

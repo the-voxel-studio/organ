@@ -39,6 +39,11 @@
         "subtitle": "Rejoignez la structure qui s'adapte à votre vie."
     },
     "project": {
+        "status": {
+            "active": "Actif",
+            "archived": "Archivé",
+            "inactive": "Inactif"
+        },
         "show": {
             "role": "Votre rôle",
             "manage_members": "Gérer les membres",

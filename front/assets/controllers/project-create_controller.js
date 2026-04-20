@@ -3,11 +3,12 @@ import { trans } from '../translator.js';
 
 export default class extends Controller {
     static targets = [
-        'name', 'description', 'colorInputs', 'customColorPicker', 'customColorDisplay', 'customColorIcon',
+        'name', 'description', 'status', 'colorInputs', 'customColorPicker', 'customColorDisplay', 'customColorIcon',
         'emojiInput', 'imageInput', 'imagePreview', 'imagePlaceholder', 'customSvgInput',
         'modeBtn', 'iconSection',
         'inviteEmail', 'inviteList', 'roleExplanation',
-        'submitBtn', 'spinner', 'error'
+        'submitBtn', 'spinner', 'error',
+        'deleteModal', 'deleteSubmitBtn', 'deleteSpinner'
     ];
 
     static values = {
@@ -21,6 +22,14 @@ export default class extends Controller {
     connect() {
         this.iconMode = 'BLOB';
         this.removedMemberUuids = [];
+        
+        // Handle ESC key to close modal
+        this.escHandler = (e) => {
+            if (e.key === 'Escape' && this.hasDeleteModalTarget && !this.deleteModalTarget.classList.contains('hidden')) {
+                this.closeDeleteModal();
+            }
+        };
+        window.addEventListener('keydown', this.escHandler);
         
         if (this.hasProjectUuidValue && this.projectUuidValue) {
             // Edit mode: Load existing members
@@ -235,7 +244,45 @@ export default class extends Controller {
         this.roleExplanationTarget.classList.toggle('hidden');
     }
 
+    // --- DELETE MODAL ---
+    openDeleteModal() {
+        this.deleteModalTarget.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeDeleteModal() {
+        if (this.deleteSubmitBtnTarget.disabled) return;
+        this.deleteModalTarget.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
     // --- SUBMISSION ---
+    async deleteProject() {
+        this.deleteSubmitBtnTarget.disabled = true;
+        this.deleteSpinnerTarget.classList.remove('hidden');
+        this.errorTarget.classList.add('hidden');
+
+        try {
+            const response = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || "Erreur lors de la suppression.");
+            }
+
+            // Invalidation du cache côté client (optionnel selon ton setup)
+            window.location.href = '/dashboard';
+        } catch (e) {
+            this.showError(e.message);
+            this.deleteSubmitBtnTarget.disabled = false;
+            this.deleteSpinnerTarget.classList.add('hidden');
+            this.closeDeleteModal();
+        }
+    }
+
     async submit() {
         this.errorTarget.classList.add('hidden');
         const name = this.nameTarget.value.trim();
@@ -266,6 +313,8 @@ export default class extends Controller {
         const projectData = {
             title: name,
             description: this.descriptionTarget.value.trim(),
+            status: this.hasStatusTarget ? this.statusTarget.value : 'ACTIVE',
+            color: color,
             iconType: iconType,
             iconData: iconData
         };

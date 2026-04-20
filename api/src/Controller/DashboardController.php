@@ -35,7 +35,7 @@ class DashboardController extends AbstractController
             return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // 1. Fetch Projects summaries (reusing logic from ProjectController)
+        // 1. Fetch Projects summaries
         $memberships = $entityManager->getRepository(ProjectMember::class)->findBy(['user' => $user, 'deletedAt' => null]);
         $projects = [];
         foreach ($memberships as $membership) {
@@ -45,11 +45,12 @@ class DashboardController extends AbstractController
                     return [
                         'uuid' => $project->getUuid(),
                         'title' => $project->getTitle(),
+                        'description' => $project->getDescription(),
                         'status' => $project->getStatus()->value,
+                        'color' => $project->getColor(),
                         'iconType' => $project->getIconType()->value,
                         'iconData' => $project->getIconData(),
                         'createdAt' => $project->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                        'description' => $project->getDescription()
                     ];
                 });
             }

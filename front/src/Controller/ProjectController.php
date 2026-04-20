@@ -13,10 +13,42 @@ use Symfony\Component\DependencyInjection\Attribute\Target;
 #[IsGranted('ROLE_USER')]
 class ProjectController extends AbstractController
 {
+    use ProjectIdentityTrait;
+
     #[Route('/projects/new', name: 'app_project_new')]
     public function new(#[Target('api.client')] HttpClientInterface $apiClient, RequestStack $requestStack): Response
     {
         return $this->render('project/create.html.twig', [
+            'projects' => $this->getSidebarProjects($apiClient, $requestStack)
+        ]);
+    }
+
+    #[Route('/trash', name: 'app_project_trash')]
+    public function trash(#[Target('api.client')] HttpClientInterface $apiClient, RequestStack $requestStack): Response
+    {
+        $trashedProjects = [];
+        try {
+            $request = $requestStack->getCurrentRequest();
+            $bearer = $request?->cookies->get('BEARER');
+
+            $response = $apiClient->request('GET', '/api/projects/trash', [
+                'headers' => [
+                    'Cookie' => 'BEARER=' . $bearer
+                ]
+            ]);
+
+            if ($response->getStatusCode() === 200) {
+                $trashedProjects = $response->toArray();
+                foreach ($trashedProjects as &$p) {
+                    $identity = $this->extractIdentity($p);
+                    $p['color'] = $identity['color'];
+                    $p['iconName'] = $identity['iconName'];
+                }
+            }
+        } catch (\Exception $e) {}
+
+        return $this->render('project/trash.html.twig', [
+            'trashedProjects' => $trashedProjects,
             'projects' => $this->getSidebarProjects($apiClient, $requestStack)
         ]);
     }
@@ -124,18 +156,5 @@ class ProjectController extends AbstractController
             }
         } catch (\Exception $e) {}
         return [];
-    }
-
-    private function extractIdentity(array $project): array
-    {
-        $default = ['color' => '#FF7EB6', 'iconName' => 'icon_1'];
-        if (isset($project['iconType']) && $project['iconType'] === 'SVG' && isset($project['iconData']) && str_starts_with($project['iconData'], '{')) {
-            $data = json_decode($project['iconData'], true);
-            return [
-                'color' => $data['color'] ?? $default['color'],
-                'iconName' => $data['icon'] ?? $default['iconName']
-            ];
-        }
-        return $default;
     }
 }

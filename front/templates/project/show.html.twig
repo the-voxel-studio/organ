@@ -6,11 +6,18 @@
 {% endblock %}
 
 {% block content %}
+	{% set project_color = data.project.color|default('#FF7EB6') %}
+	
+	{# Background Glow - Subtile ambiance #}
+	<div class="fixed top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.05] pointer-events-none blur-[120px] -z-10" 
+	     style="background-color: {{ project_color }}"></div>
+
 	<div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
 		<!-- Header -->
 		<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
 			<div class="flex items-center gap-6">
-				<div class="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden">
+				<div class="w-16 h-16 bg-white rounded-2xl shadow-sm border-2 flex items-center justify-center overflow-hidden"
+				     style="border-color: {{ project_color }}">
 					{% if data.project.iconType == 'EMOJI' %}
 						<span class="text-3xl">{{ data.project.iconData }}</span>
 					{% elseif data.project.iconType == 'BLOB' %}
@@ -22,9 +29,20 @@
 				<div>
 					<h1 class="text-3xl font-black text-black mb-1">{{ data.project.title }}</h1>
 					<div class="flex items-center gap-3">
-						<span class="px-3 py-1 bg-bubblegum/10 text-bubblegum text-[10px] font-black uppercase tracking-widest rounded-lg">
-							{{ data.project.status }}
-						</span>
+						{% if data.project.status == 'ACTIVE' %}
+							<span class="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg"
+							      style="background-color: {{ project_color }}1a; color: {{ project_color }}">
+								{{ 'project.status.active'|trans }}
+							</span>
+						{% elseif data.project.status == 'ARCHIVED' %}
+							<span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-200">
+								{{ 'project.status.archived'|trans }}
+							</span>
+						{% else %}
+							<span class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-amber-100">
+								{{ 'project.status.inactive'|trans }}
+							</span>
+						{% endif %}
 						<span class="text-xs text-gray-400 font-medium italic">
 							{{ 'project.show.role'|trans }}:
 							{{ data.project.role }}
@@ -47,9 +65,9 @@
 		<div class="space-y-12">
 			<!-- ROW 1: ORGANS -->
 			<section>
-				<div class="flex items-center justify-between mb-8 px-2">
+				<div class="flex items-center justify-between mb-8">
 					<h2 class="text-xl font-bold text-black flex items-center gap-3">
-						<div class="p-2 bg-bubblegum/10 rounded-xl text-bubblegum">
+						<div class="p-2 rounded-xl" style="background-color: {{ project_color }}1a; color: {{ project_color }}">
 							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"/>
 							</svg>
@@ -57,13 +75,15 @@
 						{{ 'project.show.organs'|trans }}
 					</h2>
 					{% if data.project.role in ['ADMIN', 'MANAGER'] %}
-						<button class="text-sm font-bold text-bubblegum hover:underline">{{ 'project.show.add_organ'|trans }}</button>
+						<button class="px-6 py-3 text-white font-bold rounded-2xl transition-all hover:brightness-110 active:scale-95 shadow-lg flex items-center gap-2 cursor-pointer shadow-current/20"
+						        style="background-color: {{ project_color }}">{{ 'project.show.add_organ'|trans }}</button>
 					{% endif %}
 				</div>
 
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 					{% for organ in data.organs %}
-						<a href="#" class="group bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-bubblegum transition-all transform hover:-translate-y-1">
+						<a href="#" class="group bg-white p-6 rounded-3xl shadow-sm border border-gray-100 transition-all transform hover:-translate-y-1"
+						   style="--hover-color: {{ project_color }}">
 							<div class="w-12 h-12 rounded-2xl mb-4 flex items-center justify-center text-white" style="background-color: {{ organ.highlightColor }}">
 								{% if organ.iconType == 'EMOJI' %}
 									<span class="text-2xl">{{ organ.iconData }}</span>
@@ -71,7 +91,7 @@
 									<div class="w-6 h-6">{{ organ.iconData|raw }}</div>
 								{% endif %}
 							</div>
-							<h3 class="font-bold text-gray-900 group-hover:text-bubblegum transition-colors">{{ organ.title }}</h3>
+							<h3 class="font-bold text-gray-900 group-hover:text-[var(--hover-color)] transition-colors">{{ organ.title }}</h3>
 							<p class="text-xs text-gray-400 font-medium mt-1 uppercase tracking-widest">{{ 'project.show.view_tasks'|trans }}</p>
 						</a>
 					{% else %}
@@ -86,7 +106,7 @@
 			<div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
 				<!-- LEFT: DESCRIPTION -->
 				<section class="lg:col-span-1">
-					<h2 class="text-xl font-bold text-black mb-8 px-2 flex items-center gap-3">
+					<h2 class="text-xl font-bold text-black mb-8 flex items-center gap-3">
 						<div class="p-2 bg-highlight/10 rounded-xl text-highlight">
 							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
@@ -109,7 +129,7 @@
 
 				<!-- RIGHT: ACTIVITIES -->
 				<section class="lg:col-span-2">
-					<h2 class="text-xl font-bold text-black mb-8 px-2 flex items-center gap-3">
+					<h2 class="text-xl font-bold text-black mb-8 flex items-center gap-3">
 						<div class="p-2 bg-green-50 rounded-xl text-green-600">
 							<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
 								<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
@@ -134,7 +154,8 @@
 										</p>
 										<div class="flex items-center gap-2 mt-1">
 											<span class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ activity.createdAt|date('H:i') }}</span>
-											<span class="text-[10px] font-bold text-bubblegum uppercase tracking-widest px-2 py-0.5 bg-bubblegum/5 rounded-md">{{ activity.fieldName ?: 'General' }}</span>
+											<span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md"
+											      style="background-color: {{ project_color }}1a; color: {{ project_color }}">{{ activity.fieldName ?: 'General' }}</span>
 										</div>
 									</div>
 								</div>
@@ -150,7 +171,7 @@
 
 			<!-- ROW 3: SECURITY LOGS -->
 			<section>
-				<h2 class="text-xl font-bold text-black mb-8 px-2 flex items-center gap-3 text-red-600">
+				<h2 class="text-xl font-bold text-black mb-8 flex items-center gap-3 text-red-600">
 					<div class="p-2 bg-red-50 rounded-xl text-red-600">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>

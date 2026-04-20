@@ -131,9 +131,21 @@
 										</svg>
 									{% endif %}
 								</div>
-								<span class="px-3 py-1 bg-green-50 text-green-700 text-[10px] font-black uppercase tracking-widest rounded-lg border border-green-100">
-									{{ project.status }}
-								</span>
+								
+								{% if project.status == 'ACTIVE' %}
+									<span class="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border"
+									      style="background-color: {{ project_color }}1a; color: {{ project_color }}; border-color: {{ project_color }}33;">
+										{{ 'project.status.active'|trans }}
+									</span>
+								{% elseif project.status == 'ARCHIVED' %}
+									<span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-200">
+										{{ 'project.status.archived'|trans }}
+									</span>
+								{% else %}
+									<span class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-amber-100">
+										{{ 'project.status.inactive'|trans }}
+									</span>
+								{% endif %}
 							</div>
 							<h3 class="text-xl font-bold text-black mb-2 group-hover:text-bubblegum transition-colors">{{ project.title|default('Sans titre') }}</h3>
 							<p class="text-sm text-gray-500 font-medium mb-6 line-clamp-2 italic">{{ (project.description is defined and project.description) ? project.description : 'Aucune description.' }}</p>
