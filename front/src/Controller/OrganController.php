@@ -60,6 +60,12 @@ class OrganController extends AbstractController
                     $identity = $this->extractIdentity($projectData['project']);
                     $projectData['project']['color'] = $identity['color'];
                     $projectData['project']['iconName'] = $identity['iconName'];
+
+                    // Grant 'ALL' permission to project admins and managers for organ setup
+                    $projectRole = $projectData['project']['role'] ?? 'MEMBER';
+                    if (in_array($projectRole, ['ADMIN', 'MANAGER'], true)) {
+                        $userPermissions[] = 'ALL';
+                    }
                 }
             } else {
                 return $this->redirectToRoute('app_dashboard');
@@ -176,9 +182,16 @@ class OrganController extends AbstractController
                     $identity = $this->extractIdentity($projectData['project']);
                     $projectData['project']['color'] = $identity['color'];
                     $projectData['project']['iconName'] = $identity['iconName'];
+
+                    // Grant 'ALL' permission to project admins and managers
+                    $projectRole = $projectData['project']['role'] ?? 'MEMBER';
+                    if (in_array($projectRole, ['ADMIN', 'MANAGER'], true)) {
+                        $permissions[] = 'ALL';
+                    }
                 }
             }
 
+            // Fetch Organ Data
             $response = $apiClient->request('GET', "/api/projects/$projectUuid/organs/$organUuid", [
                 'headers' => ['Cookie' => 'BEARER=' . $bearer]
             ]);
@@ -248,6 +261,12 @@ class OrganController extends AbstractController
                     $identity = $this->extractIdentity($projectData['project']);
                     $projectData['project']['color'] = $identity['color'];
                     $projectData['project']['iconName'] = $identity['iconName'];
+                    
+                    // Grant 'ALL' permission to project admins and managers
+                    $projectRole = $projectData['project']['role'] ?? 'MEMBER';
+                    if (in_array($projectRole, ['ADMIN', 'MANAGER'], true)) {
+                        $userPermissions[] = 'ALL';
+                    }
                 }
             } else {
                 return $this->redirectToRoute('app_dashboard');

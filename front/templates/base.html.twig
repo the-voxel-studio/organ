@@ -13,7 +13,8 @@
             {% block extra_javascripts %}{% endblock %}
         {% endblock %}
     </head>
-    <body class="{% block body_class %}min-h-screen bg-white text-gray-900 font-sans antialiased{% endblock %}">
+    <body class="{% block body_class %}min-h-screen bg-white text-gray-900 font-sans antialiased{% endblock %}" {% block body_attrs %}{% endblock %}>
         {% block layout %}{% endblock %}
+        {% block modals %}{% endblock %}
     </body>
 </html>

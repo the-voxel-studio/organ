@@ -6,17 +6,20 @@
     {{ project is defined ? 'project.edit.title'|trans : 'project.create.title'|trans }}
 {% endblock %}
 
-{% block content %}
+{% block body_attrs %}
 {% set is_edit = project is defined %}
-<div class="max-w-4xl mx-auto py-8" 
      data-controller="project-create"
      data-project-create-api-url-value="http://localhost:8001/api"
      data-project-create-project-uuid-value="{{ is_edit ? project.uuid : '' }}"
      data-project-create-user-email-value="{{ app.user.email }}"
      data-project-create-user-name-value="{{ app.user.firstName }}"
      data-project-create-initial-members-value="{{ members is defined ? members|json_encode : '[]' }}"
-     data-project-create-invitations-value="{{ invitations is defined ? invitations|json_encode : '[]' }}">
-    
+     data-project-create-invitations-value="{{ invitations is defined ? invitations|json_encode : '[]' }}"
+{% endblock %}
+
+{% block content %}
+{% set is_edit = project is defined %}
+<div class="max-w-4xl mx-auto py-8">
     <div class="mb-8 px-4">
         <a href="{{ is_edit ? path('app_project_show', {uuid: project.uuid}) : path('app_dashboard') }}" class="text-sm font-medium text-gray-500 hover:text-bubblegum transition-colors flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
@@ -214,16 +217,21 @@
                 </button>
             </div>
         </div>
+    {% endif %}
+</div>
+{% endblock %}
 
+{% block modals %}
+    {% if project is defined %}
         {# Modal de suppression de projet #}
-        <div data-project-create-target="deleteModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div data-project-create-target="deleteModal" class="hidden fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 {# Overlay #}
-                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" data-action="click->project-create#closeDeleteModal"></div>
+                <div class="fixed inset-0 bg-black/20 backdrop-blur-md transition-opacity" aria-hidden="true" data-action="click->project-create#closeDeleteModal"></div>
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-                <div class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 animate-in zoom-in-95 duration-200">
+                <div class="relative z-10 inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-gray-100 animate-in zoom-in-95 duration-200">
                     <div class="bg-white px-8 pt-10 pb-8">
                         <div class="sm:flex sm:items-start">
                             <div class="mx-auto flex-shrink-0 flex items-center justify-center h-14 w-14 rounded-2xl bg-red-50 sm:mx-0 sm:h-12 sm:w-12 border border-red-100">
@@ -259,5 +267,4 @@
             </div>
         </div>
     {% endif %}
-</div>
 {% endblock %}

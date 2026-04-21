@@ -247,6 +247,40 @@
         "permissions.ATTACHMENT_DELETE_OWN.label": "Supprimer ses Fichiers",
         "permissions.ATTACHMENT_DELETE_OWN.description": "Retirer les documents que vous avez envoyés.",
         "permissions.ATTACHMENT_DELETE_ALL.label": "Supprimer tous les Fichiers",
-        "permissions.ATTACHMENT_DELETE_ALL.description": "Gérer l'espace de stockage de l'organ."
+        "permissions.ATTACHMENT_DELETE_ALL.description": "Gérer l'espace de stockage de l'organ.",
+        "role_presets": {
+            "responsible": {
+                "name": "Responsable",
+                "description": "Contrôle total sur l'organ, les rôles et toutes les tâches."
+            },
+            "manager": {
+                "name": "Gestionnaire",
+                "description": "Gère les tâches et les membres, mais pas la structure des rôles."
+            },
+            "participant": {
+                "name": "Participant",
+                "description": "Peut créer des tâches et gérer ses propres tickets et commentaires."
+            },
+            "developer": {
+                "name": "Développeur",
+                "description": "Focus sur l'exécution technique et la mise à jour du statut des tâches."
+            },
+            "reviewer": {
+                "name": "Correcteur",
+                "description": "Focus sur la revue, la validation et le changement de statut des tâches."
+            },
+            "tester": {
+                "name": "Testeur",
+                "description": "Rapporte des bugs et valide les corrections effectuées."
+            },
+            "observer": {
+                "name": "Observateur",
+                "description": "Accès en lecture seule avec possibilité de commenter."
+            },
+            "guest": {
+                "name": "Invité",
+                "description": "Accès très restreint, uniquement en lecture seule."
+            }
+        }
     }
 }

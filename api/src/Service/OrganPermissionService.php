@@ -33,12 +33,8 @@ class OrganPermissionService
     {
         $globalRole = $this->membershipService->getGlobalRole($user, $organ->getProject());
 
-        if ($globalRole === ProjectGlobalRole::ADMIN) {
-            return true;
-        }
-
-        // 2. Project MANAGER has VIEW permission (indiscreet viewer)
-        if ($globalRole === ProjectGlobalRole::MANAGER && $permissionName === 'ORGAN_VIEW') {
+        // 1. Project ADMIN and MANAGER have all permissions
+        if (in_array($globalRole, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
             return true;
         }
 
@@ -66,14 +62,11 @@ class OrganPermissionService
     {
         $globalRole = $this->membershipService->getGlobalRole($user, $organ->getProject());
 
-        if ($globalRole === ProjectGlobalRole::ADMIN) {
+        if (in_array($globalRole, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
             return ['ALL']; // Or list all possible permissions
         }
 
         $permissions = [];
-        if ($globalRole === ProjectGlobalRole::MANAGER) {
-            $permissions[] = 'ORGAN_VIEW';
-        }
 
         $userRoles = $this->getUserRolesInOrgan($user, $organ);
         foreach ($userRoles as $role) {

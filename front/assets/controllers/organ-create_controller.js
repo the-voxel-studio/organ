@@ -25,21 +25,21 @@ export default class extends Controller {
         
         this.presets = {
             responsible: {
-                name: 'Responsable',
+                name: trans('organ.role_presets.responsible.name'),
                 iconData: '👑',
-                description: 'Contrôle total sur l\'organ, les rôles et toutes les tâches.',
+                description: trans('organ.role_presets.responsible.description'),
                 permissions: this.availablePermissionsValue.map(p => p.name)
             },
             manager: {
-                name: 'Gestionnaire',
+                name: trans('organ.role_presets.manager.name'),
                 iconData: '📂',
-                description: 'Gère les tâches et les membres, mais pas la structure des rôles.',
+                description: trans('organ.role_presets.manager.description'),
                 permissions: this.availablePermissionsValue.map(p => p.name).filter(p => !['ORGAN_MANAGE_ROLES', 'ORGAN_MANAGE_MEMBERS'].includes(p))
             },
             participant: {
-                name: 'Participant',
+                name: trans('organ.role_presets.participant.name'),
                 iconData: '👨‍💻',
-                description: 'Peut créer des tâches et gérer ses propres tickets et commentaires.',
+                description: trans('organ.role_presets.participant.description'),
                 permissions: [
                     'ORGAN_VIEW', 
                     'TASK_CREATE', 'TASK_EDIT_OWN', 'TASK_DELETE_OWN', 'TASK_STATUS_CHANGE_OWN', 'TASK_PRIORITY_CHANGE_OWN', 
@@ -50,9 +50,9 @@ export default class extends Controller {
                 ]
             },
             developer: {
-                name: 'Développeur',
+                name: trans('organ.role_presets.developer.name'),
                 iconData: '⚙️',
-                description: 'Focus sur l\'exécution technique et la mise à jour du statut des tâches.',
+                description: trans('organ.role_presets.developer.description'),
                 permissions: [
                     'ORGAN_VIEW', 
                     'TASK_EDIT_OWN', 'TASK_STATUS_CHANGE_OWN', 'TASK_ESTIMATE_MANAGE_OWN', 'TASK_ASSIGN_SELF', 
@@ -62,9 +62,9 @@ export default class extends Controller {
                 ]
             },
             reviewer: {
-                name: 'Correcteur',
+                name: trans('organ.role_presets.reviewer.name'),
                 iconData: '✅',
-                description: 'Focus sur la revue, la validation et le changement de statut des tâches.',
+                description: trans('organ.role_presets.reviewer.description'),
                 permissions: [
                     'ORGAN_VIEW', 
                     'TASK_EDIT_ALL', 'TASK_STATUS_CHANGE_ALL', 'TASK_VALIDATE', 'TASK_PRIORITY_CHANGE_ALL', 'TASK_DATES_MANAGE_ALL',
@@ -73,9 +73,9 @@ export default class extends Controller {
                 ]
             },
             tester: {
-                name: 'Testeur',
+                name: trans('organ.role_presets.tester.name'),
                 iconData: '🔍',
-                description: 'Rapporte des bugs et valide les corrections effectuées.',
+                description: trans('organ.role_presets.tester.description'),
                 permissions: [
                     'ORGAN_VIEW', 
                     'TASK_CREATE', 'TASK_STATUS_CHANGE_OWN', 
@@ -84,15 +84,15 @@ export default class extends Controller {
                 ]
             },
             observer: {
-                name: 'Observateur',
+                name: trans('organ.role_presets.observer.name'),
                 iconData: '👁️',
-                description: 'Accès en lecture seule avec possibilité de commenter.',
+                description: trans('organ.role_presets.observer.description'),
                 permissions: ['ORGAN_VIEW', 'COMMENT_CREATE']
             },
             guest: {
-                name: 'Invité',
+                name: trans('organ.role_presets.guest.name'),
                 iconData: '✉️',
-                description: 'Accès très restreint, uniquement en lecture seule.',
+                description: trans('organ.role_presets.guest.description'),
                 permissions: ['ORGAN_VIEW']
             }
         };
