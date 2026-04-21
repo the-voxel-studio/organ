@@ -16,7 +16,8 @@ export default class extends Controller {
         userName: String,
         apiUrl: String,
         projectUuid: String,
-        initialMembers: Array
+        initialMembers: Array,
+        invitations: Array
     };
 
     connect() {
@@ -33,7 +34,7 @@ export default class extends Controller {
         
         if (this.hasProjectUuidValue && this.projectUuidValue) {
             // Edit mode: Load existing members
-            this.invites = this.initialMembersValue.map(m => {
+            const existingMembers = this.initialMembersValue.map(m => {
                 const isCreator = (m.user.email === this.userEmailValue);
                 return {
                     uuid: m.uuid, // Existing membership UUID
@@ -43,10 +44,25 @@ export default class extends Controller {
                     isCreator: isCreator,
                     showMenu: false,
                     isExisting: true,
+                    isPending: false,
                     roleChanged: false
                 };
             });
+
+            // Load pending invitations
+            const pendingInvites = (this.invitationsValue || []).map(inv => ({
+                uuid: inv.uuid,
+                email: inv.email,
+                name: 'Invité',
+                role: inv.role,
+                isCreator: false,
+                showMenu: false,
+                isExisting: true,
+                isPending: true,
+                roleChanged: false
+            }));
             
+            this.invites = [...existingMembers, ...pendingInvites];
             this.invites.sort((a, b) => b.isCreator - a.isCreator);
 
             // Detect icon mode
@@ -63,7 +79,8 @@ export default class extends Controller {
                     role: 'ADMIN', 
                     isCreator: true,
                     showMenu: false,
-                    isExisting: false
+                    isExisting: false,
+                    isPending: false
                 }
             ];
         }
@@ -207,6 +224,7 @@ export default class extends Controller {
                             <div class="flex items-center gap-2">
                                 <p class="text-sm font-bold text-gray-900 truncate max-w-[200px]">${invite.email}</p>
                                 ${invite.isCreator ? '<span class="text-[10px] font-black uppercase tracking-widest text-bubblegum bg-bubblegum/10 px-2 py-0.5 rounded-md">Propriétaire</span>' : ''}
+                                ${invite.isPending ? '<span class="text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md">En attente</span>' : ''}
                             </div>
                             <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-0.5">
                                 ${roleLabel} ${invite.roleChanged ? '<span class="text-bubblegum font-bold ml-1">(Modifié)</span>' : ''}
@@ -215,7 +233,7 @@ export default class extends Controller {
                     </div>
                     
                     <div class="flex items-center gap-2">
-                        ${!invite.isCreator ? `
+                        ${(!invite.isCreator && !invite.isPending) ? `
                             <div class="relative">
                                 <button type="button" class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${invite.showMenu ? 'text-bubblegum bg-white border-gray-100' : 'text-gray-500 hover:text-bubblegum hover:bg-white'} transition-all border border-transparent"
                                         data-action="click->project-create#toggleRoleMenu" data-index="${index}">

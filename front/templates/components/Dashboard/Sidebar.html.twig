@@ -103,7 +103,7 @@
 
 			{% for project in projects %}
 				{% set project_color = project.color|default('#FF7EB6') %}
-				{% set is_active = (app.request.attributes.get('uuid') == project.uuid) %}
+				{% set is_active = (app.request.attributes.get('uuid') == project.uuid or app.request.attributes.get('projectUuid') == project.uuid) %}
 
 				<a href="{{ path('app_project_show', {uuid: project.uuid}) }}" class="flex items-center justify-between px-4 py-3 rounded-xl transition-all group mb-1 border
 																{{ is_active

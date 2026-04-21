@@ -14,7 +14,8 @@
      data-project-create-project-uuid-value="{{ is_edit ? project.uuid : '' }}"
      data-project-create-user-email-value="{{ app.user.email }}"
      data-project-create-user-name-value="{{ app.user.firstName }}"
-     data-project-create-initial-members-value="{{ members is defined ? members|json_encode : '[]' }}">
+     data-project-create-initial-members-value="{{ members is defined ? members|json_encode : '[]' }}"
+     data-project-create-invitations-value="{{ invitations is defined ? invitations|json_encode : '[]' }}">
     
     <div class="mb-8 px-4">
         <a href="{{ is_edit ? path('app_project_show', {uuid: project.uuid}) : path('app_dashboard') }}" class="text-sm font-medium text-gray-500 hover:text-bubblegum transition-colors flex items-center gap-2">

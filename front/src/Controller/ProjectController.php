@@ -112,6 +112,17 @@ class ProjectController extends AbstractController
 
             $projectData = $response->toArray();
 
+            // Fetch pending invitations
+            $invitations = [];
+            $responseInv = $apiClient->request('GET', "/api/projects/$uuid/members/invitations", [
+                'headers' => [
+                    'Cookie' => 'BEARER=' . $bearer
+                ]
+            ]);
+            if ($responseInv->getStatusCode() === 200) {
+                $invitations = $responseInv->toArray();
+            }
+
             // SECURITY CHECK: Only ADMIN can edit project settings
             if (($projectData['project']['role'] ?? '') !== 'ADMIN') {
                 return $this->redirectToRoute('app_project_show', ['uuid' => $uuid]);
@@ -126,6 +137,7 @@ class ProjectController extends AbstractController
             return $this->render('project/create.html.twig', [
                 'project' => $projectData['project'],
                 'members' => $projectData['members'] ?? [],
+                'invitations' => $invitations,
                 'projects' => $this->getSidebarProjects($apiClient, $requestStack)
             ]);
         } catch (\Exception $e) {

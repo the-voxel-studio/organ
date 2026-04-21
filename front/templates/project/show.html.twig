@@ -75,24 +75,41 @@
 						{{ 'project.show.organs'|trans }}
 					</h2>
 					{% if data.project.role in ['ADMIN', 'MANAGER'] %}
-						<button class="px-6 py-3 text-white font-bold rounded-2xl transition-all hover:brightness-110 active:scale-95 shadow-lg flex items-center gap-2 cursor-pointer shadow-current/20"
-						        style="background-color: {{ project_color }}">{{ 'project.show.add_organ'|trans }}</button>
+						<a href="{{ path('app_organ_new', {projectUuid: data.project.uuid}) }}" class="px-6 py-3 text-white font-bold rounded-2xl transition-all hover:brightness-110 active:scale-95 shadow-lg flex items-center gap-2 cursor-pointer shadow-current/20"
+						        style="background-color: {{ project_color }}">{{ 'project.show.add_organ'|trans }}</a>
 					{% endif %}
 				</div>
 
-				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{% for organ in data.organs %}
-						<a href="#" class="group bg-white p-6 rounded-3xl shadow-sm border border-gray-100 transition-all transform hover:-translate-y-1"
+						<a href="{{ path('app_organ_show', {projectUuid: data.project.uuid, organUuid: organ.uuid}) }}" class="group bg-white p-6 rounded-3xl shadow-sm border border-gray-100 transition-all transform hover:-translate-y-1 flex flex-col h-full"
 						   style="--hover-color: {{ project_color }}">
-							<div class="w-12 h-12 rounded-2xl mb-4 flex items-center justify-center text-white" style="background-color: {{ organ.highlightColor }}">
-								{% if organ.iconType == 'EMOJI' %}
-									<span class="text-2xl">{{ organ.iconData }}</span>
-								{% elseif organ.iconType == 'SVG' %}
-									<div class="w-6 h-6">{{ organ.iconData|raw }}</div>
-								{% endif %}
+							<div class="flex items-start justify-between mb-4">
+								<div class="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm" 
+								     style="background-color: {{ organ.highlightColor }}">
+									{% if organ.iconType == 'EMOJI' %}
+										<span class="text-2xl">{{ organ.iconData }}</span>
+									{% elseif organ.iconType == 'BLOB' %}
+										<img src="{{ organ.iconData }}" class="w-full h-full object-cover">
+									{% elseif organ.iconType == 'SVG' %}
+										<div class="w-6 h-6 text-white">{{ organ.iconData|raw }}</div>
+									{% endif %}
+								</div>
+								<div class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-gray-100 bg-gray-50 text-gray-500">
+									{{ organ.activeTasksCount }} {{ (organ.activeTasksCount > 1 ? 'tâches actives' : 'tâche active') }}
+								</div>
 							</div>
-							<h3 class="font-bold text-gray-900 group-hover:text-[var(--hover-color)] transition-colors">{{ organ.title }}</h3>
-							<p class="text-xs text-gray-400 font-medium mt-1 uppercase tracking-widest">{{ 'project.show.view_tasks'|trans }}</p>
+							
+							<h3 class="font-bold text-gray-900 group-hover:text-[var(--hover-color)] transition-colors mb-2">{{ organ.title }}</h3>
+							
+							<p class="text-xs text-gray-500 font-medium leading-relaxed mb-6 line-clamp-2">
+								{{ organ.description ?: 'Aucune description fournie.' }}
+							</p>
+
+							<div class="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
+								<p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">{{ 'project.show.view_tasks'|trans }}</p>
+								<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-[var(--hover-color)] transition-colors"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+							</div>
 						</a>
 					{% else %}
 						<div class="col-span-full py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200 text-center">

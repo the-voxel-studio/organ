@@ -199,12 +199,25 @@ class ProjectController extends AbstractController
         $organs = $entityManager->getRepository(Organ::class)->findBy(['project' => $project, 'deletedAt' => null]);
         $organsData = [];
         foreach ($organs as $organ) {
+            // Count active tasks (not DONE and not CANCELED)
+            $activeTasksCount = $entityManager->getRepository(\App\Entity\Task::class)->createQueryBuilder('t')
+                ->select('count(t.id)')
+                ->where('t.organ = :organ')
+                ->andWhere('t.deletedAt IS NULL')
+                ->andWhere('t.status NOT IN (:excludedStatuses)')
+                ->setParameter('organ', $organ)
+                ->setParameter('excludedStatuses', [\App\Enum\TaskStatus::DONE->value, \App\Enum\TaskStatus::CANCELED->value])
+                ->getQuery()
+                ->getSingleScalarResult();
+
             $organsData[] = [
                 'uuid' => $organ->getUuid(),
                 'title' => $organ->getTitle(),
+                'description' => $organ->getDescription(),
                 'iconType' => $organ->getIconType()->value,
                 'iconData' => $organ->getIconData(),
                 'highlightColor' => $organ->getHighlightColor(),
+                'activeTasksCount' => (int) $activeTasksCount,
             ];
         }
 

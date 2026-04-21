@@ -77,11 +77,28 @@ class TaskController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
+        // Check for TASK_DELETE permissions
+        $canDeleteAll = $this->permissionService->hasPermission($user, $organ, 'TASK_DELETE_ALL') || 
+                        $this->permissionService->hasPermission($user, $organ, 'ORGAN_EDIT') || 
+                        $this->permissionService->hasPermission($user, $organ, 'ALL');
+        
+        $canDeleteOwn = $this->permissionService->hasPermission($user, $organ, 'TASK_DELETE_OWN');
+
+        if (!$canDeleteAll && !$canDeleteOwn) {
+            return $this->json([]); // User cannot see trash if they can't delete anything
+        }
+
         // On récupère uniquement les tâches supprimées
         $queryBuilder = $entityManager->getRepository(Task::class)->createQueryBuilder('t')
             ->where('t.organ = :organ')
             ->andWhere('t.deletedAt IS NOT NULL')
             ->setParameter('organ', $organ);
+
+        if (!$canDeleteAll) {
+            // Filter by ownership if they only have TASK_DELETE_OWN
+            $queryBuilder->andWhere('t.createdBy = :user OR t.manager = :user')
+                ->setParameter('user', $user);
+        }
         
         $tasks = $queryBuilder->getQuery()->getResult();
         

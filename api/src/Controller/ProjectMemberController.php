@@ -87,6 +87,35 @@ class ProjectMemberController extends AbstractController
         return $this->json($data);
     }
 
+    #[Route('/invitations', name: 'invitations', methods: ['GET'])]
+    public function invitations(string $projectUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        $this->checkAccess($project, $entityManager, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER]);
+
+        $invitations = $entityManager->getRepository(ProjectInvitation::class)->findBy([
+            'project' => $project,
+            'acceptedAt' => null
+        ]);
+
+        $data = [];
+        foreach ($invitations as $inv) {
+            if ($inv->getExpiresAt() > new \DateTime()) {
+                $data[] = [
+                    'uuid' => $inv->getUuid(),
+                    'email' => $inv->getEmail(),
+                    'role' => $inv->getRole()->value,
+                    'createdAt' => $inv->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                    'expiresAt' => $inv->getExpiresAt()->format(\DateTimeInterface::ATOM),
+                ];
+            }
+        }
+
+        return $this->json($data);
+    }
+
     #[Route('/invite', name: 'invite', methods: ['POST'])]
     public function invite(string $projectUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {

@@ -6,6 +6,34 @@
 		<twig:Dashboard:Sidebar :projects="projects|default([])" />
 
 		<main class="flex-grow-1 px-5 py-8 overflow-y-auto w-full bg-off-white">
+			{# --- Flash Messages --- #}
+			{% for label, messages in app.flashes %}
+				{% for message in messages %}
+					<div class="max-w-7xl mx-auto mb-6">
+						<div class="flex items-center justify-between p-4 rounded-2xl border 
+									{{ label == 'error' ? 'bg-red-50 border-red-100 text-red-700' : 'bg-green-50 border-green-100 text-green-700' }} shadow-sm">
+							<div class="flex items-center gap-3">
+								{% if label == 'error' %}
+									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+										<path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+									</svg>
+								{% else %}
+									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+									</svg>
+								{% endif %}
+								<span class="text-sm font-bold">{{ message }}</span>
+							</div>
+							<button type="button" class="text-current opacity-50 hover:opacity-100 transition-opacity" onclick="this.parentElement.parentElement.remove()">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+								</svg>
+							</button>
+						</div>
+					</div>
+				{% endfor %}
+			{% endfor %}
+
 			{% block content %}{% endblock %}
 		</main>
 	</div>

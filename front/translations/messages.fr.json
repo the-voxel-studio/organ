@@ -119,5 +119,134 @@
                 "invitation": "Certaines invitations n'ont pas pu être envoyées."
             }
         }
+    },
+    "organ": {
+        "edit": {
+            "title": "Paramètres de l'Organ",
+            "back_to_organ": "Retour à l'Organ",
+            "form": {
+                "actions": {
+                    "submit": "Mettre à jour l'organ"
+                }
+            }
+        },
+        "create": {
+            "title": "Créer un Nouvel Organ",
+            "back_to_project": "Retour au Projet",
+            "form": {
+                "name": {
+                    "label": "Nom de l'organ",
+                    "placeholder": "Ex: Développement Frontend"
+                },
+                "description": {
+                    "label": "Description",
+                    "placeholder": "Décrivez le rôle de cet organ dans le projet..."
+                },
+                "identity": {
+                    "color": "Couleur distinctive",
+                    "icon": "Icône"
+                },
+                "actions": {
+                    "cancel": "Annuler",
+                    "submit": "Créer l'organ"
+                }
+            }
+        },
+        "show": {
+            "kanban": "Kanban",
+            "list": "Liste",
+            "links": "Liens",
+            "filter": "Filtrer",
+            "new_task": "Nouvelle tâche",
+            "no_links": "Aucun lien associé.",
+            "add_link": "Ajouter un lien",
+            "url_placeholder": "https://...",
+            "description_placeholder": "Ex: Cahier des charges",
+            "save_link": "Enregistrer le lien",
+            "delete_link_confirm": "Supprimer ce lien ?",
+            "todo": "À Faire",
+            "in_progress": "En Cours",
+            "done": "Terminé",
+            "waiting": "En Attente",
+            "canceled": "Annulé",
+            "no_tasks": "Aucune tâche à afficher."
+        },
+        "permissions.categories": {
+            "organ": "Gestion de l'Organ",
+            "tasks": "Gestion des Tâches",
+            "interactions": "Interactions & Fichiers"
+        },
+        "permissions.ORGAN_VIEW.label": "Voir l'Organ",
+        "permissions.ORGAN_VIEW.description": "Accès obligatoire pour voir l'organ et ses tâches.",
+        "permissions.ORGAN_EDIT.label": "Modifier l'Organ",
+        "permissions.ORGAN_EDIT.description": "Changer le nom, la description ou l'identité visuelle.",
+        "permissions.ORGAN_MANAGE_ROLES.label": "Gérer la structure (Rôles & Membres)",
+        "permissions.ORGAN_MANAGE_ROLES.description": "Modifier les rôles, les permissions et gérer l'affectation des membres.",
+        "permissions.ORGAN_MANAGE_MEMBERS.label": "Gérer les Membres (Couplé)",
+        "permissions.ORGAN_MANAGE_MEMBERS.description": "Cette permission est actuellement liée à la gestion des rôles.",
+        "permissions.ORGAN_LINK_MANAGE.label": "Gérer les Liens",
+        "permissions.ORGAN_LINK_MANAGE.description": "Ajouter ou supprimer des liens utiles à l'organ.",
+        
+        "permissions.TASK_CREATE.label": "Créer des Tâches",
+        "permissions.TASK_CREATE.description": "Ouvrir de nouveaux tickets dans cet organ.",
+        "permissions.TASK_EDIT_OWN.label": "Modifier ses Tâches",
+        "permissions.TASK_EDIT_OWN.description": "Modifier les tâches dont vous êtes le créateur ou responsable.",
+        "permissions.TASK_EDIT_ALL.label": "Modifier toutes les Tâches",
+        "permissions.TASK_EDIT_ALL.description": "Modifier n'importe quelle tâche de l'organ.",
+        "permissions.TASK_DELETE_OWN.label": "Supprimer ses Tâches",
+        "permissions.TASK_DELETE_OWN.description": "Supprimer les tâches que vous avez créées.",
+        "permissions.TASK_DELETE_ALL.label": "Supprimer toutes les Tâches",
+        "permissions.TASK_DELETE_ALL.description": "Pouvoir supprimer n'importe quelle tâche.",
+        "permissions.TASK_STATUS_CHANGE_OWN.label": "Changer Statut (ses tâches)",
+        "permissions.TASK_STATUS_CHANGE_OWN.description": "Faire avancer vos propres tâches.",
+        "permissions.TASK_STATUS_CHANGE_ALL.label": "Changer Statut (toutes)",
+        "permissions.TASK_STATUS_CHANGE_ALL.description": "Faire avancer n'importe quelle tâche.",
+        "permissions.TASK_PRIORITY_CHANGE_OWN.label": "Changer Priorité (ses tâches)",
+        "permissions.TASK_PRIORITY_CHANGE_OWN.description": "Gérer l'urgence de vos propres tâches.",
+        "permissions.TASK_PRIORITY_CHANGE_ALL.label": "Changer Priorité (toutes)",
+        "permissions.TASK_PRIORITY_CHANGE_ALL.description": "Gérer l'urgence de toutes les tâches.",
+        "permissions.TASK_DATES_MANAGE_OWN.label": "Gérer Échéances (ses tâches)",
+        "permissions.TASK_DATES_MANAGE_OWN.description": "Modifier les dates de vos propres tâches.",
+        "permissions.TASK_DATES_MANAGE_ALL.label": "Gérer Échéances (toutes)",
+        "permissions.TASK_DATES_MANAGE_ALL.description": "Modifier les dates de toutes les tâches.",
+        "permissions.TASK_ESTIMATE_MANAGE_OWN.label": "Gérer Estimations (ses tâches)",
+        "permissions.TASK_ESTIMATE_MANAGE_OWN.description": "Estimer le temps de vos propres tâches.",
+        "permissions.TASK_ESTIMATE_MANAGE_ALL.label": "Gérer Estimations (toutes)",
+        "permissions.TASK_ESTIMATE_MANAGE_ALL.description": "Estimer le temps de toutes les tâches.",
+        "permissions.TASK_ASSIGN_SELF.label": "S'assigner des Tâches",
+        "permissions.TASK_ASSIGN_SELF.description": "Se prendre une tâche ou s'en retirer.",
+        "permissions.TASK_ASSIGN_OTHERS.label": "Assigner d'autres Membres",
+        "permissions.TASK_ASSIGN_OTHERS.description": "Désigner des responsables sur les tâches.",
+        "permissions.TASK_VALIDATE.label": "Valider les Tâches",
+        "permissions.TASK_VALIDATE.description": "Marquer une tâche comme officiellement terminée.",
+        "permissions.TASK_LINK_MANAGE_OWN.label": "Gérer Liens Tâches (ses tâches)",
+        "permissions.TASK_LINK_MANAGE_OWN.description": "Ajouter des liens sur vos propres tâches.",
+        "permissions.TASK_LINK_MANAGE_ALL.label": "Gérer Liens Tâches (toutes)",
+        "permissions.TASK_LINK_MANAGE_ALL.description": "Ajouter des liens sur n'importe quelle tâche.",
+        "permissions.TASK_TAG_MANAGE_OWN.label": "Gérer Tags Tâches (ses tâches)",
+        "permissions.TASK_TAG_MANAGE_OWN.description": "Étiqueter vos propres tâches.",
+        "permissions.TASK_TAG_MANAGE_ALL.label": "Gérer Tags Tâches (toutes)",
+        "permissions.TASK_TAG_MANAGE_ALL.description": "Étiqueter n'importe quelle tâche.",
+        "permissions.TASK_DEPENDENCY_MANAGE_OWN.label": "Gérer Dépendances (ses tâches)",
+        "permissions.TASK_DEPENDENCY_MANAGE_OWN.description": "Lier vos tâches entre elles.",
+        "permissions.TASK_DEPENDENCY_MANAGE_ALL.label": "Gérer Dépendances (toutes)",
+        "permissions.TASK_DEPENDENCY_MANAGE_ALL.description": "Lier n'importe quelle tâche.",
+        
+        "permissions.COMMENT_CREATE.label": "Commenter",
+        "permissions.COMMENT_CREATE.description": "Participer aux discussions sur les tâches.",
+        "permissions.COMMENT_EDIT_OWN.label": "Modifier ses Commentaires",
+        "permissions.COMMENT_EDIT_OWN.description": "Corriger ses propres messages.",
+        "permissions.COMMENT_EDIT_ALL.label": "Modifier tous les Commentaires",
+        "permissions.COMMENT_EDIT_ALL.description": "Modérer les discussions.",
+        "permissions.COMMENT_DELETE_OWN.label": "Supprimer ses Commentaires",
+        "permissions.COMMENT_DELETE_OWN.description": "Retirer ses propres messages.",
+        "permissions.COMMENT_DELETE_ALL.label": "Supprimer tous les Commentaires",
+        "permissions.COMMENT_DELETE_ALL.description": "Nettoyer les discussions.",
+        "permissions.ATTACHMENT_ADD.label": "Ajouter des Fichiers",
+        "permissions.ATTACHMENT_ADD.description": "Envoyer des documents sur les tâches.",
+        "permissions.ATTACHMENT_DELETE_OWN.label": "Supprimer ses Fichiers",
+        "permissions.ATTACHMENT_DELETE_OWN.description": "Retirer les documents que vous avez envoyés.",
+        "permissions.ATTACHMENT_DELETE_ALL.label": "Supprimer tous les Fichiers",
+        "permissions.ATTACHMENT_DELETE_ALL.description": "Gérer l'espace de stockage de l'organ."
     }
 }
