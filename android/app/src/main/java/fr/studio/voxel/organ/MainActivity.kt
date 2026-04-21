@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import fr.studio.voxel.organ.ui.components.Header
 import fr.studio.voxel.organ.components.PrimaryButton
 import fr.studio.voxel.organ.ui.theme.OrganTheme
 
@@ -19,7 +21,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             OrganTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    myApp(
+                    Organ(
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -29,9 +31,6 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun myApp(modifier: Modifier){
-    PrimaryButton(
-        text = "Test button",
-        onClick = {}
-    )
+fun Organ(modifier: Modifier = Modifier) {
+    Header()
 }

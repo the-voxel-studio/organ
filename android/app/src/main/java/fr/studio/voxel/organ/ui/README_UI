@@ -1,0 +1,4 @@
+Colors are defined in Color.kt
+Dark or Light theme in Theme.kt
+Typography in Type.kt
+Don't create your own font/color directly in the other files
