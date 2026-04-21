@@ -14,3 +14,7 @@ app_api_doc:
     path: /api/docs
     methods: [GET]
     defaults: { _controller: nelmio_api_doc.controller.swagger_ui }
+
+auth_refresh:
+    path: /api/auth/refresh
+    methods: [POST]

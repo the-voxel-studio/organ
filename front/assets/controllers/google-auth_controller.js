@@ -5,7 +5,8 @@ export default class extends Controller {
     static values = {
         clientId: String,
         loginUrl: String,
-        redirectUrl: String
+        redirectUrl: String,
+        mode: { type: String, default: 'login' }
     };
 
     connect() {
@@ -43,20 +44,25 @@ export default class extends Controller {
 
         this.startLoading();
 
+        // Fallback: stop loading after 30 seconds if nothing happened (popup closed)
+        this.loadingTimeout = setTimeout(() => this.stopLoading(), 30000);
+
         const googleButton = this.buttonContainerTarget.querySelector('div[role="button"]') 
                           || this.buttonContainerTarget.querySelector('iframe');
         
         if (googleButton) {
             googleButton.click();
         } else {
-            google.accounts.id.prompt();
+            google.accounts.id.prompt((notification) => {
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    this.stopLoading();
+                }
+            });
         }
-
-        // On arrête le loading si la popup est fermée sans action après un délai 
-        // ou via le callback de prompt si utilisé
     }
 
     async handleCredentialResponse(response) {
+        if (this.loadingTimeout) clearTimeout(this.loadingTimeout);
         const idToken = response.credential;
 
         try {
@@ -71,11 +77,15 @@ export default class extends Controller {
             });
 
             if (res.ok) {
-                window.location.href = this.redirectUrlValue;
+                if (this.modeValue === 'link') {
+                    window.location.href = this.redirectUrlValue;
+                } else {
+                    window.location.href = this.redirectUrlValue;
+                }
             } else {
                 this.stopLoading();
                 const errorData = await res.json().catch(() => ({}));
-                this.dispatch('error', { detail: errorData.error || 'Google authentication failed' });
+                this.dispatch('error', { detail: errorData.message || errorData.error || 'Authentication failed' });
             }
         } catch (error) {
             this.stopLoading();

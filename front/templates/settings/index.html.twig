@@ -1,0 +1,340 @@
+{% extends 'layouts/logged/sidebar_layout.html.twig' %}
+
+{% block title %}
+	{{ 'title'|trans({}, 'settings') }}
+	- Organ
+{% endblock %}
+
+{% block extra_javascripts %}
+	<script src="https://accounts.google.com/gsi/client" async defer></script>
+{% endblock %}
+
+{% block content %}
+	<div data-controller="settings google-auth" data-settings-api-url-value="http://localhost:8001/api/users/me" data-settings-connections-url-value="http://localhost:8001/api/users/me/connections" data-google-auth-client-id-value="{{ google_client_id }}" data-google-auth-login-url-value="http://localhost:8001/api/users/me/link-google" data-google-auth-redirect-url-value="{{ path('app_settings') }}" data-google-auth-mode-value="link" data-action="google-auth:error->settings#showErrorFromEvent">
+
+		<div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+			<header class="mb-10">
+				<h1 class="text-3xl font-black text-black mb-2">{{ 'title'|trans({}, 'settings') }}</h1>
+				<p class="text-gray-500 font-medium">{{ 'subtitle'|trans({}, 'settings') }}</p>
+			</header>
+
+			<div
+				class="grid grid-cols-1 gap-8">
+
+				<!-- Information Personnelle -->
+				<section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+					<div class="p-8">
+						<div class="flex items-center gap-4 mb-8">
+							<div class="p-3 bg-bubblegum/10 rounded-2xl text-bubblegum">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+								</svg>
+							</div>
+							<div>
+								<h2 class="text-xl font-bold text-black">{{ 'profile.title'|trans({}, 'settings') }}</h2>
+								<p class="text-sm text-gray-500 font-medium">{{ 'profile.subtitle'|trans({}, 'settings') }}</p>
+							</div>
+						</div>
+
+						<!-- Alert Zones -->
+						<div data-settings-target="error" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-xl">
+							<span data-settings-target="errorMessage"></span>
+						</div>
+						<div data-settings-target="success" class="hidden mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-bold rounded-r-xl">
+							<span data-settings-target="successMessage"></span>
+						</div>
+
+						<form data-settings-target="form" data-action="submit->settings#submit" class="space-y-6">
+							<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+								<div>
+									<label for="firstName" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{{ 'profile.firstname_label'|trans({}, 'settings') }}</label>
+									<input type="text" name="firstName" id="firstName" value="{{ userData.firstName }}" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none font-medium">
+								</div>
+								<div>
+									<label for="lastName" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{{ 'profile.lastname_label'|trans({}, 'settings') }}</label>
+									<input type="text" name="lastName" id="lastName" value="{{ userData.lastName }}" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none font-medium">
+								</div>
+							</div>
+
+							<div>
+								<label for="email" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{{ 'profile.email_label'|trans({}, 'settings') }}</label>
+								{% if userData.authWithGoogle %}
+									<div class="relative group">
+										<input type="email" name="email" id="email" value="{{ userData.email }}" readonly class="w-full px-5 py-4 bg-gray-100 border border-gray-200 rounded-2xl text-gray-500 cursor-not-allowed font-medium outline-none">
+										<div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+											<svg xmlns="http://www.w3.org/2000/svg" viewbox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+												<path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd"/>
+											</svg>
+										</div>
+									</div>
+									<p class="mt-2 text-[10px] font-bold text-highlight uppercase tracking-wider flex items-center gap-1.5">
+										<span class="w-1 h-1 bg-highlight rounded-full"></span>
+										{{ 'profile.google_managed'|trans({}, 'settings') }}
+									</p>
+								{% else %}
+									<input type="email" name="email" id="email" value="{{ userData.email }}" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none font-medium">
+								{% endif %}
+							</div>
+
+							<div class="pt-4">
+								<button type="submit" data-settings-target="submitButton" class="px-8 py-4 bg-black hover:bg-black/90 text-white font-bold rounded-2xl shadow-lg transition-all transform hover:-translate-y-1 active:scale-[0.98] flex items-center gap-3 cursor-pointer">
+									<svg data-settings-target="spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24">
+										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+									</svg>
+									{{ 'profile.submit'|trans({}, 'settings') }}
+								</button>
+							</div>
+						</form>
+					</div>
+				</section>
+
+				<!-- Connexion & Sécurité -->
+				<section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+					<div class="p-8">
+						<div class="flex items-center gap-4 mb-8">
+							<div class="p-3 bg-highlight/10 rounded-2xl text-highlight">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+								</svg>
+							</div>
+							<div>
+								<h2 class="text-xl font-bold text-black">{{ 'security.title'|trans({}, 'settings') }}</h2>
+								<p class="text-sm text-gray-500 font-medium">{{ 'security.subtitle'|trans({}, 'settings') }}</p>
+							</div>
+						</div>
+
+						<div
+							class="space-y-8">
+							<!-- Google Link -->
+							<div class="p-6 bg-gray-50 rounded-3xl border border-gray-100">
+								<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+									<div class="flex items-center gap-4">
+										<div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
+											<svg class="w-6 h-6" viewbox="0 0 24 24">
+												<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+												<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+												<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+												<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+											</svg>
+										</div>
+										<div>
+											<p class="font-bold text-black">{{ 'security.google_account.title'|trans({}, 'settings') }}</p>
+											<p class="text-xs text-gray-500 font-medium">
+												{% if userData.authWithGoogle %}
+													{{ 'security.google_account.linked'|trans({}, 'settings') }}
+												{% else %}
+													{{ 'security.google_account.not_linked'|trans({}, 'settings') }}
+												{% endif %}
+											</p>
+										</div>
+									</div>
+
+									{% if userData.authWithGoogle %}
+										<div class="px-4 py-2 bg-green-50 text-green-700 text-xs font-black uppercase tracking-widest rounded-xl border border-green-100 flex items-center gap-2 self-start sm:self-auto">
+											<span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+											{{ 'security.google_account.status_linked'|trans({}, 'settings') }}
+										</div>
+									{% else %}
+										<div>
+											<div data-google-auth-target="buttonContainer" class="hidden"></div>
+											<button type="button" data-google-auth-target="button" data-action="click->google-auth#login" class="px-6 py-2.5 bg-white border border-gray-200 hover:border-bubblegum hover:text-bubblegum text-gray-700 text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer">
+												<svg data-google-auth-target="spinner" class="hidden animate-spin h-4 w-4 text-bubblegum" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24">
+													<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+													<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+												</svg>
+												{{ 'security.google_account.link_button'|trans({}, 'settings') }}
+											</button>
+										</div>
+									{% endif %}
+								</div>
+
+								<!-- Google Alert Zones -->
+								<div data-settings-target="googleError" class="hidden mt-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-xl">
+									<span data-settings-target="googleErrorMessage"></span>
+								</div>
+								<div data-settings-target="googleSuccess" class="hidden mt-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-bold rounded-r-xl">
+									<span data-settings-target="googleSuccessMessage"></span>
+								</div>
+							</div>
+
+							{% if not userData.authWithGoogle %}
+								<div class="h-px bg-gray-50"></div>
+
+								<div class="px-2">
+									<h3 class="font-bold text-black mb-4">{{ 'security.password.title'|trans({}, 'settings') }}</h3>
+									
+									<!-- Password Alert Zones -->
+									<div data-settings-target="passwordError" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-xl">
+										<span data-settings-target="passwordErrorMessage"></span>
+									</div>
+									<div data-settings-target="passwordSuccess" class="hidden mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-bold rounded-r-xl">
+										<span data-settings-target="passwordSuccessMessage"></span>
+									</div>
+
+									<form data-settings-target="passwordForm" data-action="submit->settings#submitPassword" class="space-y-4 max-w-md">
+										<div>
+											<label for="current_password" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{{ 'security.password.current_label'|trans({}, 'settings') }}</label>
+											<input type="password" name="currentPassword" id="current_password" required class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum transition-all outline-none font-medium">
+										</div>
+										<div>
+											<label for="new_password" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">{{ 'security.password.new_label'|trans({}, 'settings') }}</label>
+											<input type="password" name="newPassword" id="new_password" required minlength="8" class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum transition-all outline-none font-medium">
+										</div>
+										<button type="submit" data-settings-target="passwordSubmitButton" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-all flex items-center gap-2">
+											<svg data-settings-target="passwordSpinner" class="hidden animate-spin h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24">
+												<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+												<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+											</svg>
+											{{ 'security.password.submit'|trans({}, 'settings') }}
+										</button>
+									</form>
+								</div>
+							{% endif %}
+						</div>
+					</div>
+				</section>
+
+				<!-- Sessions Area -->
+				<section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+					<div class="p-8">
+						<div class="flex items-center gap-4 mb-8">
+							<div class="p-3 bg-bubblegum/10 rounded-2xl text-bubblegum">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25"/>
+								</svg>
+							</div>
+							<div>
+								<h2 class="text-xl font-bold text-black">{{ 'sessions.title'|trans({}, 'settings') }}</h2>
+								<p class="text-sm text-gray-500 font-medium">{{ 'sessions.subtitle'|trans({}, 'settings') }}</p>
+							</div>
+						</div>
+
+						<div data-settings-target="connectionsList" class="space-y-4">
+							<div class="flex items-center justify-center p-8">
+								<svg class="animate-spin h-8 w-8 text-bubblegum" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24">
+									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+								</svg>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<!-- Danger Zone -->
+				<section class="bg-red-50/30 rounded-3xl border border-red-100 overflow-hidden">
+					<div class="p-8">
+						<div class="flex items-center gap-4 mb-6">
+							<div class="p-3 bg-red-100 rounded-2xl text-red-600">
+								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+
+									<path d="M9.1709 4C9.58273 2.83481 10.694 2 12.0002 2C13.3064 2 14.4177 2.83481 14.8295 4" stroke="currentColor" stroke-linecap="round"></path>
+									<path d="M20.5001 6H3.5" stroke="currentColor"  stroke-linecap="round"></path>
+									<path d="M18.8332 8.5L18.3732 15.3991C18.1962 18.054 18.1077 19.3815 17.2427 20.1907C16.3777 21 15.0473 21 12.3865 21H11.6132C8.95235 21 7.62195 21 6.75694 20.1907C5.89194 19.3815 5.80344 18.054 5.62644 15.3991L5.1665 8.5" stroke="currentColor" stroke-linecap="round"></path>
+									<path d="M9.5 11L10 16" stroke="currentColor"  stroke-linecap="round"></path>
+									<path d="M14.5 11L14 16" stroke="currentColor"  stroke-linecap="round"></path>
+
+								</svg>
+							</div>
+							<div>
+								<h2 class="text-xl font-bold text-red-900">{{ 'delete_account.title'|trans({}, 'settings') }}</h2>
+								<p class="text-sm text-red-700/60 font-medium">{{ 'delete_account.subtitle'|trans({}, 'settings') }}</p>
+							</div>
+						</div>
+						<button type="button" data-action="click->settings#openDeleteModal" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-200 transition-all active:scale-[0.98] cursor-pointer">
+							{{ 'delete_account.button'|trans({}, 'settings') }}
+						</button>
+					</div>
+				</section>
+			</div>
+
+			<!-- Modal de Confirmation de Suppression -->
+			<div
+				data-settings-target="deleteModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
+				<!-- Overlay avec flou -->
+				<div class="fixed inset-0 bg-black/20 backdrop-blur-md transition-opacity"></div>
+
+				<div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+					<div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-gray-100">
+						<div class="bg-white px-8 pb-8 pt-10">
+							<div class="sm:flex sm:items-start">
+								<div class="mx-auto flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-50 text-red-600 sm:mx-0">
+									<svg class="h-8 w-8" fill="none" viewbox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"/>
+									</svg>
+								</div>
+								<div class="mt-4 text-center sm:ml-6 sm:mt-0 sm:text-left">
+									<h3 class="text-2xl font-black text-black leading-6">{{ 'delete_account.modal.title'|trans({}, 'settings') }}</h3>
+									<div class="mt-4 space-y-4">
+										<p class="text-sm font-medium text-gray-500 leading-relaxed">
+											{{ 'delete_account.modal.p1'|trans({}, 'settings')|raw }}
+										</p>
+										<p class="text-sm font-medium text-gray-500 leading-relaxed">
+											{{ 'delete_account.modal.p2'|trans({}, 'settings')|raw }}
+										</p>
+										<div class="p-4 bg-highlight/5 rounded-2xl border border-highlight/10">
+											<p class="text-xs font-bold text-highlight uppercase tracking-wider mb-1">{{ 'delete_account.modal.cancel_info_title'|trans({}, 'settings') }}</p>
+											<p class="text-xs font-medium text-highlight/80 leading-snug">{{ 'delete_account.modal.cancel_info_text'|trans({}, 'settings') }}</p>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="bg-gray-50/50 px-8 py-6 flex flex-col sm:flex-row-reverse gap-3">
+							<button type="button" data-action="click->settings#confirmDelete" class="inline-flex w-full justify-center items-center gap-2 rounded-2xl bg-red-600 px-6 py-4 text-sm font-black text-white shadow-xl shadow-red-200 hover:bg-red-500 transition-all sm:w-auto cursor-pointer">
+								<svg data-settings-target="deleteSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24">
+									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+								</svg>
+								{{ 'delete_account.modal.confirm'|trans({}, 'settings') }}
+							</button>
+							<button type="button" data-action="click->settings#closeDeleteModal" class="inline-flex w-full justify-center rounded-2xl bg-white px-6 py-4 text-sm font-bold text-gray-900 border border-gray-200 hover:bg-gray-50 transition-all sm:w-auto cursor-pointer">
+								{{ 'delete_account.modal.cancel'|trans({}, 'settings') }}
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Modal de Confirmation de Déconnexion Session -->
+			<div
+				data-settings-target="disconnectModal" class="hidden fixed inset-0 z-[100] overflow-y-auto">
+				<!-- Overlay avec flou -->
+				<div class="fixed inset-0 bg-black/20 backdrop-blur-md transition-opacity"></div>
+
+				<div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+					<div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-gray-100">
+						<div class="bg-white px-8 pb-8 pt-10">
+							<div class="sm:flex sm:items-start">
+								<div class="mx-auto flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-highlight/10 text-highlight sm:mx-0">
+									<svg class="h-8 w-8" fill="none" viewbox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/>
+									</svg>
+								</div>
+								<div class="mt-4 text-center sm:ml-6 sm:mt-0 sm:text-left">
+									<h3 class="text-2xl font-black text-black leading-6">{{ 'disconnect_modal.title'|trans({}, 'settings') }}</h3>
+									<div class="mt-4">
+										<p class="text-sm font-medium text-gray-500 leading-relaxed">
+											{{ 'disconnect_modal.text'|trans({}, 'settings') }}
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="bg-gray-50/50 px-8 py-6 flex flex-col sm:flex-row-reverse gap-3">
+							<button type="button" data-action="click->settings#confirmInvalidateConnection" class="inline-flex w-full justify-center items-center gap-2 rounded-2xl bg-black px-6 py-4 text-sm font-black text-white shadow-xl hover:bg-gray-800 transition-all sm:w-auto cursor-pointer">
+								<svg data-settings-target="disconnectSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24">
+									<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+									<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+								</svg>
+								{{ 'disconnect_modal.confirm'|trans({}, 'settings') }}
+							</button>
+							<button type="button" data-action="click->settings#closeDisconnectModal" class="inline-flex w-full justify-center rounded-2xl bg-white px-6 py-4 text-sm font-bold text-gray-900 border border-gray-200 hover:bg-gray-50 transition-all sm:w-auto cursor-pointer">
+								{{ 'disconnect_modal.cancel'|trans({}, 'settings') }}
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	{% endblock %}

@@ -1,8 +1,166 @@
-{% extends 'base.html.twig' %}
+{% extends 'layouts/logged/sidebar_layout.html.twig' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}
+	{{ 'dashboard.title'|trans }}
+	- Organ
+{% endblock %}
 
-{% block body %}
-    <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
-    <p>This is your dashboard skeleton.</p>
+{% block content %}
+	<div
+		class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+		<!-- Header Section -->
+		<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+			<div>
+				<h1 class="text-3xl font-black text-black mb-2">{{ 'dashboard.title'|trans }}</h1>
+				<p class="text-gray-500 font-medium">{{ 'dashboard.subtitle'|trans }}</p>
+			</div>
+			<a href="{{ path('app_project_new') }}" class="px-8 py-4 bg-bubblegum hover:bg-bubblegum/90 text-white font-bold rounded-2xl shadow-lg transition-all transform hover:-translate-y-1 active:scale-[0.98] flex items-center gap-3 w-fit">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+				</svg>
+				{{ 'dashboard.new_project'|trans }}
+			</a>
+		</header>
+
+		<div
+			class="grid grid-cols-1 gap-12">
+			<!-- Important Tasks Section -->
+			<section>
+				<div class="flex items-center gap-4 mb-8">
+					<div class="p-3 bg-bubblegum/10 rounded-2xl text-bubblegum">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"/>
+						</svg>
+					</div>
+					<div>
+						<h2 class="text-xl font-bold text-black">{{ 'dashboard.tasks.title'|trans }}</h2>
+						<p class="text-sm text-gray-500 font-medium">{{ 'dashboard.tasks.subtitle'|trans }}</p>
+					</div>
+				</div>
+
+				<div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+					<div class="p-8">
+						<div class="overflow-x-auto">
+							<table class="w-full">
+								<thead>
+									<tr class="border-b border-gray-50">
+										<th class="text-left pb-4 px-4 text-xs font-black text-gray-400 uppercase tracking-widest">{{ 'dashboard.tasks.headers.name'|trans }}</th>
+										<th class="text-left pb-4 px-4 text-xs font-black text-gray-400 uppercase tracking-widest">{{ 'dashboard.tasks.headers.date'|trans }}</th>
+										<th class="text-left pb-4 px-4 text-xs font-black text-gray-400 uppercase tracking-widest">{{ 'dashboard.tasks.headers.project'|trans }}</th>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-gray-50">
+									{% for task in tasks %}
+										<tr class="group hover:bg-gray-50 transition-colors">
+											<td class="py-5 px-4">
+												<div class="flex items-center gap-3">
+													<div class="w-2 h-2 rounded-full {% if task.priority > 1 %}bg-red-500 animate-pulse{% else %}bg-bubblegum{% endif %}"></div>
+													<span class="font-bold text-gray-900">{{ task.title }}</span>
+												</div>
+											</td>
+											<td class="py-5 px-4 text-sm font-medium text-gray-500">
+												{{ task.expiresAt ? task.expiresAt|date('d/m/Y') : '-' }}
+											</td>
+											<td class="py-5 px-4">
+												<span class="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest rounded-lg">
+													{{ task.projectName }}
+												</span>
+											</td>
+										</tr>
+									{% else %}
+										<tr>
+											<td colspan="3" class="py-12 text-center text-gray-500 font-medium italic">
+												{{ 'dashboard.tasks.empty'|trans }}
+											</td>
+										</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Projects Grid Section -->
+			<section>
+				<div class="flex items-center gap-4 mb-8">
+					<div class="p-3 bg-highlight/10 rounded-2xl text-highlight">
+						<svg class="w-8 h-8 text-highlight group-hover:text-white" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+						</svg>
+					</div>
+					<div>
+						<h2 class="text-xl font-bold text-black">{{ 'dashboard.projects.title'|trans }}</h2>
+						<p class="text-sm text-gray-500 font-medium">{{ 'dashboard.projects.subtitle'|trans }}</p>
+					</div>
+				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+					{% for project in projects %}
+						{% set project_color = project.color|default('#FF7EB6') %}
+
+						<a href="{{ path('app_project_show', {uuid: project.uuid}) }}" class="group bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-bubblegum/5 transition-all transform hover:-translate-y-1" style="border-left: 4px solid {{ project_color }}">
+							<div class="flex justify-between items-start mb-6">
+								<div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-bubblegum/10 group-hover:text-bubblegum transition-colors overflow-hidden">
+									{% if project.iconType == 'EMOJI' %}
+										<span class="text-2xl">{{ project.iconData }}</span>
+									{% elseif project.iconType == 'BLOB' %}
+										<img src="{{ project.iconData }}" class="w-full h-full object-cover">
+									{% elseif project.iconType == 'SVG' %}
+										{% if project.iconData starts with '<svg' %}
+											<div class="w-6 h-6 flex items-center justify-center">{{ project.iconData|raw }}</div>
+										{% else %}
+											{# Predefined icon #}
+											{% set icon_name = project.iconName|default('icon_1') %}
+
+											{% if icon_name == 'icon_1' %}
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+											{% elseif icon_name == 'icon_2' %}
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3"/><path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5"/></svg>
+											{% elseif icon_name == 'icon_3' %}
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+											{% elseif icon_name == 'icon_4' %}
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+											{% elseif icon_name == 'icon_5' %}
+												<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/><path d="M6.5 18c.6 0 1.2.4 1.5 1 .3.6.9 1 1.5 1H20"/></svg>
+											{% endif %}
+										{% endif %}
+									{% else %}
+										<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 0 0-1.883 2.542l.857 6a2.25 2.25 0 0 0 2.227 1.932H19.05a2.25 2.25 0 0 0 2.227-1.932l.857-6a2.25 2.25 0 0 0-1.883-2.542m-16.5 0V6A2.25 2.25 0 0 1 6 3.75h3.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 0 1.06.44H18A2.25 2.25 0 0 1 20.25 9v.776"/>
+										</svg>
+									{% endif %}
+								</div>
+								
+								{% if project.status == 'ACTIVE' %}
+									<span class="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border"
+									      style="background-color: {{ project_color }}1a; color: {{ project_color }}; border-color: {{ project_color }}33;">
+										{{ 'project.status.active'|trans }}
+									</span>
+								{% elseif project.status == 'ARCHIVED' %}
+									<span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-200">
+										{{ 'project.status.archived'|trans }}
+									</span>
+								{% else %}
+									<span class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-amber-100">
+										{{ 'project.status.inactive'|trans }}
+									</span>
+								{% endif %}
+							</div>
+							<h3 class="text-xl font-bold text-black mb-2 group-hover:text-bubblegum transition-colors">{{ project.title|default('Sans titre') }}</h3>
+							<p class="text-sm text-gray-500 font-medium mb-6 line-clamp-2 italic">{{ (project.description is defined and project.description) ? project.description : 'Aucune description.' }}</p>
+							<div class="pt-6 border-t border-gray-50 flex items-center justify-between">
+								<span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Créé le</span>
+								<span class="text-[10px] font-bold text-gray-900 italic">{{ (project.createdAt is defined) ? project.createdAt|date('d/m/Y') : '-' }}</span>
+							</div>
+						</a>
+					{% else %}
+						<div class="col-span-full rounded-3xl p-12 text-center">
+							<p class="text-gray-500 font-medium italic">{{ 'dashboard.projects.empty'|trans }}</p>
+						</div>
+					{% endfor %}
+				</div>
+			</section>
+		</div>
+	</div>
 {% endblock %}

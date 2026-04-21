@@ -18,8 +18,9 @@
                     <a href="{{ path('app_register') }}" class="w-full sm:w-auto px-8 py-4 bg-bubblegum hover:bg-bubblegum/90 text-white font-bold text-lg rounded-full shadow-2xl hover:shadow-bubblegum/30 transition-all transform hover:-translate-y-1 text-center">
                         {{ 'hero.cta_register'|trans({}, 'landing') }}
                     </a>
-                    <a href="#features" class="w-full sm:w-auto px-8 py-4 bg-white border border-gray-200 text-gray-700 font-bold text-lg rounded-full hover:bg-gray-50 transition-all text-center">
-                        {{ 'hero.cta_features'|trans({}, 'landing') }}
+                    <a href="{{ path('app_get_the_app') }}" class="w-full sm:w-auto px-8 py-4 bg-white border border-gray-200 text-gray-700 font-bold text-lg rounded-full hover:bg-gray-50 transition-all text-center flex items-center justify-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                        {{ 'hero.cta_get_the_app'|trans({}, 'landing') }}
                     </a>
                 </div>
             </div>

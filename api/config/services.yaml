@@ -25,8 +25,20 @@ services:
         arguments:
             $googleClientId: '%google_client_id%'
 
+    App\Service\NotificationService:
+        arguments:
+            $baseUrl: '%notification_base_url%'
+
     # Alias to tell Symfony which success handler to use for the interface
     Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface: '@lexik_jwt_authentication.handler.authentication_success'
+
+    App\EventListener\JWTPayloadListener:
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_created, method: onJWTCreated }
+
+    App\EventListener\JWTDecodedListener:
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_decoded, method: onJWTDecoded }
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

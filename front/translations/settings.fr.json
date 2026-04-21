@@ -1,0 +1,68 @@
+{
+    "title": "Paramètres",
+    "subtitle": "Gérez vos informations personnelles et vos préférences de compte.",
+    "profile": {
+        "title": "Profil",
+        "subtitle": "Vos informations de base visibles sur la plateforme.",
+        "firstname_label": "Prénom",
+        "lastname_label": "Nom",
+        "email_label": "Adresse E-mail",
+        "google_managed": "Géré par Google : L'adresse e-mail ne peut pas être modifiée ici.",
+        "submit": "Enregistrer les modifications"
+    },
+    "security": {
+        "title": "Sécurité",
+        "subtitle": "Gérez votre mot de passe et vos connexions tierces.",
+        "google_account": {
+            "title": "Compte Google",
+            "linked": "Compte lié avec succès",
+            "not_linked": "Non lié",
+            "status_linked": "Lié",
+            "link_button": "Lier mon compte"
+        },
+        "password": {
+            "title": "Modifier le mot de passe",
+            "current_label": "Mot de passe actuel",
+            "new_label": "Nouveau mot de passe",
+            "submit": "Mettre à jour le mot de passe"
+        }
+    },
+    "sessions": {
+        "title": "Sessions actives",
+        "subtitle": "Appareils actuellement connectés à votre compte.",
+        "empty": "Aucune session active",
+        "disconnect": "Déconnecter"
+    },
+    "delete_account": {
+        "title": "Supprimer le compte",
+        "subtitle": "Cette action est irréversible. Toutes vos données seront perdues.",
+        "button": "Supprimer mon compte Organ",
+        "modal": {
+            "title": "Désactiver le compte ?",
+            "p1": "Votre compte sera immédiatement <span class=\"text-red-600 font-bold text-base uppercase\">désactivé</span> pour une période de <span class=\"text-black font-bold\">30 jours</span>.",
+            "p2": "Pendant ce délai, vos données resteront conservées mais vous ne serez plus visible. À l'issue de ces 30 jours, votre compte et toutes ses données seront <span class=\"text-black font-bold italic\">définitivement supprimés</span>.",
+            "cancel_info_title": "Comment annuler ?",
+            "cancel_info_text": "Il vous suffit de vous reconnecter à votre compte Organ avant la fin du délai de 30 jours pour annuler automatiquement la procédure de suppression.",
+            "confirm": "Confirmer la désactivation",
+            "cancel": "Annuler"
+        }
+    },
+    "disconnect_modal": {
+        "title": "Déconnecter l'appareil ?",
+        "text": "Cet appareil sera immédiatement déconnecté. Vous devrez vous reconnecter pour accéder de nouveau à votre compte sur ce terminal.",
+        "confirm": "Déconnecter",
+        "cancel": "Annuler"
+    },
+    "errors": {
+        "generic": "Une erreur est survenue.",
+        "server": "Le serveur est indisponible.",
+        "invalid_current_password": "Le mot de passe actuel est incorrect.",
+        "password_too_short": "Le nouveau mot de passe doit faire au moins 8 caractères.",
+        "link_google_already_linked": "Ce compte Google est déjà lié à un autre profil.",
+        "link_google_email_taken": "L'adresse e-mail fournie par Google est déjà utilisée par un autre compte."
+    },
+    "success": {
+        "profile_updated": "Profil mis à jour avec succès.",
+        "password_updated": "Mot de passe mis à jour avec succès."
+    }
+}

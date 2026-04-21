@@ -126,12 +126,6 @@ class AuthController extends AbstractController
     }
 
 
-    #[Route('/refresh', name: 'refresh', methods: ['POST'])]
-    public function refresh(): void
-    {
-        // Handled by GesdinetJWT (refresh_jwt)
-    }
-
     #[Route('/logout', name: 'logout', methods: ['POST'])]
     public function logout(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {

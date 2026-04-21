@@ -1,0 +1,63 @@
+{% extends 'layouts/logged/sidebar_layout.html.twig' %}
+
+{% block title %}Corbeille - Organ{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8" data-controller="project-trash" data-project-trash-api-url-value="http://localhost:8001/api">
+    <header class="mb-12">
+        <h1 class="text-4xl font-black text-black mb-2 flex items-center gap-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10 text-red-500">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+            </svg>
+            Corbeille
+        </h1>
+        <p class="text-gray-500 font-medium">Retrouvez ici vos projets supprimés. Seul un administrateur peut les restaurer.</p>
+    </header>
+
+    {% if trashedProjects|length > 0 %}
+        <div class="space-y-4">
+            {% for project in trashedProjects %}
+                <div class="trash-item bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-6 hover:shadow-md transition-shadow">
+                    <div class="flex items-center gap-6 min-w-0">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-white flex-shrink-0" style="background-color: {{ project.color }}">
+                            {% if project.iconType == 'EMOJI' %}
+                                <span class="text-2xl">{{ project.iconData }}</span>
+                            {% elseif project.iconType == 'BLOB' %}
+                                <img src="{{ project.iconData }}" class="w-full h-full object-cover">
+                            {% elseif project.iconType == 'SVG' %}
+                                <div class="w-6 h-6">{{ project.iconData|raw }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="min-w-0">
+                            <h2 class="text-lg font-bold text-black truncate">{{ project.title }}</h2>
+                            <p class="text-xs text-gray-400 font-medium uppercase tracking-widest mt-1">
+                                Supprimé le {{ project.deletedAt|date('d/m/Y à H:i') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <button type="button" 
+                            data-action="click->project-trash#restore"
+                            data-uuid="{{ project.uuid }}"
+                            class="px-6 py-3 bg-bubblegum text-white font-bold rounded-2xl cursor-pointer hover:bg-bubblegum/90 active:scale-95 transition-all shadow-lg flex items-center gap-2 whitespace-nowrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                        </svg>
+                        Restaurer
+                    </button>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="py-20 text-center bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
+            <div class="mb-6 inline-flex p-6 bg-white rounded-full text-gray-200 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-16 h-16">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Votre corbeille est vide</h2>
+            <p class="text-gray-500 font-medium italic">Tout est à sa place ! Aucun projet n'attend d'être restauré.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

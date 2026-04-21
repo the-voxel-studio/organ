@@ -1,6 +1,123 @@
 {
     "home": "Accueil",
-    "dashboard": "Tableau de bord",
-    "logout": "Déconnexion",
-    "back": "Retour"
+    "sidebar": {
+        "help": "Aide",
+        "notifications": "Notifications",
+        "mark_all_read": "Tout marquer comme lu",
+        "no_notifications": "Aucune notification",
+        "view_all_notifications": "Voir toutes les notifications",
+        "load_more_notifications": "Charger plus de notifications",
+        "dashboard": "Dashboard",
+        "my_projects": "Mes Projets",
+        "admin_role": "Administrateur",
+        "user_role": "Utilisateur",
+        "settings": "Paramètres",
+        "logout": "Se déconnecter"
+    },
+    "dashboard": {
+        "title": "Tableau de bord",
+        "subtitle": "Gérez vos projets et tâches prioritaires.",
+        "new_project": "Nouveau Projet",
+        "tasks": {
+            "title": "Tâches prioritaires",
+            "subtitle": "Vos tâches les plus importantes à faire.",
+            "empty": "Aucune tâche prioritaire pour le moment.",
+            "headers": {
+                "name": "Tâche",
+                "date": "Échéance",
+                "project": "Projet"
+            }
+        },
+        "projects": {
+            "title": "Mes Projets",
+            "subtitle": "Les projets auxquels vous participez.",
+            "empty": "Vous n'avez pas encore de projet."
+        }
+    },
+    "auth": {
+        "slogan": "L'organisation devient <span class=\"text-bubblegum italic text-balance\">un réflexe.</span>",
+        "subtitle": "Rejoignez la structure qui s'adapte à votre vie."
+    },
+    "project": {
+        "status": {
+            "active": "Actif",
+            "archived": "Archivé",
+            "inactive": "Inactif"
+        },
+        "show": {
+            "role": "Votre rôle",
+            "manage_members": "Gérer les membres",
+            "settings": "Paramètres",
+            "organs": "Organes du projet",
+            "add_organ": "Ajouter un organe",
+            "view_tasks": "Voir les tâches",
+            "no_organs": "Aucun organe n'a encore été créé pour ce projet.",
+            "about": "À propos du projet",
+            "no_description": "Aucune description fournie.",
+            "created_at": "Projet créé le",
+            "latest_activities": "Dernières activités",
+            "no_activity": "Aucune activité récente sur les tâches.",
+            "security_logs": "Historique de sécurité",
+            "no_security_logs": "Aucun événement de sécurité critique à signaler."
+        },
+        "edit": {
+            "title": "Paramètres du Projet",
+            "back_to_project": "Retour au Projet",
+            "form": {
+                "actions": {
+                    "submit": "Mettre à jour le projet"
+                }
+            }
+        },
+        "create": {
+            "title": "Créer un Nouveau Projet",
+            "back_to_dashboard": "Retour au Dashboard",
+            "form": {
+                "name": {
+                    "label": "Nom du projet",
+                    "placeholder": "Ex: Refonte du site web"
+                },
+                "description": {
+                    "label": "Description",
+                    "placeholder": "Décrivez brièvement les objectifs du projet..."
+                },
+                "identity": {
+                    "title": "Identité visuelle",
+                    "color": "Couleur",
+                    "icon": "Icône"
+                },
+                "members": {
+                    "title": "Inviter des membres",
+                    "email": {
+                        "label": "Email",
+                        "placeholder": "email@exemple.com"
+                    },
+                    "role": {
+                        "label": "Rôle global",
+                        "admin": "Administrateur",
+                        "manager": "Manager",
+                        "member": "Membre"
+                    },
+                    "add": "Ajouter",
+                    "understand_roles": "Comprendre les rôles",
+                    "added_list": "Membres ajoutés",
+                    "no_members": "Aucun membre ajouté pour le moment.",
+                    "roles_explanation": {
+                        "admin": "<b>Administrateur :</b> Contrôle total sur le projet, ses paramètres et ses membres.",
+                        "manager": "<b>Manager :</b> Peut gérer les tâches, les membres et les paramètres du projet.",
+                        "member": "<b>Membre :</b> Peut voir le projet, gérer ses tâches et participer aux discussions."
+                    }
+                },
+                "actions": {
+                    "cancel": "Annuler",
+                    "submit": "Créer le projet"
+                }
+            },
+            "success": "Projet créé avec succès !",
+            "error": {
+                "creation": "Une erreur est survenue lors de la création du projet.",
+                "invitation": "Certaines invitations n'ont pas pu être envoyées."
+            }
+        }
+    }
 }

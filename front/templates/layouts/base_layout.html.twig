@@ -1,0 +1,35 @@
+{% extends "base.html.twig" %}
+
+{% block layout %}
+    
+    <twig:Navbar>
+        <twig:block name="desktop_actions">
+            <a href="{{ app.user ? path('app_dashboard') : path('app_home') }}" 
+               class="bg-bubblegum hover:bg-bubblegum/90 text-white font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-bubblegum/20 transition-all transform hover:-translate-y-0.5">
+                {{ app.user ? 'navbar.dashboard'|trans({}, 'landing') : 'home'|trans }}
+            </a>
+        </twig:block>
+
+        <twig:block name="mobile_links">
+            <a href="{{ app.user ? path('app_dashboard') : path('app_home') }}" 
+               class="text-3xl text-black hover:text-bubblegum font-black uppercase tracking-[0.2em] transition-all transform hover:scale-110">
+                {{ app.user ? 'navbar.dashboard'|trans({}, 'landing') : 'home'|trans }}
+            </a>
+        </twig:block>
+
+        <twig:block name="mobile_actions">
+            
+        </twig:block>
+
+    </twig:Navbar>
+
+
+    <main class="container mx-auto px-4 py-20 max-w-4xl">
+        <div class="space-y-12">
+            {% block body %}{% endblock %}
+        </div>
+    </main>
+
+    <twig:Landing:Footer />
+
+{% endblock %}

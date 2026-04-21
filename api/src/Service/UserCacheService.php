@@ -27,6 +27,7 @@ class UserCacheService
             
             return [
                 'uuid' => $user->getUuid(),
+                'email' => $user->getEmail(),
                 'firstName' => $user->getFirstName(),
                 'lastName' => $user->getLastName(),
             ];

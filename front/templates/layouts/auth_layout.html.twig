@@ -1,0 +1,68 @@
+{% extends "base.html.twig" %}
+
+{% block html_class %}h-full{% endblock %}
+
+{% block body_class %}h-full bg-white text-gray-900 font-sans antialiased{% endblock %}
+
+{% block extra_javascripts %}
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+{% endblock %}
+
+{% block layout %}
+    <div class="min-h-screen flex flex-col lg:flex-row">
+        <!-- Left Column: Branding (Hidden on mobile) -->
+        <div class="hidden lg:flex lg:w-1/2 bg-gray-50 flex-col p-8 sm:p-12 relative overflow-hidden">
+            <!-- Logo -->
+            <div class="z-10">
+                <a href="{{ path('app_home') }}" class="flex items-center gap-3 group w-fit cursor-pointer">
+                    <twig:DynamicLogo id="auth-logo" size="48px" />
+                    <span class="text-2xl font-extrabold tracking-tight text-black">Organ</span>
+                </a>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-grow flex flex-col justify-center items-center text-center z-10 py-12 lg:py-0">
+                <div class="max-w-md">
+                    <h2 class="text-4xl lg:text-5xl font-black text-black leading-tight mb-6">
+                        {% block auth_slogan %}{{ 'auth.slogan'|trans|raw }}{% endblock %}
+                    </h2>
+                    <p class="text-gray-500 text-lg mb-12">
+                        {{ 'auth.subtitle'|trans }}
+                    </p>
+                    
+                    <!-- Illustration Placeholder -->
+                    <div class="relative w-full aspect-square max-w-sm mx-auto">
+                        <div class="absolute inset-0 bg-bubblegum/10 rounded-3xl rotate-3"></div>
+                        <div class="absolute inset-0 bg-white rounded-3xl shadow-xl border border-gray-100 flex items-center justify-center -rotate-2 overflow-hidden p-8">
+                            <div class="w-full h-full bg-gray-50 rounded-2xl flex flex-col p-4 gap-4">
+                                <div class="h-4 w-1/2 bg-bubblegum/20 rounded-full"></div>
+                                <div class="h-20 w-full bg-highlight/5 rounded-xl border border-highlight/10 flex items-center justify-center">
+                                    <div class="w-8 h-8 bg-highlight/20 rounded-lg animate-pulse"></div>
+                                </div>
+                                <div class="h-20 w-full bg-bubblegum/5 rounded-xl border border-bubblegum/10"></div>
+                                <div class="h-4 w-3/4 bg-gray-200 rounded-full mt-auto"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decorative blur -->
+            <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-bubblegum/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <!-- Right Column: Form -->
+        <div class="w-full lg:w-1/2 bg-white flex flex-col justify-center p-8 sm:p-12 lg:p-24">
+            <!-- Mobile Logo (Shown only on mobile) -->
+            <div class="lg:hidden mb-12">
+                <a href="{{ path('app_home') }}" class="flex items-center justify-center gap-3 group w-fit mx-auto cursor-pointer">
+                    <twig:DynamicLogo id="auth-logo-mobile" size="40px" />
+                    <span class="text-xl font-extrabold tracking-tight text-black">Organ</span>
+                </a>
+            </div>
+            <div class="max-w-md w-full mx-auto">
+                {% block auth_content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

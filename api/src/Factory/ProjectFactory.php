@@ -42,6 +42,7 @@ final class ProjectFactory extends PersistentObjectFactory
             'status' => self::faker()->randomElement(ProjectStatus::cases()),
             'title' => self::faker()->sentence(3),
             'uuid' => self::faker()->uuid(),
+            'color' => self::faker()->hexColor(),
         ];
     }
 
