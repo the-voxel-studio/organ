@@ -3,13 +3,16 @@ package fr.studio.voxel.organ.components
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -43,9 +46,9 @@ fun PrimaryButton(
     // Normal : rose
     // Pressé : rose un peu plus clair
     val backgroundColor = if (isPressed) {
-        Color(0xFFFF89D8) // 👈 couleur au clic
+        MaterialTheme.colorScheme.secondary
     } else {
-        Color(0xFFFF7DD4) // 👈 couleur normale
+        MaterialTheme.colorScheme.primary
     }
 
     ElevatedButton(
@@ -78,14 +81,9 @@ fun PrimaryButton(
         Text(
             text = text,
 
-            //Taille du texte
-            fontSize = 16.sp,
+            style = MaterialTheme.typography.labelLarge,
 
-            //Police en gras (Roboto Bold par défaut)
-            fontWeight = FontWeight.Bold,
-
-            //Couleur du texte
-            color = Color.White
+            color = MaterialTheme.colorScheme.onPrimary
         )
     }
 }
