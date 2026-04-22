@@ -2,9 +2,12 @@ package fr.studio.voxel.organ.ui.components
 
 import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -27,7 +30,8 @@ import coil.request.ImageRequest
 import fr.studio.voxel.organ.R
 @Composable
 fun Header(
-    backgroundColor: Color = MaterialTheme.colorScheme.surface // 👉 couleur modifiable
+    backgroundColor: Color = MaterialTheme.colorScheme.surface,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
 
@@ -42,32 +46,34 @@ fun Header(
             }
             .build()
     }
-
-    Row(
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface) // 👉 fond du header
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-
-        verticalAlignment = Alignment.CenterVertically // 👉 aligne verticalement
     ) {
+        Row(
+            modifier = modifier
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
 
-        // 👉 LOGO GIF
-        AsyncImage(
-            model = ImageRequest.Builder(context)
-                .data(R.drawable.logo2)
-                .build(),
-            imageLoader = imageLoader,
-            contentDescription = "Logo",
-            modifier = Modifier.size(40.dp)
-        )
+            AsyncImage(
+                model = ImageRequest.Builder(context)
+                    .data(R.drawable.logo2)
+                    .build(),
+                imageLoader = imageLoader,
+                contentDescription = "Logo",
+                modifier = Modifier.size(40.dp)
+            )
 
-        Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
-        Text(
-            text = "Organ",
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary
-        )
+            Text(
+                text = "Organ",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
