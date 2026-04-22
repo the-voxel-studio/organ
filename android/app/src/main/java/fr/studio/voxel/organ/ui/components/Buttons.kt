@@ -46,9 +46,9 @@ fun PrimaryButton(
     // Normal : rose
     // Pressé : rose un peu plus clair
     val backgroundColor = if (isPressed) {
-        MaterialTheme.colorScheme.primary
-    } else {
         MaterialTheme.colorScheme.secondary
+    } else {
+        MaterialTheme.colorScheme.primary
     }
 
     ElevatedButton(
