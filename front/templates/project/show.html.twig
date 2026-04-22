@@ -51,6 +51,13 @@
 				</div>
 			</div>
 			<div class="flex items-center gap-3">
+				{% if data.project.role in ['ADMIN', 'MANAGER'] %}
+					<a href="{{ path('app_project_specific_trash', {uuid: data.project.uuid}) }}" class="p-3 bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-100 hover:bg-red-50 rounded-2xl transition-all active:scale-95 shadow-sm group">
+						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+							<path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+						</svg>
+					</a>
+				{% endif %}
 				{% if data.project.role == 'ADMIN' %}
 					<a href="{{ path('app_project_edit', {uuid: data.project.uuid}) }}" class="px-6 py-3 bg-black text-white font-bold rounded-2xl transition-all hover:bg-black/90 active:scale-95 shadow-lg flex items-center gap-2">
 						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
@@ -185,55 +192,6 @@
 					</div>
 				</section>
 			</div>
-
-			<!-- ROW 3: SECURITY LOGS -->
-			<section>
-				<h2 class="text-xl font-bold text-black mb-8 flex items-center gap-3 text-red-600">
-					<div class="p-2 bg-red-50 rounded-xl text-red-600">
-						<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
-						</svg>
-					</div>
-					{{ 'project.show.security_logs'|trans }}
-				</h2>
-				<div class="bg-red-50/30 rounded-3xl border border-red-100 overflow-hidden">
-					<div class="overflow-x-auto">
-						<table class="w-full">
-							<tbody class="divide-y divide-red-100/50">
-								{% for log in data.securityLogs %}
-									<tr class="hover:bg-red-50/50 transition-colors">
-										<td class="p-6">
-											<div class="flex items-center gap-4">
-												<div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-												<div>
-													<p class="text-sm font-bold text-gray-900">
-														{{ log.user ? log.user.firstName ~ ' ' ~ log.user.lastName : 'Unknown User' }}
-														<span class="font-medium text-red-600/80">{{ log.actionType }}</span>
-													</p>
-													<p class="text-[10px] font-black uppercase tracking-widest text-red-400 mt-1">
-														{{ log.createdAt|date('d/m/Y H:i') }} • Task ID: {{ log.task.uuid|slice(0, 8) }}
-													</p>
-												</div>
-											</div>
-										</td>
-										<td class="p-6 text-right">
-											<span class="px-3 py-1 bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-lg border border-red-200">
-												High Priority
-											</span>
-										</td>
-									</tr>
-								{% else %}
-									<tr>
-										<td class="p-12 text-center text-red-400/60 italic font-medium">
-											{{ 'project.show.no_security_logs'|trans }}
-										</td>
-									</tr>
-								{% endfor %}
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</section>
 		</div>
 	</div>
 {% endblock %}

@@ -8,7 +8,8 @@ export default class extends Controller {
         'modeBtn', 'iconSection',
         'roleList', 'memberSelect', 'organMemberList',
         'roleModal', 'modalRoleName', 'modalRoleEmoji', 'permissionList',
-        'submitBtn', 'spinner', 'error', 'loadingOverlay', 'loadingText'
+        'submitBtn', 'spinner', 'error', 'loadingOverlay', 'loadingText',
+        'deleteModal', 'deleteSubmitBtn', 'deleteSpinner'
     ];
 
     static values = {
@@ -23,6 +24,19 @@ export default class extends Controller {
     connect() {
         this.iconMode = 'BLOB';
         
+        // Handle ESC key to close modals
+        this.escHandler = (e) => {
+            if (e.key === 'Escape') {
+                if (this.hasRoleModalTarget && !this.roleModalTarget.classList.contains('hidden')) {
+                    this.closeRoleModal();
+                }
+                if (this.hasDeleteModalTarget && !this.deleteModalTarget.classList.contains('hidden')) {
+                    this.closeDeleteModal();
+                }
+            }
+        };
+        window.addEventListener('keydown', this.escHandler);
+
         this.presets = {
             responsible: {
                 name: trans('organ.role_presets.responsible.name'),
@@ -131,7 +145,16 @@ export default class extends Controller {
                     membersMap[m.uuid].roles.push(role.uuid);
                 });
             });
-            this.addedMembers = Object.values(membersMap);
+            
+            // Track initial state for CRUD operations on members roles
+            this.addedMembers = Object.values(membersMap).map(m => ({
+                ...m,
+                initialRoles: [...m.roles]
+            }));
+            this.initialMembers = this.addedMembers.map(m => ({
+                userUuid: m.userUuid,
+                initialRoles: [...m.initialRoles]
+            }));
             
             // Set icon preview
             setTimeout(() => {
@@ -670,11 +693,18 @@ export default class extends Controller {
                     }
                 }
 
-                // STEP 3: ASSIGN MEMBERS (When roles managed)
+                // STEP 3: ASSIGN/UNASSIGN MEMBERS (Sync roles)
                 if (!isEdit || this.hasPermission('ORGAN_MANAGE_MEMBERS')) {
-                    this.loadingTextTarget.innerText = "Attribution des membres...";
+                    this.loadingTextTarget.innerText = "Synchronisation des membres...";
+                    
+                    // 1. Process current members (added/modified)
                     for (const member of this.addedMembers) {
-                        for (const localRoleId of member.roles) {
+                        const initialRoles = member.initialRoles || [];
+                        const rolesToAdd = member.roles.filter(id => !initialRoles.includes(id));
+                        const rolesToRemove = initialRoles.filter(id => !member.roles.includes(id));
+
+                        // Roles to assign
+                        for (const localRoleId of rolesToAdd) {
                             const serverRoleUuid = roleIdMap[localRoleId] || localRoleId;
                             await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${serverRoleUuid}/assign`, {
                                 method: 'POST',
@@ -683,19 +713,69 @@ export default class extends Controller {
                                 credentials: 'include'
                             }).catch(e => console.error("Assignment failed", e));
                         }
+
+                        // Roles to unassign (for members still in the organ)
+                        for (const localRoleId of rolesToRemove) {
+                            const serverRoleUuid = roleIdMap[localRoleId] || localRoleId;
+                            await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${serverRoleUuid}/unassign/${member.userUuid}`, {
+                                method: 'DELETE',
+                                credentials: 'include'
+                            }).catch(e => console.error("Unassignment failed", e));
+                        }
+                    }
+
+                    // 2. Process members completely removed from the organ
+                    if (isEdit && this.initialMembers) {
+                        const removedMembers = this.initialMembers.filter(initial => 
+                            !this.addedMembers.some(current => current.userUuid === initial.userUuid)
+                        );
+                        for (const removedMember of removedMembers) {
+                            for (const localRoleId of removedMember.initialRoles) {
+                                const serverRoleUuid = roleIdMap[localRoleId] || localRoleId;
+                                await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${serverRoleUuid}/unassign/${removedMember.userUuid}`, {
+                                    method: 'DELETE',
+                                    credentials: 'include'
+                                }).catch(e => console.error("Unassignment cleanup failed", e));
+                            }
+                        }
                     }
                 }
             } else if (isEdit && this.hasPermission('ORGAN_MANAGE_MEMBERS')) {
-                // If user ONLY has member permission in edit mode
+                // If user ONLY has member permission in edit mode, use same sync logic but without roleIdMap
                 this.loadingTextTarget.innerText = "Mise à jour des membres...";
                 for (const member of this.addedMembers) {
-                    for (const roleId of member.roles) {
+                    const initialRoles = member.initialRoles || [];
+                    const rolesToAdd = member.roles.filter(id => !initialRoles.includes(id));
+                    const rolesToRemove = initialRoles.filter(id => !member.roles.includes(id));
+
+                    for (const roleId of rolesToAdd) {
                         await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${roleId}/assign`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ userUuid: member.userUuid }),
                             credentials: 'include'
                         }).catch(e => console.error("Assignment failed", e));
+                    }
+                    for (const roleId of rolesToRemove) {
+                        await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${roleId}/unassign/${member.userUuid}`, {
+                            method: 'DELETE',
+                            credentials: 'include'
+                        }).catch(e => console.error("Unassignment failed", e));
+                    }
+                }
+                
+                // Cleanup for removed members
+                if (this.initialMembers) {
+                    const removedMembers = this.initialMembers.filter(initial => 
+                        !this.addedMembers.some(current => current.userUuid === initial.userUuid)
+                    );
+                    for (const removedMember of removedMembers) {
+                        for (const roleId of removedMember.initialRoles) {
+                            await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${roleId}/unassign/${removedMember.userUuid}`, {
+                                method: 'DELETE',
+                                credentials: 'include'
+                            }).catch(e => console.error("Unassignment cleanup failed", e));
+                        }
                     }
                 }
             }
@@ -715,5 +795,42 @@ export default class extends Controller {
         this.submitBtnTarget.disabled = false;
         this.spinnerTarget.classList.add('hidden');
         this.loadingOverlayTarget.classList.add('hidden');
+    }
+
+    // --- DELETE MODAL ---
+    openDeleteModal() {
+        this.deleteModalTarget.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeDeleteModal() {
+        if (this.deleteSubmitBtnTarget.disabled) return;
+        this.deleteModalTarget.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    async deleteOrgan() {
+        this.deleteSubmitBtnTarget.disabled = true;
+        this.deleteSpinnerTarget.classList.remove('hidden');
+        this.errorTarget.classList.add('hidden');
+
+        try {
+            const response = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organValue.uuid}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || "Erreur lors de la suppression de l'organ.");
+            }
+
+            window.location.href = `/projects/${this.projectUuidValue}`;
+        } catch (e) {
+            this.showError(e.message);
+            this.deleteSubmitBtnTarget.disabled = false;
+            this.deleteSpinnerTarget.classList.add('hidden');
+            this.closeDeleteModal();
+        }
     }
 }

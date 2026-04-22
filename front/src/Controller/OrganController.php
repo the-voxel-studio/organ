@@ -148,6 +148,7 @@ class OrganController extends AbstractController
         $trashedTasks = [];
         $trashedRoles = [];
         $trashedMembers = [];
+        $trashedLinks = [];
         $userPermissions = [];
 
         try {
@@ -165,9 +166,10 @@ class OrganController extends AbstractController
             // Define specific access rights
             $canManageTasks = in_array('TASK_DELETE_OWN', $userPermissions) || in_array('TASK_DELETE_ALL', $userPermissions) || in_array('ORGAN_EDIT', $userPermissions) || in_array('ALL', $userPermissions);
             $canManageRoles = in_array('ORGAN_MANAGE_ROLES', $userPermissions) || in_array('ORGAN_EDIT', $userPermissions) || in_array('ALL', $userPermissions);
+            $canManageLinks = in_array('ORGAN_LINK_MANAGE', $userPermissions) || in_array('ALL', $userPermissions);
 
             // Access Control: Redirection if no management permissions at all
-            if (!$canManageTasks && !$canManageRoles) {
+            if (!$canManageTasks && !$canManageRoles && !$canManageLinks) {
                 $this->addFlash('error', 'Vous n\'avez pas l\'autorisation d\'accéder à la corbeille.');
                 return $this->redirectToRoute('app_organ_show', ['projectUuid' => $projectUuid, 'organUuid' => $organUuid]);
             }
@@ -186,7 +188,7 @@ class OrganController extends AbstractController
                     // Grant 'ALL' permission to project admins and managers
                     $projectRole = $projectData['project']['role'] ?? 'MEMBER';
                     if (in_array($projectRole, ['ADMIN', 'MANAGER'], true)) {
-                        $permissions[] = 'ALL';
+                        $userPermissions[] = 'ALL';
                     }
                 }
             }
@@ -219,6 +221,13 @@ class OrganController extends AbstractController
                 if ($response->getStatusCode() === 200) $trashedMembers = $response->toArray();
             }
 
+            if ($canManageLinks) {
+                $response = $apiClient->request('GET', "/api/projects/$projectUuid/organs/$organUuid/links/trash", [
+                    'headers' => ['Cookie' => 'BEARER=' . $bearer]
+                ]);
+                if ($response->getStatusCode() === 200) $trashedLinks = $response->toArray();
+            }
+
         } catch (\Exception $e) {
             return $this->redirectToRoute('app_dashboard');
         }
@@ -229,6 +238,7 @@ class OrganController extends AbstractController
             'trashedTasks' => $trashedTasks,
             'trashedRoles' => $trashedRoles,
             'trashedMembers' => $trashedMembers,
+            'trashedLinks' => $trashedLinks,
             'userPermissions' => $userPermissions,
             'projects' => $this->getSidebarProjects($apiClient, $requestStack)
         ]);

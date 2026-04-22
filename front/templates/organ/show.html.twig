@@ -183,7 +183,7 @@
                 </div>
 
                 {% if 'ORGAN_LINK_MANAGE' in permissions or 'ALL' in permissions %}
-                    <form data-organ-links-target="form" data-action="submit->organ-links#addLink" class="mt-8 hidden p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
+                    <form data-organ-links-target="form" data-action="submit->organ-links#saveLink" class="mt-8 hidden p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{{ 'organ.show.links'|trans }} (URL)</label>
@@ -201,7 +201,7 @@
                             </div>
                         </div>
                         <div class="flex justify-end gap-3 pt-2">
-                            <button type="button" data-action="click->organ-links#toggleForm" class="px-5 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">{{ 'organ.create.form.actions.cancel'|trans }}</button>
+                            <button type="button" data-action="click->organ-links#cancelEdit" class="px-5 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">{{ 'organ.create.form.actions.cancel'|trans }}</button>
                             <button type="submit" data-organ-links-target="submitBtn" class="px-8 py-2.5 text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
                                     style="background-color: var(--highlight-color); shadow-color: var(--highlight-color)">
                                 <span data-organ-links-target="spinner" class="hidden animate-spin">

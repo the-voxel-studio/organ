@@ -53,6 +53,64 @@ class ProjectController extends AbstractController
         ]);
     }
 
+    #[Route('/projects/{uuid}/trash', name: 'app_project_specific_trash')]
+    public function projectTrash(
+        string $uuid,
+        #[Target('api.client')] HttpClientInterface $apiClient,
+        RequestStack $requestStack
+    ): Response {
+        $trashedOrgans = [];
+        $trashedMembers = [];
+        $projectData = [];
+
+        try {
+            $request = $requestStack->getCurrentRequest();
+            $bearer = $request?->cookies->get('BEARER');
+
+            // 1. Fetch Project Details to check role
+            $response = $apiClient->request('GET', "/api/projects/$uuid/detailed", [
+                'headers' => ['Cookie' => 'BEARER=' . $bearer]
+            ]);
+
+            if ($response->getStatusCode() !== 200) throw new \Exception('Project not found');
+            $projectData = $response->toArray();
+
+            // SECURITY: Only ADMIN or MANAGER can access project trash
+            $role = $projectData['project']['role'] ?? 'MEMBER';
+            if (!in_array($role, ['ADMIN', 'MANAGER'], true)) {
+                return $this->redirectToRoute('app_project_show', ['uuid' => $uuid]);
+            }
+
+            // 2. Fetch Trashed Organs
+            $responseOrgans = $apiClient->request('GET', "/api/projects/$uuid/organs/trash", [
+                'headers' => ['Cookie' => 'BEARER=' . $bearer]
+            ]);
+            if ($responseOrgans->getStatusCode() === 200) $trashedOrgans = $responseOrgans->toArray();
+
+            // 3. Fetch Trashed Members
+            $responseMembers = $apiClient->request('GET', "/api/projects/$uuid/members/trash", [
+                'headers' => ['Cookie' => 'BEARER=' . $bearer]
+            ]);
+            if ($responseMembers->getStatusCode() === 200) $trashedMembers = $responseMembers->toArray();
+
+            if (isset($projectData['project'])) {
+                $identity = $this->extractIdentity($projectData['project']);
+                $projectData['project']['color'] = $identity['color'];
+                $projectData['project']['iconName'] = $identity['iconName'];
+            }
+
+        } catch (\Exception $e) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+
+        return $this->render('project/project_trash.html.twig', [
+            'project' => $projectData['project'],
+            'trashedOrgans' => $trashedOrgans,
+            'trashedMembers' => $trashedMembers,
+            'projects' => $this->getSidebarProjects($apiClient, $requestStack)
+        ]);
+    }
+
     #[Route('/projects/{uuid}', name: 'app_project_show')]
     public function show(
         string $uuid,

@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['item', 'searchInput', 'tasksSection', 'rolesSection', 'membersSection'];
+    static targets = ['item', 'searchInput', 'tasksSection', 'rolesSection', 'membersSection', 'linksSection', 'content', 'chevron'];
     static values = {
         apiUrl: String,
         projectUuid: String,
@@ -27,7 +27,8 @@ export default class extends Controller {
         const sections = [
             { has: this.hasTasksSectionTarget, target: this.tasksSectionTarget, selector: '.trash-item[data-type="task"]:not(.hidden)' },
             { has: this.hasRolesSectionTarget, target: this.rolesSectionTarget, selector: '.trash-item[data-type="role"]:not(.hidden)' },
-            { has: this.hasMembersSectionTarget, target: this.membersSectionTarget, selector: '.trash-item[data-type="member"]:not(.hidden)' }
+            { has: this.hasMembersSectionTarget, target: this.membersSectionTarget, selector: '.trash-item[data-type="member"]:not(.hidden)' },
+            { has: this.hasLinksSectionTarget, target: this.linksSectionTarget, selector: '.trash-item[data-type="link"]:not(.hidden)' }
         ];
 
         sections.forEach(s => {
@@ -40,6 +41,16 @@ export default class extends Controller {
                 }
             }
         });
+    }
+
+    toggleSection(event) {
+        const btn = event.currentTarget;
+        const section = btn.closest('.trash-section');
+        const content = section.querySelector('[data-organ-trash-target="content"]');
+        const chevron = section.querySelector('[data-organ-trash-target="chevron"]');
+
+        content.classList.toggle('hidden');
+        chevron.classList.toggle('rotate-180');
     }
 
     async restore(event) {
@@ -55,6 +66,8 @@ export default class extends Controller {
             url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/roles/${uuid}/restore`;
         } else if (type === 'member') {
             url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/roles/members/${uuid}/restore`;
+        } else if (type === 'link') {
+            url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/links/${uuid}/restore`;
         }
 
         try {

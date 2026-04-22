@@ -6,6 +6,7 @@
 {% set highlight_color = organ.highlightColor|default('#FF7DD4') %}
 {% set canManageTasks = 'TASK_DELETE' in userPermissions or 'ORGAN_EDIT' in userPermissions or 'ALL' in userPermissions %}
 {% set canManageRoles = 'ORGAN_MANAGE_ROLES' in userPermissions or 'ORGAN_EDIT' in userPermissions or 'ALL' in userPermissions %}
+{% set canManageLinks = 'ORGAN_LINK_MANAGE' in userPermissions or 'ALL' in userPermissions %}
 
 <div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8" 
      data-controller="organ-trash" 
@@ -47,23 +48,30 @@
         </div>
     </header>
 
-    {% if trashedTasks|length > 0 or trashedRoles|length > 0 or trashedMembers|length > 0 %}
+    {% if trashedTasks|length > 0 or trashedRoles|length > 0 or trashedMembers|length > 0 or trashedLinks|length > 0 %}
         
         {# --- TASKS SECTION --- #}
         {% if canManageTasks %}
-            <section data-organ-trash-target="tasksSection" class="mb-12 {% if trashedTasks|length == 0 %}hidden{% endif %}">
+            <section data-organ-trash-target="tasksSection" class="trash-section mb-12 {% if trashedTasks|length == 0 %}hidden{% endif %}">
                 <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
-                        <span class="w-8 h-[1px] bg-gray-100"></span>
-                        Tâches
-                    </h2>
+                    <button type="button" 
+                            data-action="click->organ-trash#toggleSection"
+                            class="flex items-center gap-3 group cursor-pointer">
+                        <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
+                            <span class="w-8 h-[1px] bg-gray-100"></span>
+                            Tâches
+                        </h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-organ-trash-target="chevron">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
                     {% if 'TASK_DELETE_ALL' in userPermissions or 'ORGAN_EDIT' in userPermissions or 'ALL' in userPermissions %}
                         <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-blue-100">Toutes les tâches</span>
                     {% else %}
                         <span class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-amber-100">Mes tâches uniquement</span>
                     {% endif %}
                 </div>
-                <div class="space-y-4">
+                <div class="space-y-4" data-organ-trash-target="content">
                     {% for task in trashedTasks %}
                         <div class="trash-item bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-6 hover:shadow-md transition-all duration-300"
                              data-organ-trash-target="item"
@@ -97,12 +105,19 @@
 
         {# --- ROLES SECTION --- #}
         {% if canManageRoles %}
-            <section data-organ-trash-target="rolesSection" class="mb-12 {% if trashedRoles|length == 0 %}hidden{% endif %}">
-                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-3">
-                    <span class="w-8 h-[1px] bg-gray-100"></span>
-                    Rôles
-                </h2>
-                <div class="space-y-4">
+            <section data-organ-trash-target="rolesSection" class="trash-section mb-12 {% if trashedRoles|length == 0 %}hidden{% endif %}">
+                <button type="button" 
+                        data-action="click->organ-trash#toggleSection"
+                        class="w-full flex items-center justify-between mb-6 group cursor-pointer">
+                    <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
+                        <span class="w-8 h-[1px] bg-gray-100"></span>
+                        Rôles
+                    </h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-organ-trash-target="chevron">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div class="space-y-4" data-organ-trash-target="content">
                     {% for role in trashedRoles %}
                         <div class="trash-item bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-6 hover:shadow-md transition-all duration-300"
                              data-organ-trash-target="item"
@@ -141,12 +156,19 @@
 
         {# --- MEMBERS SECTION --- #}
         {% if canManageRoles %}
-            <section data-organ-trash-target="membersSection" class="mb-12 {% if trashedMembers|length == 0 %}hidden{% endif %}">
-                <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 mb-6 flex items-center gap-3">
-                    <span class="w-8 h-[1px] bg-gray-100"></span>
-                    Membres
-                </h2>
-                <div class="space-y-4">
+            <section data-organ-trash-target="membersSection" class="trash-section mb-12 {% if trashedMembers|length == 0 %}hidden{% endif %}">
+                <button type="button" 
+                        data-action="click->organ-trash#toggleSection"
+                        class="w-full flex items-center justify-between mb-6 group cursor-pointer">
+                    <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
+                        <span class="w-8 h-[1px] bg-gray-100"></span>
+                        Membres
+                    </h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-organ-trash-target="chevron">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div class="space-y-4" data-organ-trash-target="content">
                     {% for assignment in trashedMembers %}
                         <div class="trash-item bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-6 hover:shadow-md transition-all duration-300"
                              data-organ-trash-target="item"
@@ -170,6 +192,53 @@
                                     data-action="click->organ-trash#restore"
                                     data-type="member"
                                     data-uuid="{{ assignment.uuid }}"
+                                    class="px-5 py-2.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                                Restaurer
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {# --- LINKS SECTION --- #}
+        {% if canManageLinks %}
+            <section data-organ-trash-target="linksSection" class="trash-section mb-12 {% if trashedLinks|length == 0 %}hidden{% endif %}">
+                <button type="button" 
+                        data-action="click->organ-trash#toggleSection"
+                        class="w-full flex items-center justify-between mb-6 group cursor-pointer">
+                    <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
+                        <span class="w-8 h-[1px] bg-gray-100"></span>
+                        Liens
+                    </h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-organ-trash-target="chevron">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div class="space-y-4" data-organ-trash-target="content">
+                    {% for link in trashedLinks %}
+                        <div class="trash-item bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-6 hover:shadow-md transition-all duration-300"
+                             data-organ-trash-target="item"
+                             data-type="link"
+                             data-search="{{ link.url }} {{ link.description }}">
+                            <div class="flex items-center gap-6 min-w-0">
+                                <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500 shrink-0 border border-indigo-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <h3 class="text-lg font-bold text-black truncate">{{ link.description|default(link.url) }}</h3>
+                                    <p class="text-xs text-gray-500 truncate">{{ link.url }}</p>
+                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
+                                        Supprimé le {{ link.deletedAt|date('d/m/Y à H:i') }}
+                                    </p>
+                                </div>
+                            </div>
+                            <button type="button" 
+                                    data-action="click->organ-trash#restore"
+                                    data-type="link"
+                                    data-uuid="{{ link.uuid }}"
                                     class="px-5 py-2.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
                                 Restaurer
                             </button>
