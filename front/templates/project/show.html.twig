@@ -12,7 +12,10 @@
 	<div class="fixed top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.05] pointer-events-none blur-[120px] -z-10" 
 	     style="background-color: {{ project_color }}"></div>
 
-	<div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+	<div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8"
+	     data-controller="project-tags"
+	     data-project-tags-project-uuid-value="{{ data.project.uuid }}"
+	     data-project-tags-can-manage-value="{{ (data.project.role in ['ADMIN', 'MANAGER']) ? 'true' : 'false' }}">
 		<!-- Header -->
 		<header class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
 			<div class="flex items-center gap-6">
@@ -81,10 +84,75 @@
 						</div>
 						{{ 'project.show.organs'|trans }}
 					</h2>
-					{% if data.project.role in ['ADMIN', 'MANAGER'] %}
-						<a href="{{ path('app_organ_new', {projectUuid: data.project.uuid}) }}" class="px-6 py-3 text-white font-bold rounded-2xl transition-all hover:brightness-110 active:scale-95 shadow-lg flex items-center gap-2 cursor-pointer shadow-current/20"
-						        style="background-color: {{ project_color }}">{{ 'project.show.add_organ'|trans }}</a>
-					{% endif %}
+					<div class="flex items-center gap-3">
+						<button data-action="click->project-tags#togglePanel"
+								class="px-5 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm cursor-pointer group flex items-center gap-2">
+							<svg class="w-4 h-4 text-gray-400 group-hover:text-black transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+							{{ (data.project.role in ['ADMIN', 'MANAGER']) ? 'project.show.manage_tags'|trans : 'project.show.tags_list_title'|trans }}
+						</button>
+						{% if data.project.role in ['ADMIN', 'MANAGER'] %}
+							<a href="{{ path('app_organ_new', {projectUuid: data.project.uuid}) }}" class="px-6 py-3 text-white font-bold rounded-2xl transition-all hover:brightness-110 active:scale-95 shadow-lg flex items-center gap-2 cursor-pointer shadow-current/20"
+									style="background-color: {{ project_color }}">{{ 'project.show.add_organ'|trans }}</a>
+						{% endif %}
+					</div>
+				</div>
+
+				{# --- TAGS PANEL --- #}
+				<div data-project-tags-target="panel" class="hidden mb-12">
+					<div class="flex items-center justify-between mb-8">
+						<h3 class="text-lg font-bold text-black flex items-center gap-3">
+							<div class="p-2 rounded-xl" style="background-color: {{ project_color }}1a; color: {{ project_color }}">
+								<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+							</div>
+							{{ (data.project.role in ['ADMIN', 'MANAGER']) ? 'project.show.tags_title'|trans : 'project.show.tags_list_title'|trans }}
+						</h3>
+						
+						{% if data.project.role in ['ADMIN', 'MANAGER'] %}
+							<button data-action="click->project-tags#toggleForm" 
+									class="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm cursor-pointer"
+									style="color: {{ project_color }}">
+								+ {{ 'project.show.add_tag'|trans }}
+							</button>
+						{% endif %}
+					</div>
+
+					<div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+						<div data-project-tags-target="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+							{# Stimulus Rendered #}
+						</div>
+
+						{% if data.project.role in ['ADMIN', 'MANAGER'] %}
+							<form data-project-tags-target="form" data-action="submit->project-tags#saveTag" class="mt-8 hidden p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
+								<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+									<div class="space-y-2">
+										<label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{{ 'project.show.tag_name'|trans }}</label>
+										<input type="text" data-project-tags-target="nameInput" required placeholder="Ex: Prioritaire" 
+											   class="w-full px-5 py-3 bg-white border border-gray-100 focus:border-highlight rounded-xl text-sm transition-all outline-none shadow-sm"
+											   onfocus="this.style.borderColor= '{{ project_color }}'"
+											   onblur="this.style.borderColor='#f3f4f6'">
+									</div>
+									<div class="space-y-2">
+										<label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{{ 'project.show.tag_color'|trans }}</label>
+										<div class="flex items-center gap-3">
+											<input type="color" data-project-tags-target="colorInput" value="#808080"
+												   class="w-12 h-12 bg-white border border-gray-100 rounded-xl cursor-pointer p-1 shadow-sm">
+											<span class="text-xs text-gray-500 font-medium">Choisissez une couleur pour ce tag</span>
+										</div>
+									</div>
+								</div>
+								<div class="flex justify-end gap-3 pt-4">
+									<button type="button" data-action="click->project-tags#toggleForm" class="px-6 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
+										Annuler
+									</button>
+									<button type="submit" data-project-tags-target="submitBtn" 
+											class="px-8 py-3 bg-black text-white font-bold rounded-xl hover:bg-black/90 transition-all shadow-lg active:scale-95 flex items-center gap-2 cursor-pointer">
+										<div data-project-tags-target="spinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+										{{ 'project.show.save_tag'|trans }}
+									</button>
+								</div>
+							</form>
+						{% endif %}
+					</div>
 				</div>
 
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

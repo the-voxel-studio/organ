@@ -61,6 +61,7 @@ class ProjectController extends AbstractController
     ): Response {
         $trashedOrgans = [];
         $trashedMembers = [];
+        $trashedTags = [];
         $projectData = [];
 
         try {
@@ -93,6 +94,12 @@ class ProjectController extends AbstractController
             ]);
             if ($responseMembers->getStatusCode() === 200) $trashedMembers = $responseMembers->toArray();
 
+            // 4. Fetch Trashed Tags
+            $responseTags = $apiClient->request('GET', "/api/projects/$uuid/tags/trash", [
+                'headers' => ['Cookie' => 'BEARER=' . $bearer]
+            ]);
+            if ($responseTags->getStatusCode() === 200) $trashedTags = $responseTags->toArray();
+
             if (isset($projectData['project'])) {
                 $identity = $this->extractIdentity($projectData['project']);
                 $projectData['project']['color'] = $identity['color'];
@@ -107,6 +114,7 @@ class ProjectController extends AbstractController
             'project' => $projectData['project'],
             'trashedOrgans' => $trashedOrgans,
             'trashedMembers' => $trashedMembers,
+            'trashedTags' => $trashedTags,
             'projects' => $this->getSidebarProjects($apiClient, $requestStack)
         ]);
     }

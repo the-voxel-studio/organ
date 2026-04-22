@@ -251,6 +251,16 @@ export declare const messages: {
     "project.show.add_organ": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "project.show.view_tasks": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "project.show.no_organs": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.manage_tags": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.view_tags_btn": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.tags_title": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.tags_list_title": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.add_tag": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.tag_name": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.tag_color": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.save_tag": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.no_tags": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "project.show.delete_tag_confirm": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "project.show.about": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "project.show.no_description": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "project.show.created_at": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;

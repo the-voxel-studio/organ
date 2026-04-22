@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['item', 'searchInput', 'organsSection', 'membersSection', 'content', 'chevron'];
+    static targets = ['item', 'searchInput', 'organsSection', 'membersSection', 'tagsSection', 'content', 'chevron'];
     static values = {
         apiUrl: String,
         projectUuid: String
@@ -25,7 +25,8 @@ export default class extends Controller {
     updateVisibility() {
         const sections = [
             { has: this.hasOrgansSectionTarget, target: this.organsSectionTarget, selector: '.trash-item[data-type="organ"]:not(.hidden)' },
-            { has: this.hasMembersSectionTarget, target: this.membersSectionTarget, selector: '.trash-item[data-type="member"]:not(.hidden)' }
+            { has: this.hasMembersSectionTarget, target: this.membersSectionTarget, selector: '.trash-item[data-type="member"]:not(.hidden)' },
+            { has: this.hasTagsSectionTarget, target: this.tagsSectionTarget, selector: '.trash-item[data-type="tag"]:not(.hidden)' }
         ];
 
         sections.forEach(s => {
@@ -63,6 +64,8 @@ export default class extends Controller {
             url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${uuid}/restore`;
         } else if (type === 'member') {
             url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/members/${uuid}/restore`;
+        } else if (type === 'tag') {
+            url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/tags/${uuid}/restore`;
         }
 
         try {
