@@ -43,8 +43,6 @@ fun PrimaryButton(
     )
 
     //  Couleur dynamique du bouton
-    // Normal : rose
-    // Pressé : rose un peu plus clair
     val backgroundColor = if (isPressed) {
         MaterialTheme.colorScheme.secondary
     } else {
