@@ -45,7 +45,6 @@ val Typography = Typography(
         letterSpacing = 0.5.sp
     ),
 
-
     labelSmall = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Normal,

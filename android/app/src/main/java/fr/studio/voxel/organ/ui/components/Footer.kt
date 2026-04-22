@@ -2,7 +2,9 @@ package fr.studio.voxel.organ.ui.components
 
 
 import android.os.Build.VERSION.SDK_INT
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,13 +50,31 @@ fun Footer(
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(onClick = {}){}
+            Image(
+                painter = painterResource(id = R.drawable.icon_account),
+                contentDescription = "Account",
+                modifier = Modifier
+                    .size(30.dp)
+                    .clickable() {
+
+                    }
+            )
+            Spacer(modifier = Modifier.weight(1f))
             Text(
                 text = "Nom Prénom",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            Button(onClick = {}){}
+            Spacer(modifier = Modifier.weight(1f))
+            Image(
+                painter = painterResource(id = R.drawable.icon_param),
+                contentDescription = "Settings",
+                modifier = Modifier
+                    .size(30.dp)
+                    .clickable() {
+
+                    }
+            )
         }
     }
 }
