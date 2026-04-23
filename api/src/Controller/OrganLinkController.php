@@ -9,6 +9,7 @@ use App\Entity\OrganLink;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Service\OrganPermissionService;
+use App\Service\OrganCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,7 +21,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class OrganLinkController extends AbstractController
 {
     public function __construct(
-        private readonly OrganPermissionService $permissionService
+        private readonly OrganPermissionService $permissionService,
+        private readonly OrganCacheService $organCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -112,6 +114,8 @@ class OrganLinkController extends AbstractController
         $entityManager->persist($link);
         $entityManager->flush();
 
+        $this->organCacheService->invalidateSummary($organUuid);
+
         return $this->json([
             'uuid' => $link->getUuid(),
             'url' => $link->getUrl(),
@@ -146,6 +150,8 @@ class OrganLinkController extends AbstractController
 
         $entityManager->flush();
 
+        $this->organCacheService->invalidateSummary($organUuid);
+
         return $this->json([
             'uuid' => $link->getUuid(),
             'url' => $link->getUrl(),
@@ -154,11 +160,18 @@ class OrganLinkController extends AbstractController
     }
 
     #[Route('/{linkUuid}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $projectUuid, string $organUuid, string $linkUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(string $projectUuid, string $organUuid, string $linkUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
-        $link = $entityManager->getRepository(OrganLink::class)->findOneBy(['uuid' => $linkUuid, 'organ' => $organ, 'deletedAt' => null]);
+        
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        $criteria = ['uuid' => $linkUuid, 'organ' => $organ];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+
+        $link = $entityManager->getRepository(OrganLink::class)->findOneBy($criteria);
 
         if (!$link) return $this->json(['message' => 'Link not found'], Response::HTTP_NOT_FOUND);
 
@@ -168,8 +181,15 @@ class OrganLinkController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $link->setDeletedAt(new \DateTime());
+        if ($isPermanent) {
+            $entityManager->remove($link);
+        } else {
+            $link->setDeletedAt(new \DateTime());
+        }
+        
         $entityManager->flush();
+
+        $this->organCacheService->invalidateSummary($organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
@@ -195,6 +215,8 @@ class OrganLinkController extends AbstractController
 
         $link->setDeletedAt(null);
         $entityManager->flush();
+
+        $this->organCacheService->invalidateSummary($organUuid);
 
         return $this->json([
             'uuid' => $link->getUuid(),

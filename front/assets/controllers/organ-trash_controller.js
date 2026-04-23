@@ -8,6 +8,17 @@ export default class extends Controller {
         organUuid: String
     };
 
+    connect() {
+        this.onTaskSaved = () => {
+            window.location.reload();
+        };
+        window.addEventListener('task-saved', this.onTaskSaved);
+    }
+
+    disconnect() {
+        window.removeEventListener('task-saved', this.onTaskSaved);
+    }
+
     search() {
         const query = this.searchInputTarget.value.toLowerCase().trim();
         
@@ -91,6 +102,51 @@ export default class extends Controller {
         } catch (error) {
             btn.disabled = false;
             console.error('Restore failed', error);
+        }
+    }
+
+    async removePermanent(event) {
+        const btn = event.currentTarget;
+        const type = btn.dataset.type;
+        const uuid = btn.dataset.uuid;
+        const row = btn.closest('.trash-item');
+
+        if (!confirm("Cette action est irréversible. Voulez-vous supprimer cet élément définitivement ?")) {
+            return;
+        }
+
+        let url = '';
+        if (type === 'task') {
+            url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/tasks/${uuid}?permanent=1`;
+        } else if (type === 'role') {
+            url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/roles/${uuid}?permanent=1`;
+        } else if (type === 'member') {
+            url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/roles/members/${uuid}?permanent=1`;
+        } else if (type === 'link') {
+            url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/links/${uuid}?permanent=1`;
+        }
+
+        try {
+            btn.disabled = true;
+            const response = await fetch(url, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                row.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    row.remove();
+                    this.updateVisibility();
+                    this.checkGlobalEmptyState();
+                }, 300);
+            } else {
+                btn.disabled = false;
+                alert('Erreur lors de la suppression définitive.');
+            }
+        } catch (error) {
+            btn.disabled = false;
+            console.error('Hard delete failed', error);
         }
     }
 

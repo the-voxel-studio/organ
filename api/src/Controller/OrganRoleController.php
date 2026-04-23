@@ -403,11 +403,18 @@ class OrganRoleController extends AbstractController
     }
 
     #[Route('/{roleUuid}/unassign/{userUuid}', name: 'unassign', methods: ['DELETE'])]
-    public function unassign(string $projectUuid, string $organUuid, string $roleUuid, string $userUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function unassign(string $projectUuid, string $organUuid, string $roleUuid, string $userUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
-        $role = $entityManager->getRepository(OrganRole::class)->findOneBy(['uuid' => $roleUuid, 'organ' => $organ, 'deletedAt' => null]);
+        
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        $roleCriteria = ['uuid' => $roleUuid, 'organ' => $organ];
+        if (!$isPermanent) {
+            $roleCriteria['deletedAt'] = null;
+        }
+
+        $role = $entityManager->getRepository(OrganRole::class)->findOneBy($roleCriteria);
         $targetUser = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $userUuid]);
 
         if (!$role || !$targetUser) {
@@ -420,17 +427,26 @@ class OrganRoleController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $uor = $entityManager->getRepository(UserOrganRole::class)->findOneBy([
+        $uorCriteria = [
             'user' => $targetUser,
             'role' => $role,
-            'deletedAt' => null
-        ]);
+        ];
+        if (!$isPermanent) {
+            $uorCriteria['deletedAt'] = null;
+        }
+
+        $uor = $entityManager->getRepository(UserOrganRole::class)->findOneBy($uorCriteria);
 
         if (!$uor) {
             return $this->json(['message' => 'Assignment not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $uor->setDeletedAt(new \DateTime());
+        if ($isPermanent) {
+            $entityManager->remove($uor);
+        } else {
+            $uor->setDeletedAt(new \DateTime());
+        }
+        
         $entityManager->flush();
 
         // Invalidate caches
@@ -441,11 +457,18 @@ class OrganRoleController extends AbstractController
     }
 
     #[Route('/{roleUuid}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $projectUuid, string $organUuid, string $roleUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(string $projectUuid, string $organUuid, string $roleUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
-        $role = $entityManager->getRepository(OrganRole::class)->findOneBy(['uuid' => $roleUuid, 'organ' => $organ, 'deletedAt' => null]);
+        
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        $criteria = ['uuid' => $roleUuid, 'organ' => $organ];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+
+        $role = $entityManager->getRepository(OrganRole::class)->findOneBy($criteria);
 
         if (!$role) {
             return $this->json(['message' => 'Role not found'], Response::HTTP_NOT_FOUND);
@@ -457,11 +480,16 @@ class OrganRoleController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $role->setDeletedAt(new \DateTime());
+        if ($isPermanent) {
+            $entityManager->remove($role);
+        } else {
+            $role->setDeletedAt(new \DateTime());
+        }
+        
         $entityManager->flush();
 
         // Invalidate role definition
-        $this->permissionService->invalidateRoleDefinition($role->getUuid());
+        $this->permissionService->invalidateRoleDefinition($roleUuid);
         // Invalidate role list cache
         $this->organCacheService->invalidateRoleList($organUuid);
 

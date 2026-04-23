@@ -232,40 +232,70 @@ class ProjectController extends AbstractController
             ];
         }
 
-        // 4. Project Notifications (Activities & Security)
-        // We filter notifications by project via task -> organ
-        $notifications = $entityManager->getRepository(Notification::class)->createQueryBuilder('n')
-            ->leftJoin('n.task', 't')
-            ->leftJoin('t.organ', 'o')
-            ->where('o.project = :project')
-            ->andWhere('n.deletedAt IS NULL')
-            ->setParameter('project', $project)
-            ->orderBy('n.createdAt', 'DESC')
-            ->setMaxResults(50)
-            ->getQuery()
-            ->getResult();
-        
-        $activities = [];
-        $securityLogs = [];
+        // 4. Unified Project Activity Feed (TaskHistory, Comments, Attachments)
+        $conn = $entityManager->getConnection();
+        $sql = "
+            SELECT 
+                'COMMENT' as type, 
+                tc.content as detail, 
+                tc.created_at, 
+                NULL as field_name, 
+                NULL as action_type, 
+                u.first_name as user_first_name,
+                u.last_name as user_last_name,
+                t.title as task_title,
+                t.uuid as task_uuid,
+                o.title as organ_title
+            FROM task_comments tc
+            JOIN tasks t ON tc.task_id = t.id
+            JOIN organs o ON t.organ_id = o.id
+            JOIN users u ON tc.user_id = u.id
+            WHERE o.project_id = :projectId AND tc.deleted_at IS NULL
 
-        foreach ($notifications as $n) {
-            $log = [
-                'uuid' => $n->getUuid(),
-                'type' => $n->getType(),
-                'message' => $n->getMessage(),
-                'createdAt' => $n->getCreatedAt()->format(\DateTimeInterface::ATOM),
-                'task' => $n->getTask() ? [
-                    'uuid' => $n->getTask()->getUuid(),
-                    'title' => $n->getTask()->getTitle()
-                ] : null
-            ];
+            UNION ALL
 
-            if (in_array($n->getType(), ['TASK_DELETE', 'SECURITY_ALERT', 'MEMBER_REMOVED'], true)) {
-                $securityLogs[] = $log;
-            } else {
-                $activities[] = $log;
-            }
-        }
+            SELECT 
+                'HISTORY' as type, 
+                NULL as detail, 
+                th.created_at, 
+                th.field_name, 
+                th.action_type, 
+                u.first_name as user_first_name,
+                u.last_name as user_last_name,
+                t.title as task_title,
+                t.uuid as task_uuid,
+                o.title as organ_title
+            FROM task_history th
+            JOIN tasks t ON th.task_id = t.id
+            JOIN organs o ON t.organ_id = o.id
+            LEFT JOIN users u ON th.user_id = u.id
+            WHERE o.project_id = :projectId AND th.action_type NOT IN ('DELETE', 'ASSIGNEE_REMOVE')
+
+            UNION ALL
+
+            SELECT 
+                'ATTACHMENT' as type, 
+                ta.file_name as detail, 
+                ta.created_at, 
+                NULL as field_name, 
+                NULL as action_type, 
+                u.first_name as user_first_name,
+                u.last_name as user_last_name,
+                t.title as task_title,
+                t.uuid as task_uuid,
+                o.title as organ_title
+            FROM task_attachments ta
+            JOIN tasks t ON ta.task_id = t.id
+            JOIN organs o ON t.organ_id = o.id
+            LEFT JOIN users u ON ta.uploaded_by = u.id
+            WHERE o.project_id = :projectId AND ta.deleted_at IS NULL
+
+            ORDER BY created_at DESC
+            LIMIT 10
+        ";
+
+        $resultSet = $conn->executeQuery($sql, ['projectId' => $project->getId()]);
+        $activities = $resultSet->fetchAllAssociative();
 
         return $this->json([
             'project' => array_merge($summary, [
@@ -274,8 +304,8 @@ class ProjectController extends AbstractController
             ]),
             'organs' => $organsData,
             'members' => $membersData,
-            'activities' => array_slice($activities, 0, 10),
-            'securityLogs' => array_slice($securityLogs, 0, 10)
+            'activities' => $activities,
+            'securityLogs' => [] // Optional: Keep or remove
         ]);
     }
 
@@ -418,7 +448,7 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{uuid}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $uuid, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(string $uuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -427,7 +457,14 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
+        $isPermanent = $request->query->getBoolean('permanent', false);
+
+        $criteria = ['uuid' => $uuid];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+
+        $project = $entityManager->getRepository(Project::class)->findOneBy($criteria);
 
         if (!$project) {
             return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
@@ -439,12 +476,16 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $project->setDeletedAt(new \DateTime());
-        
-        $projectMembers = $entityManager->getRepository(ProjectMember::class)->findBy(['project' => $project]);
-        foreach ($projectMembers as $pm) {
-            if ($pm->getDeletedAt() === null) {
-                $pm->setDeletedAt(new \DateTime());
+        if ($isPermanent) {
+            $entityManager->remove($project);
+        } else {
+            $project->setDeletedAt(new \DateTime());
+            
+            $projectMembers = $entityManager->getRepository(ProjectMember::class)->findBy(['project' => $project]);
+            foreach ($projectMembers as $pm) {
+                if ($pm->getDeletedAt() === null) {
+                    $pm->setDeletedAt(new \DateTime());
+                }
             }
         }
 

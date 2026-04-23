@@ -220,12 +220,18 @@ class ProjectMemberController extends AbstractController
     }
 
     #[Route('/{memberUuid}', name: 'remove', methods: ['DELETE'])]
-    public function remove(string $projectUuid, string $memberUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function remove(string $projectUuid, string $memberUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $currentUserMember = $this->checkAccess($project, $entityManager);
 
-        $targetMember = $entityManager->getRepository(ProjectMember::class)->findOneBy(['uuid' => $memberUuid, 'project' => $project, 'deletedAt' => null]);
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        $criteria = ['uuid' => $memberUuid, 'project' => $project];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+
+        $targetMember = $entityManager->getRepository(ProjectMember::class)->findOneBy($criteria);
         if (!$targetMember) return $this->json(['message' => 'Member not found'], Response::HTTP_NOT_FOUND);
 
         $isSelf = ($targetMember->getUser() === $this->getUser());
@@ -237,7 +243,16 @@ class ProjectMemberController extends AbstractController
         if ($targetMember->getGlobalRole() === ProjectGlobalRole::ADMIN) return $this->json(['message' => 'Cannot remove ADMIN'], Response::HTTP_BAD_REQUEST);
 
         $targetUserUuid = $targetMember->getUser()->getUuid();
-        $targetMember->setDeletedAt(new \DateTime());
+
+        if ($isPermanent) {
+            if ($currentUserMember->getGlobalRole() !== ProjectGlobalRole::ADMIN) {
+                return $this->json(['message' => 'Only project admins can perform permanent deletion'], Response::HTTP_FORBIDDEN);
+            }
+            $entityManager->remove($targetMember);
+        } else {
+            $targetMember->setDeletedAt(new \DateTime());
+        }
+
         $entityManager->flush();
         $this->membershipService->invalidate($targetUserUuid, $project->getUuid());
 
@@ -278,7 +293,17 @@ class ProjectMemberController extends AbstractController
 
         $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['project' => $project, 'user' => $user, 'deletedAt' => null]);
         if (!$membership) throw $this->createAccessDeniedException();
-        if ($allowedRoles !== null && !in_array($membership->getGlobalRole(), $allowedRoles, true)) throw $this->createAccessDeniedException();
+        
+        if ($allowedRoles !== null) {
+            $roleValue = $membership->getGlobalRole();
+            if ($roleValue instanceof \BackedEnum) $roleValue = $roleValue->value;
+            
+            $allowedValues = array_map(fn($r) => $r instanceof \BackedEnum ? $r->value : $r, $allowedRoles);
+            
+            if (!in_array($roleValue, $allowedValues, true)) {
+                throw $this->createAccessDeniedException('Insufficient permissions');
+            }
+        }
 
         return $membership;
     }

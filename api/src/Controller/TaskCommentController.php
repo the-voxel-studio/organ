@@ -204,12 +204,21 @@ class TaskCommentController extends AbstractController
     }
 
     #[Route('/{commentUuid}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $projectUuid, string $organUuid, string $taskUuid, string $commentUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(string $projectUuid, string $organUuid, string $taskUuid, string $commentUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
         $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
-        $comment = $entityManager->getRepository(TaskComment::class)->findOneBy(['uuid' => $commentUuid, 'task' => $task, 'deletedAt' => null]);
+        
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        
+        // If permanent, we can delete even if already soft-deleted
+        $criteria = ['uuid' => $commentUuid, 'task' => $task];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+        
+        $comment = $entityManager->getRepository(TaskComment::class)->findOneBy($criteria);
 
         if (!$comment) return $this->json(['message' => 'Comment not found'], Response::HTTP_NOT_FOUND);
 
@@ -217,14 +226,27 @@ class TaskCommentController extends AbstractController
         $user = $this->getUser();
         
         $isOwner = ($comment->getUser() === $user);
-        $permAll = $this->permissionService->hasPermission($user, $organ, 'COMMENT_DELETE_ALL');
-        $permOwn = $isOwner && $this->permissionService->hasPermission($user, $organ, 'COMMENT_DELETE_OWN');
+        
+        if ($isPermanent) {
+            $permAll = $this->permissionService->hasPermission($user, $organ, 'COMMENT_HARD_DELETE_ALL');
+            $permOwn = $isOwner && $this->permissionService->hasPermission($user, $organ, 'COMMENT_HARD_DELETE_OWN');
+            
+            if (!$permAll && !$permOwn) {
+                return $this->json(['message' => 'Access denied for permanent deletion'], Response::HTTP_FORBIDDEN);
+            }
+            
+            $entityManager->remove($comment);
+        } else {
+            $permAll = $this->permissionService->hasPermission($user, $organ, 'COMMENT_DELETE_ALL');
+            $permOwn = $isOwner && $this->permissionService->hasPermission($user, $organ, 'COMMENT_DELETE_OWN');
 
-        if (!$permAll && !$permOwn) {
-            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            if (!$permAll && !$permOwn) {
+                return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            }
+            
+            $comment->setDeletedAt(new \DateTime());
         }
-
-        $comment->setDeletedAt(new \DateTime());
+        
         $entityManager->flush();
 
         return $this->json(null, Response::HTTP_NO_CONTENT);

@@ -8,6 +8,11 @@ use App\Entity\Organ;
 use App\Entity\Project;
 use App\Entity\Task;
 use App\Entity\TaskAssignee;
+use App\Entity\TaskAttachment;
+use App\Entity\TaskComment;
+use App\Entity\TaskDependency;
+use App\Entity\TaskLink;
+use App\Entity\TaskTag;
 use App\Entity\User;
 use App\Enum\ProjectGlobalRole;
 use App\Enum\TaskStatus;
@@ -123,11 +128,37 @@ class TaskService
             $assigneeData[] = $userCacheService->getUserSummary($as->getUser());
         }
 
+        $tags = $this->entityManager->getRepository(TaskTag::class)->findBy(['task' => $task, 'deletedAt' => null]);
+        $tagData = [];
+        foreach ($tags as $tt) {
+            $t = $tt->getTag();
+            $tagData[] = [
+                'uuid' => $t->getUuid(),
+                'name' => $t->getName(),
+                'color' => $t->getColor(),
+            ];
+        }
+
+        $links = $this->entityManager->getRepository(TaskLink::class)->findBy(['task' => $task, 'deletedAt' => null]);
+        $linkData = [];
+        foreach ($links as $link) {
+            $linkData[] = [
+                'uuid' => $link->getUuid(),
+                'url' => $link->getUrl(),
+                'description' => $link->getDescription(),
+            ];
+        }
+
+        $commentCount = $this->entityManager->getRepository(TaskComment::class)->count(['task' => $task, 'deletedAt' => null]);
+        $attachmentCount = $this->entityManager->getRepository(TaskAttachment::class)->count(['task' => $task, 'deletedAt' => null]);
+        $dependencyCount = $this->entityManager->getRepository(TaskDependency::class)->count(['task' => $task, 'deletedAt' => null]);
+
         return [
             'uuid' => $task->getUuid(),
             'title' => $task->getTitle(),
             'description' => $task->getDescription(),
             'status' => $task->getStatus()->value,
+            'statusMessage' => $task->getStatusMessage(),
             'priority' => $task->getPriority(),
             'estimatedHours' => $task->getEstimatedHours(),
             'startDate' => $task->getStartDate()?->format(\DateTimeInterface::ATOM),
@@ -135,6 +166,11 @@ class TaskService
             'createdBy' => $task->getCreatedBy() ? $userCacheService->getUserSummary($task->getCreatedBy()) : null,
             'manager' => $task->getManager() ? $userCacheService->getUserSummary($task->getManager()) : null,
             'assignees' => $assigneeData,
+            'tags' => $tagData,
+            'links' => $linkData,
+            'commentCount' => $commentCount,
+            'attachmentCount' => $attachmentCount,
+            'dependencyCount' => $dependencyCount,
             'createdAt' => $task->getCreatedAt()->format(\DateTimeInterface::ATOM),
         ];
     }

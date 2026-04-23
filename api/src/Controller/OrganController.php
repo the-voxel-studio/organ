@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Organ;
+use App\Entity\OrganLink;
 use App\Entity\Project;
 use App\Entity\ProjectMember;
 use App\Entity\User;
@@ -196,7 +197,17 @@ class OrganController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $summary = $this->organCacheService->getOrganSummary($organ, function () use ($organ) {
+        $summary = $this->organCacheService->getOrganSummary($organ, function () use ($organ, $entityManager) {
+            $links = $entityManager->getRepository(OrganLink::class)->findBy(['organ' => $organ, 'deletedAt' => null]);
+            $linkData = [];
+            foreach ($links as $link) {
+                $linkData[] = [
+                    'uuid' => $link->getUuid(),
+                    'url' => $link->getUrl(),
+                    'description' => $link->getDescription(),
+                ];
+            }
+
             return [
                 'uuid' => $organ->getUuid(),
                 'title' => $organ->getTitle(),
@@ -205,6 +216,7 @@ class OrganController extends AbstractController
                 'iconData' => $organ->getIconData(),
                 'highlightColor' => $organ->getHighlightColor(),
                 'createdAt' => $organ->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'links' => $linkData,
             ];
         });
 
@@ -430,10 +442,17 @@ class OrganController extends AbstractController
     }
 
     #[Route('/{organUuid}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(string $projectUuid, string $organUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
-        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        $criteria = ['uuid' => $organUuid, 'project' => $project];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy($criteria);
 
         if (!$organ) {
             return $this->json(['message' => 'Organ not found'], Response::HTTP_NOT_FOUND);
@@ -441,11 +460,24 @@ class OrganController extends AbstractController
 
         /** @var User $user */
         $user = $this->getUser();
-        if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_EDIT')) {
-            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        
+        if ($isPermanent) {
+            // Need ADMIN or MANAGER global role for permanent deletion
+            $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project, 'deletedAt' => null]);
+            $isAuthorized = $membership && in_array($membership->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true);
+            
+            if (!$isAuthorized && !$this->permissionService->hasPermission($user, $organ, 'ORGAN_HARD_DELETE')) {
+                return $this->json(['message' => 'Insufficient permissions for permanent deletion'], Response::HTTP_FORBIDDEN);
+            }
+            
+            $entityManager->remove($organ);
+        } else {
+            if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_EDIT')) {
+                return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            }
+            $organ->setDeletedAt(new \DateTime());
         }
 
-        $organ->setDeletedAt(new \DateTime());
         $entityManager->flush();
 
         // Invalidate cache

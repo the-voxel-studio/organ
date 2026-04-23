@@ -92,6 +92,49 @@ export default class extends Controller {
         }
     }
 
+    async removePermanent(event) {
+        const btn = event.currentTarget;
+        const type = btn.dataset.type;
+        const uuid = btn.dataset.uuid;
+        const row = btn.closest('.trash-item');
+
+        if (!confirm("Cette action est irréversible. Voulez-vous supprimer cet élément définitivement ?")) {
+            return;
+        }
+
+        let url = '';
+        if (type === 'organ') {
+            url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${uuid}?permanent=1`;
+        } else if (type === 'tag') {
+            url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/tags/${uuid}?permanent=1`;
+        } else if (type === 'member') {
+            url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/members/${uuid}?permanent=1`;
+        }
+
+        try {
+            btn.disabled = true;
+            const response = await fetch(url, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                row.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    row.remove();
+                    this.updateVisibility();
+                    this.checkGlobalEmptyState();
+                }, 300);
+            } else {
+                btn.disabled = false;
+                alert('Erreur lors de la suppression définitive.');
+            }
+        } catch (error) {
+            btn.disabled = false;
+            console.error('Hard delete failed', error);
+        }
+    }
+
     checkGlobalEmptyState() {
         const remainingItems = this.element.querySelectorAll('.trash-item').length;
         if (remainingItems === 0) {

@@ -11,6 +11,7 @@ use App\Entity\TaskLink;
 use App\Entity\User;
 use App\Service\OrganPermissionService;
 use App\Service\TaskService;
+use App\Service\TaskCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,7 +24,8 @@ class TaskLinkController extends AbstractController
 {
     public function __construct(
         private readonly TaskService $taskService,
-        private readonly OrganPermissionService $permissionService
+        private readonly OrganPermissionService $permissionService,
+        private readonly TaskCacheService $taskCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -48,7 +50,7 @@ class TaskLinkController extends AbstractController
             $data[] = [
                 'uuid' => $link->getUuid(),
                 'url' => $link->getUrl(),
-                'description' => $link->getDescription(),
+                'description' => $link->getDescription()
             ];
         }
 
@@ -64,10 +66,6 @@ class TaskLinkController extends AbstractController
 
         if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
 
-        if ($task->getDeletedAt() !== null) {
-            return $this->json(['message' => 'Task is deleted and cannot be modified'], Response::HTTP_FORBIDDEN);
-        }
-
         /** @var User $user */
         $user = $this->getUser();
         if (!$this->taskService->can($user, $task, 'TASK_LINK_MANAGE')) {
@@ -75,8 +73,8 @@ class TaskLinkController extends AbstractController
         }
 
         $data = json_decode($request->getContent(), true);
-        if (!$data || !isset($data['url'])) {
-            return $this->json(['message' => 'URL is required'], Response::HTTP_BAD_REQUEST);
+        if (!isset($data['url'])) {
+            return $this->json(['message' => 'Missing URL'], Response::HTTP_BAD_REQUEST);
         }
 
         $link = new TaskLink();
@@ -87,31 +85,61 @@ class TaskLinkController extends AbstractController
         $entityManager->persist($link);
         $entityManager->flush();
 
+        // Invalidate cache
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
+
         return $this->json([
             'uuid' => $link->getUuid(),
-            'url' => $link->getUrl(),
-            'description' => $link->getDescription(),
+            'url' => $link->getUrl()
         ], Response::HTTP_CREATED);
     }
 
     #[Route('/{linkUuid}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $projectUuid, string $organUuid, string $taskUuid, string $linkUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(string $projectUuid, string $organUuid, string $taskUuid, string $linkUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
         $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
-        $link = $entityManager->getRepository(TaskLink::class)->findOneBy(['uuid' => $linkUuid, 'task' => $task, 'deletedAt' => null]);
+        
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        $criteria = ['uuid' => $linkUuid, 'task' => $task];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+        
+        $link = $entityManager->getRepository(TaskLink::class)->findOneBy($criteria);
 
         if (!$link) return $this->json(['message' => 'Link not found'], Response::HTTP_NOT_FOUND);
 
         /** @var User $user */
         $user = $this->getUser();
-        if (!$this->taskService->can($user, $task, 'TASK_LINK_MANAGE')) {
-            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        
+        $isCreator = ($task->getCreatedBy() === $user);
+        $isManager = ($task->getManager() === $user);
+        $isOwner = $isCreator || $isManager;
+
+        if ($isPermanent) {
+            $permAll = $this->permissionService->hasPermission($user, $organ, 'TASK_LINK_HARD_DELETE_ALL');
+            $permOwn = $isOwner && $this->permissionService->hasPermission($user, $organ, 'TASK_LINK_HARD_DELETE_OWN');
+            
+            if (!$permAll && !$permOwn && !$this->permissionService->hasPermission($user, $organ, 'ORGAN_EDIT')) {
+                return $this->json(['message' => 'Access denied for permanent deletion'], Response::HTTP_FORBIDDEN);
+            }
+            
+            $entityManager->remove($link);
+        } else {
+            if (!$this->taskService->can($user, $task, 'TASK_LINK_MANAGE')) {
+                return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+            }
+            $link->setDeletedAt(new \DateTime());
         }
 
-        $link->setDeletedAt(new \DateTime());
         $entityManager->flush();
+
+        // Invalidate cache
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
@@ -135,6 +163,7 @@ class TaskLinkController extends AbstractController
             ->where('l.task = :task')
             ->andWhere('l.deletedAt IS NOT NULL')
             ->setParameter('task', $task)
+            ->orderBy('l.deletedAt', 'DESC')
             ->getQuery()
             ->getResult();
         
@@ -144,7 +173,7 @@ class TaskLinkController extends AbstractController
                 'uuid' => $link->getUuid(),
                 'url' => $link->getUrl(),
                 'description' => $link->getDescription(),
-                'deletedAt' => $link->getDeletedAt()->format(\DateTimeInterface::ATOM),
+                'deletedAt' => $link->getDeletedAt()->format(\DateTimeInterface::ATOM)
             ];
         }
 
@@ -160,7 +189,6 @@ class TaskLinkController extends AbstractController
         $link = $entityManager->getRepository(TaskLink::class)->findOneBy(['uuid' => $linkUuid, 'task' => $task]);
 
         if (!$link) return $this->json(['message' => 'Link not found'], Response::HTTP_NOT_FOUND);
-        if ($link->getDeletedAt() === null) return $this->json(['message' => 'Link is not deleted'], Response::HTTP_BAD_REQUEST);
 
         /** @var User $user */
         $user = $this->getUser();
@@ -170,6 +198,10 @@ class TaskLinkController extends AbstractController
 
         $link->setDeletedAt(null);
         $entityManager->flush();
+
+        // Invalidate cache
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json([
             'uuid' => $link->getUuid(),

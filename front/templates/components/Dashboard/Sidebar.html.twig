@@ -23,7 +23,7 @@
 
 		{# --- Notifications Wrapper (avec controller Stimulus) --- #}
 		<div
-			data-controller="notifications" data-notifications-api-url-value="http://localhost:8001/api/notifications" data-notifications-subscribe-url-value="http://localhost:8001/api/notifications/subscribe" data-action="click@window->notifications#hide" class="relative flex items-center">
+			data-controller="notifications" data-notifications-api-url-value="/api/notifications" data-notifications-subscribe-url-value="/api/notifications/subscribe" data-action="click@window->notifications#hide" class="relative flex items-center">
 
 			{# --- Bouton Cloche --- #}
 			<button type="button" data-action="click->notifications#toggle" class="relative text-black/80 hover:text-black transition-colors duration-200 cursor-pointer focus:outline-none">
@@ -114,14 +114,18 @@
 						class="flex items-center gap-3">
 						{# Icône du projet avec rappel de couleur #}
 						<div class="w-6 h-6 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 {{ is_active ? 'bg-white/40 ring-1 ring-white/50' : 'bg-gray-50' }}">
-							{% if project.iconType == 'EMOJI' %}
-								<span class="text-sm">{{ project.iconData }}</span>
-							{% elseif project.iconType == 'BLOB' %}
-								<img src="{{ project.iconData }}" class="w-full h-full object-cover">
-							{% elseif project.iconType == 'SVG' %}
-								<div class="w-4 h-4 flex items-center justify-center {{ is_active ? 'text-white' : 'text-gray-400' }}">
-									{{ project.iconData|raw }}
-								</div>
+							{% if project.iconData is defined and project.iconData is not empty %}
+								{% if project.iconType == 'EMOJI' %}
+									<span class="text-sm">{{ project.iconData }}</span>
+								{% elseif project.iconType == 'BLOB' %}
+									<img src="{{ project.iconData }}" class="w-full h-full object-cover">
+								{% elseif project.iconType == 'SVG' %}
+									<div class="w-4 h-4 flex items-center justify-center {{ is_active ? 'text-white' : 'text-gray-400' }}">
+										{{ project.iconData|raw }}
+									</div>
+								{% endif %}
+							{% else %}
+								<div class="w-full h-full" style="background-color: {{ project_color }}"></div>
 							{% endif %}
 						</div>
 						<span class="font-bold text-sm truncate max-w-[150px]">{{ project.title }}</span>

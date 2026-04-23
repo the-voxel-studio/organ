@@ -185,12 +185,18 @@ class TagController extends AbstractController
     }
 
     #[Route('/{tagUuid}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $projectUuid, string $tagUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(string $projectUuid, string $tagUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
 
-        $tag = $entityManager->getRepository(Tag::class)->findOneBy(['uuid' => $tagUuid, 'project' => $project, 'deletedAt' => null]);
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        $criteria = ['uuid' => $tagUuid, 'project' => $project];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+        
+        $tag = $entityManager->getRepository(Tag::class)->findOneBy($criteria);
         if (!$tag) return $this->json(['message' => 'Tag not found'], Response::HTTP_NOT_FOUND);
 
         /** @var User $user */
@@ -201,7 +207,12 @@ class TagController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $tag->setDeletedAt(new \DateTime());
+        if ($isPermanent) {
+            $entityManager->remove($tag);
+        } else {
+            $tag->setDeletedAt(new \DateTime());
+        }
+        
         $entityManager->flush();
 
         // Invalidate cache

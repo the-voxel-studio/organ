@@ -55,4 +55,7 @@ return [
     'gsap/MorphSVGPlugin' => [
         'version' => '3.14.2',
     ],
+    'sortablejs' => [
+        'version' => '1.15.7',
+    ],
 ];

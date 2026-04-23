@@ -6,11 +6,11 @@
 
 {% block auth_content %}
     <div data-controller="auth-form google-auth" 
-         data-auth-form-url-value="http://localhost:8001/api/auth/register" 
+         data-auth-form-url-value="/api/auth/register" 
          data-auth-form-redirect-url-value="{{ path('app_login') }}"
          data-auth-form-type-value="register"
          data-google-auth-client-id-value="{{ google_client_id }}"
-         data-google-auth-login-url-value="http://localhost:8001/api/auth/login/google"
+         data-google-auth-login-url-value="/api/auth/login/google"
          data-google-auth-redirect-url-value="{{ path('app_dashboard') }}"
          data-action="google-auth:error->auth-form#showErrorFromEvent">
 

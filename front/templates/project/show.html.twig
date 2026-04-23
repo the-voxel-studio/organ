@@ -21,12 +21,16 @@
 			<div class="flex items-center gap-6">
 				<div class="w-16 h-16 bg-white rounded-2xl shadow-sm border-2 flex items-center justify-center overflow-hidden"
 				     style="border-color: {{ project_color }}">
-					{% if data.project.iconType == 'EMOJI' %}
-						<span class="text-3xl">{{ data.project.iconData }}</span>
-					{% elseif data.project.iconType == 'BLOB' %}
-						<img src="{{ data.project.iconData }}" class="w-full h-full object-cover">
-					{% elseif data.project.iconType == 'SVG' %}
-						<div class="w-8 h-8 flex items-center justify-center">{{ data.project.iconData|raw }}</div>
+					{% if data.project.iconData is not empty %}
+						{% if data.project.iconType == 'EMOJI' %}
+							<span class="text-3xl">{{ data.project.iconData }}</span>
+						{% elseif data.project.iconType == 'BLOB' %}
+							<img src="{{ data.project.iconData }}" class="w-full h-full object-cover">
+						{% elseif data.project.iconType == 'SVG' %}
+							<div class="w-8 h-8 flex items-center justify-center">{{ data.project.iconData|raw }}</div>
+						{% endif %}
+					{% else %}
+						<div class="w-full h-full" style="background-color: {{ project_color }}"></div>
 					{% endif %}
 				</div>
 				<div>
@@ -162,12 +166,16 @@
 							<div class="flex items-start justify-between mb-4">
 								<div class="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm" 
 								     style="background-color: {{ organ.highlightColor }}">
-									{% if organ.iconType == 'EMOJI' %}
-										<span class="text-2xl">{{ organ.iconData }}</span>
-									{% elseif organ.iconType == 'BLOB' %}
-										<img src="{{ organ.iconData }}" class="w-full h-full object-cover">
-									{% elseif organ.iconType == 'SVG' %}
-										<div class="w-6 h-6 text-white">{{ organ.iconData|raw }}</div>
+									{% if organ.iconData is not empty %}
+										{% if organ.iconType == 'EMOJI' %}
+											<span class="text-2xl">{{ organ.iconData }}</span>
+										{% elseif organ.iconType == 'BLOB' %}
+											<img src="{{ organ.iconData }}" class="w-full h-full object-cover">
+										{% elseif organ.iconType == 'SVG' %}
+											<div class="w-6 h-6 text-white">{{ organ.iconData|raw }}</div>
+										{% endif %}
+									{% else %}
+										<div class="w-full h-full" style="background-color: {{ organ.highlightColor }}"></div>
 									{% endif %}
 								</div>
 								<div class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-gray-100 bg-gray-50 text-gray-500">
@@ -233,21 +241,39 @@
 						<div class="divide-y divide-gray-50">
 							{% for activity in data.activities %}
 								<div class="p-6 flex items-start gap-4 hover:bg-gray-50 transition-colors">
-									<div class="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0 text-gray-400">
-										<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-											<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
-										</svg>
+									<div class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center flex-shrink-0 text-bubblegum font-black text-sm uppercase shadow-sm">
+										{{ activity.user_first_name|first|upper }}{{ activity.user_last_name|first|upper }}
 									</div>
 									<div class="flex-grow min-w-0">
-										<p class="text-sm font-bold text-gray-900 truncate">
-											{{ activity.user ? activity.user.firstName : 'System' }} 
-											<span class="font-medium text-gray-500">{{ activity.actionType|lower }}</span> 
-											{{ activity.task.title }}
+										<p class="text-sm text-gray-600 leading-snug">
+											<span class="font-bold text-gray-900">{{ activity.user_first_name }} {{ activity.user_last_name }}</span>
+                                            
+                                            {% if activity.type == 'COMMENT' %}
+                                                {{ 'task.history.actions.COMMENT_ADD'|trans }}
+                                            {% elseif activity.type == 'ATTACHMENT' %}
+                                                {{ 'task.history.actions.ATTACHMENT_ADD'|trans }}
+                                            {% elseif activity.type == 'HISTORY' %}
+                                                {% set action_key = activity.action_type %}
+                                                {% if activity.action_type == 'UPDATE' %}
+                                                    {% if activity.field_name == 'status' %}{% set action_key = 'STATUS_CHANGE' %}
+                                                    {% elseif activity.field_name == 'priority' %}{% set action_key = 'PRIORITY_CHANGE' %}
+                                                    {% endif %}
+                                                {% endif %}
+                                                
+                                                {{ ('task.history.actions.' ~ action_key)|trans }}
+                                                
+                                                {% if activity.field_name and action_key == 'UPDATE' %}
+                                                    {{ ('task.modal.fields.' ~ activity.field_name)|trans|lower }}
+                                                {% endif %}
+                                            {% endif %}
+
+											sur <span class="font-bold text-gray-900">{{ activity.task_title }}</span>
+                                            <span class="text-[10px] font-black uppercase tracking-widest text-gray-400 block mt-1">dans {{ activity.organ_title }}</span>
 										</p>
-										<div class="flex items-center gap-2 mt-1">
-											<span class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ activity.createdAt|date('H:i') }}</span>
+										<div class="flex items-center gap-2 mt-2">
+											<span class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ activity.created_at|date('H:i') }}</span>
 											<span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md"
-											      style="background-color: {{ project_color }}1a; color: {{ project_color }}">{{ activity.fieldName ?: 'General' }}</span>
+											      style="background-color: {{ project_color }}1a; color: {{ project_color }}">{{ ('task.history.types.' ~ activity.type)|trans }}</span>
 										</div>
 									</div>
 								</div>

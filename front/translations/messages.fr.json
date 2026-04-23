@@ -179,7 +179,14 @@
             "done": "Terminé",
             "waiting": "En Attente",
             "canceled": "Annulé",
-            "no_tasks": "Aucune tâche à afficher."
+            "no_tasks": "Aucune tâche à afficher.",
+            "add_task": "Ajouter une tâche",
+            "table": {
+                "task": "Tâche",
+                "status": "Statut",
+                "priority": "Priorité",
+                "due_date": "Date d'échéance"
+            }
         },
         "permissions.categories": {
             "organ": "Gestion de l'Organ",
@@ -264,16 +271,12 @@
                 "description": "Contrôle total sur l'organ, les rôles et toutes les tâches."
             },
             "manager": {
-                "name": "Gestionnaire",
-                "description": "Gère les tâches et les membres, mais pas la structure des rôles."
+                "name": "Manager",
+                "description": "Gère l'intégralité du cycle de vie des tâches, les assignations et les membres."
             },
             "participant": {
                 "name": "Participant",
                 "description": "Peut créer des tâches et gérer ses propres tickets et commentaires."
-            },
-            "developer": {
-                "name": "Développeur",
-                "description": "Focus sur l'exécution technique et la mise à jour du statut des tâches."
             },
             "reviewer": {
                 "name": "Correcteur",
@@ -290,6 +293,80 @@
             "guest": {
                 "name": "Invité",
                 "description": "Accès très restreint, uniquement en lecture seule."
+            }
+        }
+    },
+    "task": {
+        "modal": {
+            "create_title": "Créer une nouvelle tâche",
+            "edit_title": "Modifier la tâche",
+            "loading": "Chargement de la tâche...",
+            "hints": {
+                "required": "(requis)",
+                "optional": "(facultatif)"
+            },
+            "fields": {
+                "title": "Titre de la tâche",
+                "description": "Description détaillée",
+                "status": "Statut",
+                "status_message": "Message de statut",
+                "statusMessage": "Message de statut",
+                "priority": "Priorité",
+                "estimated_hours": "Temps estimé (h)",
+                "estimatedHours": "Temps estimé (h)",
+                "start_date": "Date de début",
+                "startDate": "Date de début",
+                "expires_at": "Échéance",
+                "expiresAt": "Échéance",
+                "manager": "Responsable",
+                "assignees": "Assignés",
+                "assignee": "Assignation",
+                "deletedAt": "Date de suppression",
+                "deleted_at": "Date de suppression",
+                "tags": "Étiquettes",
+                "links": "Liens utiles",
+                "dependencies": "Dépendances",
+                "attachments": "Pièces jointes"
+            },
+            "placeholders": {
+                "title": "Ex: Finaliser le design de l'accueil",
+                "description": "Expliquez ici ce qui doit être fait...",
+                "status_message": "Expliquez pourquoi le statut a changé ou donnez des précisions..."
+            },
+            "buttons": {
+                "cancel": "Annuler",
+                "save": "Enregistrer les modifications",
+                "create": "Créer la tâche",
+                "delete": "Supprimer la tâche"
+            },
+            "status_labels": {
+                "TODO": "À faire",
+                "IN_PROGRESS": "En cours",
+                "WAITING": "En attente",
+                "DONE": "Terminé",
+                "CANCELED": "Annulé"
+            }
+        },
+        "history": {
+            "title": "Historique",
+            "load_more": "Charger plus",
+            "types": {
+                "COMMENT": "Commentaire",
+                "HISTORY": "Activité",
+                "ATTACHMENT": "Fichier"
+            },
+            "actions": {
+                "CREATE": "a créé la tâche",
+                "UPDATE": "a modifié",
+                "STATUS_CHANGE": "a changé le statut",
+                "PRIORITY_CHANGE": "a changé la priorité",
+                "COMMENT_ADD": "a ajouté un commentaire",
+                "COMMENT_CREATE": "a ajouté un commentaire",
+                "ATTACHMENT_ADD": "a ajouté une pièce jointe",
+                "LINK_ADD": "a ajouté un lien",
+                "ASSIGNEE_ADD": "a assigné la tâche à",
+                "ASSIGNEE_REMOVE": "a retiré l'assignation de",
+                "RESTORE": "a restauré"
             }
         }
     }

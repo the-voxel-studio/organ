@@ -37,34 +37,45 @@ class TaskHistoryListener
             }
         }
 
-        // 2. Handle Task updates
+        // 2. Handle updates (including restoration)
         foreach ($uow->getScheduledEntityUpdates() as $entity) {
+            $task = null;
+            $fieldName = null;
+
             if ($entity instanceof Task) {
+                $task = $entity;
+                $fieldName = null;
+            } elseif ($entity instanceof \App\Entity\TaskLink) {
+                $task = $entity->getTask();
+                $fieldName = 'link';
+            } elseif ($entity instanceof \App\Entity\TaskAttachment) {
+                $task = $entity->getTask();
+                $fieldName = 'attachment';
+            }
+
+            if ($task) {
                 $changeset = $uow->getEntityChangeSet($entity);
-                foreach ($changeset as $field => $values) {
-                    // Skip technical fields
-                    if (in_array($field, ['updatedAt', 'id', 'uuid'], true)) continue;
+                
+                // Handle Restoration specifically
+                if (isset($changeset['deletedAt'])) {
+                    $oldDeletedAt = $changeset['deletedAt'][0];
+                    $newDeletedAt = $changeset['deletedAt'][1];
 
-                    $old = $this->formatValue($values[0]);
-                    $new = $this->formatValue($values[1]);
-
-                    $action = ($field === 'deletedAt' && $values[1] !== null) ? 'DELETE' : 'UPDATE';
-                    
-                    $this->createHistory($entity, $action, $field, $old, $new, $currentUser, $em);
+                    // Transition from deleted to active = RESTORE
+                    if ($oldDeletedAt !== null && $newDeletedAt === null) {
+                        $this->createHistory($task, 'RESTORE', $fieldName, null, null, $currentUser, $em);
+                    }
                 }
-            }
-            if ($entity instanceof TaskAssignee && isset($uow->getEntityChangeSet($entity)['deletedAt'])) {
-                $cs = $uow->getEntityChangeSet($entity);
-                if ($cs['deletedAt'][1] !== null) {
-                    $this->createHistory($entity->getTask(), 'ASSIGNEE_REMOVE', 'assignee', $entity->getUser()->getUuid(), null, $currentUser, $em);
-                }
-            }
-        }
 
-        // 3. Handle TaskAssignee removals (Hard delete fallback)
-        foreach ($uow->getScheduledEntityDeletions() as $entity) {
-            if ($entity instanceof TaskAssignee) {
-                $this->createHistory($entity->getTask(), 'ASSIGNEE_REMOVE', 'assignee', $entity->getUser()->getUuid(), null, $currentUser, $em);
+                // Handle other fields for Task only
+                if ($entity instanceof Task) {
+                    foreach ($changeset as $field => $values) {
+                        if (in_array($field, ['updatedAt', 'id', 'uuid', 'deletedAt'], true)) continue;
+                        $old = $this->formatValue($values[0]);
+                        $new = $this->formatValue($values[1]);
+                        $this->createHistory($task, 'UPDATE', $field, $old, $new, $currentUser, $em);
+                    }
+                }
             }
         }
     }

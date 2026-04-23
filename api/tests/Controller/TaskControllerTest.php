@@ -141,7 +141,102 @@ class TaskControllerTest extends ApiTestCase
         $this->assertEquals('Restored and Updated', $this->getResponseContent($client)['title']);
         }
 
-        public function testGetTaskTimelineSqlSuccess(): void
+        public function testTaskFullLifeCycleWithAllFields(): void
+    {
+        $client = static::createClient();
+        $user = UserFactory::createOne();
+        $project = ProjectFactory::createOne();
+        ProjectMemberFactory::createOne([
+            'user' => $user, 
+            'project' => $project,
+            'globalRole' => ProjectGlobalRole::ADMIN
+        ]);
+        $organ = OrganFactory::createOne(['project' => $project]);
+
+        $this->login($client, $user);
+        
+        $startDate = '2026-05-01T10:00:00';
+        $expiresAt = '2026-06-01T18:00:00';
+
+        // 1. Create with all fields
+        $client->request('POST', sprintf('/api/projects/%s/organs/%s/tasks', $project->getUuid(), $organ->getUuid()), [], [], [], json_encode([
+            'title' => 'Full Field Task',
+            'description' => 'A detailed description',
+            'status' => TaskStatus::IN_PROGRESS->value,
+            'statusMessage' => 'Starting now',
+            'priority' => 3,
+            'estimatedHours' => '12.5',
+            'startDate' => $startDate,
+            'expiresAt' => $expiresAt
+        ]));
+
+        $this->assertResponseStatusCodeSame(201);
+        $data = $this->getResponseContent($client);
+        
+        $this->assertEquals('Full Field Task', $data['title']);
+        $this->assertEquals('A detailed description', $data['description']);
+        $this->assertEquals(TaskStatus::IN_PROGRESS->value, $data['status']);
+        $this->assertEquals('Starting now', $data['statusMessage']);
+        $this->assertEquals(3, $data['priority']);
+        $this->assertEquals('12.5', $data['estimatedHours']);
+        $this->assertStringContainsString('2026-05-01T10:00:00', $data['startDate']);
+        $this->assertStringContainsString('2026-06-01T18:00:00', $data['expiresAt']);
+
+        $taskUuid = $data['uuid'];
+
+        // 2. Update to nullify some fields
+        $client->request('PATCH', sprintf('/api/projects/%s/organs/%s/tasks/%s', $project->getUuid(), $organ->getUuid(), $taskUuid), [], [], [], json_encode([
+            'description' => '',
+            'statusMessage' => '',
+            'estimatedHours' => '',
+            'startDate' => '',
+            'expiresAt' => ''
+        ]));
+
+        $this->assertResponseIsSuccessful();
+        $data = $this->getResponseContent($client);
+
+        $this->assertNull($data['description']);
+        $this->assertNull($data['statusMessage']);
+        $this->assertNull($data['estimatedHours']);
+        $this->assertNull($data['startDate']);
+        $this->assertNull($data['expiresAt']);
+    }
+
+    public function testCreateTaskWithStagedResources(): void
+    {
+        $client = static::createClient();
+        $user = UserFactory::createOne();
+        $otherUser = UserFactory::createOne();
+        $project = ProjectFactory::createOne();
+        ProjectMemberFactory::createOne([
+            'user' => $user, 
+            'project' => $project,
+            'globalRole' => ProjectGlobalRole::ADMIN
+        ]);
+        $tag = \App\Factory\TagFactory::createOne(['project' => $project]);
+        $organ = OrganFactory::createOne(['project' => $project]);
+
+        $this->login($client, $user);
+        
+        $client->request('POST', sprintf('/api/projects/%s/organs/%s/tasks', $project->getUuid(), $organ->getUuid()), [], [], [], json_encode([
+            'title' => 'Staged Task',
+            'assigneeUuids' => [$otherUser->getUuid()],
+            'tagUuids' => [$tag->getUuid()],
+            'linkData' => [['url' => 'https://google.com', 'description' => 'Search']]
+        ]));
+
+        $this->assertResponseStatusCodeSame(201);
+        $data = $this->getResponseContent($client);
+        
+        $this->assertCount(1, $data['assignees']);
+        $this->assertCount(1, $data['tags']);
+        $this->assertCount(1, $data['links']);
+        $this->assertEquals($otherUser->getUuid(), $data['assignees'][0]['uuid']);
+        $this->assertEquals($tag->getUuid(), $data['tags'][0]['uuid']);
+    }
+
+    public function testGetTaskTimelineSqlSuccess(): void
         {
         $client = static::createClient();
         $user = UserFactory::createOne();

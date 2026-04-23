@@ -6,8 +6,12 @@ namespace App\Controller;
 
 use App\Entity\Organ;
 use App\Entity\Project;
+use App\Entity\Tag;
 use App\Entity\Task;
 use App\Entity\TaskAssignee;
+use App\Entity\TaskDependency;
+use App\Entity\TaskLink;
+use App\Entity\TaskTag;
 use App\Entity\User;
 use App\Enum\TaskStatus;
 use App\Service\OrganPermissionService;
@@ -138,9 +142,30 @@ class TaskController extends AbstractController
         $task->setCreatedBy($user);
         $task->setTitle($data['title']);
         $task->setDescription($data['description'] ?? null);
-        $task->setPriority($data['priority'] ?? 1);
+        $task->setPriority((int)($data['priority'] ?? 1));
         
-        if (isset($data['managerUuid'])) {
+        if (isset($data['status'])) {
+            $status = TaskStatus::tryFrom($data['status']);
+            if ($status) $task->setStatus($status);
+        }
+
+        if (isset($data['statusMessage'])) {
+            $task->setStatusMessage(empty($data['statusMessage']) ? null : $data['statusMessage']);
+        }
+
+        if (isset($data['estimatedHours'])) {
+            $task->setEstimatedHours(empty($data['estimatedHours']) ? null : (string)$data['estimatedHours']);
+        }
+
+        if (!empty($data['startDate'])) {
+            $task->setStartDate(new \DateTime($data['startDate']));
+        }
+
+        if (!empty($data['expiresAt'])) {
+            $task->setExpiresAt(new \DateTime($data['expiresAt']));
+        }
+        
+        if (!empty($data['managerUuid'])) {
             $manager = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $data['managerUuid']]);
             if ($manager) $task->setManager($manager);
         }
@@ -151,6 +176,59 @@ class TaskController extends AbstractController
         }
 
         $entityManager->persist($task);
+
+        // Handle Assignees during creation
+        if (!empty($data['assigneeUuids']) && is_array($data['assigneeUuids'])) {
+            foreach ($data['assigneeUuids'] as $userUuid) {
+                $assigneeUser = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $userUuid, 'deletedAt' => null]);
+                if ($assigneeUser) {
+                    $assignee = new TaskAssignee();
+                    $assignee->setTask($task);
+                    $assignee->setUser($assigneeUser);
+                    $entityManager->persist($assignee);
+                }
+            }
+        }
+
+        // Handle Tags during creation
+        if (!empty($data['tagUuids']) && is_array($data['tagUuids'])) {
+            foreach ($data['tagUuids'] as $tagUuid) {
+                $tag = $entityManager->getRepository(\App\Entity\Tag::class)->findOneBy(['uuid' => $tagUuid, 'project' => $project, 'deletedAt' => null]);
+                if ($tag) {
+                    $taskTag = new \App\Entity\TaskTag();
+                    $taskTag->setTask($task);
+                    $taskTag->setTag($tag);
+                    $entityManager->persist($taskTag);
+                }
+            }
+        }
+
+        // Handle Dependencies during creation
+        if (!empty($data['dependencyUuids']) && is_array($data['dependencyUuids'])) {
+            foreach ($data['dependencyUuids'] as $depUuid) {
+                $depTask = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $depUuid, 'organ' => $organ, 'deletedAt' => null]);
+                if ($depTask && $depTask !== $task) {
+                    $dep = new TaskDependency();
+                    $dep->setTask($task);
+                    $dep->setDependsOnTask($depTask);
+                    $entityManager->persist($dep);
+                }
+            }
+        }
+
+        // Handle Links during creation
+        if (!empty($data['linkData']) && is_array($data['linkData'])) {
+            foreach ($data['linkData'] as $linkItem) {
+                if (!empty($linkItem['url'])) {
+                    $link = new TaskLink();
+                    $link->setTask($task);
+                    $link->setUrl($linkItem['url']);
+                    $link->setDescription($linkItem['description'] ?? null);
+                    $entityManager->persist($link);
+                }
+            }
+        }
+
         $entityManager->flush();
 
         // Invalidate list cache
@@ -160,11 +238,18 @@ class TaskController extends AbstractController
     }
 
     #[Route('/{taskUuid}', name: 'show', methods: ['GET'])]
-    public function show(string $projectUuid, string $organUuid, string $taskUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function show(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
-        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+        
+        $showTrashed = $request->query->getBoolean('trashed', false);
+        $criteria = ['uuid' => $taskUuid, 'organ' => $organ];
+        if (!$showTrashed) {
+            $criteria['deletedAt'] = null;
+        }
+        
+        $task = $entityManager->getRepository(Task::class)->findOneBy($criteria);
 
         if (!$task) {
             return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
@@ -216,6 +301,13 @@ class TaskController extends AbstractController
             $task->setStatus($status);
         }
 
+        if (isset($data['statusMessage'])) {
+            if (!$this->taskService->can($user, $task, 'TASK_STATUS_CHANGE')) {
+                return $this->json(['message' => 'Permission denied to change status message'], Response::HTTP_FORBIDDEN);
+            }
+            $task->setStatusMessage(empty($data['statusMessage']) ? null : $data['statusMessage']);
+        }
+
         if (isset($data['priority'])) {
             if (!$this->taskService->canEditField($user, $task, 'priority')) {
                 return $this->json(['message' => 'Permission denied to change priority'], Response::HTTP_FORBIDDEN);
@@ -223,19 +315,35 @@ class TaskController extends AbstractController
             $task->setPriority((int)$data['priority']);
         }
 
-        if (isset($data['expiresAt']) || isset($data['startDate'])) {
+        if (array_key_exists('startDate', $data) || array_key_exists('expiresAt', $data)) {
             if (!$this->taskService->canEditField($user, $task, 'expiresAt')) {
                 return $this->json(['message' => 'Permission denied to manage dates'], Response::HTTP_FORBIDDEN);
             }
-            if (isset($data['startDate'])) $task->setStartDate(new \DateTime($data['startDate']));
-            if (isset($data['expiresAt'])) $task->setExpiresAt(new \DateTime($data['expiresAt']));
+            if (array_key_exists('startDate', $data)) {
+                $task->setStartDate(empty($data['startDate']) ? null : new \DateTime($data['startDate']));
+            }
+            if (array_key_exists('expiresAt', $data)) {
+                $task->setExpiresAt(empty($data['expiresAt']) ? null : new \DateTime($data['expiresAt']));
+            }
         }
 
         if (isset($data['estimatedHours'])) {
             if (!$this->taskService->canEditField($user, $task, 'estimatedHours')) {
                 return $this->json(['message' => 'Permission denied to manage estimates'], Response::HTTP_FORBIDDEN);
             }
-            $task->setEstimatedHours((string)$data['estimatedHours']);
+            $task->setEstimatedHours(empty($data['estimatedHours']) ? null : (string)$data['estimatedHours']);
+        }
+
+        if (array_key_exists('managerUuid', $data)) {
+            if (!$this->taskService->canEditField($user, $task, 'manager')) {
+                return $this->json(['message' => 'Permission denied to change manager'], Response::HTTP_FORBIDDEN);
+            }
+            if (empty($data['managerUuid'])) {
+                $task->setManager(null);
+            } else {
+                $manager = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $data['managerUuid']]);
+                if ($manager) $task->setManager($manager);
+            }
         }
 
         if (isset($data['title'])) {
@@ -249,7 +357,7 @@ class TaskController extends AbstractController
             if (!$this->taskService->canEditField($user, $task, 'description')) {
                 return $this->json(['message' => 'Permission denied to change description'], Response::HTTP_FORBIDDEN);
             }
-            $task->setDescription($data['description']);
+            $task->setDescription(empty($data['description']) ? null : $data['description']);
         }
 
         $task->setUpdatedAt(new \DateTime());
@@ -263,11 +371,18 @@ class TaskController extends AbstractController
     }
 
     #[Route('/{taskUuid}', name: 'delete', methods: ['DELETE'])]
-    public function delete(string $projectUuid, string $organUuid, string $taskUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function delete(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
-        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
+        
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        $criteria = ['uuid' => $taskUuid, 'organ' => $organ];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+
+        $task = $entityManager->getRepository(Task::class)->findOneBy($criteria);
 
         if (!$task) {
             return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
@@ -275,18 +390,25 @@ class TaskController extends AbstractController
 
         /** @var User $user */
         $user = $this->getUser();
-        if (!$this->taskService->can($user, $task, 'TASK_DELETE')) {
+        
+        $action = $isPermanent ? 'TASK_HARD_DELETE' : 'TASK_DELETE';
+        if (!$this->taskService->can($user, $task, $action)) {
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $task->setDeletedAt(new \DateTime());
+        if ($isPermanent) {
+            $entityManager->remove($task);
+        } else {
+            $task->setDeletedAt(new \DateTime());
+        }
+        
         $entityManager->flush();
 
         // Invalidate cache
         $this->taskCacheService->invalidateSummary($taskUuid);
         $this->taskCacheService->invalidateList($organUuid);
 
-        return $this->json(['message' => 'Task deleted successfully']);
+        return $this->json(['message' => $isPermanent ? 'Task permanently deleted' : 'Task deleted successfully']);
     }
 
     #[Route('/{taskUuid}/restore', name: 'restore', methods: ['POST'])]
@@ -337,7 +459,8 @@ class TaskController extends AbstractController
         $actions = [];
         $checkActions = [
             'TASK_EDIT' => 'edit',
-            'TASK_DELETE' => 'delete',
+            'TASK_DELETE' => 'delete_task',
+            'TASK_HARD_DELETE' => 'hard_delete_task',
             'TASK_STATUS_CHANGE' => 'change_status',
             'TASK_PRIORITY_CHANGE' => 'change_priority',
             'TASK_DATES_MANAGE' => 'manage_dates',
@@ -346,8 +469,13 @@ class TaskController extends AbstractController
             'TASK_ASSIGN_SELF' => 'assign_self',
             'TASK_VALIDATE' => 'validate',
             'COMMENT_CREATE' => 'add_comment',
+            'COMMENT_DELETE' => 'delete_comment',
+            'COMMENT_HARD_DELETE' => 'hard_delete_comment',
             'ATTACHMENT_ADD' => 'add_attachment',
+            'ATTACHMENT_DELETE' => 'delete_attachment',
+            'ATTACHMENT_HARD_DELETE' => 'hard_delete_attachment',
             'TASK_LINK_MANAGE' => 'manage_links',
+            'TASK_LINK_HARD_DELETE' => 'hard_delete_link',
             'TASK_TAG_MANAGE' => 'manage_tags',
             'TASK_DEPENDENCY_MANAGE' => 'manage_dependencies',
         ];
@@ -376,7 +504,7 @@ class TaskController extends AbstractController
     }
 
     #[Route('/{taskUuid}/timeline', name: 'timeline', methods: ['GET'])]
-    public function timeline(string $projectUuid, string $organUuid, string $taskUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function timeline(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
@@ -390,43 +518,86 @@ class TaskController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        /*
-        // VERSION SYMFONY PROPRE (ORM) :
-        $comments = $task->getComments();
-        $history = $task->getTaskHistories();
-        $attachments = $task->getTaskAttachments();
-        // fusionner et trier en PHP...
-        */
+        $offset = $request->query->getInt('offset', 0);
+        $limit = $request->query->getInt('limit', 10);
 
         // VERSION SQL PURE (SI40 PRE-REQUIS : UNION + JOIN par UUID) :
         $conn = $entityManager->getConnection();
         $sql = "
-            SELECT 'COMMENT' as type, tc.content as detail, tc.created_at 
+            SELECT 
+                'COMMENT' as type, 
+                tc.content as detail, 
+                tc.created_at, 
+                NULL as field_name, 
+                NULL as action_type, 
+                NULL as old_value, 
+                NULL as new_value,
+                u.first_name,
+                u.last_name,
+                NULL as target_first_name,
+                NULL as target_last_name
             FROM task_comments tc
             JOIN tasks t ON tc.task_id = t.id
+            JOIN users u ON tc.user_id = u.id
             WHERE t.uuid = :taskUuid AND tc.deleted_at IS NULL
-            
+
             UNION ALL
-            
-            SELECT 'HISTORY' as type, CONCAT(th.action_type, ' ', COALESCE(th.field_name, '')) as detail, th.created_at 
+
+            SELECT 
+                'HISTORY' as type, 
+                NULL as detail, 
+                th.created_at, 
+                th.field_name, 
+                th.action_type, 
+                th.old_value, 
+                th.new_value,
+                u.first_name,
+                u.last_name,
+                tu.first_name as target_first_name,
+                tu.last_name as target_last_name
             FROM task_history th
             JOIN tasks t ON th.task_id = t.id
-            WHERE t.uuid = :taskUuid
-            
+            LEFT JOIN users u ON th.user_id = u.id
+            LEFT JOIN users tu ON (
+                (th.action_type = 'ASSIGNEE_ADD' AND th.new_value = tu.uuid) OR
+                (th.action_type = 'ASSIGNEE_REMOVE' AND th.old_value = tu.uuid)
+            )
+            WHERE t.uuid = :taskUuid AND th.action_type NOT IN ('DELETE', 'ASSIGNEE_REMOVE')
+
             UNION ALL
-            
-            SELECT 'ATTACHMENT' as type, ta.file_name as detail, ta.created_at 
+
+            SELECT 
+                'ATTACHMENT' as type, 
+                ta.file_name as detail, 
+                ta.created_at, 
+                NULL as field_name, 
+                NULL as action_type, 
+                NULL as old_value, 
+                NULL as new_value,
+                u.first_name,
+                u.last_name,
+                NULL as target_first_name,
+                NULL as target_last_name
             FROM task_attachments ta
             JOIN tasks t ON ta.task_id = t.id
+            LEFT JOIN users u ON ta.uploaded_by = u.id
             WHERE t.uuid = :taskUuid AND ta.deleted_at IS NULL
-            
+
             ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
         ";
 
-        $resultSet = $conn->executeQuery($sql, ['taskUuid' => $taskUuid]);
+        $resultSet = $conn->executeQuery($sql, [
+            'taskUuid' => $taskUuid,
+            'limit' => $limit,
+            'offset' => $offset
+        ], [
+            'limit' => 'integer',
+            'offset' => 'integer'
+        ]);
+
         return $this->json($resultSet->fetchAllAssociative());
     }
-
     #[Route('/{taskUuid}/assignees', name: 'add_assignee', methods: ['POST'])]
     public function addAssignee(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -477,5 +648,40 @@ class TaskController extends AbstractController
         $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(['message' => 'User assigned successfully']);
+    }
+
+    #[Route('/{taskUuid}/assignees/{userUuid}', name: 'remove_assignee', methods: ['DELETE'])]
+    public function removeAssignee(string $projectUuid, string $organUuid, string $taskUuid, string $userUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+        $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ]);
+
+        if (!$task) return $this->json(['message' => 'Task not found'], Response::HTTP_NOT_FOUND);
+
+        /** @var User $currentUser */
+        $currentUser = $this->getUser();
+        $targetUser = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $userUuid]);
+
+        if (!$targetUser) return $this->json(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+
+        $isSelf = ($targetUser === $currentUser);
+        $action = $isSelf ? 'TASK_ASSIGN_SELF' : 'TASK_ASSIGN_OTHERS';
+
+        if (!$this->taskService->can($currentUser, $task, $action)) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $assignee = $entityManager->getRepository(TaskAssignee::class)->findOneBy(['task' => $task, 'user' => $targetUser, 'deletedAt' => null]);
+        if ($assignee) {
+            $assignee->setDeletedAt(new \DateTime());
+            $entityManager->flush();
+            
+            // Invalidate cache
+            $this->taskCacheService->invalidateSummary($taskUuid);
+            $this->taskCacheService->invalidateList($organUuid);
+        }
+
+        return $this->json(null, Response::HTTP_NO_CONTENT);
     }
 }

@@ -48,7 +48,7 @@ export default class extends Controller {
                 name: trans('organ.role_presets.manager.name'),
                 iconData: '📂',
                 description: trans('organ.role_presets.manager.description'),
-                permissions: this.availablePermissionsValue.map(p => p.name).filter(p => !['ORGAN_MANAGE_ROLES', 'ORGAN_MANAGE_MEMBERS'].includes(p))
+                permissions: this.availablePermissionsValue.map(p => p.name).filter(p => !['ORGAN_MANAGE_ROLES'].includes(p))
             },
             participant: {
                 name: trans('organ.role_presets.participant.name'),
@@ -60,18 +60,6 @@ export default class extends Controller {
                     'TASK_DATES_MANAGE_OWN', 'TASK_ESTIMATE_MANAGE_OWN', 'TASK_ASSIGN_SELF', 
                     'TASK_LINK_MANAGE_OWN', 'TASK_TAG_MANAGE_OWN', 'TASK_DEPENDENCY_MANAGE_OWN',
                     'COMMENT_CREATE', 'COMMENT_EDIT_OWN', 'COMMENT_DELETE_OWN', 
-                    'ATTACHMENT_ADD', 'ATTACHMENT_DELETE_OWN'
-                ]
-            },
-            developer: {
-                name: trans('organ.role_presets.developer.name'),
-                iconData: '⚙️',
-                description: trans('organ.role_presets.developer.description'),
-                permissions: [
-                    'ORGAN_VIEW', 
-                    'TASK_EDIT_OWN', 'TASK_STATUS_CHANGE_OWN', 'TASK_ESTIMATE_MANAGE_OWN', 'TASK_ASSIGN_SELF', 
-                    'TASK_TAG_MANAGE_OWN', 'TASK_DEPENDENCY_MANAGE_OWN',
-                    'COMMENT_CREATE', 'COMMENT_EDIT_OWN', 
                     'ATTACHMENT_ADD', 'ATTACHMENT_DELETE_OWN'
                 ]
             },
@@ -224,13 +212,13 @@ export default class extends Controller {
         const newRole = {
             id: 'role-' + Date.now() + Math.random(),
             name: preset.name,
+            description: preset.description,
             iconType: 'EMOJI',
             iconData: preset.iconData,
             permissions: [...preset.permissions]
         };
-        
-        this.roles.push(newRole);
-        this.renderRoles();
+
+        this.roles.push(newRole);        this.renderRoles();
         this.renderMembers();
         
         // Remove focus immediately
@@ -450,16 +438,19 @@ export default class extends Controller {
 
         this.roleListTarget.innerHTML = this.roles.map(role => `
             <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between group">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-xl">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-xl shrink-0">
                         ${role.iconData || '👤'}
                     </div>
-                    <div>
-                        <p class="font-bold text-gray-900">${role.name}</p>
-                        <p class="text-[10px] text-gray-400 uppercase font-black">${role.permissions.length} permissions</p>
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-900 truncate">${role.name}</p>
+                        <div class="flex items-center gap-2">
+                            <p class="text-[10px] text-gray-400 uppercase font-black shrink-0">${role.permissions.length} permissions</p>
+                            ${role.description ? `<span class="text-gray-300">•</span><p class="text-[10px] text-gray-400 font-medium italic truncate" title="${role.description}">${role.description}</p>` : ''}
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 shrink-0 ml-4">
                     <button type="button" data-action="click->organ-create#openRoleConfig" data-id="${role.id}"
                             class="p-2 text-gray-400 transition-colors cursor-pointer hover:opacity-80"
                             style="color: ${projectColor}">
@@ -591,10 +582,14 @@ export default class extends Controller {
             : this.customColorPickerTarget.value;
         
         let iconType = this.iconMode;
-        let iconData = '';
-        if (this.iconMode === 'SVG') iconData = this.customSvgInputTarget.value.trim();
-        else if (this.iconMode === 'EMOJI') iconData = this.emojiInputTarget.value || '🚀';
-        else if (this.iconMode === 'BLOB') iconData = this.imagePreviewTarget.src;
+        let iconData = null;
+        if (this.iconMode === 'SVG') {
+            iconData = this.customSvgInputTarget.value.trim() || null;
+        } else if (this.iconMode === 'EMOJI') {
+            iconData = this.emojiInputTarget.value.trim() || null;
+        } else if (this.iconMode === 'BLOB') {
+            iconData = this.imagePreviewTarget.classList.contains('hidden') ? null : (this.imagePreviewTarget.src || null);
+        }
 
         const isEdit = !!(this.hasOrganValue && this.organValue && this.organValue.uuid);
         const organUuid = isEdit ? this.organValue.uuid : null;

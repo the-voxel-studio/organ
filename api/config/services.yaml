@@ -9,6 +9,7 @@
 parameters:
     notification_base_url: '%env(resolve:NOTIFICATION_BASE_URL)%'
     google_client_id: '%env(resolve:GOOGLE_CLIENT_ID)%'
+    google_client_secret: '%env(resolve:GOOGLE_CLIENT_SECRET)%'
 
 services:
     # default configuration for services in *this* file
@@ -25,6 +26,11 @@ services:
         arguments:
             $googleClientId: '%google_client_id%'
 
+    App\Service\GoogleDriveService:
+        arguments:
+            $googleClientId: '%google_client_id%'
+            $googleClientSecret: '%google_client_secret%'
+
     App\Service\NotificationService:
         arguments:
             $baseUrl: '%notification_base_url%'
@@ -39,6 +45,3 @@ services:
     App\EventListener\JWTDecodedListener:
         tags:
             - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_decoded, method: onJWTDecoded }
-
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones

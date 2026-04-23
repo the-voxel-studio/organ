@@ -19,7 +19,9 @@ class ProjectController extends AbstractController
     public function new(#[Target('api.client')] HttpClientInterface $apiClient, RequestStack $requestStack): Response
     {
         return $this->render('project/create.html.twig', [
-            'projects' => $this->getSidebarProjects($apiClient, $requestStack)
+            'projects' => $this->getSidebarProjects($apiClient, $requestStack),
+            'googleClientId' => $this->getParameter('google_client_id'),
+            'role' => 'ADMIN'
         ]);
     }
 
@@ -204,7 +206,9 @@ class ProjectController extends AbstractController
                 'project' => $projectData['project'],
                 'members' => $projectData['members'] ?? [],
                 'invitations' => $invitations,
-                'projects' => $this->getSidebarProjects($apiClient, $requestStack)
+                'projects' => $this->getSidebarProjects($apiClient, $requestStack),
+                'googleClientId' => $this->getParameter('google_client_id'),
+                'role' => $projectData['project']['role'] ?? ''
             ]);
         } catch (\Exception $e) {
             return $this->redirectToRoute('app_dashboard');

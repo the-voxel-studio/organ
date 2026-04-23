@@ -24,12 +24,8 @@ window.fetch = async (...args) => {
             if (!isRefreshing) {
                 isRefreshing = true;
                 
-                // Determine the API base URL from the failing request
-                let apiBase = 'http://localhost:8001/api';
-                if (url.startsWith('http')) {
-                    const urlObj = new URL(url);
-                    apiBase = `${urlObj.protocol}//${urlObj.host}/api`;
-                }
+                // Use relative path for proxy
+                const apiBase = '/api';
 
                 refreshPromise = originalFetch(`${apiBase}/auth/refresh`, {
                     method: 'POST',

@@ -32,8 +32,8 @@ class TaskAttachment
     #[ORM\Column(length: 500)]
     private ?string $filePath = null;
 
-    #[ORM\Column]
-    private ?int $fileSize = null;
+    #[ORM\Column(type: Types::BIGINT)]
+    private ?string $fileSize = null;
 
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $fileType = null;
@@ -43,6 +43,9 @@ class TaskAttachment
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $deletedAt = null;
+
+    #[ORM\Column(type: Types::BLOB, nullable: true, options: ["columnDefinition" => "LONGBLOB"])]
+    private $fileContent = null;
 
     public function __construct()
     {
@@ -115,12 +118,12 @@ class TaskAttachment
         return $this;
     }
 
-    public function getFileSize(): ?int
+    public function getFileSize(): ?string
     {
         return $this->fileSize;
     }
 
-    public function setFileSize(int $fileSize): static
+    public function setFileSize(string $fileSize): static
     {
         $this->fileSize = $fileSize;
 
@@ -159,6 +162,18 @@ class TaskAttachment
     public function setDeletedAt(?\DateTimeInterface $deletedAt): static
     {
         $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
+
+    public function getFileContent()
+    {
+        return $this->fileContent;
+    }
+
+    public function setFileContent($fileContent): static
+    {
+        $this->fileContent = $fileContent;
 
         return $this;
     }

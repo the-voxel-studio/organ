@@ -23,7 +23,7 @@ export default class extends Controller {
 
     async loadTags() {
         try {
-            const response = await fetch(`http://localhost:8001/api/projects/${this.projectUuidValue}/tags`, {
+            const response = await fetch(`/api/projects/${this.projectUuidValue}/tags`, {
                 credentials: 'include'
             });
             if (response.ok) {
@@ -105,8 +105,8 @@ export default class extends Controller {
         try {
             const method = this.editingUuid ? 'PUT' : 'POST';
             const endpoint = this.editingUuid 
-                ? `http://localhost:8001/api/projects/${this.projectUuidValue}/tags/${this.editingUuid}`
-                : `http://localhost:8001/api/projects/${this.projectUuidValue}/tags`;
+                ? `/api/projects/${this.projectUuidValue}/tags/${this.editingUuid}`
+                : `/api/projects/${this.projectUuidValue}/tags`;
 
             const response = await fetch(endpoint, {
                 method: method,
@@ -133,7 +133,7 @@ export default class extends Controller {
         if (!confirm(trans('project.show.delete_tag_confirm'))) return;
 
         try {
-            const response = await fetch(`http://localhost:8001/api/projects/${this.projectUuidValue}/tags/${tagUuid}`, {
+            const response = await fetch(`/api/projects/${this.projectUuidValue}/tags/${tagUuid}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });

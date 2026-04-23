@@ -155,16 +155,23 @@ class TaskDependencyController extends AbstractController
     }
 
     #[Route('/{targetTaskUuid}', name: 'remove', methods: ['DELETE'])]
-    public function remove(string $projectUuid, string $organUuid, string $taskUuid, string $targetTaskUuid, EntityManagerInterface $entityManager): JsonResponse
+    public function remove(string $projectUuid, string $organUuid, string $taskUuid, string $targetTaskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
         $task = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $taskUuid, 'organ' => $organ, 'deletedAt' => null]);
 
+        $isPermanent = $request->query->getBoolean('permanent', false);
+        
         $targetTask = $entityManager->getRepository(Task::class)->findOneBy(['uuid' => $targetTaskUuid, 'organ' => $organ]);
         if (!$targetTask) return $this->json(['message' => 'Target task not found'], Response::HTTP_NOT_FOUND);
 
-        $dep = $entityManager->getRepository(TaskDependency::class)->findOneBy(['task' => $task, 'dependsOnTask' => $targetTask, 'deletedAt' => null]);
+        $criteria = ['task' => $task, 'dependsOnTask' => $targetTask];
+        if (!$isPermanent) {
+            $criteria['deletedAt'] = null;
+        }
+
+        $dep = $entityManager->getRepository(TaskDependency::class)->findOneBy($criteria);
 
         if (!$dep) return $this->json(['message' => 'Dependency not found'], Response::HTTP_NOT_FOUND);
 
@@ -174,7 +181,12 @@ class TaskDependencyController extends AbstractController
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
-        $dep->setDeletedAt(new \DateTime());
+        if ($isPermanent) {
+            $entityManager->remove($dep);
+        } else {
+            $dep->setDeletedAt(new \DateTime());
+        }
+        
         $entityManager->flush();
 
         return $this->json(null, Response::HTTP_NO_CONTENT);

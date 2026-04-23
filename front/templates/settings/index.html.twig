@@ -10,7 +10,7 @@
 {% endblock %}
 
 {% block content %}
-	<div data-controller="settings google-auth" data-settings-api-url-value="http://localhost:8001/api/users/me" data-settings-connections-url-value="http://localhost:8001/api/users/me/connections" data-google-auth-client-id-value="{{ google_client_id }}" data-google-auth-login-url-value="http://localhost:8001/api/users/me/link-google" data-google-auth-redirect-url-value="{{ path('app_settings') }}" data-google-auth-mode-value="link" data-action="google-auth:error->settings#showErrorFromEvent">
+	<div data-controller="settings google-auth" data-settings-api-url-value="/api/users/me" data-settings-connections-url-value="/api/users/me/connections" data-google-auth-client-id-value="{{ google_client_id }}" data-google-auth-login-url-value="/api/users/me/link-google" data-google-auth-redirect-url-value="{{ path('app_settings') }}" data-google-auth-mode-value="link" data-action="google-auth:error->settings#showErrorFromEvent">
 
 		<div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
 			<header class="mb-10">
