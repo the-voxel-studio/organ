@@ -51,20 +51,27 @@
 								</thead>
 								<tbody class="divide-y divide-gray-50">
 									{% for task in tasks %}
-										<tr class="group hover:bg-gray-50 transition-colors">
+										<tr class="group hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location.href='{{ path('app_organ_show', {projectUuid: task.projectUuid, organUuid: task.organUuid}) }}#task-{{ task.uuid }}'">
 											<td class="py-5 px-4">
 												<div class="flex items-center gap-3">
-													<div class="w-2 h-2 rounded-full {% if task.priority > 1 %}bg-red-500 animate-pulse{% else %}bg-bubblegum{% endif %}"></div>
-													<span class="font-bold text-gray-900">{{ task.title }}</span>
+													<div class="flex items-center justify-center w-6 h-6 rounded-lg text-[10px] font-black {% if task.priority >= 4 %}bg-red-500 text-white animate-pulse{% elseif task.priority == 3 %}bg-amber-400 text-white{% else %}bg-gray-100 text-gray-500{% endif %}">
+														{{ task.priority }}
+													</div>
+													<span class="font-bold text-gray-900 group-hover:text-highlight transition-colors">{{ task.title }}</span>
 												</div>
 											</td>
 											<td class="py-5 px-4 text-sm font-medium text-gray-500">
 												{{ task.expiresAt ? task.expiresAt|date('d/m/Y') : '-' }}
 											</td>
 											<td class="py-5 px-4">
-												<span class="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest rounded-lg">
-													{{ task.projectName }}
-												</span>
+												<div class="flex flex-col gap-1">
+													<span class="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest rounded-lg w-fit">
+														{{ task.projectName }}
+													</span>
+													<span class="px-3 py-1 bg-highlight/10 text-highlight text-[9px] font-bold uppercase tracking-tight rounded-lg w-fit">
+														{{ task.organName }}
+													</span>
+												</div>
 											</td>
 										</tr>
 									{% else %}

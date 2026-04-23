@@ -37,6 +37,9 @@ export default class extends Controller {
         };
         window.addEventListener('task-saved', this.onTaskSaved);
 
+        // Check for task in URL hash
+        this.checkUrlHash();
+
         // Close menu on click outside
         this.closeMenuHandler = (e) => {
             if (this.hasFilterMenuTarget && !this.filterMenuTarget.classList.contains('hidden')) {
@@ -56,6 +59,27 @@ export default class extends Controller {
         window.removeEventListener('click', this.closeMenuHandler);
         if (this.sortables) {
             this.sortables.forEach(s => s.destroy());
+        }
+    }
+
+    checkUrlHash() {
+        const hash = window.location.hash;
+        if (hash.startsWith('#task-')) {
+            const taskUuid = hash.replace('#task-', '');
+            setTimeout(() => {
+                const modalEl = document.querySelector('[data-controller~="task-modal"]');
+                if (modalEl) {
+                    const controller = this.application.getControllerForElementAndIdentifier(modalEl, 'task-modal');
+                    if (controller) {
+                        controller.openForEdit({ 
+                            currentTarget: { 
+                                dataset: { taskUuid: taskUuid } 
+                            },
+                            params: { uuid: taskUuid }
+                        });
+                    }
+                }
+            }, 500);
         }
     }
 

@@ -674,7 +674,7 @@ class TaskController extends AbstractController
 
         $assignee = $entityManager->getRepository(TaskAssignee::class)->findOneBy(['task' => $task, 'user' => $targetUser, 'deletedAt' => null]);
         if ($assignee) {
-            $assignee->setDeletedAt(new \DateTime());
+            $entityManager->remove($assignee);
             $entityManager->flush();
             
             // Invalidate cache

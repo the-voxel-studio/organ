@@ -400,7 +400,7 @@ export default class extends Controller {
             btn.dataset.userUuid = m.user.uuid;
             btn.innerHTML = `
                 <span>${m.user.firstName} ${m.user.lastName}</span>
-                <span class="opacity-0 group-hover:opacity-100 text-highlight">+</span>
+                <span class="opacity-0 group-hover:opacity-100 text-[var(--highlight-color)]">+</span>
             `;
             this.userListTarget.appendChild(btn);
         });
@@ -547,7 +547,7 @@ export default class extends Controller {
             div.className = 'flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl group';
             div.innerHTML = `
                 <div class="flex flex-col">
-                    <a href="${l.url}" target="_blank" class="text-xs font-bold text-gray-900 hover:text-highlight transition-colors flex items-center gap-2">
+                    <a href="${l.url}" target="_blank" class="text-xs font-bold text-gray-900 hover:text-[var(--highlight-color)] transition-colors flex items-center gap-2">
                         ${l.description || l.url}
                         <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                     </a>
@@ -1097,7 +1097,7 @@ export default class extends Controller {
                     <div class="flex gap-2">
                         ${canRestore ? `
                             <button data-action="click->task-modal#restoreComment" data-uuid="${c.uuid}"
-                                    class="p-2 text-highlight hover:bg-highlight/10 rounded-xl transition-all cursor-pointer" title="Restaurer">
+                                    class="p-2 text-[var(--highlight-color)] hover:bg-[var(--highlight-color)]/10 rounded-xl transition-all cursor-pointer" title="Restaurer">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l5 5m-5-5l5-5"/></svg>
                             </button>
                         ` : ''}
@@ -1163,7 +1163,7 @@ export default class extends Controller {
     renderDeletedAttachments(attachments, perms = null) {
         this.deletedAttachmentListTarget.innerHTML = '';
         if (attachments.length === 0) {
-            this.deletedAttachmentListTarget.innerHTML = '<p class="text-[10px] text-gray-300 italic p-4 text-center">Aucun fichier en corbeille.</p>';
+            this.deletedAttachmentListTarget.innerHTML = '<p class="text-[10px] text-gray-300 italic p-4 text-center col-span-2">Aucun fichier en corbeille.</p>';
             return;
         }
 
@@ -1187,7 +1187,7 @@ export default class extends Controller {
                 <div class="flex gap-2">
                     ${canRestore ? `
                         <button type="button" data-action="click->task-modal#restoreAttachment" data-uuid="${a.uuid}"
-                                class="px-3 py-1.5 bg-white border border-gray-200 text-highlight text-[9px] font-black uppercase tracking-widest rounded-lg hover:border-highlight transition-all cursor-pointer">
+                                class="px-3 py-1.5 bg-white border border-gray-200 text-[var(--highlight-color)] text-[9px] font-black uppercase tracking-widest rounded-lg hover:border-[var(--highlight-color)] transition-all cursor-pointer">
                             Restaurer
                         </button>
                     ` : ''}
@@ -1224,7 +1224,7 @@ export default class extends Controller {
                 <div class="flex gap-2">
                     ${canRestore ? `
                         <button type="button" data-action="click->task-modal#restoreLink" data-uuid="${l.uuid}"
-                                class="px-3 py-1.5 bg-white border border-gray-200 text-highlight text-[9px] font-black uppercase tracking-widest rounded-lg hover:border-highlight transition-all cursor-pointer">
+                                class="px-3 py-1.5 bg-white border border-gray-200 text-[var(--highlight-color)] text-[9px] font-black uppercase tracking-widest rounded-lg hover:border-[var(--highlight-color)] transition-all cursor-pointer">
                             Restaurer
                         </button>
                     ` : ''}
@@ -1332,16 +1332,16 @@ export default class extends Controller {
                     const downloadUrl = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/tasks/${this.taskIdValue}/attachments/${a.uuid}/download`;
                     
                     const div = document.createElement('div');
-                    div.className = `p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between group hover:border-highlight/30 transition-all ${isLarge ? 'md:col-span-2 py-6' : ''}`;
+                    div.className = `p-4 bg-white border border-gray-100 rounded-2xl flex items-center justify-between group hover:border-[var(--highlight-color)]/30 transition-all ${isLarge ? 'md:col-span-2 py-6' : ''}`;
                     
                     div.innerHTML = `
                         <div class="flex items-center gap-3 min-w-0">
-                            <div class="p-2 bg-gray-50 rounded-lg text-gray-400 group-hover:text-highlight transition-colors ${isVeryLarge ? 'bg-rose-50 text-rose-500' : ''}">
+                            <div class="p-2 bg-gray-50 rounded-lg text-gray-400 group-hover:text-[var(--highlight-color)] transition-colors ${isVeryLarge ? 'bg-rose-50 text-rose-500' : ''}">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                             </div>
                             <div class="flex flex-col min-w-0">
                                 <div class="flex items-center gap-2">
-                                    <a href="${downloadUrl}" target="_blank" class="text-xs font-bold text-gray-900 truncate max-w-[250px] hover:text-highlight transition-colors">${a.fileName}</a>
+                                    <a href="${downloadUrl}" target="_blank" class="text-xs font-bold text-gray-900 truncate max-w-[250px] hover:text-[var(--highlight-color)] transition-colors">${a.fileName}</a>
                                     ${isVeryLarge ? '<span class="px-1.5 py-0.5 bg-rose-50 text-rose-500 text-[8px] font-black uppercase rounded">Lourd</span>' : ''}
                                 </div>
                                 <div class="flex items-center gap-2">

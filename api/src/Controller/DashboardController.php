@@ -67,17 +67,19 @@ class DashboardController extends AbstractController
             JOIN projects p ON o.project_id = p.id
             JOIN project_members pm ON p.id = pm.project_id
             LEFT JOIN task_assignees ta ON t.id = ta.task_id
-            WHERE (t.manager_id = :userId OR ta.user_id = :userId)
+            WHERE (t.manager_id = :userId OR ta.user_id = :userId OR t.created_by = :userId)
             AND t.deleted_at IS NULL
+            AND t.status NOT IN ('DONE', 'CANCELED')
             AND p.deleted_at IS NULL
             AND pm.user_id = :userId
             AND pm.deleted_at IS NULL
             GROUP BY t.id
             ORDER BY 
                 t.priority DESC, 
+                (t.expires_at IS NULL) ASC,
                 t.expires_at ASC, 
-                CAST(t.estimated_hours AS DECIMAL(10,2)) DESC
-            LIMIT 10
+                t.created_at ASC
+            LIMIT 4
         ";
 
         $taskUuids = $conn->executeQuery($sql, ['userId' => $user->getId()])->fetchFirstColumn();
@@ -89,6 +91,8 @@ class DashboardController extends AbstractController
                 $taskData = $this->taskService->getTaskData($task, $this->userCacheService);
                 $taskData['projectName'] = $task->getOrgan()->getProject()->getTitle();
                 $taskData['projectUuid'] = $task->getOrgan()->getProject()->getUuid();
+                $taskData['organName'] = $task->getOrgan()->getTitle();
+                $taskData['organUuid'] = $task->getOrgan()->getUuid();
                 $tasks[] = $taskData;
             }
         }

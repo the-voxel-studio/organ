@@ -78,6 +78,13 @@ class TaskHistoryListener
                 }
             }
         }
+
+        // 3. Handle deletions (Hard Delete)
+        foreach ($uow->getScheduledEntityDeletions() as $entity) {
+            if ($entity instanceof TaskAssignee) {
+                $this->createHistory($entity->getTask(), 'ASSIGNEE_REMOVE', 'assignee', $entity->getUser()->getUuid(), null, $currentUser, $em);
+            }
+        }
     }
 
     private function createHistory(Task $task, string $action, ?string $field, ?string $old, ?string $new, ?User $user, $em): void
