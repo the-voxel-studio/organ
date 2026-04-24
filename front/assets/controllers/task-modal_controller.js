@@ -47,6 +47,9 @@ export default class extends Controller {
         
         this.loadInitialData();
 
+        this.onProjectTagsChanged = () => this.loadProjectTags();
+        window.addEventListener('project-tags-changed', this.onProjectTagsChanged);
+
         // Prevent page leave during upload
         this.beforeUnloadHandler = (e) => {
             if (this.isUploading) {
@@ -61,6 +64,7 @@ export default class extends Controller {
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
         }
+        window.removeEventListener('project-tags-changed', this.onProjectTagsChanged);
         window.removeEventListener('task-saved', this.onTaskSaved);
         window.removeEventListener('beforeunload', this.beforeUnloadHandler);
         if (this.sortables) {
@@ -81,6 +85,22 @@ export default class extends Controller {
             this.updateManagerSelect();
         } catch (e) {
             console.error("Failed to load initial modal data", e);
+        }
+    }
+
+    async loadProjectTags() {
+        try {
+            const response = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/tags`, {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                this.projectTags = await response.json();
+                if (this.isOpen && !this.tagPickerTarget.classList.contains('hidden')) {
+                    this.renderProjectTagList();
+                }
+            }
+        } catch (e) {
+            console.error("Failed to load project tags", e);
         }
     }
 
@@ -516,6 +536,7 @@ export default class extends Controller {
             if (res.ok) {
                 this.tagPickerTarget.classList.add('hidden');
                 await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
             }
         } catch (e) { console.error(e); }
     }
@@ -533,7 +554,10 @@ export default class extends Controller {
                 method: 'DELETE',
                 credentials: 'include'
             });
-            if (res.ok) await this.refreshTaskData();
+            if (res.ok) {
+                await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+            }
         } catch (e) { console.error(e); }
     }
 
@@ -588,6 +612,7 @@ export default class extends Controller {
                 this.linkDescTarget.value = '';
                 this.hideLinkForm();
                 await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
             }
         } catch (e) { console.error(e); }
     }
@@ -605,7 +630,10 @@ export default class extends Controller {
                 method: 'DELETE',
                 credentials: 'include'
             });
-            if (res.ok) await this.refreshTaskData();
+            if (res.ok) {
+                await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+            }
         } catch (e) { console.error(e); }
     }
 
@@ -660,6 +688,7 @@ export default class extends Controller {
             if (res.ok) {
                 this.commentContentTarget.value = '';
                 await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
             }
         } catch (e) { console.error(e); }
     }
@@ -848,6 +877,7 @@ export default class extends Controller {
             if (res.ok) {
                 this.dependencyPickerTarget.classList.add('hidden');
                 await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
             }
         } catch (e) { console.error(e); }
     }
@@ -865,7 +895,10 @@ export default class extends Controller {
                 method: 'DELETE',
                 credentials: 'include'
             });
-            if (res.ok) await this.refreshTaskData();
+            if (res.ok) {
+                await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+            }
         } catch (e) { console.error(e); }
     }
 
@@ -1122,7 +1155,10 @@ export default class extends Controller {
                 method: 'POST',
                 credentials: 'include'
             });
-            if (res.ok) await this.refreshTaskData();
+            if (res.ok) {
+                await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+            }
         } catch (e) { console.error(e); }
     }
 
@@ -1137,7 +1173,10 @@ export default class extends Controller {
                         method: 'DELETE',
                         credentials: 'include'
                     });
-                    if (res.ok) await this.refreshTaskData();
+                    if (res.ok) {
+                        await this.refreshTaskData();
+                        window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+                    }
                 } catch (e) { console.error(e); }
             }
         );
@@ -1154,7 +1193,10 @@ export default class extends Controller {
                         method: 'DELETE',
                         credentials: 'include'
                     });
-                    if (res.ok) await this.refreshTaskData();
+                    if (res.ok) {
+                        await this.refreshTaskData();
+                        window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+                    }
                 } catch (e) { console.error(e); }
             }
         );
@@ -1247,7 +1289,10 @@ export default class extends Controller {
                 method: 'POST',
                 credentials: 'include'
             });
-            if (res.ok) await this.refreshTaskData();
+            if (res.ok) {
+                await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+            }
         } catch (e) { console.error(e); }
     }
 
@@ -1262,7 +1307,10 @@ export default class extends Controller {
                         method: 'DELETE',
                         credentials: 'include'
                     });
-                    if (res.ok) await this.refreshTaskData();
+                    if (res.ok) {
+                        await this.refreshTaskData();
+                        window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+                    }
                 } catch (e) { console.error(e); }
             }
         );
@@ -1275,7 +1323,10 @@ export default class extends Controller {
                 method: 'POST',
                 credentials: 'include'
             });
-            if (res.ok) await this.refreshTaskData();
+            if (res.ok) {
+                await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+            }
         } catch (e) { console.error(e); }
     }
 
@@ -1290,7 +1341,10 @@ export default class extends Controller {
                         method: 'DELETE',
                         credentials: 'include'
                     });
-                    if (res.ok) await this.refreshTaskData();
+                    if (res.ok) {
+                        await this.refreshTaskData();
+                        window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+                    }
                 } catch (e) { console.error(e); }
             }
         );
@@ -1303,7 +1357,10 @@ export default class extends Controller {
                 method: 'DELETE',
                 credentials: 'include'
             });
-            if (res.ok) await this.refreshTaskData();
+            if (res.ok) {
+                await this.refreshTaskData();
+                window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
+            }
         } catch (e) { console.error(e); }
     }
 

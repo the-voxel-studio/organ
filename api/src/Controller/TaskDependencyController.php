@@ -9,6 +9,7 @@ use App\Entity\Project;
 use App\Entity\Task;
 use App\Entity\TaskDependency;
 use App\Entity\User;
+use App\Service\TaskCacheService;
 use App\Service\TaskService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,7 +22,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class TaskDependencyController extends AbstractController
 {
     public function __construct(
-        private readonly TaskService $taskService
+        private readonly TaskService $taskService,
+        private readonly TaskCacheService $taskCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -105,6 +107,9 @@ class TaskDependencyController extends AbstractController
         $dep->setDeletedAt(null);
         $entityManager->flush();
 
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
+
         return $this->json(['message' => 'Dependency restored successfully']);
     }
 
@@ -151,6 +156,9 @@ class TaskDependencyController extends AbstractController
 
         $entityManager->flush();
 
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
+
         return $this->json(['message' => 'Dependency added successfully']);
     }
 
@@ -188,6 +196,9 @@ class TaskDependencyController extends AbstractController
         }
         
         $entityManager->flush();
+
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

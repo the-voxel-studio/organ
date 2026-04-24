@@ -10,6 +10,7 @@ use App\Entity\Task;
 use App\Entity\TaskComment;
 use App\Entity\User;
 use App\Service\OrganPermissionService;
+use App\Service\TaskCacheService;
 use App\Service\TaskService;
 use App\Service\UserCacheService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -25,7 +26,8 @@ class TaskCommentController extends AbstractController
     public function __construct(
         private readonly TaskService $taskService,
         private readonly OrganPermissionService $permissionService,
-        private readonly UserCacheService $userCacheService
+        private readonly UserCacheService $userCacheService,
+        private readonly TaskCacheService $taskCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -126,6 +128,9 @@ class TaskCommentController extends AbstractController
         $entityManager->persist($comment);
         $entityManager->flush();
 
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
+
         return $this->json([
             'uuid' => $comment->getUuid(),
             'content' => $comment->getContent(),
@@ -168,6 +173,9 @@ class TaskCommentController extends AbstractController
 
         $entityManager->flush();
 
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
+
         return $this->json(['message' => 'Comment updated']);
     }
 
@@ -199,6 +207,9 @@ class TaskCommentController extends AbstractController
 
         $comment->setDeletedAt(null);
         $entityManager->flush();
+
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(['message' => 'Comment restored']);
     }
@@ -248,6 +259,9 @@ class TaskCommentController extends AbstractController
         }
         
         $entityManager->flush();
+
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

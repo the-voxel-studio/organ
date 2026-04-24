@@ -10,6 +10,7 @@ use App\Entity\Tag;
 use App\Entity\Task;
 use App\Entity\TaskTag;
 use App\Entity\User;
+use App\Service\TaskCacheService;
 use App\Service\TaskService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,7 +23,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class TaskTagController extends AbstractController
 {
     public function __construct(
-        private readonly TaskService $taskService
+        private readonly TaskService $taskService,
+        private readonly TaskCacheService $taskCacheService
     ) {}
 
     #[Route('', name: 'add', methods: ['POST'])]
@@ -65,6 +67,9 @@ class TaskTagController extends AbstractController
         }
 
         $entityManager->flush();
+
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(['message' => 'Tag added successfully']);
     }
@@ -123,6 +128,9 @@ class TaskTagController extends AbstractController
         $taskTag->setDeletedAt(null);
         $entityManager->flush();
 
+        $this->taskCacheService->invalidateSummary($taskUuid);
+        $this->taskCacheService->invalidateList($organUuid);
+
         return $this->json(['message' => 'Tag restored successfully']);
     }
 
@@ -146,6 +154,9 @@ class TaskTagController extends AbstractController
         if ($taskTag) {
             $taskTag->setDeletedAt(new \DateTime());
             $entityManager->flush();
+
+            $this->taskCacheService->invalidateSummary($taskUuid);
+            $this->taskCacheService->invalidateList($organUuid);
         }
 
         return $this->json(null, Response::HTTP_NO_CONTENT);

@@ -119,6 +119,7 @@ export default class extends Controller {
                 this.clearForm();
                 this.formTarget.classList.add('hidden');
                 await this.loadTags();
+                window.dispatchEvent(new CustomEvent('project-tags-changed'));
             }
         } catch (error) {
             console.error('Failed to save tag:', error);
@@ -140,6 +141,7 @@ export default class extends Controller {
 
             if (response.ok) {
                 await this.loadTags();
+                window.dispatchEvent(new CustomEvent('project-tags-changed'));
             }
         } catch (error) {
             console.error('Failed to delete tag:', error);
