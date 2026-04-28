@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,14 +51,10 @@ fun Footer(
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.icon_account),
+            IconButtonPressable(
+                icon = R.drawable.icon_account,
                 contentDescription = "Account",
-                modifier = Modifier
-                    .size(30.dp)
-                    .clickable() {
-
-                    }
+                onClick = { /* TODO */ }
             )
             Spacer(modifier = Modifier.weight(1f))
             Text(
@@ -66,14 +63,11 @@ fun Footer(
                 color = MaterialTheme.colorScheme.onSurface,
             )
             Spacer(modifier = Modifier.weight(1f))
-            Image(
-                painter = painterResource(id = R.drawable.icon_param),
+            IconButtonPressable(
+                icon = R.drawable.icon_settings,
                 contentDescription = "Settings",
-                modifier = Modifier
-                    .size(30.dp)
-                    .clickable() {
-
-                    }
+                onClick = { /* TODO */ },
+                modifier = Modifier.size(32.dp)
             )
         }
     }
