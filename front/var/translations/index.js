@@ -478,6 +478,8 @@ export const messages = {
     "task.modal.status_labels.WAITING": {"translations":{"messages":{"fr":"En attente"}}},
     "task.modal.status_labels.DONE": {"translations":{"messages":{"fr":"Termin\u00e9"}}},
     "task.modal.status_labels.CANCELED": {"translations":{"messages":{"fr":"Annul\u00e9"}}},
+    "task.modal.error.upload.unsupported_format_no_cloud": {"translations":{"messages":{"fr":"Ce format de fichier n'est pas support\u00e9 pour le stockage local. Veuillez configurer Google Drive dans les r\u00e9glages du projet pour accepter tous les types de fichiers (ZIP, etc.)."}}},
+    "task.modal.error.upload.file_too_large_no_cloud": {"translations":{"messages":{"fr":"Fichier trop volumineux pour le stockage local (max {limit} Mo). Veuillez compresser votre fichier ou configurer Google Drive pour lever cette limite."}}},
     "task.history.title": {"translations":{"messages":{"fr":"Historique"}}},
     "task.history.load_more": {"translations":{"messages":{"fr":"Charger plus"}}},
     "task.history.types.COMMENT": {"translations":{"messages":{"fr":"Commentaire"}}},

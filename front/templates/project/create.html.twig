@@ -121,13 +121,13 @@
                     <div data-project-create-target="iconSection" data-mode="BLOB" class="{{ icon_mode == 'BLOB' ? '' : 'hidden' }}">
                         <label class="flex items-center justify-center w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-bubblegum transition-all group overflow-hidden">
                             <input type="file" data-project-create-target="imageInput" class="sr-only" accept="image/*" data-action="change->project-create#handleImagePreview">
-                            <div data-project-create-target="imagePlaceholder" class="text-center {{ (is_edit and icon_mode == 'BLOB') ? 'hidden' : '' }}">
+                            <div data-project-create-target="imagePlaceholder" class="text-center {{ (is_edit and icon_mode == 'BLOB' and project.iconData is not empty) ? 'hidden' : '' }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-8 w-8 text-gray-400 group-hover:text-bubblegum" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
                                 <span class="mt-2 block text-xs font-semibold text-gray-400 group-hover:text-bubblegum">Upload</span>
                             </div>
-                            <img data-project-create-target="imagePreview" src="{{ (is_edit and icon_mode == 'BLOB') ? project.iconData : '' }}" class="{{ (is_edit and icon_mode == 'BLOB') ? '' : 'hidden' }} w-full h-full object-cover">
+                            <img data-project-create-target="imagePreview" src="{{ (is_edit and icon_mode == 'BLOB' and project.iconData is not empty) ? project.iconData : '' }}" class="{{ (is_edit and icon_mode == 'BLOB' and project.iconData is not empty) ? '' : 'hidden' }} w-full h-full object-cover">
                         </label>
                     </div>
 

@@ -479,6 +479,8 @@ export declare const messages: {
     "task.modal.status_labels.WAITING": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "task.modal.status_labels.DONE": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "task.modal.status_labels.CANCELED": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "task.modal.error.upload.unsupported_format_no_cloud": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
+    "task.modal.error.upload.file_too_large_no_cloud": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "task.history.title": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "task.history.load_more": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
     "task.history.types.COMMENT": Message<{ 'messages': { parameters: NoParametersType } }, 'fr'>;
