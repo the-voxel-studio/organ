@@ -12,6 +12,7 @@ val LightBlue = Color(0xFF45A7D2)
 
 val PastelBlue = Color(0xFF45A7D2)
 
-val White = Color(0xFFFFF6F6)
+val Beige = Color(0xFFFFF6F6)
+val White = Color(0xFFFFFFFF)
 
 val Black = Color(0xFF0D0630)
