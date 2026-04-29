@@ -10,10 +10,36 @@ class MainViewModel : ViewModel() {
     var users by mutableStateOf(listOf<User>())
         private set
 
-    var projects by mutableStateOf(listOf<Project>())
+    //=====A l'avenir les projets viendront de la BDD=====
+    var projects by mutableStateOf(
+        listOf(
+            Project(
+                id = 1,
+                name = "Projet Alpha",
+                memberIds = listOf(1, 2),
+                organs = listOf(
+                    Organ(1, "Design", listOf(1)),
+                    Organ(2, "Développement", listOf(2))
+                )
+            ),
+            Project(
+                id = 2,
+                name = "Projet Bêta",
+                memberIds = listOf(3),
+                organs = listOf(
+                    Organ(3, "Marketing", listOf(3))
+                )
+            ),
+            Project(
+                id = 3,
+                name = "Projet Gamma",
+                memberIds = listOf(1, 4),
+                organs = emptyList()
+            )
+        )
+    )
         private set
 
-    // 🔧 LOGIQUE MÉTIER
     fun addProject(project: Project) {
         projects = projects + project
     }

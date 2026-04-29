@@ -5,7 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 
-class SidebarViewModel : ViewModel() {
+class SidebarViewModel : ViewModel(
+) {
 
     var selectedProjectId by mutableStateOf<Int?>(null)
     var selectedOrganId by mutableStateOf<Int?>(null)
@@ -19,3 +20,4 @@ class SidebarViewModel : ViewModel() {
         selectedOrganId = id
     }
 }
+

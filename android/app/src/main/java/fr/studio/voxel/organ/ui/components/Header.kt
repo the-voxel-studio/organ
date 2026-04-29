@@ -45,8 +45,7 @@ fun Header(
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-
+            AnimatedLogo()
 
             Spacer(modifier = Modifier.width(8.dp))
 

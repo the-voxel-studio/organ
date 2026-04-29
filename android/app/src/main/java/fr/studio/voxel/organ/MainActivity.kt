@@ -4,24 +4,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-<<<<<<< Updated upstream
-import androidx.compose.ui.tooling.preview.Preview
+import fr.studio.voxel.organ.domain.model.Project
+import fr.studio.voxel.organ.ui.components.SideBar
 import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.ui.components.Header
 import fr.studio.voxel.organ.components.PrimaryButton
 import fr.studio.voxel.organ.ui.components.AnimatedLogo
 import fr.studio.voxel.organ.ui.components.Footer
-=======
-import fr.studio.voxel.organ.ui.components.SideBar
->>>>>>> Stashed changes
 import fr.studio.voxel.organ.ui.theme.OrganTheme
 
 class MainActivity : ComponentActivity() {
@@ -42,5 +36,5 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Organ(modifier: Modifier = Modifier) {
-    AnimatedLogo()
+    SideBar()
 }
