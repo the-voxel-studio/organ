@@ -42,13 +42,17 @@ export default class extends Controller {
                 name: trans('organ.role_presets.responsible.name'),
                 iconData: '👑',
                 description: trans('organ.role_presets.responsible.description'),
-                permissions: this.availablePermissionsValue.map(p => p.name)
+                permissions: this.availablePermissionsValue.map(p => p.name).filter(p => 
+                    !['PROJECT_HARD_DELETE', 'ORGAN_HARD_DELETE'].includes(p)
+                )
             },
             manager: {
                 name: trans('organ.role_presets.manager.name'),
                 iconData: '📂',
                 description: trans('organ.role_presets.manager.description'),
-                permissions: this.availablePermissionsValue.map(p => p.name).filter(p => !['ORGAN_MANAGE_ROLES'].includes(p))
+                permissions: this.availablePermissionsValue.map(p => p.name).filter(p => 
+                    !['ORGAN_MANAGE_ROLES', 'ORGAN_HARD_DELETE', 'PROJECT_HARD_DELETE'].includes(p)
+                )
             },
             participant: {
                 name: trans('organ.role_presets.participant.name'),
@@ -310,10 +314,11 @@ export default class extends Controller {
             name: 'Nouveau rôle',
             iconType: 'EMOJI',
             iconData: '👤',
-            permissions: []
+            permissions: ['ORGAN_VIEW']
         };
         this.roles.push(newRole);
         this.renderRoles();
+        this.renderMembers();
     }
 
     removeRole(event) {
@@ -337,11 +342,16 @@ export default class extends Controller {
         this.modalRoleNameTarget.value = role.name;
         this.modalRoleEmojiTarget.value = (role.iconType === 'EMOJI') ? role.iconData : '';
         
-        const organPerms = this.availablePermissionsValue.filter(p => 
-            p.name.startsWith('ORGAN_') && p.name !== 'ORGAN_MANAGE_MEMBERS'
+        const allAvailable = this.availablePermissionsValue;
+
+        const organPerms = allAvailable.filter(p => 
+            p.name.startsWith('ORGAN_') && 
+            !['ORGAN_MANAGE_MEMBERS', 'ORGAN_HARD_DELETE'].includes(p.name)
         );
-        const taskPerms = this.availablePermissionsValue.filter(p => p.name.startsWith('TASK_'));
-        const interactionPerms = this.availablePermissionsValue.filter(p => p.name.startsWith('COMMENT_') || p.name.startsWith('ATTACHMENT_'));
+        const taskPerms = allAvailable.filter(p => p.name.startsWith('TASK_'));
+        const interactionPerms = allAvailable.filter(p => 
+            p.name.startsWith('COMMENT_') || p.name.startsWith('ATTACHMENT_')
+        );
 
         const renderPermGroup = (title, perms) => `
             <div class="space-y-4">
@@ -701,21 +711,23 @@ export default class extends Controller {
                         // Roles to assign
                         for (const localRoleId of rolesToAdd) {
                             const serverRoleUuid = roleIdMap[localRoleId] || localRoleId;
-                            await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${serverRoleUuid}/assign`, {
+                            const res = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${serverRoleUuid}/assign`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ userUuid: member.userUuid }),
                                 credentials: 'include'
-                            }).catch(e => console.error("Assignment failed", e));
+                            });
+                            if (!res.ok) throw new Error(`Erreur lors de l'assignation du rôle au membre ${member.name}.`);
                         }
 
                         // Roles to unassign (for members still in the organ)
                         for (const localRoleId of rolesToRemove) {
                             const serverRoleUuid = roleIdMap[localRoleId] || localRoleId;
-                            await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${serverRoleUuid}/unassign/${member.userUuid}`, {
+                            const res = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${serverRoleUuid}/unassign/${member.userUuid}`, {
                                 method: 'DELETE',
                                 credentials: 'include'
-                            }).catch(e => console.error("Unassignment failed", e));
+                            });
+                            if (!res.ok) throw new Error(`Erreur lors de la désassignation du rôle du membre ${member.name}.`);
                         }
                     }
 
@@ -727,10 +739,11 @@ export default class extends Controller {
                         for (const removedMember of removedMembers) {
                             for (const localRoleId of removedMember.initialRoles) {
                                 const serverRoleUuid = roleIdMap[localRoleId] || localRoleId;
-                                await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${serverRoleUuid}/unassign/${removedMember.userUuid}`, {
+                                const res = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${serverRoleUuid}/unassign/${removedMember.userUuid}`, {
                                     method: 'DELETE',
                                     credentials: 'include'
-                                }).catch(e => console.error("Unassignment cleanup failed", e));
+                                });
+                                if (!res.ok) throw new Error(`Erreur lors du retrait d'un membre de l'organ.`);
                             }
                         }
                     }
@@ -744,18 +757,20 @@ export default class extends Controller {
                     const rolesToRemove = initialRoles.filter(id => !member.roles.includes(id));
 
                     for (const roleId of rolesToAdd) {
-                        await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${roleId}/assign`, {
+                        const res = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${roleId}/assign`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ userUuid: member.userUuid }),
                             credentials: 'include'
-                        }).catch(e => console.error("Assignment failed", e));
+                        });
+                        if (!res.ok) throw new Error(`Erreur lors de l'assignation du rôle au membre ${member.name}.`);
                     }
                     for (const roleId of rolesToRemove) {
-                        await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${roleId}/unassign/${member.userUuid}`, {
+                        const res = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${roleId}/unassign/${member.userUuid}`, {
                             method: 'DELETE',
                             credentials: 'include'
-                        }).catch(e => console.error("Unassignment failed", e));
+                        });
+                        if (!res.ok) throw new Error(`Erreur lors de la désassignation du rôle du membre ${member.name}.`);
                     }
                 }
                 
@@ -766,10 +781,11 @@ export default class extends Controller {
                     );
                     for (const removedMember of removedMembers) {
                         for (const roleId of removedMember.initialRoles) {
-                            await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${roleId}/unassign/${removedMember.userUuid}`, {
+                            const res = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${finalOrganUuid}/roles/${roleId}/unassign/${removedMember.userUuid}`, {
                                 method: 'DELETE',
                                 credentials: 'include'
-                            }).catch(e => console.error("Unassignment cleanup failed", e));
+                            });
+                            if (!res.ok) throw new Error(`Erreur lors du retrait d'un membre de l'organ.`);
                         }
                     }
                 }

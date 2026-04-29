@@ -41,24 +41,32 @@ class TaskService
         $isAssignee = $this->isAssignee($user, $task);
         $isCreator = ($task->getCreatedBy() === $user);
 
-        // 2. Check for Global Organ Permission (ALL)
+        // 2. Exact permission check (for non-variant permissions like COMMENT_CREATE)
+        if ($this->organPermissionService->hasPermission($user, $organ, $action)) {
+            return true;
+        }
+
+        // 3. Check for Global Organ Permission (ALL)
         if ($this->organPermissionService->hasPermission($user, $organ, $action . '_ALL')) {
             return true;
         }
 
-        // 3. Check for specific Organ Role permission (OWN)
+        // 4. Check for specific Organ Role permission (OWN)
         if (!$this->organPermissionService->hasPermission($user, $organ, $action . '_OWN')) {
             return false;
         }
 
-        // 4. Ownership-based logic
+        // 5. Ownership-based logic for _OWN variant
         return match ($action) {
             'TASK_EDIT' => $isManager || $isAssignee || $isCreator,
-            'TASK_DELETE' => $isManager || $isCreator,
-            'TASK_ASSIGN_OTHERS' => $isManager,
-            'TASK_ASSIGN_SELF' => true,
-            'TASK_VALIDATE' => $isManager,
-            'COMMENT_CREATE', 'ATTACHMENT_ADD', 'TASK_LINK_MANAGE', 'TASK_TAG_MANAGE' => $isManager || $isAssignee,
+            'TASK_DELETE', 'TASK_HARD_DELETE' => $isManager || $isCreator,
+            'TASK_STATUS_CHANGE', 'TASK_ESTIMATE_MANAGE' => $isManager || $isAssignee,
+            'TASK_PRIORITY_CHANGE', 'TASK_DATES_MANAGE' => $isManager,
+            'TASK_LINK_MANAGE', 'TASK_TAG_MANAGE', 'TASK_DEPENDENCY_MANAGE' => $isManager || $isAssignee,
+            'TASK_LINK_HARD_DELETE' => $isManager,
+            // For sub-resources, returning true here allows the controller to enforce the sub-resource level ownership.
+            'COMMENT_DELETE', 'COMMENT_HARD_DELETE', 'COMMENT_EDIT',
+            'ATTACHMENT_DELETE', 'ATTACHMENT_HARD_DELETE' => true,
             default => $isManager || $isAssignee || $isCreator,
         };
     }

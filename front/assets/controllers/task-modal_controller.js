@@ -135,10 +135,11 @@ export default class extends Controller {
         this.containerTarget.querySelectorAll('[data-section="attachments"], [data-section="comments"], [data-section="timeline"]').forEach(s => s.classList.add('hidden'));
         if (this.hasTrashSectionTarget) this.trashSectionTarget.classList.add('hidden');
 
-        this.renderAssignees([], { actions: ['assign_self', 'assign_others'] });
-        this.renderTags([], { actions: ['manage_tags'] });
-        this.renderLinks([], { actions: ['manage_links'] });
-        this.renderDependencies([], { actions: ['manage_dependencies'] });
+        const stagedPerms = { taskOwnership: { isManager: true }, permissions: ['ALL'], isProjectAdmin: true };
+        this.renderAssignees([], stagedPerms);
+        this.renderTags([], stagedPerms);
+        this.renderLinks([], stagedPerms);
+        this.renderDependencies([], stagedPerms);
         
         this.taskMetaTarget.classList.add('hidden');
         this.deleteBtnTarget.classList.add('hidden');
@@ -226,7 +227,7 @@ export default class extends Controller {
 
         if (commentsRes.ok) this.renderComments(await commentsRes.json(), perms);
         await this.loadMoreTimeline();
-        await this.renderAttachments();
+        await this.renderAttachments(perms);
     }
 
     open() {
@@ -303,17 +304,17 @@ export default class extends Controller {
         form.description.value = task.description || '';
         form.status.value = task.status || 'TODO';
         form.statusMessage.value = task.statusMessage || '';
-        
+
         this.initialStatus = task.status || 'TODO';
         this.toggleStatusMessage();
-        
+
         form.priority.value = task.priority || 1;
 
         form.estimatedHours.value = task.estimatedHours || '';
-        
+
         form.startDate.value = this.formatDateForInput(task.startDate);
         form.expiresAt.value = this.formatDateForInput(task.expiresAt);
-        
+
         form.managerUuid.value = task.manager ? task.manager.uuid : '';
 
         // Capture initial state for dirty checking
@@ -344,10 +345,14 @@ export default class extends Controller {
             inputs.forEach(i => i.disabled = !isEditable);
         });
 
-        const canDelete = this.isTaskTrashed ? perms.actions.includes('hard_delete_task') : perms.actions.includes('delete_task');
+        const isTaskOwner = perms.taskOwnership.isManager || perms.taskOwnership.isCreator;
+        const canDelete = this.isTaskTrashed 
+            ? this.hasPerm('TASK_HARD_DELETE', isTaskOwner) 
+            : this.hasPerm('TASK_DELETE', isTaskOwner);
+
         this.deleteBtnTarget.classList.toggle('hidden', !canDelete);
         this.deleteBtnTarget.title = this.isTaskTrashed ? "Supprimer définitivement" : "Supprimer la tâche";
-        
+
         if (this.isTaskTrashed) {
             this.submitBtnTarget.classList.add('hidden');
         } else {
@@ -356,26 +361,45 @@ export default class extends Controller {
 
         // Action-based UI visibility
         const showAddBtns = !this.isTaskTrashed;
+
+        const canAssign = this.hasPerm('TASK_ASSIGN_OTHERS', perms.taskOwnership.isManager) || this.hasPerm('TASK_ASSIGN_SELF');
         if (this.hasAssigneeAddContainerTarget) {
-            this.assigneeAddContainerTarget.classList.toggle('hidden', !showAddBtns || (!perms.actions.includes('assign_others') && !perms.actions.includes('assign_self')));
+            this.assigneeAddContainerTarget.classList.toggle('hidden', !showAddBtns || !canAssign);
         }
         if (this.hasTagAddContainerTarget) {
-            this.tagAddContainerTarget.classList.toggle('hidden', !showAddBtns || !perms.actions.includes('manage_tags'));
+            this.tagAddContainerTarget.classList.toggle('hidden', !showAddBtns || !this.hasPerm('TASK_TAG_MANAGE', perms.taskOwnership.isManager || perms.taskOwnership.isAssignee));
         }
         if (this.hasLinkAddBtnTarget) {
-            this.linkAddBtnTarget.classList.toggle('hidden', !showAddBtns || !perms.actions.includes('manage_links'));
+            this.linkAddBtnTarget.classList.toggle('hidden', !showAddBtns || !this.hasPerm('TASK_LINK_MANAGE', perms.taskOwnership.isManager || perms.taskOwnership.isAssignee));
         }
         if (this.hasDependencyAddBtnTarget) {
-            this.dependencyAddBtnTarget.classList.toggle('hidden', !showAddBtns || !perms.actions.includes('manage_dependencies'));
+            this.dependencyAddBtnTarget.classList.toggle('hidden', !showAddBtns || !this.hasPerm('TASK_DEPENDENCY_MANAGE', perms.taskOwnership.isManager || perms.taskOwnership.isAssignee));
         }
         if (this.hasAttachmentAddContainerTarget) {
-            this.attachmentAddContainerTarget.classList.toggle('hidden', !showAddBtns || !perms.actions.includes('add_attachment'));
+            this.attachmentAddContainerTarget.classList.toggle('hidden', !showAddBtns || !this.hasPerm('ATTACHMENT_ADD', perms.taskOwnership.isManager || perms.taskOwnership.isAssignee));
         }
         if (this.hasCommentFormContainerTarget) {
-            this.commentFormContainerTarget.classList.toggle('hidden', !showAddBtns || !perms.actions.includes('add_comment'));
+            this.commentFormContainerTarget.classList.toggle('hidden', !showAddBtns || !this.hasPerm('COMMENT_CREATE', perms.taskOwnership.isManager || perms.taskOwnership.isAssignee));
         }
     }
 
+    hasPerm(permBaseName, isOwner = false) {
+        if (!this.currentPerms) return false;
+        const p = this.currentPerms.permissions || [];
+
+        if (this.currentPerms.isProjectAdmin || p.includes('ALL')) return true;
+
+        // 1. Exact match
+        if (p.includes(permBaseName)) return true;
+
+        // 2. ALL variant
+        if (p.includes(`${permBaseName}_ALL`)) return true;
+
+        // 3. OWN variant
+        if (isOwner && p.includes(`${permBaseName}_OWN`)) return true;
+
+        return false;
+    }
     formatDateForInput(dateString) {
         if (!dateString) return '';
         const d = new Date(dateString);
@@ -390,7 +414,7 @@ export default class extends Controller {
     // --- ASSIGNEES ---
     renderAssignees(assignees, perms) {
         this.assigneeListTarget.innerHTML = '';
-        const canManage = perms.actions.includes('assign_others') || perms.actions.includes('assign_self');
+        const canManage = this.hasPerm('TASK_ASSIGN_OTHERS', perms.taskOwnership?.isManager) || this.hasPerm('TASK_ASSIGN_SELF');
 
         assignees.forEach(a => {
             const div = document.createElement('div');
@@ -432,7 +456,7 @@ export default class extends Controller {
             const member = this.members.find(m => m.user.uuid === userUuid);
             if (member && !this.stagedAssignees.find(a => a.uuid === userUuid)) {
                 this.stagedAssignees.push(member.user);
-                this.renderAssignees(this.stagedAssignees, { actions: ['assign_self', 'assign_others'] });
+                this.renderAssignees(this.stagedAssignees, { taskOwnership: { isManager: true } }); // Full access for staged
             }
             this.userPickerTarget.classList.add('hidden');
             return;
@@ -456,7 +480,7 @@ export default class extends Controller {
         const userUuid = event.currentTarget.dataset.userUuid;
         if (!this.taskIdValue) {
             this.stagedAssignees = this.stagedAssignees.filter(a => a.uuid !== userUuid);
-            this.renderAssignees(this.stagedAssignees, { actions: ['assign_self', 'assign_others'] });
+            this.renderAssignees(this.stagedAssignees, { taskOwnership: { isManager: true } });
             return;
         }
 
@@ -472,7 +496,7 @@ export default class extends Controller {
     // --- TAGS ---
     renderTags(tags, perms) {
         this.taskTagListTarget.innerHTML = '';
-        const canManage = perms.actions.includes('manage_tags');
+        const canManage = this.hasPerm('TASK_TAG_MANAGE', perms.taskOwnership?.isManager || perms.taskOwnership?.isAssignee);
 
         tags.forEach(t => {
             const div = document.createElement('div');
@@ -520,7 +544,7 @@ export default class extends Controller {
             const tag = this.projectTags.find(t => t.uuid === tagUuid);
             if (tag && !this.stagedTags.find(t => t.uuid === tagUuid)) {
                 this.stagedTags.push(tag);
-                this.renderTags(this.stagedTags, { actions: ['manage_tags'] });
+                this.renderTags(this.stagedTags, { taskOwnership: { isManager: true } });
             }
             this.tagPickerTarget.classList.add('hidden');
             return;
@@ -545,7 +569,7 @@ export default class extends Controller {
         const tagUuid = event.currentTarget.dataset.tagUuid;
         if (!this.taskIdValue) {
             this.stagedTags = this.stagedTags.filter(t => t.uuid !== tagUuid);
-            this.renderTags(this.stagedTags, { actions: ['manage_tags'] });
+            this.renderTags(this.stagedTags, { taskOwnership: { isManager: true } });
             return;
         }
 
@@ -564,7 +588,7 @@ export default class extends Controller {
     // --- LINKS ---
     renderLinks(links, perms) {
         this.linkListTarget.innerHTML = '';
-        const canManage = perms.actions.includes('manage_links');
+        const canManage = this.hasPerm('TASK_LINK_MANAGE', perms.taskOwnership?.isManager || perms.taskOwnership?.isAssignee);
 
         links.forEach(l => {
             const div = document.createElement('div');
@@ -593,7 +617,7 @@ export default class extends Controller {
 
         if (!this.taskIdValue) {
             this.stagedLinks.push({ url, description });
-            this.renderLinks(this.stagedLinks, { actions: ['manage_links'] });
+            this.renderLinks(this.stagedLinks, { taskOwnership: { isManager: true } });
             this.linkUrlTarget.value = '';
             this.linkDescTarget.value = '';
             this.hideLinkForm();
@@ -621,7 +645,7 @@ export default class extends Controller {
         const linkUuid = event.currentTarget.dataset.linkUuid;
         if (!this.taskIdValue) {
             this.stagedLinks = this.stagedLinks.filter(l => (l.uuid || l.url) !== linkUuid);
-            this.renderLinks(this.stagedLinks, { actions: ['manage_links'] });
+            this.renderLinks(this.stagedLinks, { taskOwnership: { isManager: true } });
             return;
         }
 
@@ -641,11 +665,8 @@ export default class extends Controller {
     renderComments(comments, perms = null) {
         this.commentListTarget.innerHTML = '';
         comments.forEach(c => {
-            const isOwner = (c.user.uuid === this.currentUserUuidValue);
-            const canDelete = perms && (perms.actions.includes('delete_comment') || (isOwner && perms.actions.includes('delete_comment')));
-            // Note: perms.actions contains generic strings from TaskController::permissions. 
-            // The TaskController::permissions logic for delete_comment already handles OWN/ALL check but on task level.
-            // For comments, we double check ownership if only delete_comment is present.
+            const isResourceOwner = (c.user.uuid === this.currentUserUuidValue);
+            const canDelete = this.hasPerm('COMMENT_DELETE', isResourceOwner);
             
             const div = document.createElement('div');
             div.className = 'flex gap-4 group/comment';
@@ -805,7 +826,7 @@ export default class extends Controller {
     // --- DEPENDENCIES ---
     async renderDependencies(dependencies, perms) {
         this.dependencyListTarget.innerHTML = '';
-        const canManage = perms.actions.includes('manage_dependencies');
+        const canManage = this.hasPerm('TASK_DEPENDENCY_MANAGE', perms.taskOwnership?.isManager || perms.taskOwnership?.isAssignee);
 
         dependencies.forEach(d => {
             const div = document.createElement('div');
@@ -861,7 +882,7 @@ export default class extends Controller {
             const task = this.projectTasks.find(t => t.uuid === dependsOnTaskUuid);
             if (task && !this.stagedDependencies.find(d => d.uuid === dependsOnTaskUuid)) {
                 this.stagedDependencies.push(task);
-                this.renderDependencies(this.stagedDependencies.map(d => ({ dependsOnTaskUuid: d.uuid, title: d.title, status: d.status })), { actions: ['manage_dependencies'] });
+                this.renderDependencies(this.stagedDependencies.map(d => ({ dependsOnTaskUuid: d.uuid, title: d.title, status: d.status })), { taskOwnership: { isManager: true } });
             }
             this.dependencyPickerTarget.classList.add('hidden');
             return;
@@ -886,7 +907,7 @@ export default class extends Controller {
         const targetUuid = event.currentTarget.dataset.targetUuid;
         if (!this.taskIdValue) {
             this.stagedDependencies = this.stagedDependencies.filter(d => d.uuid !== targetUuid);
-            this.renderDependencies(this.stagedDependencies.map(d => ({ dependsOnTaskUuid: d.uuid, title: d.title, status: d.status })), { actions: ['manage_dependencies'] });
+            this.renderDependencies(this.stagedDependencies.map(d => ({ dependsOnTaskUuid: d.uuid, title: d.title, status: d.status })), { taskOwnership: { isManager: true } });
             return;
         }
 
@@ -1110,9 +1131,9 @@ export default class extends Controller {
         }
 
         comments.forEach(c => {
-            const isOwner = (c.user.uuid === this.currentUserUuidValue);
-            const canRestore = perms && (perms.actions.includes('delete_comment') || (isOwner && perms.actions.includes('delete_comment')));
-            const canHardDelete = perms && (perms.actions.includes('hard_delete_comment') || (isOwner && perms.actions.includes('hard_delete_comment')));
+            const isResourceOwner = (c.user.uuid === this.currentUserUuidValue);
+            const canRestore = this.hasPerm('COMMENT_DELETE', isResourceOwner);
+            const canHardDelete = this.hasPerm('COMMENT_HARD_DELETE', isResourceOwner);
 
             const div = document.createElement('div');
             div.className = 'flex flex-col gap-3 p-4 bg-white border border-gray-100 rounded-2xl group transition-all';
@@ -1210,9 +1231,9 @@ export default class extends Controller {
         }
 
         attachments.forEach(a => {
-            const isOwner = (a.uploadedBy.uuid === this.currentUserUuidValue);
-            const canRestore = perms && (perms.actions.includes('delete_attachment') || (isOwner && perms.actions.includes('delete_attachment')));
-            const canHardDelete = perms && (perms.actions.includes('hard_delete_attachment') || (isOwner && perms.actions.includes('hard_delete_attachment')));
+            const isResourceOwner = (a.uploadedBy.uuid === this.currentUserUuidValue);
+            const canRestore = this.hasPerm('ATTACHMENT_DELETE', isResourceOwner);
+            const canHardDelete = this.hasPerm('ATTACHMENT_HARD_DELETE', isResourceOwner);
 
             const div = document.createElement('div');
             div.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-2xl group transition-all';
@@ -1253,8 +1274,8 @@ export default class extends Controller {
         }
 
         links.forEach(l => {
-            const canRestore = perms && perms.actions.includes('manage_links');
-            const canHardDelete = perms && perms.actions.includes('hard_delete_link');
+            const canRestore = this.hasPerm('TASK_LINK_MANAGE', this.currentPerms?.taskOwnership?.isManager || this.currentPerms?.taskOwnership?.isAssignee);
+            const canHardDelete = this.hasPerm('TASK_LINK_HARD_DELETE', this.currentPerms?.taskOwnership?.isManager);
 
             const div = document.createElement('div');
             div.className = 'p-3 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-between group';
@@ -1364,7 +1385,7 @@ export default class extends Controller {
         } catch (e) { console.error(e); }
     }
 
-    async renderAttachments() {
+    async renderAttachments(perms = null) {
         if (!this.taskIdValue) return;
         try {
             const res = await fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/tasks/${this.taskIdValue}/attachments`, { credentials: 'include' });
@@ -1381,6 +1402,9 @@ export default class extends Controller {
                 };
 
                 attachments.forEach(a => {
+                    const isResourceOwner = (a.uploadedBy.uuid === this.currentUserUuidValue);
+                    const canDelete = this.hasPerm('ATTACHMENT_DELETE', isResourceOwner);
+
                     const sizeNum = parseInt(a.fileSize);
                     const sizeInMB = sizeNum / (1024 * 1024);
                     const isVeryLarge = sizeInMB >= 500;
@@ -1408,9 +1432,11 @@ export default class extends Controller {
                                 </div>
                             </div>
                         </div>
-                        <button type="button" data-action="click->task-modal#removeAttachment" data-attachment-uuid="${a.uuid}" class="p-2 text-gray-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
+                        ${canDelete ? `
+                            <button type="button" data-action="click->task-modal#removeAttachment" data-attachment-uuid="${a.uuid}" class="p-2 text-gray-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        ` : ''}
                     `;
                     this.attachmentListTarget.appendChild(div);
                 });

@@ -456,36 +456,6 @@ class TaskController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         
-        $actions = [];
-        $checkActions = [
-            'TASK_EDIT' => 'edit',
-            'TASK_DELETE' => 'delete_task',
-            'TASK_HARD_DELETE' => 'hard_delete_task',
-            'TASK_STATUS_CHANGE' => 'change_status',
-            'TASK_PRIORITY_CHANGE' => 'change_priority',
-            'TASK_DATES_MANAGE' => 'manage_dates',
-            'TASK_ESTIMATE_MANAGE' => 'manage_estimates',
-            'TASK_ASSIGN_OTHERS' => 'assign_others',
-            'TASK_ASSIGN_SELF' => 'assign_self',
-            'TASK_VALIDATE' => 'validate',
-            'COMMENT_CREATE' => 'add_comment',
-            'COMMENT_DELETE' => 'delete_comment',
-            'COMMENT_HARD_DELETE' => 'hard_delete_comment',
-            'ATTACHMENT_ADD' => 'add_attachment',
-            'ATTACHMENT_DELETE' => 'delete_attachment',
-            'ATTACHMENT_HARD_DELETE' => 'hard_delete_attachment',
-            'TASK_LINK_MANAGE' => 'manage_links',
-            'TASK_LINK_HARD_DELETE' => 'hard_delete_link',
-            'TASK_TAG_MANAGE' => 'manage_tags',
-            'TASK_DEPENDENCY_MANAGE' => 'manage_dependencies',
-        ];
-
-        foreach ($checkActions as $perm => $action) {
-            if ($this->taskService->can($user, $task, $perm)) {
-                $actions[] = $action;
-            }
-        }
-
         // Add granular field edit permissions
         $fields = ['priority', 'expiresAt', 'estimatedHours', 'title', 'description', 'manager'];
         $editableFields = [];
@@ -496,13 +466,17 @@ class TaskController extends AbstractController
         }
 
         return $this->json([
-            'actions' => $actions,
+            'permissions' => $this->permissionService->getOrganPermissions($user, $organ),
             'editableFields' => $editableFields,
-            'isManager' => ($task->getManager() === $user),
-            'isAssignee' => $this->taskService->isAssignee($user, $task),
+            'isProjectAdmin' => $this->taskService->isProjectAdmin($user, $project),
+            'taskOwnership' => [
+                'isManager' => ($task->getManager() === $user),
+                'isAssignee' => $this->taskService->isAssignee($user, $task),
+                'isCreator' => ($task->getCreatedBy() === $user),
+            ]
         ]);
     }
-
+    
     #[Route('/{taskUuid}/timeline', name: 'timeline', methods: ['GET'])]
     public function timeline(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
