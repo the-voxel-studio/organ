@@ -51,7 +51,7 @@ fun Header(
 
             Text(
                 text = "Organ",
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface,
             )
         }

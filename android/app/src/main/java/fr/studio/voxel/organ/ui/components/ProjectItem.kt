@@ -13,7 +13,7 @@ import fr.studio.voxel.organ.domain.model.Project
 fun ProjectItem(project: Project) {
 
     Column {
-        PrimaryButton(project.name + " >",
+        SecondaryButton(project.name + " >",
             onClick = {}
         )
     }
