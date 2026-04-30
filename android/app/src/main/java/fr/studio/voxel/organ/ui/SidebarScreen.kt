@@ -1,15 +1,23 @@
 package fr.studio.voxel.organ.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.domain.model.MainViewModel
 import fr.studio.voxel.organ.domain.model.SidebarViewModel
 import fr.studio.voxel.organ.ui.components.Footer
@@ -23,15 +31,42 @@ fun SideBar(
     sidebarVM: SidebarViewModel = viewModel()
 ){
     Column(
-        modifier = Modifier.Companion
+        modifier = Modifier
             .fillMaxHeight()
             .padding(16.dp),
-        horizontalAlignment = Alignment.Companion.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Header()
+        Header(navigateUp = {})
 
-        Spacer(modifier = Modifier.Companion.width(128.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ){
+            Image(
+                painter = painterResource(R.drawable.poubelle_logo),
+                contentDescription = "poubelle",
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable {
+                        {/*TODO*/}
+                    }
+            )
+
+            Image(
+                painter = painterResource(R.drawable.notification_logo),
+                contentDescription = "notification",
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable {
+                        {/*TODO*/}
+                    }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         SecondaryButton(
             text = "Dashboard",
@@ -43,7 +78,7 @@ fun SideBar(
             ProjectItem(project)
         }
 
-        Spacer(modifier = Modifier.Companion.weight(1f))
+        Spacer(modifier = Modifier.weight(1f))
 
         Footer()
     }
