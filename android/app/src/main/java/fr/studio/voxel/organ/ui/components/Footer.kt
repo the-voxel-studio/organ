@@ -41,28 +41,36 @@ fun Footer(
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Bottom,
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight()
     ) {
         Row(
             modifier = modifier
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButtonPressable(
+            Row(
+                modifier = modifier
+                .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButtonPressable(
                 icon = R.drawable.icon_account,
                 contentDescription = "Account",
                 onClick = { /* TODO */ }
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = "Nom Prénom",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Spacer(modifier = Modifier.weight(1f))
+                )
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                Text(
+                    text = "Nom Prénom",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+
+            Spacer(modifier = Modifier.width(24.dp))
+
             IconButtonPressable(
                 icon = R.drawable.icon_settings,
                 contentDescription = "Settings",

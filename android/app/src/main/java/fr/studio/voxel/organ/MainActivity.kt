@@ -9,13 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import fr.studio.voxel.organ.domain.model.Project
-import fr.studio.voxel.organ.ui.components.SideBar
-import androidx.compose.ui.unit.dp
-import fr.studio.voxel.organ.ui.components.Header
-import fr.studio.voxel.organ.components.PrimaryButton
-import fr.studio.voxel.organ.ui.components.AnimatedLogo
-import fr.studio.voxel.organ.ui.components.Footer
+import fr.studio.voxel.organ.ui.SideBar
 import fr.studio.voxel.organ.ui.theme.OrganTheme
 
 class MainActivity : ComponentActivity() {
@@ -36,5 +30,5 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Organ(modifier: Modifier = Modifier) {
-    SideBar()
+    OrganApp()
 }

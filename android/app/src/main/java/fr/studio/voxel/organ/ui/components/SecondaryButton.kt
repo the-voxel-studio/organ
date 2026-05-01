@@ -3,7 +3,9 @@ package fr.studio.voxel.organ.ui.components
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +21,7 @@ import androidx.compose.ui.unit.dp
 fun SecondaryButton(
     text: String,
     onClick: () -> Unit,
+    isSelected : Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -35,13 +38,14 @@ fun SecondaryButton(
         MaterialTheme.colorScheme.primary
     }
 
-    ElevatedButton(
+    Button(
         onClick = onClick,
         modifier = modifier
             .graphicsLayer(
                 scaleX = scale,
                 scaleY = scale
-            ),
+            )
+            .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.elevatedButtonColors(
             containerColor = backgroundColor
