@@ -16,7 +16,8 @@ export default class extends Controller {
         'assigneeAddContainer', 'tagAddContainer', 'linkAddBtn', 'dependencyAddBtn', 'attachmentAddContainer', 'commentFormContainer',
         'uploadProgressContainer', 'uploadFileName', 'uploadPercentage', 'uploadProgressBar',
         'trashSection', 'trashContent', 'deletedAttachmentList', 'deletedLinkList', 'deletedCommentList',
-        'confirmModal', 'confirmTitle', 'confirmMessage', 'restoreBtn'
+        'confirmModal', 'confirmTitle', 'confirmMessage', 'restoreBtn',
+        'errorModal', 'errorTitle', 'errorMessage'
     ];
     static values = {
         projectUuid: String,
@@ -312,8 +313,13 @@ export default class extends Controller {
 
         form.estimatedHours.value = task.estimatedHours || '';
 
-        form.startDate.value = this.formatDateForInput(task.startDate);
-        form.expiresAt.value = this.formatDateForInput(task.expiresAt);
+        const startParts = this.formatDateParts(task.startDate);
+        form.startDate_date.value = startParts.date;
+        form.startDate_time.value = startParts.time;
+
+        const expiresParts = this.formatDateParts(task.expiresAt);
+        form.expiresAt_date.value = expiresParts.date;
+        form.expiresAt_time.value = expiresParts.time;
 
         form.managerUuid.value = task.manager ? task.manager.uuid : '';
 
@@ -400,15 +406,21 @@ export default class extends Controller {
 
         return false;
     }
-    formatDateForInput(dateString) {
-        if (!dateString) return '';
+    formatDateParts(dateString) {
+        if (!dateString) return { date: '', time: '' };
         const d = new Date(dateString);
-        if (isNaN(d.getTime())) return '';
+        if (isNaN(d.getTime())) return { date: '', time: '' };
         
-        // Adjust for timezone offset to get local time for datetime-local input
-        const tzOffset = d.getTimezoneOffset() * 60000;
-        const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
-        return localISOTime;
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        
+        return { 
+            date: `${year}-${month}-${day}`, 
+            time: `${hours}:${minutes}` 
+        };
     }
 
     // --- ASSIGNEES ---
@@ -961,7 +973,17 @@ export default class extends Controller {
 
             if (!initRes.ok) {
                 const error = await initRes.json();
-                alert(error.message || "Erreur d'initialisation");
+                const title = initRes.status === 413 ? "Fichier trop lourd" : (initRes.status === 415 ? "Format non supporté" : "Erreur d'upload");
+                
+                // Use translation keys from server if possible, with parameters
+                let message = "Impossible d'initialiser le transfert.";
+                if (error.message && error.message.startsWith('error.')) {
+                    message = trans(`task.modal.${error.message}`, { limit: error.limit });
+                } else {
+                    message = error.message || message;
+                }
+
+                this.showError(title, message);
                 return;
             }
 
@@ -984,12 +1006,16 @@ export default class extends Controller {
                 if (uploadRes.ok) {
                     await this.refreshTaskData();
                 } else {
-                    const contentType = uploadRes.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        const error = await uploadRes.json();
-                        alert(error.message || "Erreur lors de l'envoi");
+                    if (uploadRes.status === 413) {
+                        this.showError("Fichier trop lourd", "Ce fichier est trop volumineux pour être envoyé sur nos serveurs.");
                     } else {
-                        alert("Une erreur serveur est survenue (500).");
+                        const contentType = uploadRes.headers.get("content-type");
+                        if (contentType && contentType.indexOf("application/json") !== -1) {
+                            const error = await uploadRes.json();
+                            this.showError("Erreur d'envoi", error.message || "Erreur lors de l'envoi du fichier.");
+                        } else {
+                            this.showError("Erreur serveur", "Une erreur serveur est survenue (500).");
+                        }
                     }
                 }
             }
@@ -1056,11 +1082,11 @@ export default class extends Controller {
             if (confirmRes.ok) {
                 await this.refreshTaskData();
             } else {
-                alert("Erreur lors de la confirmation du fichier auprès de l'API.");
+                this.showError("Erreur Google Drive", "Erreur lors de la confirmation du fichier auprès de l'API.");
             }
         } catch (e) {
             console.error("Google Drive Upload Error", e);
-            alert("Échec de l'envoi vers Google Drive.");
+            this.showError("Échec de l'envoi", "Échec de l'envoi vers Google Drive.");
         } finally {
             this.isUploading = false;
             this.hideUploadProgress();
@@ -1101,6 +1127,16 @@ export default class extends Controller {
     cancelConfirm() {
         this.confirmModalTarget.classList.add('hidden');
         this.pendingAction = null;
+    }
+
+    showError(title, message) {
+        this.errorTitleTarget.innerText = title;
+        this.errorMessageTarget.innerText = message;
+        this.errorModalTarget.classList.remove('hidden');
+    }
+
+    hideError() {
+        this.errorModalTarget.classList.add('hidden');
     }
 
     // --- TRASH & RESTORATION ---
@@ -1475,6 +1511,29 @@ export default class extends Controller {
             }
         });
 
+        // Combine date and time fields
+        const combine = (field) => {
+            const dateVal = this.formTarget[`${field}_date`].value;
+            const timeVal = this.formTarget[`${field}_time`].value || (field === 'startDate' ? '09:00' : '18:00');
+            return dateVal ? `${dateVal}T${timeVal}` : null;
+        };
+
+        if (isEdit) {
+            if (data.startDate_date !== undefined || data.startDate_time !== undefined) {
+                data.startDate = combine('startDate');
+            }
+            if (data.expiresAt_date !== undefined || data.expiresAt_time !== undefined) {
+                data.expiresAt = combine('expiresAt');
+            }
+            delete data.startDate_date; delete data.startDate_time;
+            delete data.expiresAt_date; delete data.expiresAt_time;
+        } else {
+            data.startDate = combine('startDate');
+            data.expiresAt = combine('expiresAt');
+            delete data.startDate_date; delete data.startDate_time;
+            delete data.expiresAt_date; delete data.expiresAt_time;
+        }
+
         // If nothing changed in edit mode, just close and return
         if (isEdit && Object.keys(data).length === 0) {
             this.close();
@@ -1522,7 +1581,7 @@ export default class extends Controller {
                 window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
             } else {
                 const error = await response.json();
-                alert(`Erreur: ${error.message || 'Une erreur est survenue'}`);
+                this.showError("Erreur de sauvegarde", error.message || "Une erreur est survenue lors de l'enregistrement.");
             }
         } catch (e) {
             console.error("Save failed", e);

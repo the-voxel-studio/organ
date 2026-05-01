@@ -150,7 +150,7 @@ export default class extends Controller {
             
             // Set icon preview
             setTimeout(() => {
-                if (this.iconMode === 'BLOB') {
+                if (this.iconMode === 'BLOB' && this.organValue.iconData) {
                     this.imagePreviewTarget.src = this.organValue.iconData;
                     this.imagePreviewTarget.classList.remove('hidden');
                     this.imagePlaceholderTarget.classList.add('hidden');

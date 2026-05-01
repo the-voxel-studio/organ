@@ -133,9 +133,10 @@ class TaskAttachmentController extends AbstractController
 
         // Seul le stockage local (DB) a une limite de taille raisonnable (ex: 20Mo)
         $maxLocalSize = 20 * 1024 * 1024;
+        $maxSizeMB = 20;
         $isBinaryType = in_array($mimeType, $allowedBinaryTypes, true);
 
-        // Si c'est trop gros pour la DB OU si ce n'est pas une image/pdf -> Google Drive
+        // Si ce n'est pas un type supporté localement OU si c'est trop gros pour la DB
         if (!$isBinaryType || $fileSize > $maxLocalSize) {
             $driveConfig = $entityManager->getRepository(ProjectDriveConfig::class)->findOneBy(['project' => $project, 'isActive' => true]);
             if ($driveConfig) {
@@ -143,7 +144,7 @@ class TaskAttachmentController extends AbstractController
                 if ($accessToken) {
                     $folderId = $driveConfig->getDriveFolderId();
                     
-                    // Fallback reconstruction dossier si besoin (déjà implémenté dans create, on le duplique ici pour la cohérence)
+                    // Fallback reconstruction dossier si besoin
                     if (!$folderId || !$this->googleDriveService->fileExists($accessToken, $folderId)) {
                         $rootFolderId = null;
                         foreach ($this->googleDriveService->listFolders($accessToken) as $f) {
@@ -175,8 +176,20 @@ class TaskAttachmentController extends AbstractController
                 }
             }
 
+            // Si on arrive ici, c'est que Drive n'est pas dispo mais que le fichier nécessite le Cloud
+            if (!$isBinaryType) {
+                return $this->json([
+                    'message' => 'error.upload.unsupported_format_no_cloud',
+                    'code' => 'UNSUPPORTED_FORMAT_NO_CLOUD'
+                ], Response::HTTP_UNSUPPORTED_MEDIA_TYPE);
+            }
+
             if ($fileSize > $maxLocalSize) {
-                return $this->json(['message' => 'Fichier trop volumineux pour le stockage local. Veuillez configurer Google Drive.'], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
+                return $this->json([
+                    'message' => 'error.upload.file_too_large_no_cloud',
+                    'code' => 'FILE_TOO_LARGE_NO_CLOUD',
+                    'limit' => $maxSizeMB
+                ], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
             }
         }
 
