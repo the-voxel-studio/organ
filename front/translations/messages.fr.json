@@ -115,7 +115,8 @@
                     "roles_explanation": {
                         "admin": "<b>Administrateur :</b> Contrôle total sur le projet, ses paramètres et ses membres.",
                         "manager": "<b>Manager :</b> Peut gérer les tâches, les membres et les paramètres du projet.",
-                        "member": "<b>Membre :</b> Peut voir le projet, gérer ses tâches et participer aux discussions."
+                        "member": "<b>Membre :</b> Peut voir le projet, gérer ses tâches et participer aux discussions.",
+                        "single_admin_warning": "Attention : Il ne peut y avoir qu'un seul administrateur par projet. Si vous nommez un autre membre administrateur, vous perdrez ce rôle au profit du nouveau responsable."
                     }
                 },
                 "actions": {

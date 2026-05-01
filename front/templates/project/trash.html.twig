@@ -74,5 +74,87 @@
             <p class="text-gray-500 font-medium italic">Tout est à sa place ! Aucun projet n'attend d'être restauré.</p>
         </div>
     {% endif %}
+
+    {# Modal de suppression définitive de projet #}
+    <div data-project-trash-target="hardDeleteModal" class="hidden fixed inset-0 z-[110] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-red-900/10 backdrop-blur-sm transition-opacity cursor-pointer" data-action="click->project-trash#closeHardDeleteModal"></div>
+
+            <div class="relative z-10 bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-red-50 transform transition-all">
+                <div class="p-10 text-center">
+                    <div class="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center text-red-500 mx-auto mb-6 border border-red-100/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </div>
+                    
+                    <h3 class="text-2xl font-black text-gray-900 mb-4">Suppression irréversible</h3>
+                    <p class="text-gray-500 font-medium leading-relaxed mb-8">
+                        Cette action est <span class="font-bold text-red-600">définitive</span>. Le projet et toutes ses données (organs, tâches, fichiers) seront supprimés sans possibilité de retour.
+                    </p>
+
+                    <div class="flex flex-col gap-3">
+                        <button type="button" 
+                                data-project-trash-target="deleteSubmitBtn"
+                                data-action="click->project-trash#confirmRemovePermanent"
+                                class="w-full py-4 bg-red-600 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-red-600/20 hover:bg-red-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer">
+                            <span data-project-trash-target="deleteSpinner" class="hidden animate-spin">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                            </span>
+                            Confirmer la suppression définitive
+                        </button>
+                        <button type="button" data-action="click->project-trash#closeHardDeleteModal"
+                                class="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all cursor-pointer">
+                            Annuler l'opération
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# Modal de restauration de projet #}
+    <div data-project-trash-target="restoreModal" class="hidden fixed inset-0 z-[110] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-bubblegum/5 backdrop-blur-sm transition-opacity cursor-pointer" data-action="click->project-trash#closeRestoreModal"></div>
+
+            <div class="relative z-10 bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-bubblegum/5 transform transition-all">
+                <div class="p-10 text-center">
+                    <div class="w-20 h-20 bg-bubblegum/5 rounded-3xl flex items-center justify-center text-bubblegum mx-auto mb-6 border border-bubblegum/10">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg>
+                    </div>
+                    
+                    <h3 class="text-2xl font-black text-gray-900 mb-4">Restaurer le projet ?</h3>
+                    <div class="space-y-4 mb-8 text-left">
+                        <p class="text-gray-500 font-medium leading-relaxed">
+                            Le projet sera de nouveau accessible sur votre tableau de bord.
+                        </p>
+                        <div class="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                            <p class="text-[11px] font-bold text-amber-700 uppercase tracking-wider flex items-center gap-2 mb-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                                Action requise après restauration
+                            </p>
+                            <p class="text-xs text-amber-600 leading-relaxed font-medium">
+                                Les autres membres du projet <b>ne seront pas</b> restaurés automatiquement pour des raisons de sécurité. Vous devrez les réactiver manuellement depuis la corbeille du projet.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                        <button type="button" 
+                                data-project-trash-target="restoreSubmitBtn"
+                                data-action="click->project-trash#confirmRestore"
+                                class="w-full py-4 bg-bubblegum text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-bubblegum/20 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer">
+                            <span data-project-trash-target="restoreSpinner" class="hidden animate-spin">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                            </span>
+                            Confirmer la restauration
+                        </button>
+                        <button type="button" data-action="click->project-trash#closeRestoreModal"
+                                class="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all cursor-pointer">
+                            Annuler
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

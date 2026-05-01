@@ -1,11 +1,40 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['item', 'searchInput', 'organsSection', 'membersSection', 'tagsSection', 'content', 'chevron'];
+    static targets = [
+        'item', 'searchInput', 'organsSection', 'membersSection', 'tagsSection', 'content', 'chevron',
+        'hardDeleteModal', 'deleteSubmitBtn', 'deleteSpinner', 'deleteModalTitle',
+        'restoreModal', 'restoreSubmitBtn', 'restoreSpinner', 'restoreModalTitle',
+        'memberCheckbox', 'bulkRestoreBtn', 'bulkRestoreModal', 'bulkCount', 'bulkRestoreSubmitBtn', 'bulkRestoreSpinner'
+    ];
     static values = {
         apiUrl: String,
         projectUuid: String
     };
+
+    connect() {
+        this.itemToManage = null;
+
+        this.escHandler = (e) => {
+            if (e.key === 'Escape') {
+                if (this.hasHardDeleteModalTarget && !this.hardDeleteModalTarget.classList.contains('hidden')) {
+                    this.closeHardDeleteModal();
+                }
+                if (this.hasRestoreModalTarget && !this.restoreModalTarget.classList.contains('hidden')) {
+                    this.closeRestoreModal();
+                }
+                if (this.hasBulkRestoreModalTarget && !this.bulkRestoreModalTarget.classList.contains('hidden')) {
+                    this.closeBulkRestoreModal();
+                }
+            }
+        };
+        window.addEventListener('keydown', this.escHandler);
+        this.updateBulkBtnVisibility();
+    }
+
+    disconnect() {
+        window.removeEventListener('keydown', this.escHandler);
+    }
 
     search() {
         const query = this.searchInputTarget.value.toLowerCase().trim();
@@ -41,6 +70,7 @@ export default class extends Controller {
         });
 
         this.checkGlobalEmptyState();
+        this.updateBulkBtnVisibility();
     }
 
     toggleSection(event) {
@@ -53,12 +83,26 @@ export default class extends Controller {
         chevron.classList.toggle('rotate-180');
     }
 
-    async restore(event) {
+    openRestoreModal(event) {
         const btn = event.currentTarget;
-        const type = btn.dataset.type;
-        const uuid = btn.dataset.uuid;
-        const row = btn.closest('.trash-item');
+        this.itemToManage = {
+            type: btn.dataset.type,
+            uuid: btn.dataset.uuid,
+            row: btn.closest('.trash-item')
+        };
+        this.restoreModalTitleTarget.innerText = `"${btn.dataset.title}"`;
+        this.restoreModalTarget.classList.remove('hidden');
+    }
 
+    closeRestoreModal() {
+        this.restoreModalTarget.classList.add('hidden');
+        this.itemToManage = null;
+    }
+
+    async confirmRestore() {
+        if (!this.itemToManage) return;
+
+        const { type, uuid, row } = this.itemToManage;
         let url = '';
         if (type === 'organ') {
             url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${uuid}/restore`;
@@ -69,8 +113,8 @@ export default class extends Controller {
         }
 
         try {
-            btn.disabled = true;
-            btn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+            this.restoreSubmitBtnTarget.disabled = true;
+            this.restoreSpinnerTarget.classList.remove('hidden');
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -79,6 +123,7 @@ export default class extends Controller {
 
             if (!response.ok) throw new Error("Erreur lors de la restauration.");
 
+            this.closeRestoreModal();
             row.classList.add('opacity-0', 'scale-95', 'transition-all', 'duration-300');
             setTimeout(() => {
                 row.remove();
@@ -87,21 +132,31 @@ export default class extends Controller {
 
         } catch (e) {
             alert(e.message);
-            btn.disabled = false;
-            btn.innerText = 'Restaurer';
+            this.restoreSubmitBtnTarget.disabled = false;
+            this.restoreSpinnerTarget.classList.add('hidden');
         }
     }
 
-    async removePermanent(event) {
+    openHardDeleteModal(event) {
         const btn = event.currentTarget;
-        const type = btn.dataset.type;
-        const uuid = btn.dataset.uuid;
-        const row = btn.closest('.trash-item');
+        this.itemToManage = {
+            type: btn.dataset.type,
+            uuid: btn.dataset.uuid,
+            row: btn.closest('.trash-item')
+        };
+        this.deleteModalTitleTarget.innerText = `"${btn.dataset.title}"`;
+        this.hardDeleteModalTarget.classList.remove('hidden');
+    }
 
-        if (!confirm("Cette action est irréversible. Voulez-vous supprimer cet élément définitivement ?")) {
-            return;
-        }
+    closeHardDeleteModal() {
+        this.hardDeleteModalTarget.classList.add('hidden');
+        this.itemToManage = null;
+    }
 
+    async confirmRemovePermanent() {
+        if (!this.itemToManage) return;
+
+        const { type, uuid, row } = this.itemToManage;
         let url = '';
         if (type === 'organ') {
             url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${uuid}?permanent=1`;
@@ -112,13 +167,16 @@ export default class extends Controller {
         }
 
         try {
-            btn.disabled = true;
+            this.deleteSubmitBtnTarget.disabled = true;
+            this.deleteSpinnerTarget.classList.remove('hidden');
+
             const response = await fetch(url, {
                 method: 'DELETE',
                 credentials: 'include'
             });
 
             if (response.ok) {
+                this.closeHardDeleteModal();
                 row.classList.add('opacity-0', 'scale-95');
                 setTimeout(() => {
                     row.remove();
@@ -126,13 +184,79 @@ export default class extends Controller {
                     this.checkGlobalEmptyState();
                 }, 300);
             } else {
-                btn.disabled = false;
-                alert('Erreur lors de la suppression définitive.');
+                throw new Error('Erreur lors de la suppression définitive.');
             }
         } catch (error) {
-            btn.disabled = false;
-            console.error('Hard delete failed', error);
+            alert(error.message);
+            this.deleteSubmitBtnTarget.disabled = false;
+            this.deleteSpinnerTarget.classList.add('hidden');
         }
+    }
+
+    // --- BULK RESTORE ---
+    selectAllMembers() {
+        this.memberCheckboxTargets.forEach(cb => {
+            if (!cb.closest('.trash-item').classList.contains('hidden')) {
+                cb.checked = true;
+            }
+        });
+        this.updateBulkBtnVisibility();
+    }
+
+    updateBulkBtnVisibility() {
+        const selectedCount = this.memberCheckboxTargets.filter(cb => cb.checked).length;
+        if (selectedCount > 0) {
+            this.bulkRestoreBtnTarget.classList.remove('hidden');
+            this.bulkRestoreBtnTarget.innerHTML = `Restaurer la sélection (${selectedCount})`;
+        } else {
+            this.bulkRestoreBtnTarget.classList.add('hidden');
+        }
+    }
+
+    openBulkRestoreModal() {
+        const selectedCount = this.memberCheckboxTargets.filter(cb => cb.checked).length;
+        this.bulkCountTarget.innerText = selectedCount;
+        this.bulkRestoreModalTarget.classList.remove('hidden');
+    }
+
+    closeBulkRestoreModal() {
+        this.bulkRestoreModalTarget.classList.add('hidden');
+    }
+
+    async confirmBulkRestore() {
+        const selectedCheckboxes = this.memberCheckboxTargets.filter(cb => cb.checked);
+        this.bulkRestoreSubmitBtnTarget.disabled = true;
+        this.bulkRestoreSpinnerTarget.classList.remove('hidden');
+
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const cb of selectedCheckboxes) {
+            const row = cb.closest('.trash-item');
+            const uuid = row.dataset.uuid;
+            const url = `${this.apiUrlValue}/projects/${this.projectUuidValue}/members/${uuid}/restore`;
+
+            try {
+                const res = await fetch(url, { method: 'POST', credentials: 'include' });
+                if (res.ok) {
+                    successCount++;
+                    row.classList.add('opacity-0', 'scale-95', 'transition-all', 'duration-300');
+                    setTimeout(() => row.remove(), 300);
+                } else {
+                    failCount++;
+                }
+            } catch (e) {
+                failCount++;
+            }
+        }
+
+        setTimeout(() => {
+            this.closeBulkRestoreModal();
+            this.updateVisibility();
+            if (failCount > 0) {
+                alert(`${successCount} membres restaurés, ${failCount} échecs.`);
+            }
+        }, 400);
     }
 
     checkGlobalEmptyState() {

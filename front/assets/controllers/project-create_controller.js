@@ -9,6 +9,7 @@ export default class extends Controller {
         'inviteEmail', 'inviteList', 'roleExplanation',
         'submitBtn', 'spinner', 'error',
         'deleteModal', 'deleteSubmitBtn', 'deleteSpinner',
+        'googleModal',
         'driveStatus', 'googleBtnText', 'driveFolderSection', 'folderLoader', 'folderList', 'generateFolderBtn'
     ];
 
@@ -133,7 +134,11 @@ export default class extends Controller {
         } catch (e) {}
     }
 
+    openGoogleModal() { this.googleModalTarget.classList.remove('hidden'); }
+    closeGoogleModal() { this.googleModalTarget.classList.add('hidden'); }
+
     async connectGoogle() {
+        this.closeGoogleModal();
         if (!this.googleClientIdValue) return;
 
         if (typeof google === 'undefined') {
@@ -233,6 +238,12 @@ export default class extends Controller {
     }
 
     // --- MEMBER MANAGEMENT ---
+    toggleRoleExplanation() {
+        if (this.hasRoleExplanationTarget) {
+            this.roleExplanationTarget.classList.toggle('hidden');
+        }
+    }
+
     addInvite() {
         const email = this.inviteEmailTarget.value.trim();
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
@@ -242,18 +253,65 @@ export default class extends Controller {
         this.renderInvites();
     }
     toggleRoleMenu(event) { const idx = parseInt(event.currentTarget.dataset.index); this.invites[idx].showMenu = !this.invites[idx].showMenu; this.renderInvites(); }
-    updateMemberRole(event) { const idx = parseInt(event.currentTarget.dataset.index); this.invites[idx].role = event.currentTarget.dataset.role; this.invites[idx].showMenu = false; if (this.invites[idx].isExisting) this.invites[idx].roleChanged = true; this.renderInvites(); }
+    updateMemberRole(event) {
+        const idx = parseInt(event.currentTarget.dataset.index);
+        const newRole = event.currentTarget.dataset.role;
+        
+        // If promoting someone to ADMIN, demote the current ADMIN
+        if (newRole === 'ADMIN') {
+            this.invites.forEach((invite, i) => {
+                if (i !== idx && invite.role === 'ADMIN') {
+                    invite.role = 'MANAGER';
+                    if (invite.isExisting) invite.roleChanged = true;
+                }
+            });
+        }
+
+        this.invites[idx].role = newRole;
+        this.invites[idx].showMenu = false;
+        if (this.invites[idx].isExisting) this.invites[idx].roleChanged = true;
+        this.renderInvites();
+    }
     removeInvite(event) { const idx = parseInt(event.currentTarget.dataset.index); if (!this.invites[idx].isCreator) { if (this.invites[idx].isExisting) this.removedMemberUuids.push(this.invites[idx].uuid); this.invites.splice(idx, 1); this.renderInvites(); } }
     renderInvites() {
-        this.inviteListTarget.innerHTML = this.invites.map((invite, index) => `
-            <div class="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-gray-100 ${invite.isCreator ? 'border-bubblegum/20 bg-bubblegum/[0.02]' : ''}">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-bubblegum font-black text-sm uppercase border border-gray-100">${invite.email.charAt(0).toUpperCase()}</div>
-                    <div><p class="text-sm font-bold text-gray-900">${invite.email}</p><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">${invite.role} ${invite.roleChanged ? '<span class="text-bubblegum">(Modifié)</span>' : ''}</p></div>
+        this.inviteListTarget.innerHTML = this.invites.map((invite, index) => {
+            const isCreator = invite.isCreator;
+            const roleLabel = trans(`project.create.form.members.role.${invite.role.toLowerCase()}`);
+            
+            return `
+                <div class="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-gray-100 ${isCreator ? 'border-bubblegum/20 bg-bubblegum/[0.02]' : ''}">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-bubblegum font-black text-sm uppercase border border-gray-100">${invite.email.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">${invite.email}</p>
+                            <div class="relative">
+                                <button type="button" 
+                                        ${isCreator ? 'disabled' : `data-action="click->project-create#toggleRoleMenu" data-index="${index}"`}
+                                        class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1 ${isCreator ? '' : 'hover:text-bubblegum'} transition-all text-left">
+                                    ${roleLabel} ${invite.roleChanged ? '<span class="text-bubblegum lowercase font-bold">(modifié)</span>' : ''}
+                                    ${!isCreator ? `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>` : ''}
+                                </button>
+                                
+                                ${invite.showMenu ? `
+                                    <div class="absolute left-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-1 overflow-hidden">
+                                        <button type="button" data-action="click->project-create#updateMemberRole" data-index="${index}" data-role="ADMIN" class="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 ${invite.role === 'ADMIN' ? 'text-bubblegum bg-bubblegum/5' : 'text-gray-500'}">
+                                            ${trans('project.create.form.members.role.admin')}
+                                        </button>
+                                        <button type="button" data-action="click->project-create#updateMemberRole" data-index="${index}" data-role="MANAGER" class="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 ${invite.role === 'MANAGER' ? 'text-bubblegum bg-bubblegum/5' : 'text-gray-500'}">
+                                            ${trans('project.create.form.members.role.manager')}
+                                        </button>
+                                        <button type="button" data-action="click->project-create#updateMemberRole" data-index="${index}" data-role="MEMBER" class="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 ${invite.role === 'MEMBER' ? 'text-bubblegum bg-bubblegum/5' : 'text-gray-500'}">
+                                            ${trans('project.create.form.members.role.member')}
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${!isCreator ? `<button type="button" data-action="click->project-create#removeInvite" data-index="${index}" class="p-2 text-gray-300 hover:text-red-500 transition-all"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 6 6 18M6 6l12 12"></path></svg></button>` : ''}
                 </div>
-                ${!invite.isCreator ? `<button type="button" data-action="click->project-create#removeInvite" data-index="${index}" class="p-2 text-gray-300 hover:text-red-500 transition-all"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 6 6 18M6 6l12 12"></path></svg></button>` : ''}
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // --- SUBMISSION ---

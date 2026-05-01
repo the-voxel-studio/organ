@@ -9,11 +9,14 @@ use App\Entity\Project;
 use App\Entity\ProjectMember;
 use App\Entity\Organ;
 use App\Entity\Notification;
+use App\Entity\ProjectDriveConfig;
 use App\Enum\IconType;
 use App\Enum\ProjectGlobalRole;
 use App\Enum\ProjectStatus;
 use App\Service\ProjectCacheService;
 use App\Service\UserCacheService;
+use App\Service\GoogleDriveService;
+use App\Service\ProjectDriveCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,7 +30,9 @@ class ProjectController extends AbstractController
 {
     public function __construct(
         private readonly ProjectCacheService $projectCacheService,
-        private readonly UserCacheService $userCacheService
+        private readonly UserCacheService $userCacheService,
+        private readonly GoogleDriveService $googleDriveService,
+        private readonly ProjectDriveCacheService $driveCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -470,14 +475,29 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project, 'deletedAt' => null]);
+        // Fix: Allow finding the member even if soft-deleted during a permanent delete
+        $memberCriteria = ['user' => $user, 'project' => $project];
+        if (!$isPermanent) {
+            $memberCriteria['deletedAt'] = null;
+        }
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy($memberCriteria);
 
         if (!$membership || $membership->getGlobalRole() !== ProjectGlobalRole::ADMIN) {
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
 
         if ($isPermanent) {
+            // Cleanup Google Drive folder if configured
+            $driveConfig = $entityManager->getRepository(ProjectDriveConfig::class)->findOneBy(['project' => $project]);
+            if ($driveConfig && $driveConfig->getDriveFolderId() && $driveConfig->getEncryptedRefreshToken()) {
+                $accessToken = $this->googleDriveService->getAccessToken($driveConfig->getEncryptedRefreshToken());
+                if ($accessToken) {
+                    $this->googleDriveService->deleteFile($accessToken, $driveConfig->getDriveFolderId());
+                }
+            }
+            
             $entityManager->remove($project);
+            $this->driveCacheService->invalidate($uuid);
         } else {
             $project->setDeletedAt(new \DateTime());
             
