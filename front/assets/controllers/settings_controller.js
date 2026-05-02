@@ -38,7 +38,7 @@ export default class extends Controller {
         if (!this.hasConnectionsListTarget) return;
 
         if (connections.length === 0) {
-            this.connectionsListTarget.innerHTML = '<p class="text-sm text-gray-500 italic p-4">Aucune session active trouvée.</p>';
+            this.connectionsListTarget.innerHTML = `<p class="text-sm text-gray-500 italic p-4">${trans('settings.devices.empty')}</p>`;
             return;
         }
 
@@ -108,10 +108,10 @@ export default class extends Controller {
                 this.closeDisconnectModal();
                 window.location.reload();
             } else {
-                alert('Échec de la déconnexion de l\'appareil');
+                alert(trans('settings.devices.error.disconnect'));
             }
         } catch (error) {
-            alert('Erreur de connexion');
+            alert(trans('settings.error.connection'));
         } finally {
             if (this.hasDisconnectSpinnerTarget) this.disconnectSpinnerTarget.classList.add('hidden');
         }

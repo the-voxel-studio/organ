@@ -520,7 +520,7 @@ export default class extends Controller {
         const canManageMembers = this.hasPermission('ORGAN_MANAGE_MEMBERS');
 
         if (this.addedMembers.length === 0) {
-            this.organMemberListTarget.innerHTML = `<p class="text-sm text-gray-400 italic">Aucun membre ajouté à l'organ.</p>`;
+            this.organMemberListTarget.innerHTML = `<p class="text-sm text-gray-400 italic">${trans('organ.create.members.empty')}</p>`;
             return;
         }
 
@@ -639,7 +639,7 @@ export default class extends Controller {
 
             // STEP 2: ROLES MANAGEMENT
             if (!isEdit || this.hasPermission('ORGAN_MANAGE_ROLES')) {
-                this.loadingTextTarget.innerText = "Synchronisation des rôles...";
+                this.loadingTextTarget.innerText = trans('organ.create.form.sync.roles');
                 const roleIdMap = {}; // Local ID -> Server UUID
 
                 if (isEdit) {
@@ -700,7 +700,7 @@ export default class extends Controller {
 
                 // STEP 3: ASSIGN/UNASSIGN MEMBERS (Sync roles)
                 if (!isEdit || this.hasPermission('ORGAN_MANAGE_MEMBERS')) {
-                    this.loadingTextTarget.innerText = "Synchronisation des membres...";
+                    this.loadingTextTarget.innerText = trans('organ.create.form.sync.members');
                     
                     // 1. Process current members (added/modified)
                     for (const member of this.addedMembers) {
@@ -750,7 +750,7 @@ export default class extends Controller {
                 }
             } else if (isEdit && this.hasPermission('ORGAN_MANAGE_MEMBERS')) {
                 // If user ONLY has member permission in edit mode, use same sync logic but without roleIdMap
-                this.loadingTextTarget.innerText = "Mise à jour des membres...";
+                this.loadingTextTarget.innerText = trans('organ.create.form.sync.members_update');
                 for (const member of this.addedMembers) {
                     const initialRoles = member.initialRoles || [];
                     const rolesToAdd = member.roles.filter(id => !initialRoles.includes(id));

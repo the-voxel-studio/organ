@@ -123,7 +123,7 @@ export default class extends Controller {
                 this.selectedFolderId = config.driveFolderId;
                 if (config.isActive) {
                     this.driveStatusTarget.classList.remove('hidden');
-                    this.googleBtnTextTarget.innerText = "Compte Google lié";
+                    this.googleBtnTextTarget.innerText = trans('project.create.drive.linked');
                     this.driveFolderSectionTarget.classList.remove('hidden');
                     if (this.selectedFolderId) {
                         this.generateFolderBtnTarget.classList.add('hidden');
@@ -168,7 +168,7 @@ export default class extends Controller {
 
                         if (linkRes.ok) {
                             this.driveStatusTarget.classList.remove('hidden');
-                            this.googleBtnTextTarget.innerText = "Compte Google lié";
+                            this.googleBtnTextTarget.innerText = trans('project.create.drive.linked');
                             this.driveFolderSectionTarget.classList.remove('hidden');
                             await this.loadFolders();
                         }
@@ -196,7 +196,7 @@ export default class extends Controller {
     renderFolders(folders) {
         this.folderListTarget.innerHTML = '';
         if (folders.length === 0) {
-            this.folderListTarget.innerHTML = '<p class="text-xs text-gray-400 italic p-4 text-center">Aucun dossier projet provisionné.</p>';
+            this.folderListTarget.innerHTML = `<p class="text-xs text-gray-400 italic p-4 text-center">${trans('project.create.drive.empty_folders')}</p>`;
             return;
         }
 
@@ -228,10 +228,10 @@ export default class extends Controller {
                 this.selectedFolderId = folder.driveFolderId;
                 this.generateFolderBtnTarget.classList.add('hidden');
                 await this.loadFolders();
-                alert("Dossier de stockage généré avec succès !");
+                alert(trans('project.create.drive.success.generated'));
             } else {
                 const err = await res.json();
-                alert(err.message || "Erreur lors de la création");
+                alert(err.message || trans('project.create.drive.error.creation'));
             }
         } catch (e) { console.error(e); }
         finally { this.folderLoaderTarget.classList.add('hidden'); }
@@ -385,18 +385,17 @@ export default class extends Controller {
                     }).catch(e => console.error("Invitation failed", e));
                 }
 
-                window.location.href = isEdit ? `/projects/${projectUuid}` : '/dashboard';
+                window.location.href = `/projects/${projectUuid}`;
             } else {
                 const err = await res.json();
-                alert(err.message || "Erreur lors de la sauvegarde");
+                alert(err.message || trans('project.create.error.save'));
             }
-        } catch (e) { 
-            console.error(e); 
-            alert("Une erreur réseau est survenue.");
-        }
-        finally { 
-            this.spinnerTarget.classList.add('hidden'); 
-            this.submitBtnTarget.disabled = false; 
+        } catch (e) {
+            console.error(e);
+            alert(trans('project.create.error.network'));
+        } finally {
+            this.spinnerTarget.classList.add('hidden');
+            this.submitBtnTarget.disabled = false;
         }
     }
 

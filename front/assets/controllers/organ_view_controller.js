@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { trans } from '../translator.js';
 import Sortable from 'sortablejs';
 
 export default class extends Controller {
@@ -225,7 +226,14 @@ export default class extends Controller {
                             // Revert on failure
                             this.loadTasks();
                             const error = await res.json();
-                            alert(error.message || "Erreur lors du déplacement");
+                            const modal = this.application.getControllerForElementAndIdentifier(this.element, 'task-modal');
+                            if (modal) {
+                                let message = error.message || trans('organ.view.error.move_task');
+                                if (res.status === 403) message = trans('task.modal.error.access_denied');
+                                modal.showError(trans('task.modal.error.save_title'), message);
+                            } else {
+                                alert(error.message || trans('organ.view.error.move_task'));
+                            }
                         }
                     } catch (e) {
                         console.error(e);

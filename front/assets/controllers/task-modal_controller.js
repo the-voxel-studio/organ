@@ -106,7 +106,7 @@ export default class extends Controller {
     }
 
     updateManagerSelect() {
-        this.managerSelectTarget.innerHTML = '<option value="">Non assigné</option>';
+        this.managerSelectTarget.innerHTML = `<option value="">${trans('task.modal.empty.manager')}</option>`;
         this.members.forEach(m => {
             const option = document.createElement('option');
             option.value = m.user.uuid;
@@ -122,8 +122,8 @@ export default class extends Controller {
         this.resetForm();
         this.initialStatus = 'TODO';
         this.toggleStatusMessage();
-        this.modalTitleTarget.innerText = "Créer une nouvelle tâche";
-        this.submitBtnTextTarget.innerText = "Créer la tâche";
+        this.modalTitleTarget.innerText = trans('task.modal.create_title');
+        this.submitBtnTextTarget.innerText = trans('task.modal.buttons.create');
         
         // Reset staged data
         this.stagedAssignees = [];
@@ -533,7 +533,7 @@ export default class extends Controller {
     renderProjectTagList() {
         this.projectTagListTarget.innerHTML = '';
         if (this.projectTags.length === 0) {
-            this.projectTagListTarget.innerHTML = '<p class="text-[10px] text-gray-400 italic p-4 text-center">Aucune étiquette définie dans le projet.</p>';
+            this.projectTagListTarget.innerHTML = `<p class="text-[10px] text-gray-400 italic p-4 text-center">${trans('task.modal.empty.tags')}</p>`;
             return;
         }
         this.projectTags.forEach(t => {
@@ -1162,7 +1162,7 @@ export default class extends Controller {
     renderDeletedComments(comments, perms = null) {
         this.deletedCommentListTarget.innerHTML = '';
         if (comments.length === 0) {
-            this.deletedCommentListTarget.innerHTML = '<p class="text-[10px] text-gray-300 italic p-4 text-center">Aucun commentaire en corbeille.</p>';
+            this.deletedCommentListTarget.innerHTML = `<p class="text-[10px] text-gray-300 italic p-4 text-center">${trans('task.modal.empty.comments')}</p>`;
             return;
         }
 
@@ -1262,7 +1262,7 @@ export default class extends Controller {
     renderDeletedAttachments(attachments, perms = null) {
         this.deletedAttachmentListTarget.innerHTML = '';
         if (attachments.length === 0) {
-            this.deletedAttachmentListTarget.innerHTML = '<p class="text-[10px] text-gray-300 italic p-4 text-center col-span-2">Aucun fichier en corbeille.</p>';
+            this.deletedAttachmentListTarget.innerHTML = `<p class="text-[10px] text-gray-300 italic p-4 text-center col-span-2">${trans('task.modal.empty.attachments')}</p>`;
             return;
         }
 
@@ -1305,7 +1305,7 @@ export default class extends Controller {
     renderDeletedLinks(links, perms = null) {
         this.deletedLinkListTarget.innerHTML = '';
         if (links.length === 0) {
-            this.deletedLinkListTarget.innerHTML = '<p class="text-[10px] text-gray-300 italic p-4 text-center">Aucun lien en corbeille.</p>';
+            this.deletedLinkListTarget.innerHTML = `<p class="text-[10px] text-gray-300 italic p-4 text-center">${trans('task.modal.empty.links')}</p>`;
             return;
         }
 
@@ -1568,8 +1568,8 @@ export default class extends Controller {
                 const result = await response.json();
                 if (!isEdit) {
                     this.taskIdValue = result.uuid;
-                    this.modalTitleTarget.innerText = "Modifier la tâche";
-                    this.submitBtnTextTarget.innerText = "Enregistrer les modifications";
+                    this.modalTitleTarget.innerText = trans('task.modal.edit_title');
+                    this.submitBtnTextTarget.innerText = trans('task.modal.buttons.save');
                     this.subResourcesTarget.classList.remove('hidden');
                     this.containerTarget.querySelectorAll('[data-section="attachments"], [data-section="comments"], [data-section="timeline"]').forEach(s => s.classList.remove('hidden'));
                     this.taskMetaTarget.classList.remove('hidden');
@@ -1581,7 +1581,9 @@ export default class extends Controller {
                 window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
             } else {
                 const error = await response.json();
-                this.showError("Erreur de sauvegarde", error.message || "Une erreur est survenue lors de l'enregistrement.");
+                let message = error.message || trans('task.modal.error.save_generic');
+                if (response.status === 403) message = trans('task.modal.error.access_denied');
+                this.showError(trans('task.modal.error.save_title'), message);
             }
         } catch (e) {
             console.error("Save failed", e);
@@ -1593,10 +1595,10 @@ export default class extends Controller {
 
     async deleteTask() {
         const isPermanent = this.isTaskTrashed === true;
-        const title = isPermanent ? "Supprimer définitivement ?" : "Supprimer la tâche ?";
+        const title = isPermanent ? trans('task.modal.confirm.delete_permanent_title') : trans('task.modal.confirm.delete_title');
         const message = isPermanent 
-            ? "Cette action est irréversible. La tâche et toutes ses données seront définitivement supprimées."
-            : "La tâche sera déplacée vers la corbeille de l'organ.";
+            ? trans('task.modal.confirm.delete_permanent_message')
+            : trans('task.modal.confirm.delete_message');
 
         this.showConfirm(
             title,

@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { trans } from '../translator.js';
 
 export default class extends Controller {
     static targets = [
@@ -121,7 +122,7 @@ export default class extends Controller {
                 credentials: 'include'
             });
 
-            if (!response.ok) throw new Error("Erreur lors de la restauration.");
+            if (!response.ok) throw new Error(trans('organ.trash.error.restore'));
 
             this.closeRestoreModal();
             row.classList.add('opacity-0', 'scale-95', 'transition-all', 'duration-300');
@@ -184,7 +185,7 @@ export default class extends Controller {
                     this.checkGlobalEmptyState();
                 }, 300);
             } else {
-                throw new Error('Erreur lors de la suppression définitive.');
+                throw new Error(trans('organ.trash.error.delete_permanent'));
             }
         } catch (error) {
             alert(error.message);
@@ -207,7 +208,7 @@ export default class extends Controller {
         const selectedCount = this.memberCheckboxTargets.filter(cb => cb.checked).length;
         if (selectedCount > 0) {
             this.bulkRestoreBtnTarget.classList.remove('hidden');
-            this.bulkRestoreBtnTarget.innerHTML = `Restaurer la sélection (${selectedCount})`;
+            this.bulkRestoreBtnTarget.innerHTML = trans('project.show.bulk_restore_btn', { count: selectedCount });
         } else {
             this.bulkRestoreBtnTarget.classList.add('hidden');
         }
@@ -254,7 +255,7 @@ export default class extends Controller {
             this.closeBulkRestoreModal();
             this.updateVisibility();
             if (failCount > 0) {
-                alert(`${successCount} membres restaurés, ${failCount} échecs.`);
+                alert(trans('project.show.restore_batch_status', { success: successCount, fail: failCount }));
             }
         }, 400);
     }

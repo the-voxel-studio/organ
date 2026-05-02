@@ -1,6 +1,6 @@
 {% extends 'layouts/logged/sidebar_layout.html.twig' %}
 
-{% block title %}Corbeille - {{ project.title }}{% endblock %}
+{% block title %}{{ 'project.trash.specific.title'|trans }} - {{ project.title }}{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8" 
@@ -15,10 +15,9 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
                 </div>
                 <div>
-                    <h3 class="text-xl font-bold text-amber-900 mb-1">Projet restauré avec succès !</h3>
+                    <h3 class="text-xl font-bold text-amber-900 mb-1">{{ 'project.trash.specific.restored_success_title'|trans }}</h3>
                     <p class="text-sm text-amber-700 leading-relaxed font-medium">
-                        Le projet est de retour, mais les membres (sauf vous) sont toujours désactivés. 
-                        <br>Utilisez la liste ci-dessous pour les restaurer, individuellement ou par groupe.
+                        {{ 'project.trash.specific.restored_success_message'|trans|raw }}
                     </p>
                 </div>
             </div>
@@ -29,7 +28,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-1 transition-transform">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                 </svg>
-                Retour au projet
+                {{ 'project.trash.specific.back_to_project'|trans }}
             </a>
         </div>
 
@@ -39,16 +38,16 @@
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10 text-red-500">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                     </svg>
-                    Corbeille du projet
+                    {{ 'project.trash.specific.title'|trans }}
                 </h1>
-                <p class="text-gray-500 font-medium italic">Retrouvez ici les organs et membres supprimés du projet.</p>
+                <p class="text-gray-500 font-medium italic">{{ 'project.trash.specific.subtitle'|trans }}</p>
             </div>
             
             <div class="relative w-64">
                 <input type="text" 
                        data-project-specific-trash-target="searchInput"
                        data-action="input->project-specific-trash#search"
-                       placeholder="Rechercher..." 
+                       placeholder="{{ 'project.trash.specific.search_placeholder'|trans }}" 
                        class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-2xl text-sm transition-all focus:border-red-500 outline-none shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -66,7 +65,7 @@
                     class="w-full flex items-center justify-between mb-6 group cursor-pointer">
                 <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
                     <span class="w-8 h-[1px] bg-gray-100"></span>
-                    Organs
+                    {{ 'project.trash.specific.sections.organs'|trans }}
                 </h2>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-project-specific-trash-target="chevron">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -87,7 +86,7 @@
                             <div class="min-w-0">
                                 <h3 class="text-lg font-bold text-black truncate">{{ organ.title }}</h3>
                                 <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
-                                    Supprimé le {{ organ.deletedAt|date('d/m/Y à H:i') }}
+                                    {{ 'project.trash.specific.actions.deleted_at'|trans({'date': organ.deletedAt|date('d/m/Y à H:i')}) }}
                                 </p>
                             </div>
                         </div>
@@ -98,7 +97,7 @@
                                     data-uuid="{{ organ.uuid }}"
                                     data-title="{{ organ.title }}"
                                     class="px-5 py-2.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
-                                Restaurer
+                                {{ 'project.trash.specific.actions.restore'|trans }}
                             </button>
                             <button type="button" 
                                     data-action="click->project-specific-trash#openHardDeleteModal"
@@ -106,7 +105,7 @@
                                     data-uuid="{{ organ.uuid }}"
                                     data-title="{{ organ.title }}"
                                     class="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
-                                    title="Supprimer définitivement">
+                                    title="{{ 'project.trash.delete_permanent_btn'|trans }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                 </svg>
@@ -125,7 +124,7 @@
                         class="flex items-center group cursor-pointer">
                     <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
                         <span class="w-8 h-[1px] bg-gray-100"></span>
-                        Membres
+                        {{ 'project.trash.specific.sections.members'|trans }}
                     </h2>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0 ml-2" data-project-specific-trash-target="chevron">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -136,13 +135,13 @@
                     <button type="button" 
                             data-action="click->project-specific-trash#selectAllMembers"
                             class="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-colors">
-                        Tout sélectionner
+                        {{ 'project.trash.specific.actions.select_all'|trans }}
                     </button>
                     <button type="button" 
                             data-project-specific-trash-target="bulkRestoreBtn"
                             data-action="click->project-specific-trash#openBulkRestoreModal"
                             class="hidden px-4 py-2 bg-bubblegum text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-bubblegum/20 hover:brightness-105 active:scale-95 transition-all flex items-center gap-2">
-                        Restaurer la sélection
+                        {{ 'project.trash.specific.actions.restore_selection'|trans }}
                     </button>
                 </div>
             </div>
@@ -181,10 +180,10 @@
                             <div class="min-w-0">
                                 <h3 class="text-lg font-bold text-black truncate">{{ member.user.firstName }} {{ member.user.lastName }}</h3>
                                 <div class="flex items-center gap-2 mt-0.5">
-                                    <p class="text-xs text-gray-500 font-medium">{{ member.user.email }} • Rôle : {{ member.role }}</p>
+                                    <p class="text-xs text-gray-500 font-medium">{{ 'project.trash.specific.actions.previous_role'|trans({'role': member.role}) }} • {{ member.user.email }}</p>
                                     <span class="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 {{ is_batch ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-400' }} rounded-lg">
-                                        Retiré le {{ member.deletedAt|date('d/m/Y à H:i') }}
-                                        {{ is_batch ? '• Lot de suppression' : '' }}
+                                        {{ 'project.trash.specific.actions.removed_at'|trans({'date': member.deletedAt|date('d/m/Y à H:i')}) }}
+                                        {{ is_batch ? ('• ' ~ 'project.trash.specific.actions.batch_label'|trans) : '' }}
                                     </span>
                                 </div>
                             </div>
@@ -196,7 +195,7 @@
                                     data-uuid="{{ member.uuid }}"
                                     data-title="{{ member.user.firstName }} {{ member.user.lastName }}"
                                     class="px-5 py-2.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
-                                Restaurer
+                                {{ 'project.trash.specific.actions.restore'|trans }}
                             </button>
                             <button type="button" 
                                     data-action="click->project-specific-trash#openHardDeleteModal"
@@ -204,7 +203,7 @@
                                     data-uuid="{{ member.uuid }}"
                                     data-title="{{ member.user.firstName }} {{ member.user.lastName }}"
                                     class="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
-                                    title="Supprimer définitivement">
+                                    title="{{ 'project.trash.delete_permanent_btn'|trans }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                 </svg>
@@ -222,7 +221,7 @@
                     class="w-full flex items-center justify-between mb-6 group cursor-pointer">
                 <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
                     <span class="w-8 h-[1px] bg-gray-100"></span>
-                    Tags
+                    {{ 'project.trash.specific.sections.tags'|trans }}
                 </h2>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-project-specific-trash-target="chevron">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
@@ -241,7 +240,7 @@
                             <div class="min-w-0">
                                 <h3 class="text-lg font-bold text-black truncate">{{ tag.name }}</h3>
                                 <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
-                                    Supprimé le {{ tag.deletedAt|date('d/m/Y à H:i') }}
+                                    {{ 'project.trash.specific.actions.deleted_at'|trans({'date': tag.deletedAt|date('d/m/Y à H:i')}) }}
                                 </p>
                             </div>
                         </div>
@@ -252,7 +251,7 @@
                                     data-uuid="{{ tag.uuid }}"
                                     data-title="{{ tag.name }}"
                                     class="px-5 py-2.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
-                                Restaurer
+                                {{ 'project.trash.specific.actions.restore'|trans }}
                             </button>
                             <button type="button" 
                                     data-action="click->project-specific-trash#openHardDeleteModal"
@@ -260,7 +259,7 @@
                                     data-uuid="{{ tag.uuid }}"
                                     data-title="{{ tag.name }}"
                                     class="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
-                                    title="Supprimer définitivement">
+                                    title="{{ 'project.trash.delete_permanent_btn'|trans }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                 </svg>
@@ -278,8 +277,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
                 </svg>
             </div>
-            <h2 class="text-xl font-bold text-gray-900 mb-2">La corbeille du projet est vide</h2>
-            <p class="text-gray-500 font-medium italic">Tout est à sa place ! Aucun élément n'attend d'être restauré.</p>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">{{ 'project.trash.specific.empty'|trans }}</h2>
+            <p class="text-gray-500 font-medium italic">{{ 'project.trash.specific.empty_subtitle'|trans }}</p>
         </div>
     {% endif %}
 
@@ -294,9 +293,9 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </div>
                     
-                    <h3 class="text-2xl font-black text-gray-900 mb-4">Suppression irréversible</h3>
+                    <h3 class="text-2xl font-black text-gray-900 mb-4">{{ 'generic.confirm_delete_permanent'|trans }}</h3>
                     <p class="text-gray-500 font-medium leading-relaxed mb-8">
-                        Êtes-vous sûr de vouloir supprimer <span data-project-specific-trash-target="deleteModalTitle" class="font-bold text-gray-900"></span> définitivement ? Cette action est irréversible.
+                        {{ 'project.trash.specific.confirm.delete_permanent_message'|trans({'title': '<span data-project-specific-trash-target="deleteModalTitle" class="font-bold text-gray-900"></span>'})|raw }}
                     </p>
 
                     <div class="flex flex-col gap-3">
@@ -307,11 +306,11 @@
                             <span data-project-specific-trash-target="deleteSpinner" class="hidden animate-spin">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                             </span>
-                            Confirmer la suppression définitive
+                            {{ 'generic.confirm_delete_permanent'|trans }}
                         </button>
                         <button type="button" data-action="click->project-specific-trash#closeHardDeleteModal"
                                 class="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all cursor-pointer">
-                            Annuler l'opération
+                            {{ 'generic.cancel'|trans }}
                         </button>
                     </div>
                 </div>
@@ -330,9 +329,9 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" /></svg>
                     </div>
                     
-                    <h3 class="text-2xl font-black text-gray-900 mb-4">Restaurer cet élément ?</h3>
+                    <h3 class="text-2xl font-black text-gray-900 mb-4">{{ 'project.trash.specific.actions.restore'|trans }} ?</h3>
                     <p class="text-gray-500 font-medium leading-relaxed mb-8">
-                        Voulez-vous restaurer <span data-project-specific-trash-target="restoreModalTitle" class="font-bold text-gray-900"></span> ? Il reprendra sa place dans le projet.
+                        {{ 'project.trash.specific.confirm.restore_message'|trans({'title': '<span data-project-specific-trash-target="restoreModalTitle" class="font-bold text-gray-900"></span>'})|raw }}
                     </p>
 
                     <div class="flex flex-col gap-3">
@@ -340,14 +339,14 @@
                                 data-project-specific-trash-target="restoreSubmitBtn"
                                 data-action="click->project-specific-trash#confirmRestore"
                                 class="w-full py-4 bg-bubblegum text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-bubblegum/20 hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer">
-                            <span data-project-specific-trash-target="restoreSpinner" class="hidden animate-spin">
+                            <span data-project-trash-target="restoreSpinner" class="hidden animate-spin">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                             </span>
-                            Confirmer la restauration
+                            {{ 'project.trash.specific.actions.restore'|trans }}
                         </button>
                         <button type="button" data-action="click->project-specific-trash#closeRestoreModal"
                                 class="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all cursor-pointer">
-                            Annuler
+                            {{ 'generic.cancel'|trans }}
                         </button>
                     </div>
                 </div>
@@ -366,9 +365,9 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     </div>
                     
-                    <h3 class="text-2xl font-black text-gray-900 mb-4">Restaurer la sélection ?</h3>
+                    <h3 class="text-2xl font-black text-gray-900 mb-4">{{ 'project.trash.specific.confirm.bulk_restore_title'|trans }}</h3>
                     <p class="text-gray-500 font-medium leading-relaxed mb-8">
-                        Vous allez restaurer <span data-project-specific-trash-target="bulkCount" class="font-bold text-gray-900"></span> membres sélectionnés. Ils retrouveront immédiatement leur accès au projet.
+                        {{ 'project.trash.specific.confirm.bulk_restore_message'|trans({'count': '<span data-project-specific-trash-target="bulkCount" class="font-bold text-gray-900"></span>'})|raw }}
                     </p>
 
                     <div class="flex flex-col gap-3">
@@ -379,11 +378,11 @@
                             <span data-project-specific-trash-target="bulkRestoreSpinner" class="hidden animate-spin">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                             </span>
-                            Confirmer la restauration groupée
+                            {{ 'generic.confirm_delete'|trans }}
                         </button>
                         <button type="button" data-action="click->project-specific-trash#closeBulkRestoreModal"
                                 class="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all cursor-pointer">
-                            Annuler
+                            {{ 'generic.cancel'|trans }}
                         </button>
                     </div>
                 </div>

@@ -147,16 +147,16 @@
                             <div class="space-y-6">
                                 {# Sorting #}
                                 <div>
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 ml-1">Trier par</p>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 ml-1">{{ 'organ.show.sort_by'|trans }}</p>
                                     <div class="grid grid-cols-1 gap-2">
                                         <button data-action="click->organ-view#setSort" data-sort="priority" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-between group/item">
-                                            Priorité
+                                            {{ 'organ.show.sort_priority'|trans }}
                                             <span data-organ-view-target="sortIndicator" data-sort="priority" class="hidden text-[var(--highlight-color)] transition-transform duration-200">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                                             </span>
                                         </button>
                                         <button data-action="click->organ-view#setSort" data-sort="date" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-between group/item">
-                                            Date de création
+                                            {{ 'organ.show.sort_date'|trans }}
                                             <span data-organ-view-target="sortIndicator" data-sort="date" class="hidden text-[var(--highlight-color)] transition-transform duration-200">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                                             </span>
@@ -166,18 +166,18 @@
 
                                 {# Filtering #}
                                 <div>
-                                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 ml-1">Filtrer par</p>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4 ml-1">{{ 'organ.show.filter_by'|trans }}</p>
                                     <div class="space-y-3">
                                         <label class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors group">
                                             <div class="relative flex items-center">
                                                 <input type="checkbox" data-action="change->organ-view#applyFilters" data-filter="me" class="peer h-5 w-5 cursor-pointer appearance-none rounded-lg border-2 border-gray-200 transition-all checked:border-[var(--highlight-color)] checked:bg-[var(--highlight-color)]">
                                                 <svg class="absolute left-1 top-1 h-3 w-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="4"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
                                             </div>
-                                            <span class="text-xs font-bold text-gray-600 group-hover:text-black">Me concerne</span>
+                                            <span class="text-xs font-bold text-gray-600 group-hover:text-black">{{ 'organ.show.filter_me'|trans }}</span>
                                         </label>
 
                                         <div class="pt-2">
-                                            <p class="text-[9px] font-bold text-gray-300 uppercase tracking-tight mb-2 ml-4">Priorité minimale</p>
+                                            <p class="text-[9px] font-bold text-gray-300 uppercase tracking-tight mb-2 ml-4">{{ 'organ.show.filter_priority_min'|trans }}</p>
                                             <div class="flex px-4 gap-1">
                                                 {% for p in 1..5 %}
                                                     <button data-action="click->organ-view#setPriorityFilter" data-priority="{{ p }}" class="flex-1 py-2 rounded-lg text-[10px] font-black border-2 border-gray-100 hover:border-gray-200 transition-all" data-organ-view-target="priorityFilter">
@@ -192,7 +192,7 @@
                                 {# Reset #}
                                 <div class="pt-4 border-t border-gray-50">
                                     <button data-action="click->organ-view#resetFilters" class="w-full py-3 rounded-2xl bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all">
-                                        Réinitialiser
+                                        {{ 'organ.show.reset_filters'|trans }}
                                     </button>
                                 </div>
                             </div>
@@ -213,7 +213,7 @@
                             <svg class="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            Corbeille
+                            {{ 'organ.show.trash'|trans }}
                         </a>
                     {% endif %}
                 </div>
@@ -238,14 +238,14 @@
                         <div class="p-2 rounded-xl" style="background-color: var(--highlight-color)1a; color: var(--highlight-color)">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
                         </div>
-                        Liens de l'organ
+                        {{ 'organ.show.links_title'|trans }}
                     </h3>
                     
                     {% if 'ORGAN_LINK_MANAGE' in permissions or 'ALL' in permissions %}
                         <button data-action="click->organ-links#toggleForm" 
                                 class="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm cursor-pointer"
                                 style="color: var(--highlight-color)">
-                            + Ajouter un lien
+                            {{ 'organ.show.add_link_btn'|trans }}
                         </button>
                     {% endif %}
                 </div>
@@ -259,15 +259,15 @@
                         <form data-organ-links-target="form" data-action="submit->organ-links#saveLink" class="mt-8 hidden p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="space-y-2">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">URL du lien</label>
-                                    <input type="url" data-organ-links-target="urlInput" required placeholder="https://..." 
+                                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{{ 'organ.show.url_label'|trans }}</label>
+                                    <input type="url" data-organ-links-target="urlInput" required placeholder="{{ 'organ.show.url_placeholder'|trans }}" 
                                            class="w-full px-5 py-3 bg-white border border-gray-100 focus:border-highlight rounded-xl text-sm transition-all outline-none shadow-sm"
                                            onfocus="this.style.borderColor= 'var(--highlight-color)'"
                                            onblur="this.style.borderColor='#f3f4f6'">
                                 </div>
                                 <div class="space-y-2">
-                                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Description (optionnel)</label>
-                                    <input type="text" data-organ-links-target="descriptionInput" placeholder="Ex: Documentation API" 
+                                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{{ 'organ.show.description_label'|trans }}</label>
+                                    <input type="text" data-organ-links-target="descriptionInput" placeholder="{{ 'organ.show.description_placeholder_alt'|trans }}" 
                                            class="w-full px-5 py-3 bg-white border border-gray-100 focus:border-highlight rounded-xl text-sm transition-all outline-none shadow-sm"
                                            onfocus="this.style.borderColor= 'var(--highlight-color)'"
                                            onblur="this.style.borderColor='#f3f4f6'">
@@ -275,12 +275,12 @@
                             </div>
                             <div class="flex justify-end gap-3 pt-4">
                                 <button type="button" data-action="click->organ-links#toggleForm" class="px-6 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
-                                    Annuler
+                                    {{ 'organ.create.form.actions.cancel'|trans }}
                                 </button>
                                 <button type="submit" data-organ-links-target="submitBtn" 
                                         class="px-8 py-3 bg-black text-white font-bold rounded-xl hover:bg-black/90 transition-all shadow-lg active:scale-95 flex items-center gap-2 cursor-pointer">
                                     <div data-organ-links-target="spinner" class="hidden w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                                    Enregistrer le lien
+                                    {{ 'organ.show.save_link'|trans }}
                                 </button>
                             </div>
                         </form>
@@ -379,11 +379,37 @@
                     <tbody data-organ-view-target="listBody">
                        {# JS Rendered #}
                     </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
+                    </table>
+                    </div>
+                    </div>
 
-    {% include "components/task_modal.html.twig" %}
+                    {# Custom Confirmation Modal for Links #}
+                    <div data-organ-links-target="confirmModal" 
+                    class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" data-action="click->organ-links#closeConfirm"></div>
+                    <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
+                    <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+
+                    <div class="text-center space-y-2">
+                    <h3 data-organ-links-target="confirmTitle" class="text-xl font-bold text-gray-900">{{ 'generic.confirmation'|trans }}</h3>
+                    <p data-organ-links-target="confirmMessage" class="text-sm text-gray-500 leading-relaxed"></p>
+                    </div>
+
+                    <div class="flex flex-col gap-3 pt-2">
+                    <button type="button" data-action="click->organ-links#confirmDelete" 
+                            class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-95 cursor-pointer">
+                        {{ 'generic.confirm_delete'|trans }}
+                    </button>
+                    <button type="button" data-action="click->organ-links#closeConfirm" 
+                            class="w-full py-4 bg-white border border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-50 transition-all cursor-pointer">
+                        {{ 'generic.cancel'|trans }}
+                    </button>
+                    </div>
+                    </div>
+                    </div>
+                    </main>
+            {% include "components/task_modal.html.twig" %}
 </div>
 {% endblock %}

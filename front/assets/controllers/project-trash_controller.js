@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { trans } from '../translator.js';
 
 export default class extends Controller {
     static targets = [
@@ -58,7 +59,7 @@ export default class extends Controller {
                 credentials: 'include'
             });
 
-            if (!response.ok) throw new Error("Erreur lors de la restauration.");
+            if (!response.ok) throw new Error(trans('organ.trash.error.restore'));
             
             this.closeRestoreModal();
             this.animateOut(row);
@@ -101,7 +102,7 @@ export default class extends Controller {
                 credentials: 'include'
             });
 
-            if (!response.ok) throw new Error("Erreur lors de la suppression définitive.");
+            if (!response.ok) throw new Error(trans('organ.trash.error.delete_permanent'));
             
             this.closeHardDeleteModal();
             this.animateOut(row);
