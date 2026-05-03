@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,6 +14,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
+import fr.studio.voxel.organ.ui.theme.AppColorScheme
+import fr.studio.voxel.organ.ui.theme.AppTypography
 
 @Composable
 fun SecondaryButton(
@@ -33,9 +33,9 @@ fun SecondaryButton(
     )
 
     val backgroundColor = if (isPressed) {
-        MaterialTheme.colorScheme.secondary
+        AppColorScheme.secondary
     } else {
-        MaterialTheme.colorScheme.primary
+        AppColorScheme.primary
     }
 
     Button(
@@ -58,8 +58,8 @@ fun SecondaryButton(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onPrimary
+            style = AppTypography.labelLarge,
+            color = AppColorScheme.onPrimary
         )
     }
 }

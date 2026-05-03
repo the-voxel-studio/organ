@@ -11,7 +11,6 @@ import coil.compose.AsyncImage
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
-import com.airbnb.lottie.compose.*
 import fr.studio.voxel.organ.R
 
 @Composable
@@ -32,7 +31,7 @@ fun AnimatedLogo() {
 
     AsyncImage(
         model = ImageRequest.Builder(context)
-            .data(R.drawable.logo2)
+            .data(R.drawable.logo_organ)
             .build(),
         imageLoader = imageLoader,
         contentDescription = "Logo",
