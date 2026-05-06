@@ -42,7 +42,7 @@ class OrganPermissionService
             return false;
         }
 
-        // 3. Aggregate permissions from all user's roles in this organ
+        // 2. Aggregate permissions from all user's roles in this organ
         $userRoles = $this->getUserRolesInOrgan($user, $organ);
         
         foreach ($userRoles as $role) {

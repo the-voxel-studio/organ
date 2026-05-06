@@ -13,6 +13,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf
     ports:
       - "3306:3306" # Port standard MySQL
     networks:
@@ -79,6 +80,7 @@ services:
     volumes:
       - ./api:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./docker/php/zz-docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
     networks:
       - app_network
 
@@ -106,6 +108,7 @@ services:
     volumes:
       - ./front:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./docker/php/zz-docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
     networks:
       - app_network
 

@@ -48,7 +48,7 @@ class DashboardController extends AbstractController
         } catch (\Exception $e) {
             // Handle error silently
         }
-
+        phpinfo();
         return $this->render('dashboard/index.html.twig', [
             'user' => $this->getUser(),
             'projects' => $projects,
