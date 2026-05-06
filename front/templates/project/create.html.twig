@@ -111,7 +111,7 @@
                     <label class="block text-sm font-semibold text-gray-700">{{ 'project.create.form.identity.icon'|trans }}</label>
                     
                     <div class="flex flex-wrap gap-2 p-1 bg-gray-50 rounded-xl w-fit">
-                        {% set icon_mode = is_edit ? project.iconType : 'BLOB' %}
+                        {% set icon_mode = organ.iconType|default('BLOB') %}
                         <button type="button" data-action="click->project-create#switchIconMode" data-mode="EMOJI" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ icon_mode == 'EMOJI' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900' }}" data-project-create-target="modeBtn">{{ 'project.create.form.identity.mode.emoji'|trans }}</button>
                         <button type="button" data-action="click->project-create#switchIconMode" data-mode="BLOB" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ icon_mode == 'BLOB' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900' }}" data-project-create-target="modeBtn">{{ 'project.create.form.identity.mode.image'|trans }}</button>
                         <button type="button" data-action="click->project-create#switchIconMode" data-mode="SVG" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ icon_mode == 'SVG' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900' }}" data-project-create-target="modeBtn">{{ 'project.create.form.identity.mode.svg'|trans }}</button>

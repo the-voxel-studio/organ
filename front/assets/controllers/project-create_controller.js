@@ -94,8 +94,16 @@ export default class extends Controller {
     switchIconMode(event) {
         const mode = event.currentTarget.dataset.mode;
         this.iconMode = mode;
-        this.modeBtnTargets.forEach(btn => btn.classList.toggle('bg-white', btn.dataset.mode === mode));
-        this.iconSectionTargets.forEach(section => section.classList.toggle('hidden', section.dataset.mode !== mode));
+        this.modeBtnTargets.forEach(btn => {
+            const isActive = btn.dataset.mode === mode;
+            btn.classList.toggle('bg-white', isActive);
+            btn.classList.toggle('shadow-sm', isActive);
+            btn.classList.toggle('text-gray-900', isActive);
+            btn.classList.toggle('text-gray-500', !isActive);
+        });
+        this.iconSectionTargets.forEach(section => {
+            section.classList.toggle('hidden', section.dataset.mode !== mode);
+        });
     }
     validateEmojiInput(event) {
         const val = event.target.value.trim();
@@ -270,6 +278,17 @@ export default class extends Controller {
         this.invites[idx].role = newRole;
         this.invites[idx].showMenu = false;
         if (this.invites[idx].isExisting) this.invites[idx].roleChanged = true;
+
+        // Ensure there's always at least one ADMIN (the current user by default)
+        const hasAdmin = this.invites.some(invite => invite.role === 'ADMIN');
+        if (!hasAdmin) {
+            const currentUser = this.invites.find(invite => invite.isCreator);
+            if (currentUser) {
+                currentUser.role = 'ADMIN';
+                if (currentUser.isExisting) currentUser.roleChanged = true;
+            }
+        }
+
         this.renderInvites();
     }
     removeInvite(event) { const idx = parseInt(event.currentTarget.dataset.index); if (!this.invites[idx].isCreator) { if (this.invites[idx].isExisting) this.removedMemberUuids.push(this.invites[idx].uuid); this.invites.splice(idx, 1); this.renderInvites(); } }
