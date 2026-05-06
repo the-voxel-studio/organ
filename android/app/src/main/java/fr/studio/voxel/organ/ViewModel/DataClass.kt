@@ -18,3 +18,10 @@ data class User(
     val firstName: String,
     val lastName: String
 )
+
+data class Task(
+    val id: Int,
+    val name: String,
+    val progress: Int,         // X/10
+    val deadline: String
+)

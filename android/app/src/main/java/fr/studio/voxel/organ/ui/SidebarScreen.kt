@@ -22,6 +22,7 @@ import fr.studio.voxel.organ.domain.model.MainViewModel
 import fr.studio.voxel.organ.domain.model.SidebarViewModel
 import fr.studio.voxel.organ.ui.components.Footer
 import fr.studio.voxel.organ.ui.components.Header
+import fr.studio.voxel.organ.ui.components.PrimaryButton
 import fr.studio.voxel.organ.ui.components.ProjectItem
 import fr.studio.voxel.organ.ui.components.SecondaryButton
 

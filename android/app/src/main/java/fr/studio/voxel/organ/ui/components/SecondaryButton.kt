@@ -1,5 +1,6 @@
 package fr.studio.voxel.organ.ui.components
 
+import android.inputmethodservice.Keyboard
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
