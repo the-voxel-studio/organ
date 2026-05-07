@@ -141,6 +141,9 @@ class TaskService
         $tagData = [];
         foreach ($tags as $tt) {
             $t = $tt->getTag();
+            if ($t->getDeletedAt() !== null) {
+                continue;
+            }
             $tagData[] = [
                 'uuid' => $t->getUuid(),
                 'name' => $t->getName(),

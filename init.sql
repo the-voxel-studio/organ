@@ -15,8 +15,8 @@ USE app_database;
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL UNIQUE,
-    first_name VARCHAR(100) NULL,
-    last_name VARCHAR(100) NULL,
+    first_name VARCHAR(50) NULL,
+    last_name VARCHAR(50) NULL,
     email VARCHAR(180) NOT NULL UNIQUE,
     password VARCHAR(255) NULL,
     google_id VARCHAR(255) NULL UNIQUE,

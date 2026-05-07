@@ -7,9 +7,11 @@ namespace App\Controller;
 use App\Entity\Project;
 use App\Entity\ProjectMember;
 use App\Entity\Tag;
+use App\Entity\TaskTag;
 use App\Entity\User;
 use App\Enum\ProjectGlobalRole;
 use App\Service\TagCacheService;
+use App\Service\TaskCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,8 +23,27 @@ use Symfony\Component\Routing\Attribute\Route;
 class TagController extends AbstractController
 {
     public function __construct(
-        private readonly TagCacheService $tagCacheService
+        private readonly TagCacheService $tagCacheService,
+        private readonly TaskCacheService $taskCacheService
     ) {}
+
+    private function invalidateAffectedTasks(Tag $tag, EntityManagerInterface $entityManager): void
+    {
+        // Find all tasks associated with this tag (even if the association is soft-deleted, 
+        // to be safe, but usually we care about active associations)
+        $taskTags = $entityManager->getRepository(TaskTag::class)->findBy(['tag' => $tag]);
+        $organUuids = [];
+        
+        foreach ($taskTags as $tt) {
+            $task = $tt->getTask();
+            $this->taskCacheService->invalidateSummary($task->getUuid());
+            $organUuids[$task->getOrgan()->getUuid()] = true;
+        }
+        
+        foreach (array_keys($organUuids) as $organUuid) {
+            $this->taskCacheService->invalidateList($organUuid);
+        }
+    }
 
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(string $projectUuid, EntityManagerInterface $entityManager): JsonResponse
@@ -150,6 +171,7 @@ class TagController extends AbstractController
 
         // Invalidate cache
         $this->tagCacheService->invalidateList($projectUuid);
+        $this->invalidateAffectedTasks($tag, $entityManager);
 
         return $this->json(['message' => 'Tag updated']);
     }
@@ -180,6 +202,7 @@ class TagController extends AbstractController
 
         // Invalidate cache
         $this->tagCacheService->invalidateList($projectUuid);
+        $this->invalidateAffectedTasks($tag, $entityManager);
 
         return $this->json(['message' => 'Tag restored']);
     }
@@ -206,6 +229,8 @@ class TagController extends AbstractController
         if (!$membership || !in_array($membership->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
+
+        $this->invalidateAffectedTasks($tag, $entityManager);
 
         if ($isPermanent) {
             $entityManager->remove($tag);

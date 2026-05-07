@@ -376,7 +376,7 @@ export default class extends Controller {
         div.innerHTML = `
             <div class="flex flex-col gap-4">
                 <div class="flex items-start justify-between gap-4">
-                    <h4 class="text-sm font-bold text-gray-900 leading-tight group-hover:text-black">${task.title}</h4>
+                    <h4 class="text-sm font-bold text-gray-900 leading-tight group-hover:text-black truncate" title="${task.title}">${task.title}</h4>
                     <span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${priorityColors[task.priority] || priorityColors[1]} shrink-0">
                         P${task.priority}
                     </span>
@@ -384,7 +384,7 @@ export default class extends Controller {
                 ${task.tags && task.tags.length > 0 ? `
                     <div class="flex flex-wrap gap-1.5">
                         ${task.tags.map(t => `
-                            <span class="px-2 py-0.5 bg-gray-50 text-[9px] font-black uppercase tracking-widest rounded border border-gray-100" style="color: ${t.color}; border-color: ${t.color}20">${t.name}</span>
+                            <span class="px-2 py-0.5 bg-gray-50 text-[9px] font-black uppercase tracking-widest rounded border border-gray-100 truncate max-w-[80px]" style="color: ${t.color}; border-color: ${t.color}20" title="${t.name}">${t.name}</span>
                         `).join('')}
                     </div>
                 ` : ''}
@@ -432,8 +432,8 @@ export default class extends Controller {
 
         tr.innerHTML = `
             <td class="px-8 py-5">
-                <div class="flex flex-col">
-                    <span class="text-sm font-bold text-gray-900 group-hover:text-black">${task.title}</span>
+                <div class="flex flex-col min-w-0">
+                    <span class="text-sm font-bold text-gray-900 group-hover:text-black truncate" title="${task.title}">${task.title}</span>
                     <span class="text-[10px] text-gray-400 font-medium">${task.uuid.slice(0, 8)}</span>
                 </div>
             </td>
