@@ -342,7 +342,12 @@ class TaskController extends AbstractController
                 $task->setManager(null);
             } else {
                 $manager = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $data['managerUuid']]);
-                if ($manager) $task->setManager($manager);
+                if ($manager) {
+                    if (!$this->permissionService->isOrganMember($manager, $organ)) {
+                        return $this->json(['message' => 'Selected manager is not a member of this organ'], Response::HTTP_BAD_REQUEST);
+                    }
+                    $task->setManager($manager);
+                }
             }
         }
 
@@ -604,6 +609,10 @@ class TaskController extends AbstractController
 
         if (!$this->taskService->can($currentUser, $task, $action)) {
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$this->permissionService->isOrganMember($targetUser, $organ)) {
+            return $this->json(['message' => 'Selected user is not a member of this organ'], Response::HTTP_BAD_REQUEST);
         }
 
         $existing = $entityManager->getRepository(TaskAssignee::class)->findOneBy(['task' => $task, 'user' => $targetUser]);

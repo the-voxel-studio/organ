@@ -56,6 +56,20 @@ class OrganPermissionService
     }
 
     /**
+     * Check if a user is a member of an organ.
+     * A member is someone who is either a Project ADMIN/MANAGER or has a role in the organ.
+     */
+    public function isOrganMember(User $user, Organ $organ): bool
+    {
+        $globalRole = $this->membershipService->getGlobalRole($user, $organ->getProject());
+        if (in_array($globalRole, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return true;
+        }
+
+        return count($this->getUserRolesInOrgan($user, $organ)) > 0;
+    }
+
+    /**
      * Get all permissions for a user in an organ.
      */
     public function getOrganPermissions(User $user, Organ $organ): array

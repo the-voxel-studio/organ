@@ -76,7 +76,7 @@ export default class extends Controller {
     async loadInitialData() {
         try {
             const [membersRes, tagsRes] = await Promise.all([
-                fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/members`, { credentials: 'include' }),
+                fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/members`, { credentials: 'include' }),
                 fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/tags`, { credentials: 'include' })
             ]);
 
@@ -109,8 +109,8 @@ export default class extends Controller {
         this.managerSelectTarget.innerHTML = `<option value="">${trans('task.modal.empty.manager')}</option>`;
         this.members.forEach(m => {
             const option = document.createElement('option');
-            option.value = m.user.uuid;
-            option.textContent = `${m.user.firstName} ${m.user.lastName}`;
+            option.value = m.uuid;
+            option.textContent = `${m.firstName} ${m.lastName}`;
             this.managerSelectTarget.appendChild(option);
         });
     }
@@ -456,9 +456,9 @@ export default class extends Controller {
             btn.type = 'button';
             btn.className = 'w-full text-left px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-between group';
             btn.dataset.action = 'click->task-modal#addAssignee';
-            btn.dataset.userUuid = m.user.uuid;
+            btn.dataset.userUuid = m.uuid;
             btn.innerHTML = `
-                <span class="truncate" title="${m.user.firstName} ${m.user.lastName}">${m.user.firstName} ${m.user.lastName}</span>
+                <span class="truncate" title="${m.firstName} ${m.lastName}">${m.firstName} ${m.lastName}</span>
                 <span class="opacity-0 group-hover:opacity-100 text-[var(--highlight-color)] shrink-0">+</span>
             `;
             this.userListTarget.appendChild(btn);
@@ -468,9 +468,9 @@ export default class extends Controller {
     async addAssignee(event) {
         const userUuid = event.currentTarget.dataset.userUuid;
         if (!this.taskIdValue) {
-            const member = this.members.find(m => m.user.uuid === userUuid);
+            const member = this.members.find(m => m.uuid === userUuid);
             if (member && !this.stagedAssignees.find(a => a.uuid === userUuid)) {
-                this.stagedAssignees.push(member.user);
+                this.stagedAssignees.push(member);
                 this.renderAssignees(this.stagedAssignees, { taskOwnership: { isManager: true } }); // Full access for staged
             }
             this.userPickerTarget.classList.add('hidden');

@@ -16,10 +16,30 @@ class OrganCacheService
     private const CACHE_TTL = 3600; // 1 hour
 
     private const ROLE_LIST_CACHE_PREFIX = 'organ_role_list_';
+    private const MEMBER_LIST_CACHE_PREFIX = 'organ_members_list_';
 
     public function __construct(
         private readonly CacheInterface $cache
     ) {}
+
+    /**
+     * Get organ members list summary for an organ.
+     */
+    public function getMemberList(Organ $organ, callable $fetcher): array
+    {
+        return $this->cache->get(self::MEMBER_LIST_CACHE_PREFIX . $organ->getUuid(), function (ItemInterface $item) use ($fetcher) {
+            $item->expiresAfter(self::CACHE_TTL);
+            return $fetcher();
+        });
+    }
+
+    /**
+     * Invalidate organ members list cache.
+     */
+    public function invalidateMemberList(string $organUuid): void
+    {
+        $this->cache->delete(self::MEMBER_LIST_CACHE_PREFIX . $organUuid);
+    }
 
     /**
      * Get organ roles list summary for an organ.

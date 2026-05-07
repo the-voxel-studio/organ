@@ -398,6 +398,7 @@ class OrganRoleController extends AbstractController
         // Invalidate caches
         $this->permissionService->invalidateUserRoles($uor->getUser()->getUuid(), $organ->getUuid());
         $this->organCacheService->invalidateRoleList($organUuid);
+        $this->organCacheService->invalidateMemberList($organUuid);
 
         return $this->json(['message' => 'Member restored successfully']);
     }
@@ -452,6 +453,7 @@ class OrganRoleController extends AbstractController
         // Invalidate caches
         $this->permissionService->invalidateUserRoles($userUuid, $organ->getUuid());
         $this->organCacheService->invalidateRoleList($organUuid);
+        $this->organCacheService->invalidateMemberList($organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
