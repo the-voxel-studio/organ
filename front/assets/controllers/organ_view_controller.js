@@ -8,7 +8,7 @@ export default class extends Controller {
         'topScrollContainer', 'topScrollThumb',
         'todoCol', 'inProgressCol', 'waitingCol', 'doneCol', 'canceledCol',
         'todoCount', 'inProgressCount', 'waitingCount', 'doneCount', 'canceledCount',
-        'listBody', 'filterMenu', 'sortIndicator', 'priorityFilter'
+        'listBody', 'filterMenu', 'sortIndicator', 'priorityFilter', 'statusFilter', 'statusColumn'
     ];
     static values = {
         projectUuid: String,
@@ -24,6 +24,7 @@ export default class extends Controller {
         this.sortOrder = 'asc';
         this.filterMe = false;
         this.minPriority = 0;
+        this.selectedStatuses = [];
 
         // Default view is Kanban
         this.showKanban();
@@ -137,11 +138,35 @@ export default class extends Controller {
         });
     }
 
+    toggleStatusFilter(event) {
+        const status = event.currentTarget.dataset.status;
+        if (this.selectedStatuses.includes(status)) {
+            this.selectedStatuses = this.selectedStatuses.filter(s => s !== status);
+        } else {
+            this.selectedStatuses.push(status);
+        }
+        this.updateStatusUI();
+        this.applyAll();
+    }
+
+    updateStatusUI() {
+        const highlightColor = this.element.style.getPropertyValue('--highlight-color');
+        this.statusFilterTargets.forEach(el => {
+            const status = el.dataset.status;
+            const active = this.selectedStatuses.includes(status);
+            
+            el.style.backgroundColor = active ? highlightColor : '';
+            el.style.color = active ? 'white' : '';
+            el.style.borderColor = active ? highlightColor : '';
+        });
+    }
+
     resetFilters() {
         this.sortBy = null;
         this.sortOrder = 'asc';
         this.filterMe = false;
         this.minPriority = 0;
+        this.selectedStatuses = [];
 
         // Reset UI
         const meCheckbox = this.element.querySelector('[data-filter="me"]');
@@ -149,6 +174,7 @@ export default class extends Controller {
         
         this.updateSortUI();
         this.updatePriorityUI();
+        this.updateStatusUI();
         this.applyAll();
     }
 
@@ -166,6 +192,10 @@ export default class extends Controller {
 
         if (this.minPriority > 0) {
             tasks = tasks.filter(t => t.priority >= this.minPriority);
+        }
+
+        if (this.selectedStatuses.length > 0) {
+            tasks = tasks.filter(t => this.selectedStatuses.includes(t.status));
         }
 
         // 2. Sort
@@ -301,6 +331,19 @@ export default class extends Controller {
             'DONE': this.doneColTarget,
             'CANCELED': this.canceledColTarget
         };
+
+        // Handle Kanban column visibility
+        if (this.hasStatusColumnTarget) {
+            this.statusColumnTargets.forEach(col => {
+                const status = col.dataset.status;
+                if (this.selectedStatuses.length === 0) {
+                    col.classList.remove('hidden');
+                } else {
+                    col.classList.toggle('hidden', !this.selectedStatuses.includes(status));
+                }
+            });
+        }
+
         const counts = {
             'TODO': this.todoCountTarget,
             'IN_PROGRESS': this.inProgressCountTarget,

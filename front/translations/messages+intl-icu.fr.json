@@ -68,7 +68,7 @@
             "role": "Votre rôle",
             "manage_members": "Gérer les membres",
             "settings": "Paramètres",
-            "organs": "organes du projet",
+            "organs": "Organ du projet",
             "add_organ": "Ajouter un Organ",
             "view_tasks": "Voir les tâches",
             "no_organs": "Aucun Organ n'a encore été créé pour ce projet.",
@@ -126,7 +126,7 @@
                 "restored_success_title": "Projet restauré avec succès !",
                 "restored_success_message": "Le projet est de retour, mais les membres (sauf vous) sont toujours désactivés. <br>Utilisez la liste ci-dessous pour les restaurer, individuellement ou par groupe.",
                 "sections": {
-                    "organs": "organes",
+                    "organs": "Organ",
                     "members": "Membres",
                     "tags": "Tags"
                 },
