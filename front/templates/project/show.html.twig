@@ -55,6 +55,13 @@
 							{{ data.project.role }}
 						</span>
 					</div>
+					{% if data.admin is defined and data.admin is not null %}
+						<div class="mt-2 text-xs text-gray-400 font-bold italic">
+							Admin : {{ data.admin.firstName }} {{ data.admin.lastName }} 
+							<span class="mx-1">•</span>
+							<a href="mailto:{{ data.admin.email }}" class="hover:text-black transition-colors">{{ data.admin.email }}</a>
+						</div>
+					{% endif %}
 				</div>
 			</div>
 			<div class="flex items-center gap-3">

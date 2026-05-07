@@ -229,12 +229,22 @@ class ProjectController extends AbstractController
         // 3. Members
         $memberships = $entityManager->getRepository(ProjectMember::class)->findBy(['project' => $project, 'deletedAt' => null]);
         $membersData = [];
+        $adminInfo = null;
         foreach ($memberships as $ms) {
+            $userSummary = $this->userCacheService->getUserSummary($ms->getUser());
             $membersData[] = [
                 'uuid' => $ms->getUuid(),
-                'user' => $this->userCacheService->getUserSummary($ms->getUser()),
+                'user' => $userSummary,
                 'globalRole' => $ms->getGlobalRole()->value,
             ];
+
+            if ($ms->getGlobalRole() === ProjectGlobalRole::ADMIN && $adminInfo === null) {
+                $adminInfo = [
+                    'firstName' => $userSummary['firstName'],
+                    'lastName' => $userSummary['lastName'],
+                    'email' => $ms->getUser()->getEmail()
+                ];
+            }
         }
 
         // 4. Unified Project Activity Feed (TaskHistory, Comments, Attachments)
@@ -307,6 +317,7 @@ class ProjectController extends AbstractController
                 'description' => $project->getDescription(),
                 'role' => $membership->getGlobalRole()->value,
             ]),
+            'admin' => $adminInfo,
             'organs' => $organsData,
             'members' => $membersData,
             'activities' => $activities,
