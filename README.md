@@ -59,6 +59,9 @@ MYSQL_PASSWORD=app_password
 # Identifiants pour le service phpMyAdmin
 PMA_USER=root
 PMA_PASSWORD=root_password
+
+# Mercure Realtime Hub
+MERCURE_JWT_SECRET=!ChangeThisMercureHubJWTSecretKey!
 ```
 
 ### 2. API Backend (`api/.env`)
@@ -95,8 +98,8 @@ COOKIE_SECURE=false
 ###> REALTIME (Mercure) ###
 MERCURE_URL=http://mercure/.well-known/mercure
 MERCURE_PUBLIC_URL=http://localhost:8000/hub
-# IMPORTANT: 32 caractères minimum obligatoire
-MERCURE_JWT_SECRET='must_be_exactly_or_more_than_32_characters_long'
+# IMPORTANT: 32 caractères minimum obligatoire (doit être identique à la racine)
+MERCURE_JWT_SECRET=!ChangeThisMercureHubJWTSecretKey!
 NOTIFICATION_BASE_URL=http://localhost:8000
 ###< REALTIME ###
 ```

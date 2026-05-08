@@ -52,8 +52,8 @@ services:
     image: dunglas/mercure
     container_name: organ_mercure
     environment:
-      MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
-      MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+      MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_SECRET}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_SECRET}
       MERCURE_CORS_ALLOWED_ORIGINS: '*'
       SERVER_NAME: ':80' 
     ports:
@@ -83,6 +83,8 @@ services:
       context: ./api
       dockerfile: Dockerfile
     container_name: organ_api_php
+    environment:
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET}
     volumes:
       - ./api:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
