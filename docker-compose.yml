@@ -3,6 +3,7 @@ services:
   # BASES DE DONNÉES & CACHE
   # ==========================================
   database:
+    platform: linux/amd64
     image: mysql:8.0
     container_name: organ_mysql
     environment:
@@ -20,6 +21,7 @@ services:
       - app_network
 
   phpmyadmin:
+    platform: linux/amd64
     image: phpmyadmin/phpmyadmin
     container_name: organ_phpmyadmin
     environment:
@@ -34,6 +36,7 @@ services:
       - app_network
 
   valkey:
+    platform: linux/amd64
     image: valkey/valkey:7.2
     container_name: organ_valkey
     ports:
@@ -45,6 +48,7 @@ services:
   # TEMPS RÉEL (MERCURE)
   # ==========================================
   mercure:
+    platform: linux/amd64
     image: dunglas/mercure
     container_name: organ_mercure
     environment:
@@ -61,6 +65,7 @@ services:
   # EMAILS LOCAUX (MAILPIT)
   # ==========================================
   mailpit:
+    platform: linux/amd64
     image: axllent/mailpit
     container_name: organ_mailpit
     ports:
@@ -73,6 +78,7 @@ services:
   # BACKEND (API SYMFONY)
   # ==========================================
   api-php:
+    platform: linux/amd64
     build: 
       context: ./api
       dockerfile: Dockerfile
@@ -85,6 +91,7 @@ services:
       - app_network
 
   api-nginx:
+    platform: linux/amd64
     image: nginx:alpine
     container_name: organ_api_nginx
     ports:
@@ -101,6 +108,7 @@ services:
   # FRONTEND (SYMFONY / JS)
   # ==========================================
   front-php:
+    platform: linux/amd64
     build: 
       context: ./front
       dockerfile: Dockerfile
@@ -113,6 +121,7 @@ services:
       - app_network
 
   front-nginx:
+    platform: linux/amd64
     image: nginx:alpine
     container_name: organ_front_nginx
     ports:
@@ -128,6 +137,7 @@ services:
       - app_network
 
   front-tailwind-watch:
+    platform: linux/amd64
     build: 
       context: ./front
       dockerfile: Dockerfile
