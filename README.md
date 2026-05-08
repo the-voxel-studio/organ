@@ -189,3 +189,26 @@ Pour que la connexion Google et l'export Drive fonctionnent, vous devez créer u
 *   **Application :** [http://localhost:8000](http://localhost:8000)
 *   **Documentation API :** [http://localhost:8001/api/docs](http://localhost:8001/api/docs)
 *   **Mails locaux :** [http://localhost:8025](http://localhost:8025)
+
+---
+
+## Données de Test (Seed)
+
+Pour faciliter le développement, un fichier `seed.sql` est disponible à la racine du projet. Il contient des utilisateurs, des projets, des organes et des tâches de démonstration.
+
+### Import via phpMyAdmin
+1.  Accédez à phpMyAdmin : [http://localhost:8080](http://localhost:8080).
+2.  Connectez-vous avec les identifiants définis dans votre fichier `.env` (par défaut `root` / `root_password`).
+3.  Sélectionnez la base de données `app_database` dans la colonne de gauche.
+4.  Cliquez sur l'onglet **Importer** en haut de la page.
+5.  Choisissez le fichier `seed.sql` présent à la racine du projet.
+6.  Cliquez sur **Importer** en bas de page.
+
+### Comptes de Test
+Tous les comptes ci-dessous utilisent le mot de passe : `password`
+
+*   **Administrateur :** `admin@organ.com` (Jean Dupont)
+*   **Manager :** `manager@organ.com` (Marie Curie)
+*   **Développeur :** `dev@organ.com` (Albert Einstein)
+*   **Utilisateur :** `user@organ.com` (Nikola Tesla)
+*   **Membre :** `grace@organ.com` (Grace Hopper)
