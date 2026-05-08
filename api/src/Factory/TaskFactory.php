@@ -37,7 +37,7 @@ final class TaskFactory extends PersistentObjectFactory
         return [
             'createdAt' => self::faker()->dateTime(),
             'organ' => OrganFactory::new(),
-            'priority' => self::faker()->numberBetween(0, 100),
+            'priority' => self::faker()->numberBetween(1, 10),
             'status' => self::faker()->randomElement(TaskStatus::cases()),
             'title' => self::faker()->sentence(4),
             'updatedAt' => self::faker()->dateTime(),

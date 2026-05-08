@@ -65,6 +65,8 @@ export declare const messages: {
     "errors.invalid_google_token": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.account_deleted": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.email_taken": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.field_blank": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.field_too_long": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.generic_error": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.server_error": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "title": Message<{ 'get_the_app': { parameters: NoParametersType }, 'settings': { parameters: NoParametersType } }, 'fr'>;

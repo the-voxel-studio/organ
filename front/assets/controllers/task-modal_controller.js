@@ -73,6 +73,23 @@ export default class extends Controller {
         }
     }
 
+    validatePriority(event) {
+        const input = event.target;
+        let value = input.value;
+
+        // Force integer by removing non-digits
+        value = value.replace(/[^\d]/g, '');
+
+        if (value !== '') {
+            let num = parseInt(value, 10);
+            if (num < 1) num = 1;
+            if (num > 10) num = 10;
+            value = num.toString();
+        }
+
+        input.value = value;
+    }
+
     async loadInitialData() {
         try {
             const [membersRes, tagsRes] = await Promise.all([

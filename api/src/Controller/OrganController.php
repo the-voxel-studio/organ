@@ -26,7 +26,8 @@ class OrganController extends AbstractController
 {
     public function __construct(
         private readonly OrganPermissionService $permissionService,
-        private readonly OrganCacheService $organCacheService
+        private readonly OrganCacheService $organCacheService,
+        private readonly \App\Service\TaskCacheService $taskCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -526,6 +527,7 @@ class OrganController extends AbstractController
         // Invalidate cache
         $this->organCacheService->invalidateSummary($organUuid);
         $this->organCacheService->invalidateList($projectUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

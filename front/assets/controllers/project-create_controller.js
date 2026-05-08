@@ -69,9 +69,13 @@ export default class extends Controller {
             this.invites = [...this.invites, ...pendingInvites];
             this.invites.sort((a, b) => b.isCreator - a.isCreator);
 
-            if (this.hasImagePreviewTarget && !this.imagePreviewTarget.classList.contains('hidden')) this.iconMode = 'BLOB';
-            else if (this.hasEmojiInputTarget && this.emojiInputTarget.value) this.iconMode = 'EMOJI';
-            else if (this.hasCustomSvgInputTarget && this.customSvgInputTarget.value) this.iconMode = 'SVG';
+            let detectedMode = 'BLOB';
+            if (this.hasImagePreviewTarget && !this.imagePreviewTarget.classList.contains('hidden')) detectedMode = 'BLOB';
+            else if (this.hasEmojiInputTarget && this.emojiInputTarget.value) detectedMode = 'EMOJI';
+            else if (this.hasCustomSvgInputTarget && this.customSvgInputTarget.value) detectedMode = 'SVG';
+            
+            this.iconMode = detectedMode;
+            this.syncIconUI();
 
             this.checkDriveConfig();
         } else {
@@ -92,8 +96,12 @@ export default class extends Controller {
         if (customRadio) customRadio.checked = true;
     }
     switchIconMode(event) {
-        const mode = event.currentTarget.dataset.mode;
-        this.iconMode = mode;
+        this.iconMode = event.currentTarget.dataset.mode;
+        this.syncIconUI();
+    }
+
+    syncIconUI() {
+        const mode = this.iconMode;
         this.modeBtnTargets.forEach(btn => {
             const isActive = btn.dataset.mode === mode;
             btn.classList.toggle('bg-white', isActive);

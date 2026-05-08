@@ -60,6 +60,11 @@ class Task
     private ?string $estimatedHours = null;
 
     #[ORM\Column(type: Types::SMALLINT, options: ['default' => 1])]
+    #[Assert\Range(
+        min: 1,
+        max: 10,
+        notInRangeMessage: 'La priorité doit être comprise entre {{ min }} et {{ max }}.',
+    )]
     private int $priority = 1;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]

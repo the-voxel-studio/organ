@@ -76,7 +76,14 @@ export default class extends Controller {
         const chevron = section.querySelector('[data-organ-trash-target="chevron"]');
 
         content.classList.toggle('hidden');
-        chevron.classList.toggle('rotate-180');
+        
+        if (content.classList.contains('hidden')) {
+            chevron.classList.remove('rotate-0');
+            chevron.classList.add('-rotate-90');
+        } else {
+            chevron.classList.remove('-rotate-90');
+            chevron.classList.add('rotate-0');
+        }
     }
 
     async restore(event) {

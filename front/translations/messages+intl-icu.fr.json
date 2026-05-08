@@ -68,7 +68,7 @@
             "role": "Votre rôle",
             "manage_members": "Gérer les membres",
             "settings": "Paramètres",
-            "organs": "Organ du projet",
+            "organs": "Organs du projet",
             "add_organ": "Ajouter un Organ",
             "view_tasks": "Voir les tâches",
             "no_organs": "Aucun Organ n'a encore été créé pour ce projet.",
@@ -124,7 +124,7 @@
                 "empty": "La corbeille du projet est vide",
                 "empty_subtitle": "Tout est à sa place ! Aucun élément n'attend d'être restauré.",
                 "restored_success_title": "Projet restauré avec succès !",
-                "restored_success_message": "Le projet est de retour, mais les membres (sauf vous) sont toujours désactivés. <br>Utilisez la liste ci-dessous pour les restaurer, individuellement ou par groupe.",
+                "restored_success_message": "Le projet est de retour, mais les membres qui ont accepté de rejoindre le projet sont toujours désactivés. <br>Utilisez la liste ci-dessous pour les restaurer, individuellement ou par groupe.",
                 "sections": {
                     "organs": "Organ",
                     "members": "Membres",
@@ -501,7 +501,8 @@
             "loading": "Chargement de la tâche...",
             "hints": {
                 "required": "(requis)",
-                "optional": "(facultatif)"
+                "optional": "(facultatif)",
+                "priority_range": "Entre 1 (faible) et 10 (urgent)"
             },
             "fields": {
                 "title": "Titre de la tâche",
@@ -579,7 +580,7 @@
                 "CREATE": "a créé la tâche",
                 "UPDATE": "a modifié",
                 "STATUS_CHANGE": "a changé le statut",
-                "PRIORITY_CHANGE": "a changé la priorité",
+                "PRIORITY_CHANGE": "a changé la",
                 "COMMENT_ADD": "a ajouté un commentaire",
                 "COMMENT_CREATE": "a ajouté un commentaire",
                 "ATTACHMENT_ADD": "a ajouté une pièce jointe",

@@ -93,8 +93,12 @@
 
                          {# Priority #}
                          <div class="space-y-2" data-task-modal-target="fieldContainer" data-field="priority">
-                             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{{ 'task.modal.fields.priority'|trans }}</label>
-                             <input type="number" name="priority" min="1" max="10"
+                             <div class="flex items-center justify-between ml-1">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ 'task.modal.fields.priority'|trans }}</label>
+                                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">{{ 'task.modal.hints.priority_range'|trans }}</span>
+                             </div>
+                             <input type="number" name="priority" min="1" max="10" step="1"
+                                    data-action="input->task-modal#validatePriority"
                                     class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]">
                          </div>
                          </div>

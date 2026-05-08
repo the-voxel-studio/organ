@@ -555,7 +555,7 @@ export default class extends Controller {
         const canManageMembers = this.hasPermission('ORGAN_MANAGE_MEMBERS');
 
         if (this.addedMembers.length === 0) {
-            this.organMemberListTarget.innerHTML = `<p class="text-sm text-gray-400 italic">${trans('organ.create.members.empty')}</p>`;
+            this.organMemberListTarget.innerHTML = `<p class="text-sm text-gray-400 italic">${trans('organ.create.form.members.empty')}</p>`;
             return;
         }
 
@@ -615,6 +615,14 @@ export default class extends Controller {
         if (!name) {
             this.showError("Le nom de l'organ est obligatoire.");
             return;
+        }
+
+        // Validate members: every member must have at least one role
+        for (const member of this.addedMembers) {
+            if (member.roles.length === 0) {
+                this.showError(`Le membre "${member.name}" doit avoir au moins un rôle.`);
+                return;
+            }
         }
 
         this.submitBtnTarget.disabled = true;
