@@ -198,6 +198,11 @@ export default class extends Controller {
             tasks = tasks.filter(t => this.selectedStatuses.includes(t.status));
         }
 
+        // 1b. Special filter for Due Date sorting
+        if (this.sortBy === 'dueDate') {
+            tasks = tasks.filter(t => t.expiresAt !== null && t.expiresAt !== undefined);
+        }
+
         // 2. Sort
         if (this.sortBy) {
             tasks.sort((a, b) => {
@@ -208,6 +213,9 @@ export default class extends Controller {
                 } else if (this.sortBy === 'date') {
                     valA = new Date(a.createdAt).getTime();
                     valB = new Date(b.createdAt).getTime();
+                } else if (this.sortBy === 'dueDate') {
+                    valA = new Date(a.expiresAt).getTime();
+                    valB = new Date(b.expiresAt).getTime();
                 }
 
                 if (valA < valB) return this.sortOrder === 'asc' ? -1 : 1;

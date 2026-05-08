@@ -335,6 +335,7 @@
             "add_task": "Ajouter une tâche",
             "sort_by": "Trier par",
             "sort_priority": "Priorité",
+            "sort_due_date": "Date d'échéance",
             "sort_date": "Date de création",
             "filter_by": "Filtrer par",
             "filter_me": "Me concerne",

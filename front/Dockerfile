@@ -8,6 +8,8 @@ RUN apk add --no-cache \
 
 RUN docker-php-ext-install intl opcache pdo_mysql zip
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php composer-setup.php --install-dir=/usr/bin --filename=composer \
+    && php -r "unlink('composer-setup.php');"
 
 WORKDIR /var/www/html

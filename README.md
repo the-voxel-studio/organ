@@ -5,19 +5,18 @@ Organ est une application de gestion de projets collaboratifs dont la principale
 ## Fonctionnalités Clés
 
 ### Fonctionnalités Principales
-*   **Gestion Avancée des Permissions et des Rôles :** Un contrôle fin des droits au niveau des sous-projets (appelés "organes"). Les administrateurs peuvent définir des rôles sur mesure à partir d'une liste détaillée de permissions (par exemple, valider, créer, modifier ou supprimer des tâches pour soi-même ou pour d'autres).
-*   **Gestion de Tâches Sophistiquée :** Définissez des tâches avec un nom, une échéance, un statut (en attente, en cours, terminée) et une échelle de priorité de 1 à 10. Un filtre dédié permet de trier par priorité et par date d'échéance.
+*   **Gestion Avancée des Permissions et des Rôles :** Un contrôle fin des droits au niveau des sous-projets (appelés "Organ"). Les administrateurs peuvent définir des rôles sur mesure à partir d'une liste détaillée de permissions (par exemple, valider, créer, modifier ou supprimer des tâches pour soi-même ou pour d'autres).
+*   **Gestion de Tâches Sophistiquée :** Définissez des tâches avec un nom, une échéance, un statut (en attente, en cours, terminée) et une échelle de priorité de 1 à 10. Un filtre dédié permet de trier par priorité et par statut.
 *   **Outils d'Organisation et de Suivi :** Gérez un calendrier avec des échéances et une intégration potentielle avec Google Calendar. Toutes les notifications sont gérées en interne dans l'application.
 
 ### Expérience Utilisateur (UX)
 *   **Tableau de Bord :** Le tableau de bord principal met en évidence les tâches urgentes et utilise un dégradé de couleurs (du rose au rouge) pour représenter visuellement les priorités des projets.
 *   **Authentification Sécurisée :** Hachage de mot de passe standard et une option de connexion avec Google.
-*   **Panneau de Navigation :** Un panneau de navigation unique comprend des outils comme une "Roulette de choix au hasard" et une liste de liens externes.
+*   **Panneau de Navigation :** Un panneau de navigation unique comprend des outils et une liste de liens externes.
 
 ### Fonctionnalités Techniques
 *   **Gestion des Comptes Utilisateurs :** Opérations CRUD (Créer, Lire, Mettre à jour, Supprimer) complètes pour les comptes utilisateurs.
 *   **Sécurité :** La communication sécurisée avec la base de données et le hachage des mots de passe sont mis en œuvre.
-*   **Journalisation des Activités :** Des journaux de sécurité et d'activité sont maintenus au niveau du projet.
 
 ---
 
@@ -31,7 +30,6 @@ L'application est composée de plusieurs microservices orchestrés par Docker Co
 *   **Cache (`valkey`) :** Un système de stockage de données en mémoire utilisé pour la mise en cache, basé sur Valkey (un fork de Redis).
 *   **Hub Temps Réel (`mercure`) :** Un hub Mercure pour pousser des mises à jour en temps réel aux clients.
 *   **Admin Base de Données (`phpmyadmin`) :** Une interface web pour gérer la base de données MySQL.
-*   **Récupérateur d'Emails (`mailpit`) :** Un serveur d'emails local pour intercepter et visualiser les emails envoyés par l'application pendant le développement.
 
 ### Schéma du Backend
 
@@ -44,6 +42,8 @@ Le diagramme suivant illustre l'architecture générale de l'API backend :
 ## Configuration de l'Environnement
 
 Le projet nécessite trois fichiers `.env`. **Ne réfléchissez pas trop :** les valeurs ci-dessous sont des exemples valides pour le développement local. Copiez-collez sans crainte.
+
+> **Important :** Dans les exemples ci-dessous, les valeurs entourées de `< >` (ex: `<VOTRE_ID_CLIENT>`) doivent être remplacées par vos propres valeurs réelles obtenues lors de la configuration de vos services (Google Cloud, etc.) ou des placeholders valides.
 
 > **Règle d'or des secrets :** Pour `APP_SECRET`, `JWT_PASSPHRASE` et surtout `MERCURE_JWT_SECRET`, utilisez des chaînes de caractères **longues (min. 32 caractères)**. Une clé trop courte (ex: "123") fera planter le serveur API sans message d'erreur explicite.
 
@@ -194,7 +194,7 @@ Pour que la connexion Google et l'export Drive fonctionnent, vous devez créer u
 
 ## Données de Test (Seed)
 
-Pour faciliter le développement, un fichier `seed.sql` est disponible à la racine du projet. Il contient des utilisateurs, des projets, des organes et des tâches de démonstration.
+Pour faciliter le développement, un fichier `seed.sql` est disponible à la racine du projet. Il contient des utilisateurs, des projets, des Organs et des tâches de démonstration.
 
 ### Import via phpMyAdmin
 1.  Accédez à phpMyAdmin : [http://localhost:8080](http://localhost:8080).
