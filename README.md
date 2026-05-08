@@ -188,7 +188,6 @@ Pour que la connexion Google et l'export Drive fonctionnent, vous devez créer u
 ### Accès aux Services :
 *   **Application :** [http://localhost:8000](http://localhost:8000)
 *   **Documentation API :** [http://localhost:8001/api/docs](http://localhost:8001/api/docs)
-*   **Mails locaux :** [http://localhost:8025](http://localhost:8025)
 
 ---
 
