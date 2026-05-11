@@ -35,7 +35,11 @@ fun OrganApp(
             startDestination = OrganScreen.Sidebar.name
         ) {
             composable(route = OrganScreen.Sidebar.name){
-                SideBar()
+                SideBar(navController = navController)
+            }
+
+            composable(route = OrganScreen.Dashboard.name){
+                //Dashboard(navController = navController)
             }
         }
 

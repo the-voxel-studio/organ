@@ -1,19 +1,31 @@
 package fr.studio.voxel.organ.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ui.theme.AppColorScheme
 import fr.studio.voxel.organ.ui.theme.AppTypography
 
@@ -22,6 +34,7 @@ fun SecondaryButton(
     text: String,
     onClick: () -> Unit,
     isSelected : Boolean = false,
+    iconRes: Int? = null,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -32,10 +45,17 @@ fun SecondaryButton(
         label = "scaleAnim"
     )
 
-    val backgroundColor = if (isPressed) {
-        AppColorScheme.secondary
+    val backgroundColor = when {
+        isSelected -> MaterialTheme.colorScheme.primary
+        isPressed -> MaterialTheme.colorScheme.primary
+        else -> Color.Transparent
+    }
+
+    // Couleur du texte
+    val contentColor = if (isSelected) {
+        MaterialTheme.colorScheme.surface
     } else {
-        AppColorScheme.primary
+        MaterialTheme.colorScheme.onSurface
     }
 
     Button(
@@ -47,19 +67,41 @@ fun SecondaryButton(
             )
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.elevatedButtonColors(
-            containerColor = backgroundColor
+        border = BorderStroke(1.dp, Color.Gray),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = backgroundColor,
+            contentColor = contentColor
         ),
         interactionSource = interactionSource,
-        elevation = ButtonDefaults.elevatedButtonElevation(
-            defaultElevation = 6.dp,
-            pressedElevation = 2.dp
-        )
+        elevation = null
     ) {
-        Text(
-            text = text,
-            style = AppTypography.labelLarge,
-            color = AppColorScheme.onPrimary
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            if (iconRes != null) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = "logo_dashboard",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Icon(
+                painter = painterResource(id = R.drawable.flechedroite_logo),
+                contentDescription = "Fleche poitant vers la droite",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
