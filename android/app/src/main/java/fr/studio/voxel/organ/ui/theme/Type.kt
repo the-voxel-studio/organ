@@ -32,7 +32,7 @@ val Typography = Typography(
     bodyLarge = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
+        fontSize =20.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     ),
@@ -40,7 +40,7 @@ val Typography = Typography(
     labelLarge = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
+        fontSize = 16.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.5.sp
     ),
@@ -48,7 +48,7 @@ val Typography = Typography(
     labelSmall = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Normal,
-        fontSize = 11.sp,
+        fontSize = 14.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
     )

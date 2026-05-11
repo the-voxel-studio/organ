@@ -10,11 +10,17 @@ import androidx.compose.ui.Modifier
 import fr.studio.voxel.organ.domain.model.Project
 
 @Composable
-fun ProjectItem(project: Project) {
+fun ProjectItem(
+    project: Project,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
 
     Column {
-        SecondaryButton(project.name + " >",
-            onClick = {}
+        SecondaryButton(
+            text = project.name ,
+            isSelected = isSelected,
+            onClick = onClick
         )
     }
 }
