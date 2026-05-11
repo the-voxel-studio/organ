@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.R
+import fr.studio.voxel.organ.ui.theme.AppColorScheme
+import fr.studio.voxel.organ.ui.theme.AppTypography
 
 @Composable
 fun SecondaryButton(

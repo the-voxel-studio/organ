@@ -58,7 +58,7 @@
                             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ 'task.modal.fields.title'|trans }}</label>
                             <span class="text-[9px] font-bold uppercase tracking-tighter" style="color: var(--highlight-color)">{{ 'task.modal.hints.required'|trans }}</span>
                          </div>
-                         <input type="text" name="title" required placeholder="{{ 'task.modal.placeholders.title'|trans }}"
+                         <input type="text" name="title" required maxlength="200" data-task-modal-target="titleInput" placeholder="{{ 'task.modal.placeholders.title'|trans }}"
                                 class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-lg font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]">
                          </div>
 
@@ -68,7 +68,7 @@
                             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ 'task.modal.fields.description'|trans }}</label>
                             <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">{{ 'task.modal.hints.optional'|trans }}</span>
                          </div>
-                         <textarea name="description" rows="4" placeholder="{{ 'task.modal.placeholders.description'|trans }}"
+                         <textarea name="description" rows="4" maxlength="4000" placeholder="{{ 'task.modal.placeholders.description'|trans }}"
                                    class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm transition-all outline-none shadow-sm resize-none focus:border-[var(--highlight-color)]"></textarea>
                          </div>
 
@@ -93,8 +93,12 @@
 
                          {# Priority #}
                          <div class="space-y-2" data-task-modal-target="fieldContainer" data-field="priority">
-                             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{{ 'task.modal.fields.priority'|trans }}</label>
-                             <input type="number" name="priority" min="1" max="10"
+                             <div class="flex items-center justify-between ml-1">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ 'task.modal.fields.priority'|trans }}</label>
+                                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">{{ 'task.modal.hints.priority_range'|trans }}</span>
+                             </div>
+                             <input type="number" name="priority" min="1" max="10" step="1"
+                                    data-action="input->task-modal#validatePriority"
                                     class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]">
                          </div>
                          </div>
@@ -214,8 +218,8 @@
                                  <input type="url" data-task-modal-target="linkUrl" placeholder="URL (https://...)" class="w-full px-4 py-2 text-xs bg-gray-50 rounded-lg outline-none focus:bg-white border border-transparent focus:border-highlight transition-all">
                                  <input type="text" data-task-modal-target="linkDesc" placeholder="Description" class="w-full px-4 py-2 text-xs bg-gray-50 rounded-lg outline-none focus:bg-white border border-transparent focus:border-highlight transition-all">
                                  <div class="flex justify-end gap-2">
-                                     <button data-action="click->task-modal#hideLinkForm" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">Annuler</button>
-                                     <button data-action="click->task-modal#addLink" class="px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-lg">Enregistrer</button>
+                                     <button data-action="click->task-modal#hideLinkForm" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400">{{ 'generic.cancel'|trans }}</button>
+                                     <button data-action="click->task-modal#addLink" class="px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-lg">{{ 'generic.save'|trans }}</button>
                                  </div>
                              </div>
                          </div>
@@ -356,54 +360,54 @@
             </button>
         </footer>
     </div>
+</div>
 
-    {# In-App Confirmation Modal #}
-    <div data-task-modal-target="confirmModal" 
-         class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" data-action="click->task-modal#cancelConfirm"></div>
-        <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
-            <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            </div>
-            
-            <div class="text-center space-y-2">
-                <h3 data-task-modal-target="confirmTitle" class="text-xl font-bold text-gray-900">Confirmation</h3>
-                <p data-task-modal-target="confirmMessage" class="text-sm text-gray-500 leading-relaxed">Voulez-vous vraiment effectuer cette action ?</p>
-            </div>
+{# In-App Confirmation Modal #}
+<div data-task-modal-target="confirmModal" 
+     class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" data-action="click->task-modal#cancelConfirm"></div>
+    <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
+        <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        
+        <div class="text-center space-y-2">
+            <h3 data-task-modal-target="confirmTitle" class="text-xl font-bold text-gray-900">{{ 'generic.confirmation'|trans }}</h3>
+            <p data-task-modal-target="confirmMessage" class="text-sm text-gray-500 leading-relaxed">Voulez-vous vraiment effectuer cette action ?</p>
+        </div>
 
-            <div class="flex flex-col gap-3 pt-2">
-                <button type="button" data-action="click->task-modal#executeConfirm" 
-                        class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-95 cursor-pointer">
-                    Confirmer
-                </button>
-                <button type="button" data-action="click->task-modal#cancelConfirm" 
-                        class="w-full py-4 bg-white border border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-50 transition-all cursor-pointer">
-                    Annuler
-                </button>
-            </div>
+        <div class="flex flex-col gap-3 pt-2">
+            <button type="button" data-action="click->task-modal#executeConfirm" 
+                    class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-[0.98] cursor-pointer">
+                {{ 'generic.confirm'|trans }}
+            </button>
+            <button type="button" data-action="click->task-modal#cancelConfirm" 
+                    class="w-full py-4 bg-white border border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-50 transition-all cursor-pointer">
+                {{ 'generic.cancel'|trans }}
+            </button>
         </div>
     </div>
+</div>
 
-    {# Error Modal #}
-    <div data-task-modal-target="errorModal" 
-         class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
-        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" data-action="click->task-modal#hideError"></div>
-        <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
-            <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            </div>
-            
-            <div class="text-center space-y-2">
-                <h3 data-task-modal-target="errorTitle" class="text-xl font-bold text-gray-900">Erreur</h3>
-                <p data-task-modal-target="errorMessage" class="text-sm text-gray-500 leading-relaxed"></p>
-            </div>
+{# Error Modal #}
+<div data-task-modal-target="errorModal" 
+     class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" data-action="click->task-modal#hideError"></div>
+    <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
+        <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+        
+        <div class="text-center space-y-2">
+            <h3 data-task-modal-target="errorTitle" class="text-xl font-bold text-gray-900">{{ 'generic.error'|trans }}</h3>
+            <p data-task-modal-target="errorMessage" class="text-sm text-gray-500 leading-relaxed"></p>
+        </div>
 
-            <div class="pt-2">
-                <button type="button" data-action="click->task-modal#hideError" 
-                        class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-95 cursor-pointer">
-                    D'accord
-                </button>
-            </div>
+        <div class="pt-2">
+            <button type="button" data-action="click->task-modal#hideError" 
+                    class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-[0.98] cursor-pointer">
+                {{ 'generic.ok'|trans }}
+            </button>
         </div>
     </div>
 </div>

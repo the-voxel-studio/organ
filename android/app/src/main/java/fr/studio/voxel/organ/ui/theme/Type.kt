@@ -18,38 +18,43 @@ val SpaceMono = FontFamily(
     Font(R.font.spacemono_bold, FontWeight.Bold)
 )
 
-// Set of Material typography styles to start with
-val Typography = Typography(
-
-    titleLarge = TextStyle(
+object AppTypography {
+    val titleLarge = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Normal,
         fontSize = 28.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp
-    ),
+    )
 
-    bodyLarge = TextStyle(
+    val bodyLarge = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Bold,
         fontSize =20.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
-    ),
+    )
 
-    labelLarge = TextStyle(
+    val labelLarge = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Bold,
         fontSize = 16.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.5.sp
-    ),
+    )
 
-    labelSmall = TextStyle(
+    val labelSmall = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
     )
+}
+
+val MaterialTypography = Typography(
+    titleLarge = AppTypography.titleLarge,
+    bodyLarge = AppTypography.bodyLarge,
+    labelLarge = AppTypography.labelLarge,
+    labelSmall = AppTypography.labelSmall
 )

@@ -1,20 +1,57 @@
 import { Controller } from '@hotwired/stimulus';
+import { trans } from '../translator.js';
 
 export default class extends Controller {
+    static targets = [
+        'hardDeleteModal', 'deleteSubmitBtn', 'deleteSpinner',
+        'restoreModal', 'restoreSubmitBtn', 'restoreSpinner'
+    ];
     static values = {
         apiUrl: String
     };
 
-    async restore(event) {
-        const uuid = event.currentTarget.dataset.uuid;
-        const btn = event.currentTarget;
-        const row = btn.closest('.trash-item');
+    connect() {
+        this.projectToManageUuid = null;
+        this.projectToManageRow = null;
 
-        if (!confirm("Voulez-vous restaurer ce projet ?")) {
-            return;
-        }
+        // Handle ESC key to close modals
+        this.escHandler = (e) => {
+            if (e.key === 'Escape') {
+                if (this.hasHardDeleteModalTarget && !this.hardDeleteModalTarget.classList.contains('hidden')) {
+                    this.closeHardDeleteModal();
+                }
+                if (this.hasRestoreModalTarget && !this.restoreModalTarget.classList.contains('hidden')) {
+                    this.closeRestoreModal();
+                }
+            }
+        };
+        window.addEventListener('keydown', this.escHandler);
+    }
 
-        this.setLoading(btn, true);
+    disconnect() {
+        window.removeEventListener('keydown', this.escHandler);
+    }
+
+    restore(event) {
+        this.projectToManageUuid = event.currentTarget.dataset.uuid;
+        this.projectToManageRow = event.currentTarget.closest('.trash-item');
+        this.restoreModalTarget.classList.remove('hidden');
+    }
+
+    closeRestoreModal() {
+        this.restoreModalTarget.classList.add('hidden');
+        this.projectToManageUuid = null;
+        this.projectToManageRow = null;
+    }
+
+    async confirmRestore() {
+        if (!this.projectToManageUuid) return;
+
+        const uuid = this.projectToManageUuid;
+        const row = this.projectToManageRow;
+
+        this.restoreSubmitBtnTarget.disabled = true;
+        this.restoreSpinnerTarget.classList.remove('hidden');
 
         try {
             const response = await fetch(`${this.apiUrlValue}/projects/${uuid}/restore`, {
@@ -22,24 +59,42 @@ export default class extends Controller {
                 credentials: 'include'
             });
 
-            if (!response.ok) throw new Error("Erreur lors de la restauration.");
+            if (!response.ok) throw new Error(trans('organ.trash.error.restore'));
+            
+            this.closeRestoreModal();
             this.animateOut(row);
+            
+            // Redirect to project trash to restore members
+            setTimeout(() => {
+                window.location.href = `/projects/${uuid}/trash?restored=1`;
+            }, 600);
         } catch (e) {
             alert(e.message);
-            this.setLoading(btn, false, 'Restaurer');
+            this.restoreSubmitBtnTarget.disabled = false;
+            this.restoreSpinnerTarget.classList.add('hidden');
         }
     }
 
-    async removePermanent(event) {
-        const uuid = event.currentTarget.dataset.uuid;
-        const btn = event.currentTarget;
-        const row = btn.closest('.trash-item');
+    removePermanent(event) {
+        this.projectToManageUuid = event.currentTarget.dataset.uuid;
+        this.projectToManageRow = event.currentTarget.closest('.trash-item');
+        this.hardDeleteModalTarget.classList.remove('hidden');
+    }
 
-        if (!confirm("Cette action est irréversible. Le projet et toutes ses données (organs, tâches, fichiers) seront supprimés définitivement. Continuer ?")) {
-            return;
-        }
+    closeHardDeleteModal() {
+        this.hardDeleteModalTarget.classList.add('hidden');
+        this.projectToManageUuid = null;
+        this.projectToManageRow = null;
+    }
 
-        this.setLoading(btn, true);
+    async confirmRemovePermanent() {
+        if (!this.projectToManageUuid) return;
+
+        const uuid = this.projectToManageUuid;
+        const row = this.projectToManageRow;
+
+        this.deleteSubmitBtnTarget.disabled = true;
+        this.deleteSpinnerTarget.classList.remove('hidden');
 
         try {
             const response = await fetch(`${this.apiUrlValue}/projects/${uuid}?permanent=1`, {
@@ -47,20 +102,14 @@ export default class extends Controller {
                 credentials: 'include'
             });
 
-            if (!response.ok) throw new Error("Erreur lors de la suppression définitive.");
+            if (!response.ok) throw new Error(trans('organ.trash.error.delete_permanent'));
+            
+            this.closeHardDeleteModal();
             this.animateOut(row);
         } catch (e) {
             alert(e.message);
-            this.setLoading(btn, false);
-        }
-    }
-
-    setLoading(btn, loading, text = '') {
-        btn.disabled = loading;
-        if (loading) {
-            btn.innerHTML = '<svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
-        } else {
-            btn.innerText = text;
+            this.deleteSubmitBtnTarget.disabled = false;
+            this.deleteSpinnerTarget.classList.add('hidden');
         }
     }
 

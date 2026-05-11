@@ -247,7 +247,7 @@ export default class extends Controller {
                 window.location.reload();
             } else {
                 const data = await response.json();
-                alert(data.message || "Impossible d'accepter l'invitation");
+                alert(data.message || trans('notifications.error.accept_invitation'));
             }
         } catch (error) {
             console.error('Failed to accept invitation:', error);

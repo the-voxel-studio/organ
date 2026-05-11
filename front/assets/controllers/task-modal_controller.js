@@ -5,7 +5,7 @@ export default class extends Controller {
     static targets = [
         'container', 'backdrop', 'panel', 'modalTitle', 'form', 'loader', 'formContent', 
         'fieldContainer', 'submitBtn', 'submitBtnText', 'managerSelect', 'subResources',
-        'taskMeta', 'taskUuid', 'taskCreatedAt', 'deleteBtn',
+        'taskMeta', 'taskUuid', 'taskCreatedAt', 'deleteBtn', 'titleInput',
         'assigneeList', 'userPicker', 'userList',
         'taskTagList', 'tagPicker', 'projectTagList',
         'linkList', 'linkForm', 'linkUrl', 'linkDesc',
@@ -73,10 +73,27 @@ export default class extends Controller {
         }
     }
 
+    validatePriority(event) {
+        const input = event.target;
+        let value = input.value;
+
+        // Force integer by removing non-digits
+        value = value.replace(/[^\d]/g, '');
+
+        if (value !== '') {
+            let num = parseInt(value, 10);
+            if (num < 1) num = 1;
+            if (num > 10) num = 10;
+            value = num.toString();
+        }
+
+        input.value = value;
+    }
+
     async loadInitialData() {
         try {
             const [membersRes, tagsRes] = await Promise.all([
-                fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/members`, { credentials: 'include' }),
+                fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/members`, { credentials: 'include' }),
                 fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/tags`, { credentials: 'include' })
             ]);
 
@@ -106,11 +123,11 @@ export default class extends Controller {
     }
 
     updateManagerSelect() {
-        this.managerSelectTarget.innerHTML = '<option value="">Non assigné</option>';
+        this.managerSelectTarget.innerHTML = `<option value="">${trans('task.modal.empty.manager')}</option>`;
         this.members.forEach(m => {
             const option = document.createElement('option');
-            option.value = m.user.uuid;
-            option.textContent = `${m.user.firstName} ${m.user.lastName}`;
+            option.value = m.uuid;
+            option.textContent = `${m.firstName} ${m.lastName}`;
             this.managerSelectTarget.appendChild(option);
         });
     }
@@ -122,8 +139,8 @@ export default class extends Controller {
         this.resetForm();
         this.initialStatus = 'TODO';
         this.toggleStatusMessage();
-        this.modalTitleTarget.innerText = "Créer une nouvelle tâche";
-        this.submitBtnTextTarget.innerText = "Créer la tâche";
+        this.modalTitleTarget.innerText = trans('task.modal.create_title');
+        this.submitBtnTextTarget.innerText = trans('task.modal.buttons.create');
         
         // Reset staged data
         this.stagedAssignees = [];
@@ -278,6 +295,9 @@ export default class extends Controller {
             const input = c.querySelector('input, textarea, select');
             if (input) input.disabled = false;
         });
+        if (this.hasTitleInputTarget) {
+            this.titleInputTarget.classList.remove('border-red-500', 'ring-red-100');
+        }
         if (this.hasStatusMessageContainerTarget) {
             this.statusMessageContainerTarget.classList.add('hidden');
         }
@@ -432,7 +452,7 @@ export default class extends Controller {
             const div = document.createElement('div');
             div.className = 'flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs font-bold text-gray-700';
             div.innerHTML = `
-                <span>${a.firstName} ${a.lastName}</span>
+                <span class="truncate max-w-[120px]" title="${a.firstName} ${a.lastName}">${a.firstName} ${a.lastName}</span>
                 ${canManage ? `<button type="button" data-action="click->task-modal#removeAssignee" data-user-uuid="${a.uuid}" class="text-gray-400 hover:text-rose-500 transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg></button>` : ''}
             `;
             this.assigneeListTarget.appendChild(div);
@@ -453,10 +473,10 @@ export default class extends Controller {
             btn.type = 'button';
             btn.className = 'w-full text-left px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-between group';
             btn.dataset.action = 'click->task-modal#addAssignee';
-            btn.dataset.userUuid = m.user.uuid;
+            btn.dataset.userUuid = m.uuid;
             btn.innerHTML = `
-                <span>${m.user.firstName} ${m.user.lastName}</span>
-                <span class="opacity-0 group-hover:opacity-100 text-[var(--highlight-color)]">+</span>
+                <span class="truncate" title="${m.firstName} ${m.lastName}">${m.firstName} ${m.lastName}</span>
+                <span class="opacity-0 group-hover:opacity-100 text-[var(--highlight-color)] shrink-0">+</span>
             `;
             this.userListTarget.appendChild(btn);
         });
@@ -465,9 +485,9 @@ export default class extends Controller {
     async addAssignee(event) {
         const userUuid = event.currentTarget.dataset.userUuid;
         if (!this.taskIdValue) {
-            const member = this.members.find(m => m.user.uuid === userUuid);
+            const member = this.members.find(m => m.uuid === userUuid);
             if (member && !this.stagedAssignees.find(a => a.uuid === userUuid)) {
-                this.stagedAssignees.push(member.user);
+                this.stagedAssignees.push(member);
                 this.renderAssignees(this.stagedAssignees, { taskOwnership: { isManager: true } }); // Full access for staged
             }
             this.userPickerTarget.classList.add('hidden');
@@ -516,7 +536,7 @@ export default class extends Controller {
             div.style.color = t.color;
             div.innerHTML = `
                 <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${t.color}"></span>
-                <span>${t.name}</span>
+                <span class="truncate max-w-[100px]" title="${t.name}">${t.name}</span>
                 ${canManage ? `<button type="button" data-action="click->task-modal#removeTag" data-tag-uuid="${t.uuid}" class="text-gray-300 transition-colors cursor-pointer" onmouseover="this.style.color='var(--highlight-color)'" onmouseout="this.style.color='#d1d5db'"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg></button>` : ''}
             `;
             this.taskTagListTarget.appendChild(div);
@@ -533,7 +553,7 @@ export default class extends Controller {
     renderProjectTagList() {
         this.projectTagListTarget.innerHTML = '';
         if (this.projectTags.length === 0) {
-            this.projectTagListTarget.innerHTML = '<p class="text-[10px] text-gray-400 italic p-4 text-center">Aucune étiquette définie dans le projet.</p>';
+            this.projectTagListTarget.innerHTML = `<p class="text-[10px] text-gray-400 italic p-4 text-center">${trans('task.modal.empty.tags')}</p>`;
             return;
         }
         this.projectTags.forEach(t => {
@@ -544,7 +564,7 @@ export default class extends Controller {
             btn.dataset.tagUuid = t.uuid;
             btn.innerHTML = `
                 <span class="w-2 h-2 rounded-full" style="background-color: ${t.color}"></span>
-                <span>${t.name}</span>
+                <span class="truncate" title="${t.name}">${t.name}</span>
             `;
             this.projectTagListTarget.appendChild(btn);
         });
@@ -689,7 +709,7 @@ export default class extends Controller {
                 <div class="flex-grow space-y-1">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-black text-gray-900">${c.user.firstName} ${c.user.lastName}</span>
+                            <span class="text-xs font-black text-gray-900 truncate max-w-[150px]" title="${c.user.firstName} ${c.user.lastName}">${c.user.firstName} ${c.user.lastName}</span>
                             <span class="text-[10px] font-bold text-gray-400">${new Date(c.createdAt).toLocaleString()}</span>
                         </div>
                         ${canDelete ? `
@@ -1162,7 +1182,7 @@ export default class extends Controller {
     renderDeletedComments(comments, perms = null) {
         this.deletedCommentListTarget.innerHTML = '';
         if (comments.length === 0) {
-            this.deletedCommentListTarget.innerHTML = '<p class="text-[10px] text-gray-300 italic p-4 text-center">Aucun commentaire en corbeille.</p>';
+            this.deletedCommentListTarget.innerHTML = `<p class="text-[10px] text-gray-300 italic p-4 text-center">${trans('task.modal.empty.comments')}</p>`;
             return;
         }
 
@@ -1179,8 +1199,8 @@ export default class extends Controller {
                         <div class="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center text-[8px] font-black uppercase text-gray-400">
                             ${c.user.firstName[0]}${c.user.lastName[0]}
                         </div>
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-gray-900">${c.user.firstName} ${c.user.lastName}</span>
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-[10px] font-bold text-gray-900 truncate max-w-[120px]" title="${c.user.firstName} ${c.user.lastName}">${c.user.firstName} ${c.user.lastName}</span>
                             <span class="text-[9px] font-medium text-gray-400">Supprimé le ${new Date(c.deletedAt).toLocaleString()}</span>
                         </div>
                     </div>
@@ -1262,7 +1282,7 @@ export default class extends Controller {
     renderDeletedAttachments(attachments, perms = null) {
         this.deletedAttachmentListTarget.innerHTML = '';
         if (attachments.length === 0) {
-            this.deletedAttachmentListTarget.innerHTML = '<p class="text-[10px] text-gray-300 italic p-4 text-center col-span-2">Aucun fichier en corbeille.</p>';
+            this.deletedAttachmentListTarget.innerHTML = `<p class="text-[10px] text-gray-300 italic p-4 text-center col-span-2">${trans('task.modal.empty.attachments')}</p>`;
             return;
         }
 
@@ -1305,7 +1325,7 @@ export default class extends Controller {
     renderDeletedLinks(links, perms = null) {
         this.deletedLinkListTarget.innerHTML = '';
         if (links.length === 0) {
-            this.deletedLinkListTarget.innerHTML = '<p class="text-[10px] text-gray-300 italic p-4 text-center">Aucun lien en corbeille.</p>';
+            this.deletedLinkListTarget.innerHTML = `<p class="text-[10px] text-gray-300 italic p-4 text-center">${trans('task.modal.empty.links')}</p>`;
             return;
         }
 
@@ -1484,6 +1504,17 @@ export default class extends Controller {
     async save(event) {
         event.preventDefault();
         const isEdit = this.taskIdValue !== "";
+
+        // Validate mandatory title
+        if (this.hasTitleInputTarget) {
+            const title = this.titleInputTarget.value.trim();
+            if (!title) {
+                this.titleInputTarget.classList.add('border-red-500', 'ring-red-100');
+                this.titleInputTarget.focus();
+                return;
+            }
+            this.titleInputTarget.classList.remove('border-red-500', 'ring-red-100');
+        }
         
         const data = {};
         const inputs = this.formTarget.querySelectorAll('input:not(:disabled), textarea:not(:disabled), select:not(:disabled)');
@@ -1568,8 +1599,8 @@ export default class extends Controller {
                 const result = await response.json();
                 if (!isEdit) {
                     this.taskIdValue = result.uuid;
-                    this.modalTitleTarget.innerText = "Modifier la tâche";
-                    this.submitBtnTextTarget.innerText = "Enregistrer les modifications";
+                    this.modalTitleTarget.innerText = trans('task.modal.edit_title');
+                    this.submitBtnTextTarget.innerText = trans('task.modal.buttons.save');
                     this.subResourcesTarget.classList.remove('hidden');
                     this.containerTarget.querySelectorAll('[data-section="attachments"], [data-section="comments"], [data-section="timeline"]').forEach(s => s.classList.remove('hidden'));
                     this.taskMetaTarget.classList.remove('hidden');
@@ -1581,7 +1612,9 @@ export default class extends Controller {
                 window.dispatchEvent(new CustomEvent('task-saved', { detail: { organUuid: this.organUuidValue } }));
             } else {
                 const error = await response.json();
-                this.showError("Erreur de sauvegarde", error.message || "Une erreur est survenue lors de l'enregistrement.");
+                let message = error.message || trans('task.modal.error.save_generic');
+                if (response.status === 403) message = trans('task.modal.error.access_denied');
+                this.showError(trans('task.modal.error.save_title'), message);
             }
         } catch (e) {
             console.error("Save failed", e);
@@ -1593,10 +1626,10 @@ export default class extends Controller {
 
     async deleteTask() {
         const isPermanent = this.isTaskTrashed === true;
-        const title = isPermanent ? "Supprimer définitivement ?" : "Supprimer la tâche ?";
+        const title = isPermanent ? trans('task.modal.confirm.delete_permanent_title') : trans('task.modal.confirm.delete_title');
         const message = isPermanent 
-            ? "Cette action est irréversible. La tâche et toutes ses données seront définitivement supprimées."
-            : "La tâche sera déplacée vers la corbeille de l'organ.";
+            ? trans('task.modal.confirm.delete_permanent_message')
+            : trans('task.modal.confirm.delete_message');
 
         this.showConfirm(
             title,

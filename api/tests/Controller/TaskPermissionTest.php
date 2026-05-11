@@ -89,7 +89,7 @@ class TaskPermissionTest extends ApiTestCase
 
         // 2. Mais l'Assignee ne peut pas modifier la priorité (réservé au Manager dans TaskService::canEditField)
         $client->request('PATCH', sprintf('/api/projects/%s/organs/%s/tasks/%s', $project->getUuid(), $organ->getUuid(), $task->getUuid()), [], [], [], json_encode([
-            'priority' => 50
+            'priority' => 5
         ]));
         $this->assertResponseStatusCodeSame(403);
     }
