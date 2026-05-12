@@ -68,24 +68,20 @@ fun Header(
             modifier = Modifier.align(Alignment.CenterEnd)
         ) {
             if (isSideBarClosed) {
-                Image(
-                    painter = painterResource(R.drawable.poubelle_logo),
+                IconButtonPressable(
+                    icon = R.drawable.poubelle_logo,
                     contentDescription = "poubelle",
                     modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
-                            /*TODO*/
-                        }
+                        .size(24.dp),
+                    onClick = { /*TODO*/ }
                 )
                 Spacer(modifier = Modifier.width(24.dp))
-                Image(
-                    painter = painterResource(R.drawable.notification_logo),
+                IconButtonPressable(
+                    icon = R.drawable.notification_logo,
                     contentDescription = "notification",
                     modifier = Modifier
-                        .size(24.dp)
-                        .clickable {
-                            /*TODO*/
-                        }
+                        .size(24.dp),
+                    onClick = { /*TODO*/ }
                 )
             }
         }
