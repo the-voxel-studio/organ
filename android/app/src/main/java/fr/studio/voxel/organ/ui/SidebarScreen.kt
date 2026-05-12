@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,6 +34,7 @@ import fr.studio.voxel.organ.domain.model.MainViewModel
 import fr.studio.voxel.organ.domain.model.SidebarViewModel
 import fr.studio.voxel.organ.ui.components.Footer
 import fr.studio.voxel.organ.ui.components.Header
+import fr.studio.voxel.organ.ui.components.IconButtonPressable
 import fr.studio.voxel.organ.ui.components.ProjectItem
 import fr.studio.voxel.organ.ui.components.SecondaryButton
 
@@ -67,29 +69,23 @@ fun SideBar(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ){
-            Icon(
-                painter = painterResource(R.drawable.poubelle_logo),
+            IconButtonPressable(
+                icon = R.drawable.poubelle_logo,
                 contentDescription = "poubelle",
                 modifier = Modifier
-                    .size(24.dp)
-                    .clickable (
-                        interactionSource = interactionPoubelle,
-                        indication = null,
-                        onClick = { /* TODO */ }
-                    ),
+                    .size(24.dp),
+                onClick =  { /* TODO */ },
+                interactionSource = interactionPoubelle,
                 tint = if (isPressedPoubelle) Color.Red else MaterialTheme.colorScheme.onSurface
             )
 
-            Icon(
-                painter = painterResource(R.drawable.notification_logo),
+            IconButtonPressable(
+                icon = R.drawable.notification_logo,
                 contentDescription = "notification",
                 modifier = Modifier
-                    .size(24.dp)
-                    .clickable (
-                        interactionSource = interactionNotif,
-                        indication = null,
-                        onClick = { /* TODO */ }
-                    ),
+                    .size(24.dp),
+                onClick = { /* TODO */ },
+                interactionSource = interactionNotif,
                 tint = if (isPressedNotif) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
             )
         }
@@ -132,6 +128,14 @@ fun SideBar(
         }
 
         Spacer(modifier = Modifier.weight(1f))
+
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(0.9f),
+            thickness = 2.dp,
+            color =  MaterialTheme.colorScheme.outline
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Footer()
     }
