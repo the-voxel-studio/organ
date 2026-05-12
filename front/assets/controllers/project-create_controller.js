@@ -388,15 +388,28 @@ export default class extends Controller {
                         }).catch(e => console.error("Removal failed", e));
                     }
 
-                    for (const member of this.invites) {
-                        if (member.isExisting && member.roleChanged) {
-                            await fetch(`${this.apiUrlValue}/projects/${projectUuid}/members/${member.uuid}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ role: member.role }),
-                                credentials: 'include'
-                            }).catch(e => console.error("Role update failed", e));
+                    // Sort role updates to put ADMIN promotions first.
+                    // This ensures the current admin can promote someone before they are demoted by the side-effect.
+                    const roleUpdates = this.invites
+                        .filter(m => m.isExisting && m.roleChanged)
+                        .sort((a, b) => (b.role === 'ADMIN' ? 1 : 0) - (a.role === 'ADMIN' ? 1 : 0));
+
+                    const hasAdminPromotion = roleUpdates.some(m => m.role === 'ADMIN');
+
+                    for (const member of roleUpdates) {
+                        // If an ADMIN is being promoted, the API will automatically demote the current caller to MANAGER.
+                        // We can skip the explicit request for the current user if they are being demoted to MANAGER
+                        // and someone else is being promoted to ADMIN, to avoid "Access Denied" or redundant requests.
+                        if (hasAdminPromotion && member.email === this.userEmailValue && member.role === 'MANAGER') {
+                            continue;
                         }
+
+                        await fetch(`${this.apiUrlValue}/projects/${projectUuid}/members/${member.uuid}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ role: member.role }),
+                            credentials: 'include'
+                        }).catch(e => console.error("Role update failed", e));
                     }
                 }
 
