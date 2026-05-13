@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,17 +26,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fr.studio.voxel.organ.R
-import fr.studio.voxel.organ.ui.theme.AppColorScheme
-import fr.studio.voxel.organ.ui.theme.AppTypography
 
 @Composable
 fun SecondaryButton(
+    modifier: Modifier = Modifier,
     text: String,
     onClick: () -> Unit,
     isSelected : Boolean = false,
-    iconRes: Int? = null,
-    modifier: Modifier = Modifier
+    iconRes: Int? = null
+
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -48,7 +49,7 @@ fun SecondaryButton(
     val backgroundColor = when {
         isSelected -> MaterialTheme.colorScheme.primary
         isPressed -> MaterialTheme.colorScheme.primary
-        else -> Color.Transparent
+        else -> Color.White
     }
 
     // Couleur du texte
@@ -65,7 +66,8 @@ fun SecondaryButton(
                 scaleX = scale,
                 scaleY = scale
             )
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .height(80.dp),
         shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, Color.Gray),
         colors = ButtonDefaults.buttonColors(
@@ -77,7 +79,7 @@ fun SecondaryButton(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
             if (iconRes != null) {

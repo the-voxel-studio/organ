@@ -16,16 +16,16 @@ object AppColorScheme {
     val onSurface = Black
 }
 
-val MaterialColorScheme = lightColorScheme(
-    primary = AppColorScheme.primary,
-    onPrimary = AppColorScheme.onPrimary,
-    secondary = AppColorScheme.secondary,
-    onSecondary = AppColorScheme.onSecondary,
-    tertiary = AppColorScheme.tertiary,
-    background = AppColorScheme.background,
-    onBackground = AppColorScheme.onBackground,
-    surface = AppColorScheme.surface,
-    onSurface = AppColorScheme.onSurface
+    secondary = PastelBlue,
+    onSecondary = Black,
+
+    tertiary = LightBlue,
+
+    background = Beige,
+    onBackground = Black,
+
+    surface = Beige,
+    onSurface = Black
 )
 
 @Composable

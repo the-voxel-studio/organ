@@ -22,7 +22,7 @@ object AppTypography {
     val titleLarge = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Normal,
-        fontSize = 28.sp,
+        fontSize = 40.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp
     )
@@ -30,7 +30,7 @@ object AppTypography {
     val bodyLarge = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Bold,
-        fontSize =20.sp,
+        fontSize = 18.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     )
@@ -38,7 +38,7 @@ object AppTypography {
     val labelLarge = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
+        fontSize = 20.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.5.sp
     )
@@ -46,7 +46,7 @@ object AppTypography {
     val labelSmall = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
+        fontSize = 18.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp
     )

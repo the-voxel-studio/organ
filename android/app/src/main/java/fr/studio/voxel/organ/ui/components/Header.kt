@@ -53,14 +53,15 @@ fun Header(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            AnimatedLogo()
+
+            AnimatedLogo(size = 48.dp)
 
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
                 text = "Organ",
-                style = AppTypography.titleLarge,
-                color = AppColorScheme.onSurface,
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 

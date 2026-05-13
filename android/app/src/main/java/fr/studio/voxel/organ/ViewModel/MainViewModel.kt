@@ -11,7 +11,7 @@ class MainViewModel : ViewModel() {
         private set
 
     //=====A l'avenir les projets viendront de la BDD=====
-    var projects by mutableStateOf(
+    var projects by mutableStateOf<List<Project>?>(
         listOf(
             Project(
                 id = 1,
@@ -35,17 +35,28 @@ class MainViewModel : ViewModel() {
                 name = "Projet Gamma",
                 memberIds = listOf(1, 4),
                 organs = emptyList()
+            ),
+            Project(
+                id = 4,
+                name = "Projet X",
+                memberIds = listOf(1, 4),
+                organs = emptyList()
             )
-        )
+       )
     )
         private set
 
+    // Pour les tests, fonction de réinitialisation
+    fun clearProjects() {
+        projects = emptyList() // L'utilisateur existe mais n'a aucun projet
+    }
+
     fun addProject(project: Project) {
-        projects = projects + project
+        projects = projects?.plus(project)
     }
 
     fun addOrgan(projectId: Int, organ: Organ) {
-        projects = projects.map {
+        projects = projects?.map {
             if (it.id == projectId) {
                 it.copy(organs = it.organs + organ)
             } else it
@@ -53,7 +64,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun addUserToOrgan(projectId: Int, organId: Int, userId: Int) {
-        projects = projects.map { project ->
+        projects = projects?.map { project ->
             if (project.id == projectId) {
                 project.copy(
                     organs = project.organs.map { organ ->
