@@ -27,6 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.ImageLoader
@@ -37,12 +39,14 @@ import coil.request.ImageRequest
 import fr.studio.voxel.organ.R
 @Composable
 fun Footer(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    utilisateur: String
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
+            .padding(16.dp)
     ) {
         Row(
             modifier = modifier
@@ -55,25 +59,30 @@ fun Footer(
                 onClick = { /* TODO */ }
             )*/
             UserAvatar(
-                name = "Nom Prénom"
+                name = utilisateur,
+                size = 40.dp
             )
 
             Spacer(modifier = Modifier.width(24.dp))
 
             Text(
-                text = "Nom Prénom",
+                text = utilisateur,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+
+            Spacer(modifier = Modifier.width(24.dp))
+
+            IconButtonPressable(
+                icon = R.drawable.icon_settings,
+                contentDescription = "Settings",
+                onClick = { /* TODO */ },
+                modifier = Modifier.size(40.dp)
             )
         }
-
-        Spacer(modifier = Modifier.width(24.dp))
-
-        IconButtonPressable(
-            icon = R.drawable.icon_settings,
-            contentDescription = "Settings",
-            onClick = { /* TODO */ },
-            modifier = Modifier.size(32.dp)
-        )
     }
 }

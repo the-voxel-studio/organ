@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.modifier.modifierLocalOf
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -44,7 +47,8 @@ import fr.studio.voxel.organ.ui.components.SecondaryButton
 fun SideBar(
     navController: NavHostController,
     mainVM: MainViewModel = viewModel(),
-    sidebarVM: SidebarViewModel = viewModel()
+    sidebarVM: SidebarViewModel = viewModel(),
+    utilisateur : String
 ){
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -55,99 +59,111 @@ fun SideBar(
     val interactionNotif = remember { MutableInteractionSource() }
     val isPressedNotif by interactionNotif.collectIsPressedAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxHeight()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surface
     ) {
 
-        Header(navigateUp = {})
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxHeight()
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ){
-            IconButtonPressable(
-                icon = R.drawable.poubelle_logo,
-                contentDescription = "poubelle",
-                modifier = Modifier
-                    .size(24.dp),
-                onClick =  { /* TODO */ },
-                interactionSource = interactionPoubelle,
-                tint = if (isPressedPoubelle) Color.Red else MaterialTheme.colorScheme.onSurface
-            )
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-            IconButtonPressable(
-                icon = R.drawable.notification_logo,
-                contentDescription = "notification",
-                modifier = Modifier
-                    .size(24.dp),
-                onClick = { /* TODO */ },
-                interactionSource = interactionNotif,
-                tint = if (isPressedNotif) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-            )
-        }
+            Header(navigateUp = {})
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        SecondaryButton(
-            text = "Dashboard",
-            iconRes = R.drawable.dashboard_logo,
-            isSelected = currentRoute == OrganScreen.Dashboard.name,
-            onClick = {
-                navController.navigate(OrganScreen.Dashboard.name) {
-                    // Évite d'empiler plusieurs fois la même page
-                    popUpTo(OrganScreen.Dashboard.name) { inclusive = true }
-                }
-            }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        val projects = mainVM.projects?:emptyList()
-
-        if (projects.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "MES PROJETS",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline, // gris
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 8.dp, bottom = 8.dp)
+                    .padding(vertical = 16.dp, horizontal = 80.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButtonPressable(
+                    icon = R.drawable.poubelle_logo,
+                    contentDescription = "poubelle",
+                    modifier = Modifier
+                        .size(32.dp),
+                    onClick = { /* TODO */ },
+                    interactionSource = interactionPoubelle,
+                    tint = if (isPressedPoubelle) Color.Red else MaterialTheme.colorScheme.onSurface
+                )
+
+                IconButtonPressable(
+                    icon = R.drawable.notification_logo,
+                    contentDescription = "notification",
+                    modifier = Modifier
+                        .size(32.dp),
+                    onClick = { /* TODO */ },
+                    interactionSource = interactionNotif,
+                    tint = if (isPressedNotif) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            SecondaryButton(
+                text = "Dashboard",
+                iconRes = R.drawable.dashboard_logo,
+                isSelected = currentRoute == OrganScreen.Dashboard.name,
+                onClick = {
+                    navController.navigate(OrganScreen.Dashboard.name) {
+                        // Évite d'empiler plusieurs fois la même page
+                        popUpTo(OrganScreen.Dashboard.name) { inclusive = true }
+                    }
+                }
             )
 
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                //Liste des projets
-                projects.forEach { project ->
-                    val projectRoute = "${OrganScreen.Project.name}/${project.id}"
-                    ProjectItem(
-                        project = project,
-                        isSelected = currentRoute == projectRoute,
-                        onClick = { navController.navigate(projectRoute) }
-                    )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val projects = mainVM.projects ?: emptyList()
+
+            if (projects.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "MES PROJETS",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.outline, // gris
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp, bottom = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    //Liste des projets
+                    projects.forEach { project ->
+                        val projectRoute = "${OrganScreen.Project.name}/${project.id}"
+                        ProjectItem(
+                            project = project,
+                            isSelected = currentRoute == projectRoute,
+                            onClick = { navController.navigate(projectRoute) }
+                        )
+                    }
                 }
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
             }
-        }else{
-            Spacer(modifier = Modifier.weight(1f))
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(0.9f),
+                thickness = 2.dp,
+                color = MaterialTheme.colorScheme.outline
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Footer(utilisateur = utilisateur)
         }
-
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(0.9f),
-            thickness = 2.dp,
-            color =  MaterialTheme.colorScheme.outline
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Footer()
     }
 }

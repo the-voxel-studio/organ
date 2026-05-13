@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import coil.compose.AsyncImage
@@ -15,7 +16,9 @@ import com.airbnb.lottie.compose.*
 import fr.studio.voxel.organ.R
 
 @Composable
-fun AnimatedLogo() {
+fun AnimatedLogo(
+    size: Dp = 40.dp
+) {
     val context = LocalContext.current
 
     val imageLoader = remember {
@@ -36,6 +39,6 @@ fun AnimatedLogo() {
             .build(),
         imageLoader = imageLoader,
         contentDescription = "Logo",
-        modifier = Modifier.size(40.dp)
+        modifier = Modifier.size(size)
     )
 }

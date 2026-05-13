@@ -13,7 +13,7 @@ private val LightColorScheme = lightColorScheme(
 
     tertiary = LightBlue,
 
-    background = White,
+    background = Beige,
     onBackground = Black,
 
     surface = Beige,
