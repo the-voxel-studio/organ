@@ -3,7 +3,7 @@
     "subtitle": "Gérez vos informations personnelles et vos préférences de compte.",
     "profile": {
         "title": "Profil",
-        "subtitle": "Vos informations de base visibles sur la plateforme.",
+        "subtitle": "Vos informations visibles sur la plateforme.",
         "firstname_label": "Prénom",
         "lastname_label": "Nom",
         "email_label": "Adresse E-mail",

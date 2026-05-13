@@ -150,7 +150,7 @@ export default class extends Controller {
             
             // Set icon preview
             setTimeout(() => {
-                if (this.iconMode === 'BLOB') {
+                if (this.iconMode === 'BLOB' && this.organValue.iconData) {
                     this.imagePreviewTarget.src = this.organValue.iconData;
                     this.imagePreviewTarget.classList.remove('hidden');
                     this.imagePlaceholderTarget.classList.add('hidden');
@@ -311,14 +311,18 @@ export default class extends Controller {
         if (!this.hasPermission('ORGAN_MANAGE_ROLES')) return;
         const newRole = {
             id: 'role-' + Date.now(),
-            name: 'Nouveau rôle',
+            name: '',
             iconType: 'EMOJI',
             iconData: '👤',
-            permissions: ['ORGAN_VIEW']
+            permissions: ['ORGAN_VIEW'],
+            isNew: true // Mark as temporary for cancellation logic
         };
         this.roles.push(newRole);
         this.renderRoles();
         this.renderMembers();
+
+        // Auto-open modal for the new role
+        this.openRoleModalById(newRole.id);
     }
 
     removeRole(event) {
@@ -335,12 +339,17 @@ export default class extends Controller {
 
     openRoleConfig(event) {
         const id = event.currentTarget.dataset.id;
+        this.openRoleModalById(id);
+    }
+
+    openRoleModalById(id) {
         const role = this.roles.find(r => r.id === id);
         if (!role) return;
 
         this.editingRoleId = id;
         this.modalRoleNameTarget.value = role.name;
         this.modalRoleEmojiTarget.value = (role.iconType === 'EMOJI') ? role.iconData : '';
+        this.modalRoleNameTarget.classList.remove('border-red-500', 'ring-red-100');
         
         const allAvailable = this.availablePermissionsValue;
 
@@ -404,9 +413,24 @@ export default class extends Controller {
         `;
 
         this.roleModalTarget.classList.remove('hidden');
+
+        // Auto-focus name field
+        setTimeout(() => {
+            this.modalRoleNameTarget.focus();
+            this.modalRoleNameTarget.select();
+        }, 50);
     }
 
     closeRoleModal() {
+        if (this.editingRoleId) {
+            const role = this.roles.find(r => r.id === this.editingRoleId);
+            // If it was a new role and we are cancelling, remove it from the list
+            if (role && role.isNew) {
+                this.roles = this.roles.filter(r => r.id !== this.editingRoleId);
+                this.renderRoles();
+                this.renderMembers();
+            }
+        }
         this.roleModalTarget.classList.add('hidden');
         this.editingRoleId = null;
     }
@@ -415,9 +439,17 @@ export default class extends Controller {
         const role = this.roles.find(r => r.id === this.editingRoleId);
         if (!role) return;
 
-        role.name = this.modalRoleNameTarget.value.trim() || 'Rôle sans nom';
+        const name = this.modalRoleNameTarget.value.trim();
+        if (!name) {
+            this.modalRoleNameTarget.classList.add('border-red-500', 'ring-red-100');
+            this.modalRoleNameTarget.focus();
+            return;
+        }
+
+        role.name = name;
         role.iconData = this.modalRoleEmojiTarget.value.trim() || '👤';
         role.iconType = 'EMOJI';
+        delete role.isNew; // Role is now "persisted" in local state
 
         const checkedPerms = Array.from(this.permissionListTarget.querySelectorAll('input:checked')).map(i => i.value);
         if (!checkedPerms.includes('ORGAN_VIEW')) checkedPerms.push('ORGAN_VIEW');
@@ -439,7 +471,10 @@ export default class extends Controller {
 
         this.renderRoles();
         this.renderMembers();
-        this.closeRoleModal();
+        
+        // Use a flag to avoid the closeRoleModal cleanup logic
+        this.editingRoleId = null; 
+        this.roleModalTarget.classList.add('hidden');
     }
 
     renderRoles() {
@@ -455,7 +490,7 @@ export default class extends Controller {
                     <div class="min-w-0">
                         <p class="font-bold text-gray-900 truncate">${role.name}</p>
                         <div class="flex items-center gap-2">
-                            <p class="text-[10px] text-gray-400 uppercase font-black shrink-0">${role.permissions.length} permissions</p>
+                            <p class="text-[10px] text-gray-400 uppercase font-black shrink-0">${trans('organ.permission_count', {count: role.permissions.length})}</p>
                             ${role.description ? `<span class="text-gray-300">•</span><p class="text-[10px] text-gray-400 font-medium italic truncate" title="${role.description}">${role.description}</p>` : ''}
                         </div>
                     </div>
@@ -520,7 +555,7 @@ export default class extends Controller {
         const canManageMembers = this.hasPermission('ORGAN_MANAGE_MEMBERS');
 
         if (this.addedMembers.length === 0) {
-            this.organMemberListTarget.innerHTML = `<p class="text-sm text-gray-400 italic">Aucun membre ajouté à l'organ.</p>`;
+            this.organMemberListTarget.innerHTML = `<p class="text-sm text-gray-400 italic">${trans('organ.create.form.members.empty')}</p>`;
             return;
         }
 
@@ -582,6 +617,14 @@ export default class extends Controller {
             return;
         }
 
+        // Validate members: every member must have at least one role
+        for (const member of this.addedMembers) {
+            if (member.roles.length === 0) {
+                this.showError(`Le membre "${member.name}" doit avoir au moins un rôle.`);
+                return;
+            }
+        }
+
         this.submitBtnTarget.disabled = true;
         this.spinnerTarget.classList.remove('hidden');
         this.loadingOverlayTarget.classList.remove('hidden');
@@ -639,7 +682,7 @@ export default class extends Controller {
 
             // STEP 2: ROLES MANAGEMENT
             if (!isEdit || this.hasPermission('ORGAN_MANAGE_ROLES')) {
-                this.loadingTextTarget.innerText = "Synchronisation des rôles...";
+                this.loadingTextTarget.innerText = trans('organ.create.form.sync.roles');
                 const roleIdMap = {}; // Local ID -> Server UUID
 
                 if (isEdit) {
@@ -700,7 +743,7 @@ export default class extends Controller {
 
                 // STEP 3: ASSIGN/UNASSIGN MEMBERS (Sync roles)
                 if (!isEdit || this.hasPermission('ORGAN_MANAGE_MEMBERS')) {
-                    this.loadingTextTarget.innerText = "Synchronisation des membres...";
+                    this.loadingTextTarget.innerText = trans('organ.create.form.sync.members');
                     
                     // 1. Process current members (added/modified)
                     for (const member of this.addedMembers) {
@@ -750,7 +793,7 @@ export default class extends Controller {
                 }
             } else if (isEdit && this.hasPermission('ORGAN_MANAGE_MEMBERS')) {
                 // If user ONLY has member permission in edit mode, use same sync logic but without roleIdMap
-                this.loadingTextTarget.innerText = "Mise à jour des membres...";
+                this.loadingTextTarget.innerText = trans('organ.create.form.sync.members_update');
                 for (const member of this.addedMembers) {
                     const initialRoles = member.initialRoles || [];
                     const rolesToAdd = member.roles.filter(id => !initialRoles.includes(id));

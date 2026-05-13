@@ -27,11 +27,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private string $uuid;
 
     #[ORM\Column(length: 100, nullable: true)]
-    #[Assert\Length(max: 100)]
+    #[Assert\Length(max: 50)]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 100, nullable: true)]
-    #[Assert\Length(max: 100)]
+    #[Assert\Length(max: 50)]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 180, unique: true)]

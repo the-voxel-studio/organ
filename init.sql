@@ -1,9 +1,13 @@
 -- =========================================================================
 -- INITIALISATION DE LA BASE DE TEST (Nécessaire pour PHPUnit / Foundry)
 -- =========================================================================
-CREATE DATABASE IF NOT EXISTS app_database_test;
+CREATE DATABASE IF NOT EXISTS app_database CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS app_database_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON app_database.* TO 'app_user'@'%';
 GRANT ALL PRIVILEGES ON app_database_test.* TO 'app_user'@'%';
 FLUSH PRIVILEGES;
+
+USE app_database;
 
 -- =========================================================================
 -- UTILISATEURS (Comptes locaux JWT + Google OAuth)
@@ -11,8 +15,8 @@ FLUSH PRIVILEGES;
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     uuid VARCHAR(36) NOT NULL UNIQUE,
-    first_name VARCHAR(100) NULL,
-    last_name VARCHAR(100) NULL,
+    first_name VARCHAR(50) NULL,
+    last_name VARCHAR(50) NULL,
     email VARCHAR(180) NOT NULL UNIQUE,
     password VARCHAR(255) NULL,
     google_id VARCHAR(255) NULL UNIQUE,

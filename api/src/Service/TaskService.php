@@ -62,12 +62,13 @@ class TaskService
             'TASK_DELETE', 'TASK_HARD_DELETE' => $isManager || $isCreator,
             'TASK_STATUS_CHANGE', 'TASK_ESTIMATE_MANAGE' => $isManager || $isAssignee,
             'TASK_PRIORITY_CHANGE', 'TASK_DATES_MANAGE' => $isManager,
+            'TASK_VALIDATE' => $isManager,
             'TASK_LINK_MANAGE', 'TASK_TAG_MANAGE', 'TASK_DEPENDENCY_MANAGE' => $isManager || $isAssignee,
             'TASK_LINK_HARD_DELETE' => $isManager,
             // For sub-resources, returning true here allows the controller to enforce the sub-resource level ownership.
             'COMMENT_DELETE', 'COMMENT_HARD_DELETE', 'COMMENT_EDIT',
             'ATTACHMENT_DELETE', 'ATTACHMENT_HARD_DELETE' => true,
-            default => $isManager || $isAssignee || $isCreator,
+            default => false,
         };
     }
 
@@ -140,6 +141,9 @@ class TaskService
         $tagData = [];
         foreach ($tags as $tt) {
             $t = $tt->getTag();
+            if ($t->getDeletedAt() !== null) {
+                continue;
+            }
             $tagData[] = [
                 'uuid' => $t->getUuid(),
                 'name' => $t->getName(),

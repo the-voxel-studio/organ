@@ -37,7 +37,7 @@ class RoleManagementPermissionTest extends ApiTestCase
         $this->assertResponseStatusCodeSame(403);
     }
 
-    public function testProjectManagerCannotManageRolesByDefault(): void
+    public function testProjectManagerCanManageRoles(): void
     {
         $client = static::createClient();
         
@@ -53,10 +53,10 @@ class RoleManagementPermissionTest extends ApiTestCase
 
         $this->login($client, $manager);
         
-        // Even if he can VIEW the organ, he should not be able to manage roles
+        // Project Manager has full permissions on organs by default
         $client->request('POST', sprintf('/api/projects/%s/organs/%s/roles', $project->getUuid(), $organ->getUuid()), [], [], [], json_encode([
             'name' => 'Manager attempt'
         ]));
-        $this->assertResponseStatusCodeSame(403);
+        $this->assertResponseStatusCodeSame(201);
     }
 }

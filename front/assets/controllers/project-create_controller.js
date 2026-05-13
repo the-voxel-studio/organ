@@ -9,6 +9,7 @@ export default class extends Controller {
         'inviteEmail', 'inviteList', 'roleExplanation',
         'submitBtn', 'spinner', 'error',
         'deleteModal', 'deleteSubmitBtn', 'deleteSpinner',
+        'googleModal',
         'driveStatus', 'googleBtnText', 'driveFolderSection', 'folderLoader', 'folderList', 'generateFolderBtn'
     ];
 
@@ -68,9 +69,13 @@ export default class extends Controller {
             this.invites = [...this.invites, ...pendingInvites];
             this.invites.sort((a, b) => b.isCreator - a.isCreator);
 
-            if (this.hasImagePreviewTarget && !this.imagePreviewTarget.classList.contains('hidden')) this.iconMode = 'BLOB';
-            else if (this.hasEmojiInputTarget && this.emojiInputTarget.value) this.iconMode = 'EMOJI';
-            else if (this.hasCustomSvgInputTarget && this.customSvgInputTarget.value) this.iconMode = 'SVG';
+            let detectedMode = 'BLOB';
+            if (this.hasImagePreviewTarget && !this.imagePreviewTarget.classList.contains('hidden')) detectedMode = 'BLOB';
+            else if (this.hasEmojiInputTarget && this.emojiInputTarget.value) detectedMode = 'EMOJI';
+            else if (this.hasCustomSvgInputTarget && this.customSvgInputTarget.value) detectedMode = 'SVG';
+            
+            this.iconMode = detectedMode;
+            this.syncIconUI();
 
             this.checkDriveConfig();
         } else {
@@ -91,10 +96,22 @@ export default class extends Controller {
         if (customRadio) customRadio.checked = true;
     }
     switchIconMode(event) {
-        const mode = event.currentTarget.dataset.mode;
-        this.iconMode = mode;
-        this.modeBtnTargets.forEach(btn => btn.classList.toggle('bg-white', btn.dataset.mode === mode));
-        this.iconSectionTargets.forEach(section => section.classList.toggle('hidden', section.dataset.mode !== mode));
+        this.iconMode = event.currentTarget.dataset.mode;
+        this.syncIconUI();
+    }
+
+    syncIconUI() {
+        const mode = this.iconMode;
+        this.modeBtnTargets.forEach(btn => {
+            const isActive = btn.dataset.mode === mode;
+            btn.classList.toggle('bg-white', isActive);
+            btn.classList.toggle('shadow-sm', isActive);
+            btn.classList.toggle('text-gray-900', isActive);
+            btn.classList.toggle('text-gray-500', !isActive);
+        });
+        this.iconSectionTargets.forEach(section => {
+            section.classList.toggle('hidden', section.dataset.mode !== mode);
+        });
     }
     validateEmojiInput(event) {
         const val = event.target.value.trim();
@@ -122,7 +139,7 @@ export default class extends Controller {
                 this.selectedFolderId = config.driveFolderId;
                 if (config.isActive) {
                     this.driveStatusTarget.classList.remove('hidden');
-                    this.googleBtnTextTarget.innerText = "Compte Google lié";
+                    this.googleBtnTextTarget.innerText = trans('project.create.drive.linked');
                     this.driveFolderSectionTarget.classList.remove('hidden');
                     if (this.selectedFolderId) {
                         this.generateFolderBtnTarget.classList.add('hidden');
@@ -133,7 +150,11 @@ export default class extends Controller {
         } catch (e) {}
     }
 
+    openGoogleModal() { this.googleModalTarget.classList.remove('hidden'); }
+    closeGoogleModal() { this.googleModalTarget.classList.add('hidden'); }
+
     async connectGoogle() {
+        this.closeGoogleModal();
         if (!this.googleClientIdValue) return;
 
         if (typeof google === 'undefined') {
@@ -163,7 +184,7 @@ export default class extends Controller {
 
                         if (linkRes.ok) {
                             this.driveStatusTarget.classList.remove('hidden');
-                            this.googleBtnTextTarget.innerText = "Compte Google lié";
+                            this.googleBtnTextTarget.innerText = trans('project.create.drive.linked');
                             this.driveFolderSectionTarget.classList.remove('hidden');
                             await this.loadFolders();
                         }
@@ -191,7 +212,7 @@ export default class extends Controller {
     renderFolders(folders) {
         this.folderListTarget.innerHTML = '';
         if (folders.length === 0) {
-            this.folderListTarget.innerHTML = '<p class="text-xs text-gray-400 italic p-4 text-center">Aucun dossier projet provisionné.</p>';
+            this.folderListTarget.innerHTML = `<p class="text-xs text-gray-400 italic p-4 text-center">${trans('project.create.drive.empty_folders')}</p>`;
             return;
         }
 
@@ -223,16 +244,22 @@ export default class extends Controller {
                 this.selectedFolderId = folder.driveFolderId;
                 this.generateFolderBtnTarget.classList.add('hidden');
                 await this.loadFolders();
-                alert("Dossier de stockage généré avec succès !");
+                alert(trans('project.create.drive.success.generated'));
             } else {
                 const err = await res.json();
-                alert(err.message || "Erreur lors de la création");
+                alert(err.message || trans('project.create.drive.error.creation'));
             }
         } catch (e) { console.error(e); }
         finally { this.folderLoaderTarget.classList.add('hidden'); }
     }
 
     // --- MEMBER MANAGEMENT ---
+    toggleRoleExplanation() {
+        if (this.hasRoleExplanationTarget) {
+            this.roleExplanationTarget.classList.toggle('hidden');
+        }
+    }
+
     addInvite() {
         const email = this.inviteEmailTarget.value.trim();
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
@@ -242,18 +269,76 @@ export default class extends Controller {
         this.renderInvites();
     }
     toggleRoleMenu(event) { const idx = parseInt(event.currentTarget.dataset.index); this.invites[idx].showMenu = !this.invites[idx].showMenu; this.renderInvites(); }
-    updateMemberRole(event) { const idx = parseInt(event.currentTarget.dataset.index); this.invites[idx].role = event.currentTarget.dataset.role; this.invites[idx].showMenu = false; if (this.invites[idx].isExisting) this.invites[idx].roleChanged = true; this.renderInvites(); }
+    updateMemberRole(event) {
+        const idx = parseInt(event.currentTarget.dataset.index);
+        const newRole = event.currentTarget.dataset.role;
+        
+        // If promoting someone to ADMIN, demote the current ADMIN
+        if (newRole === 'ADMIN') {
+            this.invites.forEach((invite, i) => {
+                if (i !== idx && invite.role === 'ADMIN') {
+                    invite.role = 'MANAGER';
+                    if (invite.isExisting) invite.roleChanged = true;
+                }
+            });
+        }
+
+        this.invites[idx].role = newRole;
+        this.invites[idx].showMenu = false;
+        if (this.invites[idx].isExisting) this.invites[idx].roleChanged = true;
+
+        // Ensure there's always at least one ADMIN (the current user by default)
+        const hasAdmin = this.invites.some(invite => invite.role === 'ADMIN');
+        if (!hasAdmin) {
+            const currentUser = this.invites.find(invite => invite.isCreator);
+            if (currentUser) {
+                currentUser.role = 'ADMIN';
+                if (currentUser.isExisting) currentUser.roleChanged = true;
+            }
+        }
+
+        this.renderInvites();
+    }
     removeInvite(event) { const idx = parseInt(event.currentTarget.dataset.index); if (!this.invites[idx].isCreator) { if (this.invites[idx].isExisting) this.removedMemberUuids.push(this.invites[idx].uuid); this.invites.splice(idx, 1); this.renderInvites(); } }
     renderInvites() {
-        this.inviteListTarget.innerHTML = this.invites.map((invite, index) => `
-            <div class="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-gray-100 ${invite.isCreator ? 'border-bubblegum/20 bg-bubblegum/[0.02]' : ''}">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-bubblegum font-black text-sm uppercase border border-gray-100">${invite.email.charAt(0).toUpperCase()}</div>
-                    <div><p class="text-sm font-bold text-gray-900">${invite.email}</p><p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">${invite.role} ${invite.roleChanged ? '<span class="text-bubblegum">(Modifié)</span>' : ''}</p></div>
+        this.inviteListTarget.innerHTML = this.invites.map((invite, index) => {
+            const isCreator = invite.isCreator;
+            const roleLabel = trans(`project.create.form.members.role.${invite.role.toLowerCase()}`);
+            
+            return `
+                <div class="flex items-center justify-between bg-gray-50 p-4 rounded-2xl border border-gray-100 ${isCreator ? 'border-bubblegum/20 bg-bubblegum/[0.02]' : ''}">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-bubblegum font-black text-sm uppercase border border-gray-100">${invite.email.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-900">${invite.email}</p>
+                            <div class="relative">
+                                <button type="button" 
+                                        ${isCreator ? 'disabled' : `data-action="click->project-create#toggleRoleMenu" data-index="${index}"`}
+                                        class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1 ${isCreator ? '' : 'hover:text-bubblegum'} transition-all text-left">
+                                    ${roleLabel} ${invite.roleChanged ? '<span class="text-bubblegum lowercase font-bold">(modifié)</span>' : ''}
+                                    ${!isCreator ? `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>` : ''}
+                                </button>
+                                
+                                ${invite.showMenu ? `
+                                    <div class="absolute left-0 mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 z-50 py-1 overflow-hidden">
+                                        <button type="button" data-action="click->project-create#updateMemberRole" data-index="${index}" data-role="ADMIN" class="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 ${invite.role === 'ADMIN' ? 'text-bubblegum bg-bubblegum/5' : 'text-gray-500'}">
+                                            ${trans('project.create.form.members.role.admin')}
+                                        </button>
+                                        <button type="button" data-action="click->project-create#updateMemberRole" data-index="${index}" data-role="MANAGER" class="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 ${invite.role === 'MANAGER' ? 'text-bubblegum bg-bubblegum/5' : 'text-gray-500'}">
+                                            ${trans('project.create.form.members.role.manager')}
+                                        </button>
+                                        <button type="button" data-action="click->project-create#updateMemberRole" data-index="${index}" data-role="MEMBER" class="w-full text-left px-4 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 ${invite.role === 'MEMBER' ? 'text-bubblegum bg-bubblegum/5' : 'text-gray-500'}">
+                                            ${trans('project.create.form.members.role.member')}
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    ${!isCreator ? `<button type="button" data-action="click->project-create#removeInvite" data-index="${index}" class="p-2 text-gray-300 hover:text-red-500 transition-all"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 6 6 18M6 6l12 12"></path></svg></button>` : ''}
                 </div>
-                ${!invite.isCreator ? `<button type="button" data-action="click->project-create#removeInvite" data-index="${index}" class="p-2 text-gray-300 hover:text-red-500 transition-all"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18 6 6 18M6 6l12 12"></path></svg></button>` : ''}
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     // --- SUBMISSION ---
@@ -303,15 +388,28 @@ export default class extends Controller {
                         }).catch(e => console.error("Removal failed", e));
                     }
 
-                    for (const member of this.invites) {
-                        if (member.isExisting && member.roleChanged) {
-                            await fetch(`${this.apiUrlValue}/projects/${projectUuid}/members/${member.uuid}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ role: member.role }),
-                                credentials: 'include'
-                            }).catch(e => console.error("Role update failed", e));
+                    // Sort role updates to put ADMIN promotions first.
+                    // This ensures the current admin can promote someone before they are demoted by the side-effect.
+                    const roleUpdates = this.invites
+                        .filter(m => m.isExisting && m.roleChanged)
+                        .sort((a, b) => (b.role === 'ADMIN' ? 1 : 0) - (a.role === 'ADMIN' ? 1 : 0));
+
+                    const hasAdminPromotion = roleUpdates.some(m => m.role === 'ADMIN');
+
+                    for (const member of roleUpdates) {
+                        // If an ADMIN is being promoted, the API will automatically demote the current caller to MANAGER.
+                        // We can skip the explicit request for the current user if they are being demoted to MANAGER
+                        // and someone else is being promoted to ADMIN, to avoid "Access Denied" or redundant requests.
+                        if (hasAdminPromotion && member.email === this.userEmailValue && member.role === 'MANAGER') {
+                            continue;
                         }
+
+                        await fetch(`${this.apiUrlValue}/projects/${projectUuid}/members/${member.uuid}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ role: member.role }),
+                            credentials: 'include'
+                        }).catch(e => console.error("Role update failed", e));
                     }
                 }
 
@@ -327,18 +425,17 @@ export default class extends Controller {
                     }).catch(e => console.error("Invitation failed", e));
                 }
 
-                window.location.href = isEdit ? `/projects/${projectUuid}` : '/dashboard';
+                window.location.href = `/projects/${projectUuid}`;
             } else {
                 const err = await res.json();
-                alert(err.message || "Erreur lors de la sauvegarde");
+                alert(err.message || trans('project.create.error.save'));
             }
-        } catch (e) { 
-            console.error(e); 
-            alert("Une erreur réseau est survenue.");
-        }
-        finally { 
-            this.spinnerTarget.classList.add('hidden'); 
-            this.submitBtnTarget.disabled = false; 
+        } catch (e) {
+            console.error(e);
+            alert(trans('project.create.error.network'));
+        } finally {
+            this.spinnerTarget.classList.add('hidden');
+            this.submitBtnTarget.disabled = false;
         }
     }
 

@@ -15,7 +15,12 @@ window.fetch = async (...args) => {
         const url = typeof args[0] === 'string' ? args[0] : args[0].url;
         
         // Avoid infinite loop if the refresh request itself returns 401
-        if (url.includes('/api/auth/refresh')) {
+        // Also avoid redirecting on login/register routes where 401 is a normal "invalid credentials" response
+        if (
+            url.includes('/api/auth/refresh') || 
+            url.includes('/api/auth/login') || 
+            url.includes('/api/auth/register')
+        ) {
             return response;
         }
 

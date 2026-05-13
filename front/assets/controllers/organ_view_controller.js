@@ -1,4 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
+import { trans } from '../translator.js';
 import Sortable from 'sortablejs';
 
 export default class extends Controller {
@@ -7,7 +8,7 @@ export default class extends Controller {
         'topScrollContainer', 'topScrollThumb',
         'todoCol', 'inProgressCol', 'waitingCol', 'doneCol', 'canceledCol',
         'todoCount', 'inProgressCount', 'waitingCount', 'doneCount', 'canceledCount',
-        'listBody', 'filterMenu', 'sortIndicator', 'priorityFilter'
+        'listBody', 'filterMenu', 'sortIndicator', 'priorityFilter', 'statusFilter', 'statusColumn'
     ];
     static values = {
         projectUuid: String,
@@ -23,6 +24,7 @@ export default class extends Controller {
         this.sortOrder = 'asc';
         this.filterMe = false;
         this.minPriority = 0;
+        this.selectedStatuses = [];
 
         // Default view is Kanban
         this.showKanban();
@@ -136,11 +138,35 @@ export default class extends Controller {
         });
     }
 
+    toggleStatusFilter(event) {
+        const status = event.currentTarget.dataset.status;
+        if (this.selectedStatuses.includes(status)) {
+            this.selectedStatuses = this.selectedStatuses.filter(s => s !== status);
+        } else {
+            this.selectedStatuses.push(status);
+        }
+        this.updateStatusUI();
+        this.applyAll();
+    }
+
+    updateStatusUI() {
+        const highlightColor = this.element.style.getPropertyValue('--highlight-color');
+        this.statusFilterTargets.forEach(el => {
+            const status = el.dataset.status;
+            const active = this.selectedStatuses.includes(status);
+            
+            el.style.backgroundColor = active ? highlightColor : '';
+            el.style.color = active ? 'white' : '';
+            el.style.borderColor = active ? highlightColor : '';
+        });
+    }
+
     resetFilters() {
         this.sortBy = null;
         this.sortOrder = 'asc';
         this.filterMe = false;
         this.minPriority = 0;
+        this.selectedStatuses = [];
 
         // Reset UI
         const meCheckbox = this.element.querySelector('[data-filter="me"]');
@@ -148,6 +174,7 @@ export default class extends Controller {
         
         this.updateSortUI();
         this.updatePriorityUI();
+        this.updateStatusUI();
         this.applyAll();
     }
 
@@ -167,6 +194,15 @@ export default class extends Controller {
             tasks = tasks.filter(t => t.priority >= this.minPriority);
         }
 
+        if (this.selectedStatuses.length > 0) {
+            tasks = tasks.filter(t => this.selectedStatuses.includes(t.status));
+        }
+
+        // 1b. Special filter for Due Date sorting
+        if (this.sortBy === 'dueDate') {
+            tasks = tasks.filter(t => t.expiresAt !== null && t.expiresAt !== undefined);
+        }
+
         // 2. Sort
         if (this.sortBy) {
             tasks.sort((a, b) => {
@@ -177,6 +213,9 @@ export default class extends Controller {
                 } else if (this.sortBy === 'date') {
                     valA = new Date(a.createdAt).getTime();
                     valB = new Date(b.createdAt).getTime();
+                } else if (this.sortBy === 'dueDate') {
+                    valA = new Date(a.expiresAt).getTime();
+                    valB = new Date(b.expiresAt).getTime();
                 }
 
                 if (valA < valB) return this.sortOrder === 'asc' ? -1 : 1;
@@ -225,7 +264,14 @@ export default class extends Controller {
                             // Revert on failure
                             this.loadTasks();
                             const error = await res.json();
-                            alert(error.message || "Erreur lors du déplacement");
+                            const modal = this.application.getControllerForElementAndIdentifier(this.element, 'task-modal');
+                            if (modal) {
+                                let message = error.message || trans('organ.view.error.move_task');
+                                if (res.status === 403) message = trans('task.modal.error.access_denied');
+                                modal.showError(trans('task.modal.error.save_title'), message);
+                            } else {
+                                alert(error.message || trans('organ.view.error.move_task'));
+                            }
                         }
                     } catch (e) {
                         console.error(e);
@@ -293,6 +339,19 @@ export default class extends Controller {
             'DONE': this.doneColTarget,
             'CANCELED': this.canceledColTarget
         };
+
+        // Handle Kanban column visibility
+        if (this.hasStatusColumnTarget) {
+            this.statusColumnTargets.forEach(col => {
+                const status = col.dataset.status;
+                if (this.selectedStatuses.length === 0) {
+                    col.classList.remove('hidden');
+                } else {
+                    col.classList.toggle('hidden', !this.selectedStatuses.includes(status));
+                }
+            });
+        }
+
         const counts = {
             'TODO': this.todoCountTarget,
             'IN_PROGRESS': this.inProgressCountTarget,
@@ -368,7 +427,7 @@ export default class extends Controller {
         div.innerHTML = `
             <div class="flex flex-col gap-4">
                 <div class="flex items-start justify-between gap-4">
-                    <h4 class="text-sm font-bold text-gray-900 leading-tight group-hover:text-black">${task.title}</h4>
+                    <h4 class="text-sm font-bold text-gray-900 leading-tight group-hover:text-black truncate" title="${task.title}">${task.title}</h4>
                     <span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${priorityColors[task.priority] || priorityColors[1]} shrink-0">
                         P${task.priority}
                     </span>
@@ -376,7 +435,7 @@ export default class extends Controller {
                 ${task.tags && task.tags.length > 0 ? `
                     <div class="flex flex-wrap gap-1.5">
                         ${task.tags.map(t => `
-                            <span class="px-2 py-0.5 bg-gray-50 text-[9px] font-black uppercase tracking-widest rounded border border-gray-100" style="color: ${t.color}; border-color: ${t.color}20">${t.name}</span>
+                            <span class="px-2 py-0.5 bg-gray-50 text-[9px] font-black uppercase tracking-widest rounded border border-gray-100 truncate max-w-[80px]" style="color: ${t.color}; border-color: ${t.color}20" title="${t.name}">${t.name}</span>
                         `).join('')}
                     </div>
                 ` : ''}
@@ -424,8 +483,8 @@ export default class extends Controller {
 
         tr.innerHTML = `
             <td class="px-8 py-5">
-                <div class="flex flex-col">
-                    <span class="text-sm font-bold text-gray-900 group-hover:text-black">${task.title}</span>
+                <div class="flex flex-col min-w-0">
+                    <span class="text-sm font-bold text-gray-900 group-hover:text-black truncate" title="${task.title}">${task.title}</span>
                     <span class="text-[10px] text-gray-400 font-medium">${task.uuid.slice(0, 8)}</span>
                 </div>
             </td>

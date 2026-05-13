@@ -145,13 +145,13 @@
                     <div data-organ-create-target="iconSection" data-mode="BLOB" class="{{ icon_mode == 'BLOB' ? '' : 'hidden' }}">
                         <label class="flex items-center justify-center w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-bubblegum transition-all group overflow-hidden">
                             <input type="file" data-organ-create-target="imageInput" class="sr-only" accept="image/*" data-action="change->organ-create#handleImagePreview">
-                            <div data-organ-create-target="imagePlaceholder" class="text-center {{ (organ and icon_mode == 'BLOB') ? 'hidden' : '' }}">
+                            <div data-organ-create-target="imagePlaceholder" class="text-center {{ (organ and icon_mode == 'BLOB' and organ.iconData is not empty) ? 'hidden' : '' }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-8 w-8 text-gray-400 group-hover:text-bubblegum" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
                                 <span class="mt-2 block text-xs font-semibold text-gray-400 group-hover:text-bubblegum">Upload</span>
                             </div>
-                            <img data-organ-create-target="imagePreview" src="{{ (organ and icon_mode == 'BLOB') ? organ.iconData : '' }}" class="{{ (organ and icon_mode == 'BLOB') ? '' : 'hidden' }} w-full h-full object-cover">
+                            <img data-organ-create-target="imagePreview" src="{{ (organ and icon_mode == 'BLOB' and organ.iconData is not empty) ? organ.iconData : '' }}" class="{{ (organ and icon_mode == 'BLOB' and organ.iconData is not empty) ? '' : 'hidden' }} w-full h-full object-cover">
                         </label>
                     </div>
 
@@ -272,7 +272,7 @@
             
             <a href="{{ organ ? path('app_organ_show', {projectUuid: project.uuid, organUuid: organ.uuid}) : path('app_project_show', {uuid: project.uuid}) }}"
                class="px-8 py-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-2xl hover:bg-gray-50 transition-all active:scale-95">
-                Annuler
+                {{ 'generic.cancel'|trans }}
             </a>
             
             <button type="button" data-organ-create-target="submitBtn" data-action="click->organ-create#submit"
@@ -375,8 +375,8 @@
                 </div>
                 
                 <div class="bg-gray-50 px-8 py-6 flex justify-end gap-3">
-                    <button type="button" data-action="click->organ-create#closeRoleModal" class="px-6 py-3 font-bold text-gray-500 hover:text-gray-700 cursor-pointer">Annuler</button>
-                    <button type="button" data-action="click->organ-create#saveRole" class="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 active:scale-95 transition-all cursor-pointer">Enregistrer</button>
+                    <button type="button" data-action="click->organ-create#closeRoleModal" class="px-6 py-3 font-bold text-gray-500 hover:text-gray-700 cursor-pointer">{{ 'generic.cancel'|trans }}</button>
+                    <button type="button" data-action="click->organ-create#saveRole" class="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 active:scale-95 transition-all cursor-pointer">{{ 'generic.save'|trans }}</button>
                 </div>
             </div>
         </div>
@@ -405,11 +405,11 @@
                             <span data-organ-create-target="deleteSpinner" class="hidden animate-spin">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
                             </span>
-                            Confirmer la suppression
+                            {{ 'generic.confirm_delete'|trans }}
                         </button>
                         <button type="button" data-action="click->organ-create#closeDeleteModal"
                                 class="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all cursor-pointer">
-                            Annuler l'opération
+                            {{ 'generic.cancel'|trans }}
                         </button>
                     </div>
                 </div>
