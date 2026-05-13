@@ -16,5 +16,6 @@ data class Project(
 data class User(
     val id: Int,
     val firstName: String,
-    val lastName: String
+    val lastName: String,
+    val projectIdList: List<Int>
 )

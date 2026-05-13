@@ -1,28 +1,39 @@
 package fr.studio.voxel.organ.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import fr.studio.voxel.organ.R
 
 @Composable
 fun SecondaryButton(
+    modifier: Modifier = Modifier,
     text: String,
     onClick: () -> Unit,
     isSelected : Boolean = false,
-    modifier: Modifier = Modifier
+    iconRes: Int? = null
+
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -32,10 +43,17 @@ fun SecondaryButton(
         label = "scaleAnim"
     )
 
-    val backgroundColor = if (isPressed) {
-        MaterialTheme.colorScheme.secondary
+    val backgroundColor = when {
+        isSelected -> MaterialTheme.colorScheme.primary
+        isPressed -> MaterialTheme.colorScheme.primary
+        else -> Color.Transparent
+    }
+
+    // Couleur du texte
+    val contentColor = if (isSelected) {
+        MaterialTheme.colorScheme.surface
     } else {
-        MaterialTheme.colorScheme.primary
+        MaterialTheme.colorScheme.onSurface
     }
 
     Button(
@@ -47,19 +65,41 @@ fun SecondaryButton(
             )
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.elevatedButtonColors(
-            containerColor = backgroundColor
+        border = BorderStroke(1.dp, Color.Gray),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = backgroundColor,
+            contentColor = contentColor
         ),
         interactionSource = interactionSource,
-        elevation = ButtonDefaults.elevatedButtonElevation(
-            defaultElevation = 6.dp,
-            pressedElevation = 2.dp
-        )
+        elevation = null
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            if (iconRes != null) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = "logo_dashboard",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+            }
+
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            Icon(
+                painter = painterResource(id = R.drawable.flechedroite_logo),
+                contentDescription = "Fleche poitant vers la droite",
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }

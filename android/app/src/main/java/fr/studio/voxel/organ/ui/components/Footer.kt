@@ -48,35 +48,32 @@ fun Footer(
             modifier = modifier
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = modifier
-                .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButtonPressable(
+        ){
+            /*IconButtonPressable(
                 icon = R.drawable.icon_account,
                 contentDescription = "Account",
                 onClick = { /* TODO */ }
-                )
-
-                Spacer(modifier = Modifier.width(24.dp))
-
-                Text(
-                    text = "Nom Prénom",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-            }
+            )*/
+            UserAvatar(
+                name = "Nom Prénom"
+            )
 
             Spacer(modifier = Modifier.width(24.dp))
 
-            IconButtonPressable(
-                icon = R.drawable.icon_settings,
-                contentDescription = "Settings",
-                onClick = { /* TODO */ },
-                modifier = Modifier.size(32.dp)
+            Text(
+                text = "Nom Prénom",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
+
+        Spacer(modifier = Modifier.width(24.dp))
+
+        IconButtonPressable(
+            icon = R.drawable.icon_settings,
+            contentDescription = "Settings",
+            onClick = { /* TODO */ },
+            modifier = Modifier.size(32.dp)
+        )
     }
 }
