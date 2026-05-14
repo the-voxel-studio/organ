@@ -52,7 +52,7 @@ fun TaskItem(
                             repeat(2) {
                                 Box(
                                     modifier = Modifier
-                                        .size(6.dp)
+                                        .size(10.dp)
                                         .padding(1.dp)
                                         .background(AppColorScheme.onSurface.copy(alpha = 0.4f), CircleShape)
                                 )

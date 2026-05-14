@@ -14,14 +14,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.domain.model.Task
-import fr.studio.voxel.organ.ui.theme.AppColorScheme
-import fr.studio.voxel.organ.ui.theme.AppTypography
+import fr.studio.voxel.organ.ui.components.TaskComponents.TaskCountBadge
+import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
+import fr.studio.voxel.organ.ui.theme.MaterialTypography
 
 @Composable
 fun TaskColumn(
@@ -31,9 +36,9 @@ fun TaskColumn(
 ) {
     Column(
         modifier = modifier
-            .border(2.dp, AppColorScheme.onSurface)
-            .background(AppColorScheme.surface)
-            .padding(16.dp)
+            .border(2.dp, MaterialColorScheme.onSurface)
+            .background(Color.Transparent)
+            .padding(horizontal = 16.dp, vertical = 32.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -42,24 +47,14 @@ fun TaskColumn(
         ) {
             Text(
                 text = nameColumn,
-                style = AppTypography.titleLarge,
-                color = AppColorScheme.onSurface
+                style = MaterialTypography.titleMedium,
+                color = MaterialColorScheme.onSurface
             )
 
-            // Bouton 3 points
-            Row {
-                repeat(3) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .padding(2.dp)
-                            .background(AppColorScheme.onSurface.copy(alpha = 0.4f), CircleShape)
-                    )
-                }
-            }
+            TaskCountBadge(tasks.size)
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         // 🔹 Liste des tâches
         tasks.forEach { task ->
@@ -67,41 +62,38 @@ fun TaskColumn(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         // Bouton Ajouter tâche
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, AppColorScheme.onSurface.copy(alpha = 0.4f))
+                .border(2.dp, MaterialColorScheme.onSurface.copy(alpha = 0.4f))
                 .clickable {
                     // TODO: action ajouter tâche
                 }
                 .padding(12.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
             ) {
                 // Icône "+"
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .border(2.dp, AppColorScheme.onSurface, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "+",
-                        style = AppTypography.labelLarge,
-                        color = AppColorScheme.onSurface
-                    )
-                }
+                Icon(
+                    painterResource(id = R.drawable.outline_add_circle_24),
+                    contentDescription = "Logo ajouter tâche",
+                    tint = MaterialColorScheme.onSurface,
 
-                Spacer(modifier = Modifier.width(12.dp))
+                    modifier = Modifier
+                        .size(32.dp)
+                )
+
+                Spacer(modifier = Modifier.width(24.dp))
 
                 Text(
                     text = "Ajouter Tâche",
-                    style = AppTypography.labelLarge,
-                    color = AppColorScheme.onSurface
+                    style = MaterialTypography.labelLarge,
+                    color = MaterialColorScheme.onSurface
                 )
             }
         }

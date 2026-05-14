@@ -40,6 +40,30 @@ class MainViewModel : ViewModel() {
     )
         private set
 
+    var tasks by mutableStateOf(
+        listOf(
+            Task(
+                id = 1,
+                name = "Tache Alpha",
+                progress = 4,
+                deadline = "26/02/18"
+            ),
+            Task(
+                id = 2,
+                name = "Tache Bêta",
+                progress = 2,
+                deadline = "04/08/22"
+            ),
+            Task(
+                id = 2,
+                name = "Tache Omega",
+                progress = 8,
+                deadline = "10/11/28"
+            )
+        )
+    )
+        private set
+
     fun addProject(project: Project) {
         projects = projects + project
     }
