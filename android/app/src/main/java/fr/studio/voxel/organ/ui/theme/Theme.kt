@@ -10,9 +10,9 @@ object AppColorScheme {
     val secondary = PastelBlue
     val onSecondary = Black
     val tertiary = LightBlue
-    val background = White
+    val background = Beige
     val onBackground = Black
-    val surface = Beige
+    val surface = White
     val onSurface = Black
 }
 
