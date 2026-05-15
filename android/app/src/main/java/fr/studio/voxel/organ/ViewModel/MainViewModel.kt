@@ -46,6 +46,36 @@ class MainViewModel : ViewModel() {
     )
         private set
 
+    var tasks by mutableStateOf(
+        listOf(
+            Task(
+                id = 1,
+                name = "Tache Alpha",
+                progress = 4,
+                deadline = "26/02/18",
+                projectId = 1,
+                organId = 1
+            ),
+            Task(
+                id = 2,
+                name = "Tache Bêta",
+                progress = 2,
+                deadline = "04/08/22",
+                projectId = 1,
+                organId = 2
+            ),
+            Task(
+                id = 2,
+                name = "Tache Omega",
+                progress = 8,
+                deadline = "10/11/28",
+                projectId = 2,
+                organId = 3
+            )
+        )
+    )
+        private set
+
     // Pour les tests, fonction de réinitialisation
     fun clearProjects() {
         projects = emptyList() // L'utilisateur existe mais n'a aucun projet

@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,20 +25,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import fr.studio.voxel.organ.ui.components.Header
 import fr.studio.voxel.organ.ui.components.PrimaryButton
 import fr.studio.voxel.organ.OrganScreen
 import fr.studio.voxel.organ.R
+import fr.studio.voxel.organ.domain.model.MainViewModel
+import fr.studio.voxel.organ.ui.components.DashboardComponents.PriorityTask
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 
 @Composable
 fun Dashboard(
-    navController: NavHostController
+    navController: NavHostController,
+    dash_VM : MainViewModel = viewModel()
 ){
     Column(
         modifier = Modifier
             .fillMaxHeight()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -91,7 +98,7 @@ fun Dashboard(
 
             Column (
                 modifier = Modifier
-                    .padding(vertical = 32.dp)
+                    .padding(top = 32.dp, bottom = 24.dp)
                     .fillMaxWidth()
             ) {
                 Text(
@@ -111,6 +118,8 @@ fun Dashboard(
                 )
             }
         }
+
+        PriorityTask()
 
         Row(
             modifier = Modifier
