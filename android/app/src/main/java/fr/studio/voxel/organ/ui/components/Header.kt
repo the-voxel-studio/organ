@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,13 +39,14 @@ fun Header(
     ) {
         if (canOpenSidebar) {
             IconButton(
-                onClick = navigateUp,
-                modifier = Modifier.align(Alignment.CenterStart)
+                modifier = Modifier.align(Alignment.CenterStart),
+                onClick = navigateUp
             ) {
                 Icon(
                     imageVector = Icons.Default.Menu,
                     contentDescription = "Menu",
-                    tint = AppColorScheme.onSurface
+                    tint = AppColorScheme.onSurface,
+                    modifier = Modifier.size(40.dp)
                 )
             }
         }
