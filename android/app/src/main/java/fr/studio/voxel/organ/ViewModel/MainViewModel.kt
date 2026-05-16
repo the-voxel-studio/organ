@@ -1,9 +1,11 @@
-package fr.studio.voxel.organ.domain.model
+package fr.studio.voxel.organ.ViewModel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectVisual
+import fr.studio.voxel.organ.R
 
 class MainViewModel : ViewModel() {
 
@@ -16,6 +18,10 @@ class MainViewModel : ViewModel() {
             Project(
                 id = 1,
                 name = "Projet Alpha",
+                description = "Le but de ce projet et de reconstruire la planète entière.",
+                color = "0xFF5EAA6C",
+                visual = ProjectVisual.Emoji("🧬"),
+                state = "Active",
                 memberIds = listOf(1, 2),
                 organs = listOf(
                     Organ(1, "Design", listOf(1)),
@@ -25,6 +31,10 @@ class MainViewModel : ViewModel() {
             Project(
                 id = 2,
                 name = "Projet Bêta",
+                description = "Ecrire un livre en entier de A à Z.",
+                color = "0xFF1E4589",
+                visual = ProjectVisual.SvgIcon(R.drawable.menu_tache),
+                state = "Terminée",
                 memberIds = listOf(3),
                 organs = listOf(
                     Organ(3, "Marketing", listOf(3))
@@ -33,12 +43,20 @@ class MainViewModel : ViewModel() {
             Project(
                 id = 3,
                 name = "Projet Gamma",
+                description = "Tuer l'enderdragon dans minecraft.",
+                color = "0xFFAEBAEF",
+                visual = ProjectVisual.Emoji("🚀"),
+                state = "Archivée",
                 memberIds = listOf(1, 4),
                 organs = emptyList()
             ),
             Project(
                 id = 4,
                 name = "Projet X",
+                description = "faire tout le frontend d'un site web.",
+                color = "0xFF8A60BE",
+                visual = ProjectVisual.SvgIcon(R.drawable.poubelle_logo),
+                state = "En Attente",
                 memberIds = listOf(1, 4),
                 organs = emptyList()
             )

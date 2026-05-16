@@ -2,12 +2,10 @@ package fr.studio.voxel.organ.ui.components
 
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.ButtonDefaults
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 
-import fr.studio.voxel.organ.domain.model.Project
+import fr.studio.voxel.organ.ViewModel.Project
 
 @Composable
 fun ProjectItem(

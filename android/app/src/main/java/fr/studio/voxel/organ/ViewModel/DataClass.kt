@@ -1,4 +1,6 @@
-package fr.studio.voxel.organ.domain.model
+package fr.studio.voxel.organ.ViewModel
+
+import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectVisual
 
 data class Organ(
     val id: Int,
@@ -9,6 +11,10 @@ data class Organ(
 data class Project(
     val id: Int,
     val name: String,
+    val description : String,
+    val color : String,
+    val visual: ProjectVisual,
+    val state : String,
     val memberIds: List<Int>,
     val organs: List<Organ>
 )

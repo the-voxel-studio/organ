@@ -30,7 +30,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavHostController
 import fr.studio.voxel.organ.OrganScreen
 import fr.studio.voxel.organ.R
-import fr.studio.voxel.organ.domain.model.MainViewModel
+import fr.studio.voxel.organ.ViewModel.MainViewModel
 import fr.studio.voxel.organ.domain.model.SidebarViewModel
 import fr.studio.voxel.organ.ui.components.FooterComponents.Footer
 import fr.studio.voxel.organ.ui.components.Header

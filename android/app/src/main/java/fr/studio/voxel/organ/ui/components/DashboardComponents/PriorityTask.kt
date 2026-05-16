@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -18,10 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import fr.studio.voxel.organ.domain.model.MainViewModel
-import fr.studio.voxel.organ.domain.model.Project
-import fr.studio.voxel.organ.domain.model.Task
-import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
+import fr.studio.voxel.organ.ViewModel.MainViewModel
 
 @Composable
 fun PriorityTask(
