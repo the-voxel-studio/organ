@@ -6,8 +6,10 @@ import androidx.compose.runtime.Composable
 
 object AppColorScheme {
     val primary = PastelPink
+    val primaryContainer = LightPink
     val onPrimary = Black
-    val secondary = PastelBlue
+    val secondary = DarkBlue
+    val secondaryContainer = LightBlue
     val onSecondary = Black
     val tertiary = LightBlue
     val background = Beige
@@ -18,8 +20,10 @@ object AppColorScheme {
 
 val MaterialColorScheme = lightColorScheme(
     primary = AppColorScheme.primary,
+    primaryContainer = AppColorScheme.primaryContainer,
     onPrimary = AppColorScheme.onPrimary,
     secondary = AppColorScheme.secondary,
+    secondaryContainer = AppColorScheme.secondaryContainer,
     onSecondary = AppColorScheme.onSecondary,
     tertiary = AppColorScheme.tertiary,
     background = AppColorScheme.background,

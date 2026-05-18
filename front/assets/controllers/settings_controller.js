@@ -152,9 +152,7 @@ export default class extends Controller {
 
             if (response.ok) {
                 this.showSuccess(trans('success.profile_updated', {}, 'settings'));
-                if (result.refresh) {
-                    setTimeout(() => window.location.reload(), 1500);
-                }
+                setTimeout(() => window.location.reload(), 1500);
             } else {
                 this.showError(this.mapErrorMessage(result.message || result[0]?.message));
             }

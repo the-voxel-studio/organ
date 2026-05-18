@@ -1,4 +1,4 @@
-package fr.studio.voxel.organ.ui.components
+package fr.studio.voxel.organ.ui.components.FooterComponents
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,39 +7,52 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.R
-import fr.studio.voxel.organ.ui.theme.AppColorScheme
-import fr.studio.voxel.organ.ui.theme.AppTypography
+import fr.studio.voxel.organ.ui.components.IconButtonPressable
 
 @Composable
 fun Footer(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    utilisateur: String
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
     ) {
         Row(
             modifier = modifier.padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButtonPressable(
+        ){
+            /*IconButtonPressable(
                 icon = R.drawable.icon_account,
                 contentDescription = "Account",
                 onClick = { /* TODO */ }
+            )*/
+            UserAvatar(
+                name = utilisateur,
+                size = 40.dp
             )
 
             Spacer(modifier = Modifier.width(24.dp))
 
             Text(
-                text = "Nom Prénom",
-                style = AppTypography.labelLarge,
-                color = AppColorScheme.onSurface,
+                text = utilisateur,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
             )
 
             Spacer(modifier = Modifier.width(24.dp))
@@ -48,7 +61,7 @@ fun Footer(
                 icon = R.drawable.icon_settings,
                 contentDescription = "Settings",
                 onClick = { /* TODO */ },
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(40.dp)
             )
         }
     }

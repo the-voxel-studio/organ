@@ -62,7 +62,7 @@ export default class extends Controller {
             <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm group">
                 <div class="flex items-center gap-3">
                     <div class="w-4 h-4 rounded-full shadow-inner" style="background-color: ${tag.color}"></div>
-                    <span class="text-sm font-bold text-gray-700">${tag.name}</span>
+                    <span class="text-sm font-bold text-gray-700 truncate max-w-[150px]" title="${tag.name}">${tag.name}</span>
                 </div>
                 ${this.canManageValue ? `
                     <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">

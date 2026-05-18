@@ -8,6 +8,7 @@ use App\Enum\TaskStatus;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'tasks')]
@@ -41,9 +42,12 @@ class Task
     private ?User $validatedBy = null;
 
     #[ORM\Column(length: 200)]
+    #[Assert\NotBlank]
+    #[Assert\Length(max: 200)]
     private ?string $title = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 4000)]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, enumType: TaskStatus::class, options: ['default' => TaskStatus::TODO, 'comment' => 'TODO, IN_PROGRESS, WAITING, DONE, CANCELED'])]
@@ -56,6 +60,11 @@ class Task
     private ?string $estimatedHours = null;
 
     #[ORM\Column(type: Types::SMALLINT, options: ['default' => 1])]
+    #[Assert\Range(
+        min: 1,
+        max: 10,
+        notInRangeMessage: 'La priorité doit être comprise entre {{ min }} et {{ max }}.',
+    )]
     private int $priority = 1;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]

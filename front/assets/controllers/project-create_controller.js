@@ -69,9 +69,13 @@ export default class extends Controller {
             this.invites = [...this.invites, ...pendingInvites];
             this.invites.sort((a, b) => b.isCreator - a.isCreator);
 
-            if (this.hasImagePreviewTarget && !this.imagePreviewTarget.classList.contains('hidden')) this.iconMode = 'BLOB';
-            else if (this.hasEmojiInputTarget && this.emojiInputTarget.value) this.iconMode = 'EMOJI';
-            else if (this.hasCustomSvgInputTarget && this.customSvgInputTarget.value) this.iconMode = 'SVG';
+            let detectedMode = 'BLOB';
+            if (this.hasImagePreviewTarget && !this.imagePreviewTarget.classList.contains('hidden')) detectedMode = 'BLOB';
+            else if (this.hasEmojiInputTarget && this.emojiInputTarget.value) detectedMode = 'EMOJI';
+            else if (this.hasCustomSvgInputTarget && this.customSvgInputTarget.value) detectedMode = 'SVG';
+            
+            this.iconMode = detectedMode;
+            this.syncIconUI();
 
             this.checkDriveConfig();
         } else {
@@ -92,10 +96,22 @@ export default class extends Controller {
         if (customRadio) customRadio.checked = true;
     }
     switchIconMode(event) {
-        const mode = event.currentTarget.dataset.mode;
-        this.iconMode = mode;
-        this.modeBtnTargets.forEach(btn => btn.classList.toggle('bg-white', btn.dataset.mode === mode));
-        this.iconSectionTargets.forEach(section => section.classList.toggle('hidden', section.dataset.mode !== mode));
+        this.iconMode = event.currentTarget.dataset.mode;
+        this.syncIconUI();
+    }
+
+    syncIconUI() {
+        const mode = this.iconMode;
+        this.modeBtnTargets.forEach(btn => {
+            const isActive = btn.dataset.mode === mode;
+            btn.classList.toggle('bg-white', isActive);
+            btn.classList.toggle('shadow-sm', isActive);
+            btn.classList.toggle('text-gray-900', isActive);
+            btn.classList.toggle('text-gray-500', !isActive);
+        });
+        this.iconSectionTargets.forEach(section => {
+            section.classList.toggle('hidden', section.dataset.mode !== mode);
+        });
     }
     validateEmojiInput(event) {
         const val = event.target.value.trim();
@@ -270,6 +286,17 @@ export default class extends Controller {
         this.invites[idx].role = newRole;
         this.invites[idx].showMenu = false;
         if (this.invites[idx].isExisting) this.invites[idx].roleChanged = true;
+
+        // Ensure there's always at least one ADMIN (the current user by default)
+        const hasAdmin = this.invites.some(invite => invite.role === 'ADMIN');
+        if (!hasAdmin) {
+            const currentUser = this.invites.find(invite => invite.isCreator);
+            if (currentUser) {
+                currentUser.role = 'ADMIN';
+                if (currentUser.isExisting) currentUser.roleChanged = true;
+            }
+        }
+
         this.renderInvites();
     }
     removeInvite(event) { const idx = parseInt(event.currentTarget.dataset.index); if (!this.invites[idx].isCreator) { if (this.invites[idx].isExisting) this.removedMemberUuids.push(this.invites[idx].uuid); this.invites.splice(idx, 1); this.renderInvites(); } }
@@ -361,15 +388,28 @@ export default class extends Controller {
                         }).catch(e => console.error("Removal failed", e));
                     }
 
-                    for (const member of this.invites) {
-                        if (member.isExisting && member.roleChanged) {
-                            await fetch(`${this.apiUrlValue}/projects/${projectUuid}/members/${member.uuid}`, {
-                                method: 'PATCH',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ role: member.role }),
-                                credentials: 'include'
-                            }).catch(e => console.error("Role update failed", e));
+                    // Sort role updates to put ADMIN promotions first.
+                    // This ensures the current admin can promote someone before they are demoted by the side-effect.
+                    const roleUpdates = this.invites
+                        .filter(m => m.isExisting && m.roleChanged)
+                        .sort((a, b) => (b.role === 'ADMIN' ? 1 : 0) - (a.role === 'ADMIN' ? 1 : 0));
+
+                    const hasAdminPromotion = roleUpdates.some(m => m.role === 'ADMIN');
+
+                    for (const member of roleUpdates) {
+                        // If an ADMIN is being promoted, the API will automatically demote the current caller to MANAGER.
+                        // We can skip the explicit request for the current user if they are being demoted to MANAGER
+                        // and someone else is being promoted to ADMIN, to avoid "Access Denied" or redundant requests.
+                        if (hasAdminPromotion && member.email === this.userEmailValue && member.role === 'MANAGER') {
+                            continue;
                         }
+
+                        await fetch(`${this.apiUrlValue}/projects/${projectUuid}/members/${member.uuid}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ role: member.role }),
+                            credentials: 'include'
+                        }).catch(e => console.error("Role update failed", e));
                     }
                 }
 

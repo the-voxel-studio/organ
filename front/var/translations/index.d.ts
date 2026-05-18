@@ -65,6 +65,8 @@ export declare const messages: {
     "errors.invalid_google_token": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.account_deleted": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.email_taken": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.field_blank": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
+    "errors.field_too_long": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.generic_error": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "errors.server_error": Message<{ 'auth': { parameters: NoParametersType } }, 'fr'>;
     "title": Message<{ 'get_the_app': { parameters: NoParametersType }, 'settings': { parameters: NoParametersType } }, 'fr'>;
@@ -460,6 +462,7 @@ export declare const messages: {
     "organ.permissions.ORGAN_MANAGE_MEMBERS.description": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "organ.permissions.ORGAN_LINK_MANAGE.label": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "organ.permissions.ORGAN_LINK_MANAGE.description": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
+    "organ.permission_count": Message<{ 'messages+intl-icu': { parameters: { 'count': number } } }, 'fr'>;
     "organ.permissions.TASK_CREATE.label": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "organ.permissions.TASK_CREATE.description": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "organ.permissions.TASK_EDIT_OWN.label": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;

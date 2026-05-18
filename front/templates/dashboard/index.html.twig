@@ -52,12 +52,12 @@
 								<tbody class="divide-y divide-gray-50">
 									{% for task in tasks %}
 										<tr class="group hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location.href='{{ path('app_organ_show', {projectUuid: task.projectUuid, organUuid: task.organUuid}) }}#task-{{ task.uuid }}'">
-											<td class="py-5 px-4">
+											<td class="py-5 px-4 max-w-[300px]">
 												<div class="flex items-center gap-3">
 													<div class="flex items-center justify-center w-6 h-6 rounded-lg text-[10px] font-black {% if task.priority >= 4 %}bg-red-500 text-white animate-pulse{% elseif task.priority == 3 %}bg-amber-400 text-white{% else %}bg-gray-100 text-gray-500{% endif %}">
 														{{ task.priority }}
 													</div>
-													<span class="font-bold text-gray-900 group-hover:text-highlight transition-colors">{{ task.title }}</span>
+													<span class="font-bold text-gray-900 group-hover:text-highlight transition-colors truncate" title="{{ task.title }}">{{ task.title }}</span>
 												</div>
 											</td>
 											<td class="py-5 px-4 text-sm font-medium text-gray-500">

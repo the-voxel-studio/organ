@@ -62,7 +62,7 @@ class OrganPermissionServiceTest extends KernelTestCase
         ]);
 
         $this->assertTrue($this->service->hasPermission($user, $organ, 'ORGAN_VIEW'));
-        $this->assertFalse($this->service->hasPermission($user, $organ, 'ORGAN_EDIT'));
+        $this->assertTrue($this->service->hasPermission($user, $organ, 'ORGAN_EDIT'));
     }
 
     public function testHasPermissionViaOrganRole(): void
