@@ -3,6 +3,7 @@ services:
   # BASES DE DONNÉES & CACHE
   # ==========================================
   database:
+    platform: linux/amd64
     image: mysql:8.0
     container_name: organ_mysql
     environment:
@@ -13,12 +14,14 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/custom.cnf
     ports:
       - "3306:3306" # Port standard MySQL
     networks:
       - app_network
 
   phpmyadmin:
+    platform: linux/amd64
     image: phpmyadmin/phpmyadmin
     container_name: organ_phpmyadmin
     environment:
@@ -33,6 +36,7 @@ services:
       - app_network
 
   valkey:
+    platform: linux/amd64
     image: valkey/valkey:7.2
     container_name: organ_valkey
     ports:
@@ -44,11 +48,12 @@ services:
   # TEMPS RÉEL (MERCURE)
   # ==========================================
   mercure:
+    platform: linux/amd64
     image: dunglas/mercure
     container_name: organ_mercure
     environment:
-      MERCURE_PUBLISHER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
-      MERCURE_SUBSCRIBER_JWT_KEY: '!ChangeThisMercureHubJWTSecretKey!'
+      MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_SECRET}
+      MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_SECRET}
       MERCURE_CORS_ALLOWED_ORIGINS: '*'
       SERVER_NAME: ':80' 
     ports:
@@ -60,6 +65,7 @@ services:
   # EMAILS LOCAUX (MAILPIT)
   # ==========================================
   mailpit:
+    platform: linux/amd64
     image: axllent/mailpit
     container_name: organ_mailpit
     ports:
@@ -72,17 +78,22 @@ services:
   # BACKEND (API SYMFONY)
   # ==========================================
   api-php:
+    platform: linux/amd64
     build: 
       context: ./api
       dockerfile: Dockerfile
     container_name: organ_api_php
+    environment:
+      MERCURE_JWT_SECRET: ${MERCURE_JWT_SECRET}
     volumes:
       - ./api:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./docker/php/zz-docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
     networks:
       - app_network
 
   api-nginx:
+    platform: linux/amd64
     image: nginx:alpine
     container_name: organ_api_nginx
     ports:
@@ -99,6 +110,7 @@ services:
   # FRONTEND (SYMFONY / JS)
   # ==========================================
   front-php:
+    platform: linux/amd64
     build: 
       context: ./front
       dockerfile: Dockerfile
@@ -106,10 +118,12 @@ services:
     volumes:
       - ./front:/var/www/html
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./docker/php/zz-docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
     networks:
       - app_network
 
   front-nginx:
+    platform: linux/amd64
     image: nginx:alpine
     container_name: organ_front_nginx
     ports:
@@ -125,6 +139,7 @@ services:
       - app_network
 
   front-tailwind-watch:
+    platform: linux/amd64
     build: 
       context: ./front
       dockerfile: Dockerfile

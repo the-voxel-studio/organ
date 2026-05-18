@@ -26,7 +26,8 @@ class OrganRoleController extends AbstractController
 {
     public function __construct(
         private readonly OrganPermissionService $permissionService,
-        private readonly OrganCacheService $organCacheService
+        private readonly OrganCacheService $organCacheService,
+        private readonly \App\Service\TaskCacheService $taskCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -326,6 +327,7 @@ class OrganRoleController extends AbstractController
         $this->permissionService->invalidateUserRoles($targetUser->getUuid(), $organ->getUuid());
         // Also invalidate role list as it might contain permissions summary
         $this->organCacheService->invalidateRoleList($organUuid);
+        $this->organCacheService->invalidateMemberList($organUuid);
 
         return $this->json(['message' => 'Role assigned successfully']);
     }
@@ -398,6 +400,8 @@ class OrganRoleController extends AbstractController
         // Invalidate caches
         $this->permissionService->invalidateUserRoles($uor->getUser()->getUuid(), $organ->getUuid());
         $this->organCacheService->invalidateRoleList($organUuid);
+        $this->organCacheService->invalidateMemberList($organUuid);
+        $this->taskCacheService->invalidateUserTasksInOrgan($uor->getUser()->getUuid(), $organUuid);
 
         return $this->json(['message' => 'Member restored successfully']);
     }
@@ -452,6 +456,8 @@ class OrganRoleController extends AbstractController
         // Invalidate caches
         $this->permissionService->invalidateUserRoles($userUuid, $organ->getUuid());
         $this->organCacheService->invalidateRoleList($organUuid);
+        $this->organCacheService->invalidateMemberList($organUuid);
+        $this->taskCacheService->invalidateUserTasksInOrgan($userUuid, $organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
@@ -481,9 +487,21 @@ class OrganRoleController extends AbstractController
         }
 
         if ($isPermanent) {
+            // Find members before removal to invalidate cache
+            $uors = $entityManager->getRepository(UserOrganRole::class)->findBy(['role' => $role]);
+            foreach ($uors as $uor) {
+                $this->taskCacheService->invalidateUserTasksInOrgan($uor->getUser()->getUuid(), $organUuid);
+            }
             $entityManager->remove($role);
         } else {
             $role->setDeletedAt(new \DateTime());
+            // Also soft delete members to be consistent? 
+            // Usually soft deleting a role might imply members lose permissions.
+            $uors = $entityManager->getRepository(UserOrganRole::class)->findBy(['role' => $role, 'deletedAt' => null]);
+            foreach ($uors as $uor) {
+                $uor->setDeletedAt(new \DateTime());
+                $this->taskCacheService->invalidateUserTasksInOrgan($uor->getUser()->getUuid(), $organUuid);
+            }
         }
         
         $entityManager->flush();
@@ -492,6 +510,7 @@ class OrganRoleController extends AbstractController
         $this->permissionService->invalidateRoleDefinition($roleUuid);
         // Invalidate role list cache
         $this->organCacheService->invalidateRoleList($organUuid);
+        $this->organCacheService->invalidateMemberList($organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }
@@ -518,12 +537,23 @@ class OrganRoleController extends AbstractController
         }
 
         $role->setDeletedAt(null);
+        
+        // Restore members as well? 
+        $uors = $entityManager->getRepository(UserOrganRole::class)->findBy(['role' => $role]);
+        foreach ($uors as $uor) {
+            if ($uor->getDeletedAt() !== null) {
+                $uor->setDeletedAt(null);
+                $this->taskCacheService->invalidateUserTasksInOrgan($uor->getUser()->getUuid(), $organUuid);
+            }
+        }
+
         $entityManager->flush();
 
         // Invalidate role definition
         $this->permissionService->invalidateRoleDefinition($role->getUuid());
         // Invalidate role list cache
         $this->organCacheService->invalidateRoleList($organUuid);
+        $this->organCacheService->invalidateMemberList($organUuid);
 
         return $this->json([
             'uuid' => $role->getUuid(),

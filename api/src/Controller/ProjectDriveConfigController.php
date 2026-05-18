@@ -179,6 +179,36 @@ class ProjectDriveConfigController extends AbstractController
         ]);
     }
 
+    #[Route('', name: 'update', methods: ['POST', 'PUT'])]
+    public function update(string $projectUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $this->checkAccess($project, $entityManager, [ProjectGlobalRole::ADMIN]);
+
+        $config = $entityManager->getRepository(ProjectDriveConfig::class)->findOneBy(['project' => $project]);
+        if (!$config) {
+            $config = new ProjectDriveConfig();
+            $config->setProject($project);
+            $entityManager->persist($config);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (isset($data['driveFolderId'])) {
+            $config->setDriveFolderId($data['driveFolderId']);
+        }
+        if (isset($data['refreshToken'])) {
+            $config->setEncryptedRefreshToken($data['refreshToken']);
+        }
+        if (isset($data['isActive'])) {
+            $config->setIsActive((bool)$data['isActive']);
+        }
+
+        $entityManager->flush();
+        $this->driveCacheService->invalidate($projectUuid);
+
+        return $this->json(['message' => 'Drive configuration updated']);
+    }
+
     #[Route('', name: 'delete', methods: ['DELETE'])]
     public function delete(string $projectUuid, EntityManagerInterface $entityManager): JsonResponse
     {

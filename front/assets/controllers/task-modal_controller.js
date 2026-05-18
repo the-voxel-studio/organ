@@ -5,7 +5,7 @@ export default class extends Controller {
     static targets = [
         'container', 'backdrop', 'panel', 'modalTitle', 'form', 'loader', 'formContent', 
         'fieldContainer', 'submitBtn', 'submitBtnText', 'managerSelect', 'subResources',
-        'taskMeta', 'taskUuid', 'taskCreatedAt', 'deleteBtn',
+        'taskMeta', 'taskUuid', 'taskCreatedAt', 'deleteBtn', 'titleInput',
         'assigneeList', 'userPicker', 'userList',
         'taskTagList', 'tagPicker', 'projectTagList',
         'linkList', 'linkForm', 'linkUrl', 'linkDesc',
@@ -73,10 +73,27 @@ export default class extends Controller {
         }
     }
 
+    validatePriority(event) {
+        const input = event.target;
+        let value = input.value;
+
+        // Force integer by removing non-digits
+        value = value.replace(/[^\d]/g, '');
+
+        if (value !== '') {
+            let num = parseInt(value, 10);
+            if (num < 1) num = 1;
+            if (num > 10) num = 10;
+            value = num.toString();
+        }
+
+        input.value = value;
+    }
+
     async loadInitialData() {
         try {
             const [membersRes, tagsRes] = await Promise.all([
-                fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/members`, { credentials: 'include' }),
+                fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/organs/${this.organUuidValue}/members`, { credentials: 'include' }),
                 fetch(`${this.apiUrlValue}/projects/${this.projectUuidValue}/tags`, { credentials: 'include' })
             ]);
 
@@ -109,8 +126,8 @@ export default class extends Controller {
         this.managerSelectTarget.innerHTML = `<option value="">${trans('task.modal.empty.manager')}</option>`;
         this.members.forEach(m => {
             const option = document.createElement('option');
-            option.value = m.user.uuid;
-            option.textContent = `${m.user.firstName} ${m.user.lastName}`;
+            option.value = m.uuid;
+            option.textContent = `${m.firstName} ${m.lastName}`;
             this.managerSelectTarget.appendChild(option);
         });
     }
@@ -278,6 +295,9 @@ export default class extends Controller {
             const input = c.querySelector('input, textarea, select');
             if (input) input.disabled = false;
         });
+        if (this.hasTitleInputTarget) {
+            this.titleInputTarget.classList.remove('border-red-500', 'ring-red-100');
+        }
         if (this.hasStatusMessageContainerTarget) {
             this.statusMessageContainerTarget.classList.add('hidden');
         }
@@ -432,7 +452,7 @@ export default class extends Controller {
             const div = document.createElement('div');
             div.className = 'flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs font-bold text-gray-700';
             div.innerHTML = `
-                <span>${a.firstName} ${a.lastName}</span>
+                <span class="truncate max-w-[120px]" title="${a.firstName} ${a.lastName}">${a.firstName} ${a.lastName}</span>
                 ${canManage ? `<button type="button" data-action="click->task-modal#removeAssignee" data-user-uuid="${a.uuid}" class="text-gray-400 hover:text-rose-500 transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg></button>` : ''}
             `;
             this.assigneeListTarget.appendChild(div);
@@ -453,10 +473,10 @@ export default class extends Controller {
             btn.type = 'button';
             btn.className = 'w-full text-left px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-between group';
             btn.dataset.action = 'click->task-modal#addAssignee';
-            btn.dataset.userUuid = m.user.uuid;
+            btn.dataset.userUuid = m.uuid;
             btn.innerHTML = `
-                <span>${m.user.firstName} ${m.user.lastName}</span>
-                <span class="opacity-0 group-hover:opacity-100 text-[var(--highlight-color)]">+</span>
+                <span class="truncate" title="${m.firstName} ${m.lastName}">${m.firstName} ${m.lastName}</span>
+                <span class="opacity-0 group-hover:opacity-100 text-[var(--highlight-color)] shrink-0">+</span>
             `;
             this.userListTarget.appendChild(btn);
         });
@@ -465,9 +485,9 @@ export default class extends Controller {
     async addAssignee(event) {
         const userUuid = event.currentTarget.dataset.userUuid;
         if (!this.taskIdValue) {
-            const member = this.members.find(m => m.user.uuid === userUuid);
+            const member = this.members.find(m => m.uuid === userUuid);
             if (member && !this.stagedAssignees.find(a => a.uuid === userUuid)) {
-                this.stagedAssignees.push(member.user);
+                this.stagedAssignees.push(member);
                 this.renderAssignees(this.stagedAssignees, { taskOwnership: { isManager: true } }); // Full access for staged
             }
             this.userPickerTarget.classList.add('hidden');
@@ -516,7 +536,7 @@ export default class extends Controller {
             div.style.color = t.color;
             div.innerHTML = `
                 <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${t.color}"></span>
-                <span>${t.name}</span>
+                <span class="truncate max-w-[100px]" title="${t.name}">${t.name}</span>
                 ${canManage ? `<button type="button" data-action="click->task-modal#removeTag" data-tag-uuid="${t.uuid}" class="text-gray-300 transition-colors cursor-pointer" onmouseover="this.style.color='var(--highlight-color)'" onmouseout="this.style.color='#d1d5db'"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg></button>` : ''}
             `;
             this.taskTagListTarget.appendChild(div);
@@ -544,7 +564,7 @@ export default class extends Controller {
             btn.dataset.tagUuid = t.uuid;
             btn.innerHTML = `
                 <span class="w-2 h-2 rounded-full" style="background-color: ${t.color}"></span>
-                <span>${t.name}</span>
+                <span class="truncate" title="${t.name}">${t.name}</span>
             `;
             this.projectTagListTarget.appendChild(btn);
         });
@@ -689,7 +709,7 @@ export default class extends Controller {
                 <div class="flex-grow space-y-1">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="text-xs font-black text-gray-900">${c.user.firstName} ${c.user.lastName}</span>
+                            <span class="text-xs font-black text-gray-900 truncate max-w-[150px]" title="${c.user.firstName} ${c.user.lastName}">${c.user.firstName} ${c.user.lastName}</span>
                             <span class="text-[10px] font-bold text-gray-400">${new Date(c.createdAt).toLocaleString()}</span>
                         </div>
                         ${canDelete ? `
@@ -1179,8 +1199,8 @@ export default class extends Controller {
                         <div class="w-6 h-6 rounded-lg bg-gray-50 flex items-center justify-center text-[8px] font-black uppercase text-gray-400">
                             ${c.user.firstName[0]}${c.user.lastName[0]}
                         </div>
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-bold text-gray-900">${c.user.firstName} ${c.user.lastName}</span>
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-[10px] font-bold text-gray-900 truncate max-w-[120px]" title="${c.user.firstName} ${c.user.lastName}">${c.user.firstName} ${c.user.lastName}</span>
                             <span class="text-[9px] font-medium text-gray-400">Supprimé le ${new Date(c.deletedAt).toLocaleString()}</span>
                         </div>
                     </div>
@@ -1484,6 +1504,17 @@ export default class extends Controller {
     async save(event) {
         event.preventDefault();
         const isEdit = this.taskIdValue !== "";
+
+        // Validate mandatory title
+        if (this.hasTitleInputTarget) {
+            const title = this.titleInputTarget.value.trim();
+            if (!title) {
+                this.titleInputTarget.classList.add('border-red-500', 'ring-red-100');
+                this.titleInputTarget.focus();
+                return;
+            }
+            this.titleInputTarget.classList.remove('border-red-500', 'ring-red-100');
+        }
         
         const data = {};
         const inputs = this.formTarget.querySelectorAll('input:not(:disabled), textarea:not(:disabled), select:not(:disabled)');

@@ -26,7 +26,8 @@ class OrganController extends AbstractController
 {
     public function __construct(
         private readonly OrganPermissionService $permissionService,
-        private readonly OrganCacheService $organCacheService
+        private readonly OrganCacheService $organCacheService,
+        private readonly \App\Service\TaskCacheService $taskCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -333,6 +334,49 @@ class OrganController extends AbstractController
         ]);
     }
 
+    #[Route('/{organUuid}/members', name: 'members', methods: ['GET'])]
+    public function members(string $projectUuid, string $organUuid, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
+        $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
+
+        if (!$organ) return $this->json(['message' => 'Organ not found'], Response::HTTP_NOT_FOUND);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $fetcher = function () use ($entityManager, $organ) {
+            $uors = $entityManager->getRepository(\App\Entity\UserOrganRole::class)->createQueryBuilder('uor')
+                ->join('uor.role', 'r')
+                ->where('r.organ = :organ')
+                ->andWhere('uor.deletedAt IS NULL')
+                ->andWhere('r.deletedAt IS NULL')
+                ->setParameter('organ', $organ)
+                ->getQuery()
+                ->getResult();
+            
+            $users = [];
+            foreach ($uors as $uor) {
+                $u = $uor->getUser();
+                if (!isset($users[$u->getUuid()])) {
+                    $users[$u->getUuid()] = [
+                        'uuid' => $u->getUuid(),
+                        'firstName' => $u->getFirstName(),
+                        'lastName' => $u->getLastName(),
+                        'email' => $u->getEmail(),
+                    ];
+                }
+            }
+
+            return array_values($users);
+        };
+
+        return $this->json($this->organCacheService->getMemberList($organ, $fetcher));
+    }
+
     #[Route('/{organUuid}/check-permission/{permissionName}', name: 'check_permission', methods: ['GET'])]
     public function checkPermission(string $projectUuid, string $organUuid, string $permissionName, EntityManagerInterface $entityManager): JsonResponse
     {
@@ -483,6 +527,7 @@ class OrganController extends AbstractController
         // Invalidate cache
         $this->organCacheService->invalidateSummary($organUuid);
         $this->organCacheService->invalidateList($projectUuid);
+        $this->taskCacheService->invalidateList($organUuid);
 
         return $this->json(null, Response::HTTP_NO_CONTENT);
     }

@@ -193,14 +193,18 @@ class ProjectMemberController extends AbstractController
             return $this->json(['message' => 'Member is deleted and cannot be updated'], Response::HTTP_FORBIDDEN);
         }
 
-        if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $targetMember->getGlobalRole() !== ProjectGlobalRole::MEMBER) {
-            return $this->json(['message' => 'Managers can only manage users with MEMBER role'], Response::HTTP_FORBIDDEN);
-        }
-
         $data = json_decode($request->getContent(), true);
         if (isset($data['role'])) {
             $newRole = ProjectGlobalRole::tryFrom($data['role']);
             if (!$newRole) return $this->json(['message' => 'Invalid role'], Response::HTTP_BAD_REQUEST);
+
+            if ($targetMember->getGlobalRole() === $newRole) {
+                return $this->json(['message' => 'Member updated']);
+            }
+
+            if ($currentUserMember->getGlobalRole() === ProjectGlobalRole::MANAGER && $targetMember->getGlobalRole() !== ProjectGlobalRole::MEMBER) {
+                return $this->json(['message' => 'Managers can only manage users with MEMBER role'], Response::HTTP_FORBIDDEN);
+            }
 
             if ($newRole === ProjectGlobalRole::ADMIN) {
                 if ($currentUserMember->getGlobalRole() !== ProjectGlobalRole::ADMIN) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);

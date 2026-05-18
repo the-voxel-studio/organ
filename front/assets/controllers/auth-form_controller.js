@@ -83,6 +83,8 @@ export default class extends Controller {
                 'Password must be at least 8 characters': 'errors.password_too_short',
                 'User already exists': 'errors.user_exists',
                 'Email is not valid': 'errors.email_invalid',
+                'This value is not a valid email address.': 'errors.email_invalid',
+                'This value should not be blank.': 'errors.field_blank',
                 'Invalid credentials.': 'errors.invalid_credentials',
                 'This account uses Google Login. Please use the "Sign in with Google" button.': 'errors.google_only_account',
                 'Token is required': 'errors.token_required',

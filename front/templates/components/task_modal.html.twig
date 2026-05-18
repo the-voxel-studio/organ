@@ -58,7 +58,7 @@
                             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ 'task.modal.fields.title'|trans }}</label>
                             <span class="text-[9px] font-bold uppercase tracking-tighter" style="color: var(--highlight-color)">{{ 'task.modal.hints.required'|trans }}</span>
                          </div>
-                         <input type="text" name="title" required placeholder="{{ 'task.modal.placeholders.title'|trans }}"
+                         <input type="text" name="title" required maxlength="200" data-task-modal-target="titleInput" placeholder="{{ 'task.modal.placeholders.title'|trans }}"
                                 class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-lg font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]">
                          </div>
 
@@ -68,7 +68,7 @@
                             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ 'task.modal.fields.description'|trans }}</label>
                             <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">{{ 'task.modal.hints.optional'|trans }}</span>
                          </div>
-                         <textarea name="description" rows="4" placeholder="{{ 'task.modal.placeholders.description'|trans }}"
+                         <textarea name="description" rows="4" maxlength="4000" placeholder="{{ 'task.modal.placeholders.description'|trans }}"
                                    class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm transition-all outline-none shadow-sm resize-none focus:border-[var(--highlight-color)]"></textarea>
                          </div>
 
@@ -93,8 +93,12 @@
 
                          {# Priority #}
                          <div class="space-y-2" data-task-modal-target="fieldContainer" data-field="priority">
-                             <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">{{ 'task.modal.fields.priority'|trans }}</label>
-                             <input type="number" name="priority" min="1" max="10"
+                             <div class="flex items-center justify-between ml-1">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">{{ 'task.modal.fields.priority'|trans }}</label>
+                                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">{{ 'task.modal.hints.priority_range'|trans }}</span>
+                             </div>
+                             <input type="number" name="priority" min="1" max="10" step="1"
+                                    data-action="input->task-modal#validatePriority"
                                     class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]">
                          </div>
                          </div>

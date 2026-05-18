@@ -269,7 +269,7 @@ class TaskController extends AbstractController
     }
 
     #[Route('/{taskUuid}', name: 'update', methods: ['PUT', 'PATCH'])]
-    public function update(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function update(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager, ValidatorInterface $validator): JsonResponse
     {
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $projectUuid, 'deletedAt' => null]);
         $organ = $entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $organUuid, 'project' => $project, 'deletedAt' => null]);
@@ -342,7 +342,12 @@ class TaskController extends AbstractController
                 $task->setManager(null);
             } else {
                 $manager = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $data['managerUuid']]);
-                if ($manager) $task->setManager($manager);
+                if ($manager) {
+                    if (!$this->permissionService->isOrganMember($manager, $organ)) {
+                        return $this->json(['message' => 'Selected manager is not a member of this organ'], Response::HTTP_BAD_REQUEST);
+                    }
+                    $task->setManager($manager);
+                }
             }
         }
 
@@ -358,6 +363,11 @@ class TaskController extends AbstractController
                 return $this->json(['message' => 'Permission denied to change description'], Response::HTTP_FORBIDDEN);
             }
             $task->setDescription(empty($data['description']) ? null : $data['description']);
+        }
+
+        $errors = $validator->validate($task);
+        if (count($errors) > 0) {
+            return $this->json($errors, Response::HTTP_BAD_REQUEST);
         }
 
         $task->setUpdatedAt(new \DateTime());
@@ -599,6 +609,10 @@ class TaskController extends AbstractController
 
         if (!$this->taskService->can($currentUser, $task, $action)) {
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$this->permissionService->isOrganMember($targetUser, $organ)) {
+            return $this->json(['message' => 'Selected user is not a member of this organ'], Response::HTTP_BAD_REQUEST);
         }
 
         $existing = $entityManager->getRepository(TaskAssignee::class)->findOneBy(['task' => $task, 'user' => $targetUser]);

@@ -155,6 +155,12 @@
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
                                             </span>
                                         </button>
+                                        <button data-action="click->organ-view#setSort" data-sort="dueDate" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-between group/item">
+                                            {{ 'organ.show.sort_due_date'|trans }}
+                                            <span data-organ-view-target="sortIndicator" data-sort="dueDate" class="hidden text-[var(--highlight-color)] transition-transform duration-200">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg>
+                                            </span>
+                                        </button>
                                         <button data-action="click->organ-view#setSort" data-sort="date" class="w-full text-left px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition-colors flex items-center justify-between group/item">
                                             {{ 'organ.show.sort_date'|trans }}
                                             <span data-organ-view-target="sortIndicator" data-sort="date" class="hidden text-[var(--highlight-color)] transition-transform duration-200">
@@ -182,6 +188,27 @@
                                                 {% for p in 1..5 %}
                                                     <button data-action="click->organ-view#setPriorityFilter" data-priority="{{ p }}" class="flex-1 py-2 rounded-lg text-[10px] font-black border-2 border-gray-100 hover:border-gray-200 transition-all" data-organ-view-target="priorityFilter">
                                                         {{ p }}
+                                                    </button>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+
+                                        <div class="pt-2">
+                                            <p class="text-[9px] font-bold text-gray-300 uppercase tracking-tight mb-2 ml-4">{{ 'organ.show.table.status'|trans }}</p>
+                                            <div class="flex flex-wrap px-4 gap-2">
+                                                {% set statuses = [
+                                                    {'id': 'TODO', 'label': 'organ.show.todo'|trans},
+                                                    {'id': 'IN_PROGRESS', 'label': 'organ.show.in_progress'|trans},
+                                                    {'id': 'WAITING', 'label': 'organ.show.waiting'|trans},
+                                                    {'id': 'DONE', 'label': 'organ.show.done'|trans},
+                                                    {'id': 'CANCELED', 'label': 'organ.show.canceled'|trans}
+                                                ] %}
+                                                {% for s in statuses %}
+                                                    <button data-action="click->organ-view#toggleStatusFilter" 
+                                                            data-status="{{ s.id }}" 
+                                                            data-organ-view-target="statusFilter"
+                                                            class="px-3 py-1.5 rounded-lg text-[9px] font-black border-2 border-gray-100 hover:border-gray-200 transition-all uppercase tracking-wider">
+                                                        {{ s.label }}
                                                     </button>
                                                 {% endfor %}
                                             </div>
@@ -298,7 +325,7 @@
         <div data-organ-view-target="kanbanView" class="overflow-x-auto pb-12 custom-scrollbar">
             <div class="flex gap-8 min-w-max pr-8">
                 {# TODO Column #}
-                <div class="space-y-6 w-[350px]">
+                <div data-organ-view-target="statusColumn" data-status="TODO" class="space-y-6 w-[350px]">
                     <div class="flex items-center justify-between px-4">
                         <h5 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
                             <span class="w-2 h-2 rounded-full bg-slate-300"></span>
@@ -311,7 +338,7 @@
                 </div>
 
                 {# IN PROGRESS Column #}
-                <div class="space-y-6 w-[350px]">
+                <div data-organ-view-target="statusColumn" data-status="IN_PROGRESS" class="space-y-6 w-[350px]">
                     <div class="flex items-center justify-between px-4">
                         <h5 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
                             <span class="w-2 h-2 rounded-full" style="background-color: var(--highlight-color)"></span>
@@ -324,7 +351,7 @@
                 </div>
 
                 {# WAITING Column #}
-                <div class="space-y-6 w-[350px]">
+                <div data-organ-view-target="statusColumn" data-status="WAITING" class="space-y-6 w-[350px]">
                     <div class="flex items-center justify-between px-4">
                         <h5 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
                             <span class="w-2 h-2 rounded-full bg-amber-400"></span>
@@ -337,7 +364,7 @@
                 </div>
 
                 {# DONE Column #}
-                <div class="space-y-6 w-[350px]">
+                <div data-organ-view-target="statusColumn" data-status="DONE" class="space-y-6 w-[350px]">
                     <div class="flex items-center justify-between px-4">
                         <h5 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
                             <span class="w-2 h-2 rounded-full bg-green-400"></span>
@@ -350,7 +377,7 @@
                 </div>
 
                 {# CANCELED Column #}
-                <div class="space-y-6 w-[350px]">
+                <div data-organ-view-target="statusColumn" data-status="CANCELED" class="space-y-6 w-[350px]">
                     <div class="flex items-center justify-between px-4">
                         <h5 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
                             <span class="w-2 h-2 rounded-full bg-rose-400"></span>
@@ -379,25 +406,25 @@
                     <tbody data-organ-view-target="listBody">
                        {# JS Rendered #}
                     </tbody>
-                    </table>
-                    </div>
-                    </div>
+                </table>
+            </div>
+        </div>
 
-                    {# Custom Confirmation Modal for Links #}
-                    <div data-organ-links-target="confirmModal" 
-                    class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" data-action="click->organ-links#closeConfirm"></div>
-                    <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
-                    <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
+        {# Custom Confirmation Modal for Links #}
+        <div data-organ-links-target="confirmModal" 
+             class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" data-action="click->organ-links#closeConfirm"></div>
+            <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
+                <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                    </div>
+                </div>
 
-                    <div class="text-center space-y-2">
+                <div class="text-center space-y-2">
                     <h3 data-organ-links-target="confirmTitle" class="text-xl font-bold text-gray-900">{{ 'generic.confirmation'|trans }}</h3>
                     <p data-organ-links-target="confirmMessage" class="text-sm text-gray-500 leading-relaxed"></p>
-                    </div>
+                </div>
 
-                    <div class="flex flex-col gap-3 pt-2">
+                <div class="flex flex-col gap-3 pt-2">
                     <button type="button" data-action="click->organ-links#confirmDelete" 
                             class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-95 cursor-pointer">
                         {{ 'generic.confirm_delete'|trans }}
@@ -406,10 +433,11 @@
                             class="w-full py-4 bg-white border border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-50 transition-all cursor-pointer">
                         {{ 'generic.cancel'|trans }}
                     </button>
-                    </div>
-                    </div>
-                    </div>
-                    </main>
-            {% include "components/task_modal.html.twig" %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    {% include "components/task_modal.html.twig" %}
 </div>
 {% endblock %}

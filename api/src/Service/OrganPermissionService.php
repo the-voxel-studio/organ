@@ -42,7 +42,7 @@ class OrganPermissionService
             return false;
         }
 
-        // 3. Aggregate permissions from all user's roles in this organ
+        // 2. Aggregate permissions from all user's roles in this organ
         $userRoles = $this->getUserRolesInOrgan($user, $organ);
         
         foreach ($userRoles as $role) {
@@ -53,6 +53,20 @@ class OrganPermissionService
         }
 
         return false;
+    }
+
+    /**
+     * Check if a user is a member of an organ.
+     * A member is someone who is either a Project ADMIN/MANAGER or has a role in the organ.
+     */
+    public function isOrganMember(User $user, Organ $organ): bool
+    {
+        $globalRole = $this->membershipService->getGlobalRole($user, $organ->getProject());
+        if (in_array($globalRole, [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return true;
+        }
+
+        return count($this->getUserRolesInOrgan($user, $organ)) > 0;
     }
 
     /**
