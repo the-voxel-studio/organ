@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.R
-import fr.studio.voxel.organ.domain.model.Task
+import fr.studio.voxel.organ.ViewModel.Task
 import fr.studio.voxel.organ.ui.components.TaskComponents.TaskCountBadge
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 import fr.studio.voxel.organ.ui.theme.MaterialTypography
