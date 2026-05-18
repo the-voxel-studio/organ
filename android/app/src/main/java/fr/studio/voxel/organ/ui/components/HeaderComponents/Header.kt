@@ -1,7 +1,5 @@
-package fr.studio.voxel.organ.ui.components
+package fr.studio.voxel.organ.ui.components.HeaderComponents
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -19,11 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.R
+import fr.studio.voxel.organ.ui.components.IconButtonPressable
 import fr.studio.voxel.organ.ui.theme.AppColorScheme
-import fr.studio.voxel.organ.ui.theme.AppTypography
 
 @Composable
 fun Header(

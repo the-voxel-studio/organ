@@ -33,10 +33,10 @@ import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ViewModel.MainViewModel
 import fr.studio.voxel.organ.domain.model.SidebarViewModel
 import fr.studio.voxel.organ.ui.components.FooterComponents.Footer
-import fr.studio.voxel.organ.ui.components.Header
+import fr.studio.voxel.organ.ui.components.HeaderComponents.Header
 import fr.studio.voxel.organ.ui.components.IconButtonPressable
-import fr.studio.voxel.organ.ui.components.ProjectItem
-import fr.studio.voxel.organ.ui.components.SecondaryButton
+import fr.studio.voxel.organ.ui.components.SidebarComponents.ProjectItem
+import fr.studio.voxel.organ.ui.components.SidebarComponents.SecondaryButton
 
 @Composable
 fun SideBar(

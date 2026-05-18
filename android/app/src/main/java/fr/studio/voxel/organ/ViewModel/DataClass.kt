@@ -12,6 +12,7 @@ data class Project(
     val id: Int,
     val name: String,
     val description : String,
+    val dateCreation : String,
     val color : String,
     val visual: ProjectVisual,
     val state : String,

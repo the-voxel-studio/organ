@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,11 +27,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import fr.studio.voxel.organ.ui.components.Header
-import fr.studio.voxel.organ.ui.components.PrimaryButton
+import fr.studio.voxel.organ.ui.components.HeaderComponents.Header
 import fr.studio.voxel.organ.OrganScreen
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ViewModel.MainViewModel
+import fr.studio.voxel.organ.ui.components.AddButton
 import fr.studio.voxel.organ.ui.components.DashboardComponents.PriorityTask
 import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectSticker
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
@@ -39,149 +41,155 @@ fun Dashboard(
     navController: NavHostController,
     dashVM : MainViewModel = viewModel()
 ){
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxHeight()
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        item {
-            Header(
-                navigateUp = { navController.navigate(OrganScreen.Sidebar.name) },
-                canOpenSidebar = true
-            )
-        }
-        item {
-            Column(
-                modifier = Modifier
-                    .padding(vertical = 24.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text(
-                    text = "Tableau de bord",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Text(
-                    text = "Gérez vos projets et tâches prioritaires.",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Normal
-                    ),
-                    color = MaterialTheme.colorScheme.outline
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item {
+                Header(
+                    navigateUp = { navController.navigate(OrganScreen.Sidebar.name) },
+                    canOpenSidebar = true
                 )
             }
-        }
-        item {
-            PrimaryButton("Nouveau Projet", onClick = {/* TODO */})
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .padding(vertical = 32.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
+            item {
+                Column(
                     modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(MaterialColorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
+                        .padding(top = 24.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.Start
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.menu_tache),
-                        contentDescription = "Logo des tâches",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(32.dp) // Taille de l'icône seule
+                    Text(
+                        text = "Tableau de bord",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Text(
+                        text = "Gérez vos projets et tâches prioritaires.",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Normal
+                        ),
+                        color = MaterialTheme.colorScheme.outline
                     )
                 }
+            }
 
-                Spacer(modifier = Modifier.width(24.dp))
+            item {
+                Row(
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(MaterialColorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.menu_tache),
+                            contentDescription = "Logo des tâches",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp) // Taille de l'icône seule
+                        )
+                    }
 
-                Column(
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 32.dp, bottom = 24.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Tâches prioritaires",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "Vos tâches les plus importantes à faire.",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Normal
+                            ),
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
+            }
+
+            item {
+                PriorityTask()
+            }
+
+            item {
+                Row(
                     modifier = Modifier
                         .padding(top = 32.dp, bottom = 24.dp)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Tâches prioritaires",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(MaterialColorScheme.secondaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.projet_folder),
+                            contentDescription = "Logo des tâches",
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
 
-                    Text(
-                        text = "Vos tâches les plus importantes à faire.",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Normal
-                        ),
-                        color = MaterialTheme.colorScheme.outline
-                    )
+                    Spacer(modifier = Modifier.width(24.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 32.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Mes Projets",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "Les projets auxquels vous participez.",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Normal
+                            ),
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+
                 }
+                ProjectSticker(projectsList = dashVM.projects ?: emptyList())
+            }
+            item{
+                Spacer(modifier = Modifier.height(50.dp))
             }
         }
-
-        item {
-            PriorityTask()
-        }
-
-        item {
-            Row(
-                modifier = Modifier
-                    .padding(top = 32.dp, bottom = 24.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(MaterialColorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.projet_folder),
-                        contentDescription = "Logo des tâches",
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(24.dp))
-
-                Column(
-                    modifier = Modifier
-                        .padding(top = 32.dp)
-                        .fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Mes Projets",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Text(
-                        text = "Les projets auxquels vous participez.",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Normal
-                        ),
-                        color = MaterialTheme.colorScheme.outline
-                    )
-                }
-
-            }
-            ProjectSticker(projectsList = dashVM.projects ?: emptyList())
-        }
+        AddButton(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(24.dp)
+        ){ }
     }
-
 }

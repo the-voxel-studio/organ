@@ -1,4 +1,4 @@
-package fr.studio.voxel.organ.ui.components
+package fr.studio.voxel.organ.ui.components.HeaderComponents
 
 import android.os.Build.VERSION.SDK_INT
 import androidx.compose.foundation.layout.size
