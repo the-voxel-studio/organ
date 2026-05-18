@@ -1,13 +1,11 @@
-package fr.studio.voxel.organ.ui.components
+package fr.studio.voxel.organ.ui.components.SidebarComponents
 
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.ButtonDefaults
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 
-import fr.studio.voxel.organ.domain.model.Project
+import fr.studio.voxel.organ.ViewModel.Project
 
 @Composable
 fun ProjectItem(
@@ -18,7 +16,7 @@ fun ProjectItem(
 
     Column {
         SecondaryButton(
-            text = project.name ,
+            text = project.name,
             isSelected = isSelected,
             onClick = onClick
         )

@@ -1,4 +1,4 @@
-package fr.studio.voxel.organ.ui.components
+package fr.studio.voxel.organ.ui.components.FooterComponents
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

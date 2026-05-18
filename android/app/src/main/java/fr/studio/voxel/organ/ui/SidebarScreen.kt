@@ -1,7 +1,5 @@
 package fr.studio.voxel.organ.ui
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -17,12 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,21 +24,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.modifier.modifierLocalOf
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavHostController
 import fr.studio.voxel.organ.OrganScreen
 import fr.studio.voxel.organ.R
-import fr.studio.voxel.organ.domain.model.MainViewModel
+import fr.studio.voxel.organ.ViewModel.MainViewModel
 import fr.studio.voxel.organ.domain.model.SidebarViewModel
-import fr.studio.voxel.organ.ui.components.Footer
-import fr.studio.voxel.organ.ui.components.Header
+import fr.studio.voxel.organ.ui.components.FooterComponents.Footer
+import fr.studio.voxel.organ.ui.components.HeaderComponents.Header
 import fr.studio.voxel.organ.ui.components.IconButtonPressable
-import fr.studio.voxel.organ.ui.components.ProjectItem
-import fr.studio.voxel.organ.ui.components.SecondaryButton
+import fr.studio.voxel.organ.ui.components.SidebarComponents.ProjectItem
+import fr.studio.voxel.organ.ui.components.SidebarComponents.SecondaryButton
 
 @Composable
 fun SideBar(
@@ -53,6 +45,9 @@ fun SideBar(
     sidebarVM: SidebarViewModel = viewModel(),
     utilisateur : String
 ){
+    // Récupère la route de la page juste avant la Sidebar
+    val previousRoute = navController.previousBackStackEntry?.destination?.route
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -66,8 +61,6 @@ fun SideBar(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
     ) {
-
-
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -110,7 +103,7 @@ fun SideBar(
             SecondaryButton(
                 text = "Dashboard",
                 iconRes = R.drawable.dashboard_logo,
-                isSelected = currentRoute == OrganScreen.Dashboard.name,
+                isSelected = (previousRoute == OrganScreen.Dashboard.name),
                 onClick = {
                     navController.navigate(OrganScreen.Dashboard.name) {
                         // Évite d'empiler plusieurs fois la même page

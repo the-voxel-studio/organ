@@ -1,4 +1,4 @@
-package fr.studio.voxel.organ.ui.components
+package fr.studio.voxel.organ.ui.components.SidebarComponents
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import fr.studio.voxel.organ.R
 
 @Composable
@@ -79,7 +78,7 @@ fun SecondaryButton(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
             if (iconRes != null) {

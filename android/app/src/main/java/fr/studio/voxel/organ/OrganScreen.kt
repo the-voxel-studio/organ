@@ -15,6 +15,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import fr.studio.voxel.organ.ui.SideBar
+import fr.studio.voxel.organ.ui.Dashboard
 
 
 enum class OrganScreen() {
@@ -49,7 +50,7 @@ fun OrganApp(
             }
 
             composable(route = OrganScreen.Dashboard.name){
-                //Dashboard(navController = navController)
+                Dashboard(navController = navController)
             }
         }
 
