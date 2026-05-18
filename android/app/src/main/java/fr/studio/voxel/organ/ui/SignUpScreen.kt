@@ -1,43 +1,57 @@
 package fr.studio.voxel.organ.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.withLink
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ViewModel.SignUpViewModel
 import fr.studio.voxel.organ.ui.components.HeaderComponents.Header
 import fr.studio.voxel.organ.ui.components.PrimaryButton
+import fr.studio.voxel.organ.ui.components.SignUpComponents.LoginRedirectText
 
 @Composable
 fun SignUp(
-    viewModel: SignUpViewModel = viewModel()
+    viewModel: SignUpViewModel = viewModel(),
+    //onLoginClick: () -> Unit
 ){
     Surface(
         modifier = Modifier
@@ -266,9 +280,57 @@ fun SignUp(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
+                var checked by remember { mutableStateOf(false) }
 
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ){
+                    Checkbox(checked = checked,
+                        onCheckedChange = {newValue -> checked = newValue },
+                        modifier = Modifier
+                            .offset(x = (-6).dp)
+                            .scale(1.4f)
+                    )
+
+                    val condition = buildAnnotatedString{
+                        append("J'accepte les ".uppercase())
+
+                        withStyle(style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        ) {
+                            append("Conditions d'utilisation ".uppercase())
+                        }
+
+                        append("et la ".uppercase())
+
+                        withStyle(style = SpanStyle(
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        ) {
+                            append("politique de confidentialité".uppercase())
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Text(
+                        text = condition,
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(40.dp))
 
                 val createAccount = "Créer mon compte"
 
@@ -277,9 +339,60 @@ fun SignUp(
                     text = createAccount.uppercase(),
                     modifier = Modifier
                         .fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.surface
+                    colorText = MaterialTheme.colorScheme.surface
                 )
+
+                Spacer(modifier = Modifier.height(40.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    )
+
+                    Text(
+                        text = "OU S'INSCRIRE AVEC",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        thickness = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
+
+            PrimaryButton(
+                text = "Se connecter avec Google",
+                onClick = {/*TODO*/},
+                color = MaterialTheme.colorScheme.background,
+                pressedColor = MaterialTheme.colorScheme.surface,
+                colorText = MaterialTheme.colorScheme.onSurface,
+                icon = R.drawable.logo_google,
+                iconTint = Color.Unspecified
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            LoginRedirectText(
+                onLoginClick = {
+                    // Mets ici ta logique pour ouvrir l'écran de connexion !
+                    // Exemple : navController.navigate("login_screen")
+                },
+                normalText = "Déjà un compte ? ",
+                linkText = "Se connecter"
+            )
         }
     }
 }
