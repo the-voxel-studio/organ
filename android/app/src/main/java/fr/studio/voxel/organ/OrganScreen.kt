@@ -1,6 +1,5 @@
 package fr.studio.voxel.organ
 
-import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
@@ -11,16 +10,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.padding
 import androidx.navigation.compose.composable
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import fr.studio.voxel.organ.ui.SideBar
 import fr.studio.voxel.organ.ui.Dashboard
+import fr.studio.voxel.organ.ui.SignUp
 
 
-enum class OrganScreen() {
+enum class OrganScreen {
     LogIn,
-    Register,
+    SignUp,
     Dashboard,
     Sidebar,
     Project,
@@ -38,8 +36,14 @@ fun OrganApp(
         NavHost(
             navController = navController,
             modifier = Modifier.padding(innerPadding),
-            startDestination = OrganScreen.Sidebar.name
+            startDestination = OrganScreen.SignUp.name
         ) {
+            composable(
+                route = OrganScreen.SignUp.name
+            ){
+                SignUp()
+            }
+
             composable(
                 route = OrganScreen.Sidebar.name,
                 enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },

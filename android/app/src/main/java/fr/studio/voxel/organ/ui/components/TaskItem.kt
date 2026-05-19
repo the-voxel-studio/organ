@@ -16,7 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import fr.studio.voxel.organ.domain.model.Task
+import fr.studio.voxel.organ.ViewModel.Task
 import fr.studio.voxel.organ.ui.theme.AppColorScheme
 import fr.studio.voxel.organ.ui.theme.AppTypography
 
