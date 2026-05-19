@@ -37,14 +37,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             OrganTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(modifier = Modifier.padding(innerPadding)) {
-                        //ApiTestInterface() uncomment to test API quickly
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Organ(
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                Column(modifier = Modifier.padding(top = 16.dp)) {
+                    /*ApiTestInterface() //uncomment to test API quickly
+                    Spacer(modifier = Modifier.height(16.dp)) */
+                    Organ()
                 }
             }
         }

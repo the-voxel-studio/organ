@@ -32,7 +32,7 @@ fun Header(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 20.dp)
+            .padding(bottom = 20.dp)
     ) {
         if (canOpenSidebar) {
             IconButton(

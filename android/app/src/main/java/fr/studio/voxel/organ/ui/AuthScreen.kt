@@ -2,6 +2,7 @@ package fr.studio.voxel.organ.ui
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -49,8 +50,9 @@ fun AuthScreen(
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 0.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
         ) {
             Header(navigateUp = {})
 
