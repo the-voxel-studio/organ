@@ -31,13 +31,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,8 +47,7 @@ import fr.studio.voxel.organ.ui.components.SignUpComponents.LoginRedirectText
 
 @Composable
 fun SignUp(
-    viewModel: SignUpViewModel = viewModel(),
-    //onLoginClick: () -> Unit
+    viewModel: SignUpViewModel = viewModel()
 ){
     Surface(
         modifier = Modifier
@@ -347,7 +343,7 @@ fun SignUp(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 16.dp),
+                        .padding(top = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     HorizontalDivider(
@@ -369,8 +365,6 @@ fun SignUp(
                         color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                     )
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
             }
 
             PrimaryButton(
@@ -380,7 +374,10 @@ fun SignUp(
                 pressedColor = MaterialTheme.colorScheme.surface,
                 colorText = MaterialTheme.colorScheme.onSurface,
                 icon = R.drawable.logo_google,
-                iconTint = Color.Unspecified
+                iconTint = Color.Unspecified,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             )
 
             Spacer(modifier = Modifier.height(32.dp))

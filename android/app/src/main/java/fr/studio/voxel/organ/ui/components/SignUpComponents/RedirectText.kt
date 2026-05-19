@@ -26,6 +26,10 @@ fun LoginRedirectText(
                 style = SpanStyle(
                     color = MaterialTheme.colorScheme.primary, // Ta couleur (ex: Bleu ou Vert)
                     fontWeight = FontWeight.Bold
+                ),
+                pressedStyle = SpanStyle(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline
                 )
             ),
             //Se déclenche quand on clique dessus
