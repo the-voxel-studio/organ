@@ -13,11 +13,12 @@ import androidx.navigation.compose.composable
 import androidx.compose.animation.slideOutHorizontally
 import fr.studio.voxel.organ.ui.SideBar
 import fr.studio.voxel.organ.ui.Dashboard
+import fr.studio.voxel.organ.ui.SignIn
 import fr.studio.voxel.organ.ui.SignUp
 
 
 enum class OrganScreen {
-    LogIn,
+    SignIn,
     SignUp,
     Dashboard,
     Sidebar,
@@ -36,8 +37,14 @@ fun OrganApp(
         NavHost(
             navController = navController,
             modifier = Modifier.padding(innerPadding),
-            startDestination = OrganScreen.SignUp.name
+            startDestination = OrganScreen.SignIn.name
         ) {
+            composable(
+                route = OrganScreen.SignIn.name
+            ){
+                SignIn()
+            }
+
             composable(
                 route = OrganScreen.SignUp.name
             ){
