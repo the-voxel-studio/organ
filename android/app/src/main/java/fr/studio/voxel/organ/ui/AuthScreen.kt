@@ -57,14 +57,13 @@ fun AuthScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 24.dp, horizontal = 16.dp),
+                    .padding(top = 8.dp,bottom = 8.dp, start = 16.dp, end = 16.dp),
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
                     text = if (mode == AuthMode.SIGN_UP) "Crée un compte" else "Bon retour !",
-                    style = MaterialTheme.typography.titleLarge.copy(
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 36.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -294,7 +293,7 @@ fun AuthScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 PrimaryButton(
                     onClick = { viewModel.handleAuth(mode) },
@@ -303,7 +302,7 @@ fun AuthScreen(
                     colorText = MaterialTheme.colorScheme.surface
                 )
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Row(
                     modifier = Modifier
@@ -318,7 +317,7 @@ fun AuthScreen(
                     )
                     Text(
                         text = if (mode == AuthMode.SIGN_UP) "OU S'INSCRIRE AVEC" else "OU CONTINUER AVEC",
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
                         color = MaterialTheme.colorScheme.outline,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )

@@ -15,8 +15,6 @@ import fr.studio.voxel.organ.ui.AuthMode
 import fr.studio.voxel.organ.ui.AuthScreen
 import fr.studio.voxel.organ.ui.SideBar
 import fr.studio.voxel.organ.ui.Dashboard
-import fr.studio.voxel.organ.ui.SignIn
-import fr.studio.voxel.organ.ui.SignUp
 
 
 enum class OrganScreen {
