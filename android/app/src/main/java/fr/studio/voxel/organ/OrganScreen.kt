@@ -11,6 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.padding
 import androidx.navigation.compose.composable
 import androidx.compose.animation.slideOutHorizontally
+import fr.studio.voxel.organ.ui.AuthMode
+import fr.studio.voxel.organ.ui.AuthScreen
 import fr.studio.voxel.organ.ui.SideBar
 import fr.studio.voxel.organ.ui.Dashboard
 import fr.studio.voxel.organ.ui.SignIn
@@ -42,13 +44,28 @@ fun OrganApp(
             composable(
                 route = OrganScreen.SignIn.name
             ){
-                SignIn()
+                AuthScreen(
+                    mode = AuthMode.SIGN_IN,
+                    onModeSwitch = { targetMode ->
+                        if (targetMode == AuthMode.SIGN_UP) {
+                            navController.navigate(OrganScreen.SignUp.name)
+                        }
+                    }
+                )
             }
 
             composable(
                 route = OrganScreen.SignUp.name
             ){
-                SignUp()
+                AuthScreen(
+                    mode = AuthMode.SIGN_UP,
+                    onModeSwitch = { targetMode ->
+                        if (targetMode == AuthMode.SIGN_IN) {
+                            // On revient en arrière ou on force la route de connexion
+                            navController.popBackStack()
+                        }
+                    }
+                )
             }
 
             composable(
