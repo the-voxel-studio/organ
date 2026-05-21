@@ -1,0 +1,185 @@
+<div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+  
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center min-h-[400px]">
+      <div class="w-12 h-12 border-4 border-bubblegum border-t-transparent rounded-full animate-spin"></div>
+      <p class="mt-4 text-gray-500 font-medium animate-pulse">Chargement de votre espace de travail...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <!-- Error State -->
+    <div class="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-6 text-center max-w-lg mx-auto mt-12">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-12 h-12 text-red-500 mx-auto mb-4 animate-bounce">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+      </svg>
+      <h3 class="text-lg font-bold mb-2">Une erreur est survenue</h3>
+      <p class="text-sm text-red-600 mb-6">{{ errorMessage() }}</p>
+      <button type="button" (click)="loadDashboardData()" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow transition-all cursor-pointer">
+        Réessayer
+      </button>
+    </div>
+  } @else if (dashboardData()) {
+    <!-- Header Section -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+      <div>
+        <h1 class="text-3xl font-black text-black mb-2">Tableau de bord</h1>
+        <p class="text-gray-500 font-medium">Suivez l'avancement de vos projets et tâches prioritaires.</p>
+      </div>
+      <!-- In placeholder phase, new project redirects to project creation or shows message -->
+      <a routerLink="/project/new" class="px-8 py-4 bg-bubblegum hover:bg-bubblegum/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-bubblegum/30 transition-all transform hover:-translate-y-1 active:scale-[0.98] flex items-center gap-3 w-fit cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+        </svg>
+        Nouveau projet
+      </a>
+    </header>
+
+    <div class="grid grid-cols-1 gap-12">
+      <!-- Important Tasks Section -->
+      <section>
+        <div class="flex items-center gap-4 mb-8">
+          <div class="p-3 bg-bubblegum/10 rounded-2xl text-bubblegum">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-black">Tâches prioritaires</h2>
+            <p class="text-sm text-gray-500 font-medium">Les tâches qui requièrent votre attention immédiate.</p>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div class="p-8">
+            <div class="overflow-x-auto">
+              <table class="w-full border-collapse">
+                <thead>
+                  <tr class="border-b border-gray-50">
+                    <th class="text-left pb-4 px-4 text-xs font-black text-gray-400 uppercase tracking-widest">Tâche</th>
+                    <th class="text-left pb-4 px-4 text-xs font-black text-gray-400 uppercase tracking-widest">Écheance</th>
+                    <th class="text-left pb-4 px-4 text-xs font-black text-gray-400 uppercase tracking-widest">Projet / Organe</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                  @for (task of dashboardData()?.tasks; track task.uuid) {
+                    <tr class="group hover:bg-gray-50/80 transition-colors cursor-pointer" 
+                        [routerLink]="['/organ', task.projectUuid, task.organUuid]" 
+                        [fragment]="'task-' + task.uuid">
+                      <td class="py-5 px-4 max-w-[300px]">
+                        <div class="flex items-center gap-3">
+                          <div class="flex items-center justify-center w-6 h-6 rounded-lg text-[10px] font-black shrink-0"
+                               [ngClass]="{
+                                 'bg-red-500 text-white animate-pulse': task.priority >= 4,
+                                 'bg-amber-400 text-white': task.priority === 3,
+                                 'bg-gray-100 text-gray-500': task.priority < 3
+                               }">
+                            {{ task.priority }}
+                          </div>
+                          <span class="font-bold text-gray-900 group-hover:text-highlight transition-colors truncate" [title]="task.title">
+                            {{ task.title }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="py-5 px-4 text-sm font-medium text-gray-500">
+                        {{ formatDate(task.expiresAt) }}
+                      </td>
+                      <td class="py-5 px-4">
+                        <div class="flex flex-col gap-1">
+                          <span class="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest rounded-lg w-fit">
+                            {{ task.projectName }}
+                          </span>
+                          <span class="px-3 py-1 bg-highlight/10 text-highlight text-[9px] font-bold uppercase tracking-tight rounded-lg w-fit">
+                            {{ task.organName }}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td colspan="3" class="py-12 text-center text-gray-500 font-medium italic">
+                        Aucune tâche prioritaire assignée pour le moment.
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Projects Grid Section -->
+      <section>
+        <div class="flex items-center gap-4 mb-8">
+          <div class="p-3 bg-highlight/10 rounded-2xl text-highlight">
+            <svg class="w-8 h-8 text-highlight" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-black">Vos Projets</h2>
+            <p class="text-sm text-gray-500 font-medium">Accédez rapidement à vos espaces de travail.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (project of dashboardData()?.projects; track project.uuid) {
+            <a [routerLink]="['/project', project.uuid]" 
+               class="group bg-white p-8 rounded-3xl shadow-sm border border-gray-100 border-l-4 hover:shadow-xl hover:shadow-bubblegum/5 transition-all transform hover:-translate-y-1 cursor-pointer"
+               [style.border-left-color]="getProjectColorHex(project.color)">
+              
+              <div class="flex justify-between items-start mb-6">
+                <!-- Project Icon -->
+                <div class="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-bubblegum/10 group-hover:text-bubblegum transition-colors overflow-hidden">
+                  @if (project.iconData && project.iconType === 'EMOJI') {
+                    <span class="text-2xl">{{ project.iconData }}</span>
+                  } @else if (project.iconData && project.iconType === 'IMAGE') {
+                    <img [src]="project.iconData" class="w-full h-full object-cover" alt="project icon">
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-19.5 0A2.25 2.25 0 0 0 4.5 15h15a2.25 2.25 0 0 0 2.25-2.25m-19.5 0v.243a2.25 2.25 0 0 0 1.07 1.916l7.5 4.561a2.25 2.25 0 0 0 2.36 0l7.5-4.561a2.25 2.25 0 0 0 1.07-1.916V12.75" />
+                    </svg>
+                  }
+                </div>
+                
+                <!-- Status Badge -->
+                @if (project.status === 'ACTIVE') {
+                  <span class="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border transition-all"
+                        [style.background-color]="getProjectColorHex(project.color) + '1a'"
+                        [style.color]="getProjectColorHex(project.color)"
+                        [style.border-color]="getProjectColorHex(project.color) + '33'">
+                    Actif
+                  </span>
+                } @else if (project.status === 'ARCHIVED') {
+                  <span class="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-slate-200">
+                    Archivé
+                  </span>
+                } @else {
+                  <span class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-amber-100">
+                    Inactif
+                  </span>
+                }
+              </div>
+
+              <h3 class="text-xl font-bold text-black mb-2 group-hover:text-bubblegum transition-colors">
+                {{ project.title || 'Sans titre' }}
+              </h3>
+              <p class="text-sm text-gray-500 font-medium mb-6 line-clamp-2 italic">
+                {{ project.description || 'Aucune description.' }}
+              </p>
+              
+              <div class="pt-6 border-t border-gray-50 flex items-center justify-between">
+                <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Créé le</span>
+                <span class="text-[10px] font-bold text-gray-900 italic">{{ formatDate(project.createdAt) }}</span>
+              </div>
+            </a>
+          } @empty {
+            <div class="col-span-full rounded-3xl p-12 text-center bg-white border border-gray-100">
+              <p class="text-gray-500 font-medium italic">Vous n'avez pas encore créé de projet. Commencez dès maintenant !</p>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</div>

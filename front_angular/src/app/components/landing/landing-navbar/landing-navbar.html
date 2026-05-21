@@ -1,0 +1,136 @@
+<nav class="sticky top-0 z-50 bg-white/60 backdrop-blur-md border-b border-gray-100 shadow-sm">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-20">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center">
+        <a routerLink="/" class="flex items-center gap-3 group">
+          <app-dynamic-logo size="48px"></app-dynamic-logo>
+          <span class="text-2xl font-extrabold tracking-tight text-black">Organ</span>
+        </a>
+      </div>
+
+      <!-- Desktop Links -->
+      <div class="hidden xl:flex items-center space-x-10">
+        @if (isHome()) {
+          @for (link of links; track link.id) {
+            <a [href]="'#' + link.id" 
+               class="relative text-gray-600 hover:text-black font-bold transition-all text-xs uppercase tracking-widest py-2 group">
+              {{ link.label }}
+              <span class="absolute bottom-0 left-0 w-full h-1 bg-bubblegum rounded-full transform scale-x-0 transition-transform duration-300 origin-left group-hover:scale-x-100"></span>
+            </a>
+          }
+        }
+      </div>
+
+      <!-- Desktop Actions -->
+      <div class="hidden xl:flex items-center space-x-4">
+        @if (isHome()) {
+          @if (authService.isAuthenticated()) {
+            <a routerLink="/dashboard" class="bg-bubblegum hover:bg-bubblegum/90 text-white font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-bubblegum/20 transition-all transform hover:-translate-y-0.5">
+              Aller au Dashboard
+            </a>
+          } @else {
+            <a routerLink="/login" class="text-gray-600 hover:text-black font-semibold px-4 py-2 transition-colors">
+              Connexion
+            </a>
+            <a routerLink="/register" class="bg-bubblegum hover:bg-bubblegum/90 text-white font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-bubblegum/20 transition-all transform hover:-translate-y-0.5">
+              S'inscrire
+            </a>
+          }
+        } @else {
+          <a [routerLink]="authService.isAuthenticated() ? '/dashboard' : '/'" class="bg-bubblegum hover:bg-bubblegum/90 text-white font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-bubblegum/20 transition-all transform hover:-translate-y-0.5">
+            {{ authService.isAuthenticated() ? 'Aller au Dashboard' : 'Accueil' }}
+          </a>
+        }
+      </div>
+
+      <!-- Burger Menu Button (Mobile) -->
+      <div class="xl:hidden flex items-center ml-4">
+        <button type="button" 
+                (click)="toggleMobileMenu()"
+                class="text-gray-500 hover:text-black focus:outline-none cursor-pointer">
+          <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M4 18L20 18" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4 12L20 12" stroke-width="2" stroke-linecap="round"/>
+            <path d="M4 6L20 6" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Full-screen Overlay -->
+  <div class="fixed inset-0 z-[100] w-full h-[100vh] overflow-y-auto bg-white transition-all duration-500 ease-in-out flex flex-col top-0 -translate-y-full opacity-0 pointer-events-none"
+       [class.translate-y-0]="isMobileMenuOpen()"
+       [class.opacity-100]="isMobileMenuOpen()"
+       [class.pointer-events-auto]="isMobileMenuOpen()"
+       [class.-translate-y-full]="!isMobileMenuOpen()"
+       [class.opacity-0]="!isMobileMenuOpen()"
+       [class.pointer-events-none]="!isMobileMenuOpen()">
+    
+    <div class="container mx-auto px-4 sm:px-6">
+      <div class="flex justify-between items-center h-20">
+        <div class="flex items-center gap-3">
+          <a routerLink="/" (click)="closeMobileMenu()" class="flex items-center gap-3 group">
+            <app-dynamic-logo size="48px"></app-dynamic-logo>
+            <span class="text-2xl font-extrabold tracking-tight text-black">Organ</span>
+          </a>
+        </div>
+        <button type="button" 
+                (click)="closeMobileMenu()"
+                class="text-gray-500 hover:text-black focus:outline-none p-2 -mr-2 cursor-pointer">
+          <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Links -->
+    <div class="flex-grow flex flex-col justify-center items-center gap-8 px-6">
+      @if (isHome()) {
+        @for (link of links; track link.id) {
+          <a [href]="'#' + link.id" 
+             (click)="closeMobileMenu()"
+             class="text-3xl text-black hover:text-bubblegum font-black uppercase tracking-[0.2em] transition-all transform hover:scale-110">
+            {{ link.label }}
+          </a>
+        }
+      } @else {
+        <a [routerLink]="authService.isAuthenticated() ? '/dashboard' : '/'" 
+           (click)="closeMobileMenu()"
+           class="text-3xl text-black hover:text-bubblegum font-black uppercase tracking-[0.2em] transition-all transform hover:scale-110">
+          {{ authService.isAuthenticated() ? 'Aller au Dashboard' : 'Accueil' }}
+        </a>
+      }
+    </div>
+
+    <!-- Mobile Actions -->
+    @if (isHome()) {
+      <div class="p-8 border-t border-gray-100 bg-gray-50/80 backdrop-blur-sm">
+        <div class="container mx-auto flex flex-col gap-4">
+          @if (authService.isAuthenticated()) {
+            <a routerLink="/dashboard" 
+               (click)="closeMobileMenu()"
+               class="text-center bg-bubblegum hover:bg-bubblegum/90 text-white font-black py-5 rounded-2xl shadow-xl shadow-bubblegum/20 text-xl uppercase tracking-widest transition-transform active:scale-95">
+              Aller au Dashboard
+            </a>
+          } @else {
+            <a routerLink="/login" 
+               (click)="closeMobileMenu()"
+               class="text-center text-gray-800 hover:text-black font-bold py-4 border-2 border-gray-200 rounded-2xl transition-colors text-lg bg-white">
+              Connexion
+            </a>
+            <a routerLink="/register" 
+               (click)="closeMobileMenu()"
+               class="text-center bg-bubblegum hover:bg-bubblegum/90 text-white font-black py-5 rounded-2xl shadow-xl shadow-bubblegum/20 text-xl uppercase tracking-widest transition-transform active:scale-95">
+              S'inscrire
+            </a>
+          }
+        </div>
+      </div>
+    }
+  </div>

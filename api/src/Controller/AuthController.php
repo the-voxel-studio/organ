@@ -141,9 +141,11 @@ class AuthController extends AbstractController
 
         $response = new JsonResponse(['message' => 'Logged out successfully']);
         
-        // Clear cookies on path /
-        $response->headers->clearCookie('BEARER', '/');
-        $response->headers->clearCookie('refresh_token', '/');
+        $secure = filter_var($_ENV['COOKIE_SECURE'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
+
+        // Clear cookies on path / with exact attributes to ensure browser matching
+        $response->headers->clearCookie('BEARER', '/', null, $secure, true, 'lax');
+        $response->headers->clearCookie('refresh_token', '/', null, $secure, true, 'lax');
 
         return $response;
     }

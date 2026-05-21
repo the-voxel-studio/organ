@@ -1,0 +1,26 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+
+@theme {
+  --color-bubblegum: var(--bubblegum);
+  --color-pastel-pink: var(--pastel-pink);
+  --color-light-blue: var(--light-blue);
+  --color-background-blue: var(--background-blue);
+  --color-highlight: var(--highlight);
+  --color-black: var(--black);
+  --color-off-white: var(--white);
+}
+
+:root {
+  --pastel-pink: rgba(255, 125, 212, 0.59);
+  --light-blue: #45A7D2;
+  --background-blue: rgba(69, 167, 210, 0.46);
+  --highlight: #355EE4;
+  --black: #0D0630;
+  --bubblegum: #FF7DD4;
+  --white: #FFF6F6;
+}

@@ -1,0 +1,63 @@
+<section class="relative overflow-hidden pt-16 pb-24 lg:pt-32 lg:pb-40">
+  <!-- Background Accents -->
+  <div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-bubblegum/5 rounded-full blur-3xl -z-10"></div>
+  <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-highlight/5 rounded-full blur-3xl -z-10"></div>
+
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-24">
+      
+      <!-- Left: Text Content -->
+      <div class="lg:w-1/2 text-center lg:text-left">
+        <h1 class="text-5xl lg:text-7xl font-extrabold text-black leading-tight tracking-tighter mb-6">
+          Organisez tout, <br><span class="text-bubblegum italic">naturellement.</span>
+        </h1>
+        <p class="text-xl text-gray-600 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+          Libérez votre esprit des listes interminables. Organ est l'outil intuitif qui structure vos projets pour vous permettre de vous concentrer sur l'essentiel.
+        </p>
+        <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+          <a routerLink="/register" class="w-full sm:w-auto px-8 py-4 bg-bubblegum hover:bg-bubblegum/90 text-white font-bold text-lg rounded-full shadow-2xl hover:shadow-bubblegum/30 transition-all transform hover:-translate-y-1 text-center">
+            Essayer gratuitement
+          </a>
+          <a routerLink="/get-the-app" class="w-full sm:w-auto px-8 py-4 bg-white border border-gray-200 text-gray-700 font-bold text-lg rounded-full hover:bg-gray-50 transition-all text-center flex items-center justify-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+            Installer l'application
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Visual Placeholders -->
+      <div class="lg:w-1/2 relative w-full aspect-square max-w-lg">
+        <!-- Large Main Card -->
+        <div class="absolute inset-4 bg-white rounded-3xl shadow-2xl border border-gray-100 flex items-center justify-center overflow-hidden z-10">
+          <div class="w-full h-full bg-gradient-to-br from-gray-50 to-white p-8">
+            <div class="h-4 w-32 bg-gray-200 rounded-full mb-6"></div>
+            <div class="space-y-4">
+              <div class="h-24 w-full bg-bubblegum/10 rounded-2xl"></div>
+              <div class="h-24 w-full bg-highlight/10 rounded-2xl"></div>
+              <div class="h-24 w-full bg-pastel-pink/10 rounded-2xl"></div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Floating Decorative Elements -->
+        <div class="absolute -top-4 -right-4 w-48 h-48 bg-bubblegum/20 rounded-2xl blur-xl z-0 animate-pulse"></div>
+        
+        <div class="absolute top-1/4 -right-12 w-40 h-40 bg-white rounded-2xl shadow-xl border border-gray-50 z-20 hidden sm:flex flex-col p-4">
+          <div class="h-3 w-3/4 bg-highlight/30 rounded-full mb-3"></div>
+          <div class="h-10 w-10 rounded-full bg-highlight/20 self-end mt-auto"></div>
+        </div>
+
+        <div class="absolute bottom-1/4 -left-12 w-48 h-32 bg-white rounded-2xl shadow-xl border border-gray-50 z-20 hidden sm:flex flex-col p-4 transform -rotate-6">
+          <div class="flex gap-2 mb-2">
+            <div class="h-2 w-2 rounded-full bg-red-400"></div>
+            <div class="h-2 w-2 rounded-full bg-yellow-400"></div>
+            <div class="h-2 w-2 rounded-full bg-green-400"></div>
+          </div>
+          <div class="h-2 w-full bg-gray-100 rounded-full mb-2"></div>
+          <div class="h-2 w-2/3 bg-gray-100 rounded-full"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>

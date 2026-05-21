@@ -24,8 +24,9 @@ Organ est une application de gestion de projets collaboratifs dont la principale
 
 L'application est composée de plusieurs microservices orchestrés par Docker Compose. Chaque service s'exécute dans son propre conteneur et communique sur un réseau partagé.
 
-*   **Frontend (`front-nginx`, `front-php`) :** La partie de l'application visible par l'utilisateur, construite avec Symfony et JavaScript. Elle gère l'interface utilisateur et interagit avec l'API backend.
-*   **Backend (`api-nginx`, `api-php`) :** Le cœur de l'application, une API Symfony qui gère la logique métier, les données et l'authentification des utilisateurs.
+*   **Frontend PHP (`front-nginx`, `front-php`) :** L'interface utilisateur historique construite avec Symfony (Twig) et JavaScript (Stimulus/Tailwind). Elle est accessible sur [http://localhost:8000](http://localhost:8000).
+*   **Frontend Angular (`front-angular`) :** Le nouveau frontend moderne construit avec Angular, accessible sur [http://localhost:4200](http://localhost:4200).
+*   **Backend (`api-nginx`, `api-php`) :** Le cœur de l'application, une API Symfony qui gère la logique métier, les données et l'authentification des utilisateurs. Accessible sur [http://localhost:8001](http://localhost:8001).
 *   **Base de Données relationnelle (`database`) :** Une base de données MySQL pour la persistance des données relationnelles structurées.
 *   **Base de Données NoSQL (`mongodb`) :** Une base de données MongoDB pour stocker l'historique, les données analytiques et les fichiers.
 *   **Cache (`valkey`) :** Un système de stockage de données en mémoire utilisé pour la mise en cache, basé sur Valkey (un fork de Redis).
