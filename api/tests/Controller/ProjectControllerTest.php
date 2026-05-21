@@ -193,8 +193,12 @@ class ProjectControllerTest extends ApiTestCase
         $client->request('GET', '/api/projects/' . $project->getUuid() . '/stats');
 
         $this->assertResponseIsSuccessful();
-        $data = $this->getResponseContent($client);
+        $response = $this->getResponseContent($client);
         
+        $this->assertArrayHasKey('history', $response);
+        $this->assertArrayHasKey('current', $response);
+        
+        $data = $response['current'];
         $this->assertCount(2, $data); // TODO and DONE groups
         
         // Find TODO stats

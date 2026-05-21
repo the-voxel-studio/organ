@@ -129,6 +129,18 @@ class TaskService
         return $assignee !== null;
     }
 
+    public function getTaskSummaryByUuid(string $uuid): ?array
+    {
+        $task = $this->entityManager->getRepository(Task::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
+        if (!$task) return null;
+
+        return [
+            'uuid' => $task->getUuid(),
+            'title' => $task->getTitle(),
+            'organTitle' => $task->getOrgan()->getTitle(),
+        ];
+    }
+
     public function getTaskData(Task $task, UserCacheService $userCacheService): array
     {
         $assignees = $this->entityManager->getRepository(TaskAssignee::class)->findBy(['task' => $task, 'deletedAt' => null]);

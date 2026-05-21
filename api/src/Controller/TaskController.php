@@ -18,7 +18,9 @@ use App\Service\OrganPermissionService;
 use App\Service\TaskService;
 use App\Service\UserCacheService;
 use App\Service\TaskCacheService;
+use App\Service\AuditLogService;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,7 +35,9 @@ class TaskController extends AbstractController
         private readonly TaskService $taskService,
         private readonly OrganPermissionService $permissionService,
         private readonly UserCacheService $userCacheService,
-        private readonly TaskCacheService $taskCacheService
+        private readonly TaskCacheService $taskCacheService,
+        private readonly AuditLogService $auditLogService,
+        private readonly DocumentManager $dm
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -176,6 +180,7 @@ class TaskController extends AbstractController
         }
 
         $entityManager->persist($task);
+        $entityManager->flush();
 
         // Handle Assignees during creation
         if (!empty($data['assigneeUuids']) && is_array($data['assigneeUuids'])) {
@@ -260,6 +265,9 @@ class TaskController extends AbstractController
         if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
+
+        // Log consultation
+        $this->auditLogService->logConsultation($user, null, null, $task);
 
         $summary = $this->taskCacheService->getTaskSummary($task, function () use ($task) {
             return $this->taskService->getTaskData($task, $this->userCacheService);
@@ -503,85 +511,85 @@ class TaskController extends AbstractController
         }
 
         $offset = $request->query->getInt('offset', 0);
-        $limit = $request->query->getInt('limit', 10);
+        $limit = $request->query->getInt('limit', 20);
 
-        // VERSION SQL PURE (SI40 PRE-REQUIS : UNION + JOIN par UUID) :
+        // 1. Fetch Comments & Attachments from SQL
         $conn = $entityManager->getConnection();
-        $sql = "
-            SELECT 
+        $sqlSql = "
+            (SELECT 
                 'COMMENT' as type, 
                 tc.content as detail, 
                 tc.created_at, 
-                NULL as field_name, 
-                NULL as action_type, 
-                NULL as old_value, 
-                NULL as new_value,
                 u.first_name,
                 u.last_name,
-                NULL as target_first_name,
-                NULL as target_last_name
+                u.uuid as user_uuid
             FROM task_comments tc
-            JOIN tasks t ON tc.task_id = t.id
             JOIN users u ON tc.user_id = u.id
-            WHERE t.uuid = :taskUuid AND tc.deleted_at IS NULL
-
+            WHERE tc.task_id = :taskId AND tc.deleted_at IS NULL)
+            
             UNION ALL
-
-            SELECT 
-                'HISTORY' as type, 
-                NULL as detail, 
-                th.created_at, 
-                th.field_name, 
-                th.action_type, 
-                th.old_value, 
-                th.new_value,
-                u.first_name,
-                u.last_name,
-                tu.first_name as target_first_name,
-                tu.last_name as target_last_name
-            FROM task_history th
-            JOIN tasks t ON th.task_id = t.id
-            LEFT JOIN users u ON th.user_id = u.id
-            LEFT JOIN users tu ON (
-                (th.action_type = 'ASSIGNEE_ADD' AND th.new_value = tu.uuid) OR
-                (th.action_type = 'ASSIGNEE_REMOVE' AND th.old_value = tu.uuid)
-            )
-            WHERE t.uuid = :taskUuid AND th.action_type NOT IN ('DELETE', 'ASSIGNEE_REMOVE')
-
-            UNION ALL
-
-            SELECT 
+            
+            (SELECT 
                 'ATTACHMENT' as type, 
                 ta.file_name as detail, 
                 ta.created_at, 
-                NULL as field_name, 
-                NULL as action_type, 
-                NULL as old_value, 
-                NULL as new_value,
                 u.first_name,
                 u.last_name,
-                NULL as target_first_name,
-                NULL as target_last_name
+                u.uuid as user_uuid
             FROM task_attachments ta
-            JOIN tasks t ON ta.task_id = t.id
-            LEFT JOIN users u ON ta.uploaded_by = u.id
-            WHERE t.uuid = :taskUuid AND ta.deleted_at IS NULL
-
+            JOIN users u ON ta.uploaded_by = u.id
+            WHERE ta.task_id = :taskId AND ta.deleted_at IS NULL)
+            
             ORDER BY created_at DESC
-            LIMIT :limit OFFSET :offset
         ";
+        $sqlItems = $conn->executeQuery($sqlSql, ['taskId' => $task->getId()])->fetchAllAssociative();
 
-        $resultSet = $conn->executeQuery($sql, [
-            'taskUuid' => $taskUuid,
-            'limit' => $limit,
-            'offset' => $offset
-        ], [
-            'limit' => 'integer',
-            'offset' => 'integer'
-        ]);
+        // 2. Fetch Audit Logs from MongoDB
+        $mongoLogs = $this->dm->getRepository(\App\Document\AuditLog::class)->createQueryBuilder()
+            ->field('taskUuid')->equals($task->getUuid())
+            ->sort('createdAt', 'desc')
+            ->limit($limit + $offset)
+            ->getQuery()
+            ->execute();
 
-        return $this->json($resultSet->fetchAllAssociative());
+        $timeline = [];
+        
+        // Transform SQL items
+        foreach ($sqlItems as $item) {
+            $timeline[] = [
+                'type' => $item['type'],
+                'detail' => $item['detail'],
+                'createdAt' => (new \DateTime($item['created_at']))->format(\DateTimeInterface::ATOM),
+                'userName' => $item['first_name'] . ' ' . $item['last_name'],
+                'userUuid' => $item['user_uuid']
+            ];
+        }
+
+        // Transform Mongo logs
+        foreach ($mongoLogs as $log) {
+            $userSummary = $log->getUserUuid() ? $this->userCacheService->getUserSummaryByUuid($log->getUserUuid()) : null;
+            
+            $timeline[] = [
+                'type' => 'HISTORY',
+                'actionType' => $log->getActionType(),
+                'fieldName' => $log->getFieldName(),
+                'oldValue' => $log->getOldValues(),
+                'newValue' => $log->getNewValues(),
+                'createdAt' => $log->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'userName' => $userSummary ? ($userSummary['firstName'] . ' ' . $userSummary['lastName']) : 'System',
+                'userUuid' => $log->getUserUuid()
+            ];
+        }
+
+        // 3. Sort combined timeline by date
+        usort($timeline, fn($a, $b) => strcmp($b['createdAt'], $a['createdAt']));
+
+        // 4. Apply pagination
+        $pagedTimeline = array_slice($timeline, $offset, $limit);
+
+        return $this->json($pagedTimeline);
     }
+
     #[Route('/{taskUuid}/assignees', name: 'add_assignee', methods: ['POST'])]
     public function addAssignee(string $projectUuid, string $organUuid, string $taskUuid, Request $request, EntityManagerInterface $entityManager): JsonResponse
     {

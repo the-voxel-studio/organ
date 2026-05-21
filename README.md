@@ -26,7 +26,8 @@ L'application est composée de plusieurs microservices orchestrés par Docker Co
 
 *   **Frontend (`front-nginx`, `front-php`) :** La partie de l'application visible par l'utilisateur, construite avec Symfony et JavaScript. Elle gère l'interface utilisateur et interagit avec l'API backend.
 *   **Backend (`api-nginx`, `api-php`) :** Le cœur de l'application, une API Symfony qui gère la logique métier, les données et l'authentification des utilisateurs.
-*   **Base de Données (`database`) :** Une base de données MySQL pour la persistance des données.
+*   **Base de Données relationnelle (`database`) :** Une base de données MySQL pour la persistance des données relationnelles structurées.
+*   **Base de Données NoSQL (`mongodb`) :** Une base de données MongoDB pour stocker l'historique, les données analytiques et les fichiers.
 *   **Cache (`valkey`) :** Un système de stockage de données en mémoire utilisé pour la mise en cache, basé sur Valkey (un fork de Redis).
 *   **Hub Temps Réel (`mercure`) :** Un hub Mercure pour pousser des mises à jour en temps réel aux clients.
 *   **Admin Base de Données (`phpmyadmin`) :** Une interface web pour gérer la base de données MySQL.
@@ -62,6 +63,11 @@ PMA_PASSWORD=root_password
 
 # Mercure Realtime Hub
 MERCURE_JWT_SECRET=!ChangeThisMercureHubJWTSecretKey!
+
+# Identifiants pour le service MongoDB
+MONGODB_ROOT_USER=root
+MONGODB_ROOT_PASSWORD=mongodb_root_password
+MONGODB_DATABASE=organ
 ```
 
 ### 2. API Backend (`api/.env`)
@@ -83,6 +89,8 @@ CORS_ALLOW_ORIGIN='^https?://localhost:(8000|8001)$'
 ###> DATABASE & CACHE ###
 DATABASE_URL="mysql://app_user:app_password@database:3306/app_database?serverVersion=8.0.32&charset=utf8mb4"
 REDIS_URL=redis://organ_valkey:6379
+MONGODB_URI="mongodb://root:mongodb_root_password@mongodb:27017/?authSource=admin"
+MONGODB_DB="organ_dev"
 ###< DATABASE & CACHE ###
 
 ###> AUTHENTICATION ###
@@ -205,6 +213,10 @@ Pour faciliter le développement, un fichier `seed.sql` est disponible à la rac
 4.  Cliquez sur l'onglet **Importer** en haut de la page.
 5.  Choisissez le fichier `seed.sql` présent à la racine du projet.
 6.  Cliquez sur **Importer** en bas de page.
+
+### Import MongoDb
+1.  `cat seed_mongo.js | docker-compose exec -T mongodb mongosh -u root -p mongodb_root_password --authenticationDatabase admin` pour Linux
+2.  `Get-Content seed_mongo.js | docker-compose exec -T mongodb mongosh -u root -p mongodb_root_password --authenticationDatabase admin` pour Windows
 
 ### Comptes de Test
 Tous les comptes ci-dessous utilisent le mot de passe : `password`

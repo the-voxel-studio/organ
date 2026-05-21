@@ -244,14 +244,17 @@ CREATE TABLE task_attachments (
     task_id INT NOT NULL,
     uploaded_by INT NOT NULL,
     file_name VARCHAR(255) NOT NULL,
-    file_path VARCHAR(500) NOT NULL,
+    file_path VARCHAR(500) NOT NULL COMMENT 'URI: mongo://<id> or drive://<driveId>',
     file_size BIGINT NOT NULL,
     file_type VARCHAR(100) NULL,
-    file_content LONGBLOB NULL,
-    created_at DATETIME NOT NULL,
+    mongo_file_id VARCHAR(48) NULL COMMENT 'ObjectId MongoDB du document file_storage',
+    file_version INT NOT NULL DEFAULT 1,
+    checksum CHAR(64) NULL COMMENT 'SHA-256 du fichier',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at DATETIME NULL,
     FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE RESTRICT
+    FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE RESTRICT,
+    INDEX idx_mongo_file_id (mongo_file_id)
 );
 
 -- =========================================================================
@@ -310,23 +313,6 @@ CREATE TABLE task_dependencies (
 );
 
 -- =========================================================================
--- HISTORIQUE DES TÂCHES (Audit Log)
--- =========================================================================
-CREATE TABLE task_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    uuid VARCHAR(36) NOT NULL UNIQUE,
-    task_id INT NOT NULL,
-    user_id INT NULL,
-    action_type VARCHAR(50) NOT NULL,
-    field_name VARCHAR(50) NULL,
-    old_value LONGTEXT NULL,
-    new_value LONGTEXT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-);
-
--- =========================================================================
 -- NOTIFICATIONS UTILISATEURS
 -- =========================================================================
 CREATE TABLE notifications (
@@ -349,7 +335,6 @@ CREATE TABLE notifications (
 CREATE INDEX idx_tasks_organ_status ON tasks(organ_id, status);
 CREATE INDEX idx_tasks_manager_status ON tasks(manager_id, status);
 CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read);
-CREATE INDEX idx_task_history_timeline ON task_history(task_id, created_at);
 CREATE INDEX idx_projects_deleted_at ON projects(deleted_at);
 CREATE INDEX idx_organs_deleted_at ON organs(deleted_at);
 CREATE INDEX idx_tasks_deleted_at ON tasks(deleted_at);

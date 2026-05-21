@@ -14,11 +14,13 @@ use App\Service\OrganPermissionService;
 use App\Service\TaskService;
 use App\Service\UserCacheService;
 use App\Service\GoogleDriveService;
+use App\Service\MongoFileStorageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/projects/{projectUuid}/organs/{organUuid}/tasks/{taskUuid}/attachments', name: 'task_attachments_')]
@@ -28,7 +30,8 @@ class TaskAttachmentController extends AbstractController
         private readonly TaskService $taskService,
         private readonly OrganPermissionService $permissionService,
         private readonly UserCacheService $userCacheService,
-        private readonly GoogleDriveService $googleDriveService
+        private readonly GoogleDriveService $googleDriveService,
+        private readonly MongoFileStorageService $mongoFileStorageService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -70,18 +73,6 @@ class TaskAttachmentController extends AbstractController
                             $matches = array_filter($attachments, fn($a) => $a->getUuid() === $uuid);
                             $attToClean = reset($matches);
                             if ($attToClean) {
-                                // Clean up associated history first
-                                $entityManager->getRepository(\App\Entity\TaskHistory::class)->createQueryBuilder('h')
-                                    ->delete()
-                                    ->where('h.task = :task')
-                                    ->andWhere('h.fieldName = :field')
-                                    ->andWhere('h.old_value = :uuid OR h.new_value = :uuid')
-                                    ->setParameter('task', $task)
-                                    ->setParameter('field', 'attachment')
-                                    ->setParameter('uuid', $attToClean->getUuid())
-                                    ->getQuery()
-                                    ->execute();
-
                                 $entityManager->remove($attToClean);
                                 $needsFlush = true;
                             }
@@ -286,8 +277,11 @@ class TaskAttachmentController extends AbstractController
         $attachment->setFileName($file->getClientOriginalName());
         $attachment->setFileSize((string)$file->getSize());
         $attachment->setFileType($mimeType);
-        $attachment->setFileContent(fopen($file->getPathname(), 'r'));
-        $attachment->setFilePath('db://' . $attachment->getUuid());
+        
+        $mongoId = $this->mongoFileStorageService->store($file, $attachment->getUuid());
+        $attachment->setMongoFileId($mongoId);
+        $attachment->setFilePath('mongo://' . $mongoId);
+        $attachment->setChecksum(hash_file('sha256', $file->getRealPath()));
 
         $entityManager->persist($attachment);
         $entityManager->flush();
@@ -325,7 +319,6 @@ class TaskAttachmentController extends AbstractController
         $attachment->setFileSize((string)($data['fileSize'] ?? 0));
         $attachment->setFileType($data['fileType'] ?? null);
         $attachment->setFilePath('drive://' . $data['driveId']);
-        $attachment->setFileContent(null);
 
         $entityManager->persist($attachment);
         $entityManager->flush();
@@ -364,21 +357,9 @@ class TaskAttachmentController extends AbstractController
                 $accessToken = $this->googleDriveService->getAccessToken($driveConfig->getEncryptedRefreshToken());
                 if ($accessToken) {
                     if (!$this->googleDriveService->fileExists($accessToken, $driveId)) {
-                        // File is gone! Clean up history and hard delete from DB
-                        $entityManager->getRepository(\App\Entity\TaskHistory::class)->createQueryBuilder('h')
-                            ->delete()
-                            ->where('h.task = :task')
-                            ->andWhere('h.fieldName = :field')
-                            ->andWhere('h.old_value = :uuid OR h.new_value = :uuid')
-                            ->setParameter('task', $task)
-                            ->setParameter('field', 'attachment')
-                            ->setParameter('uuid', $attachment->getUuid())
-                            ->getQuery()
-                            ->execute();
-
                         $entityManager->remove($attachment);
                         $entityManager->flush();
-                        return $this->json(['message' => 'Le fichier a été supprimé du Google Drive. Référence et historique nettoyés.'], Response::HTTP_NOT_FOUND);
+                        return $this->json(['message' => 'Le fichier a été supprimé du Google Drive. Référence nettoyée.'], Response::HTTP_NOT_FOUND);
                     }
                 }
             }
@@ -386,18 +367,26 @@ class TaskAttachmentController extends AbstractController
             return $this->redirect('https://drive.google.com/open?id=' . $driveId);
         }
 
-        $content = $attachment->getFileContent();
-        if (!$content) {
-            return $this->json(['message' => 'Binary content not found'], Response::HTTP_NOT_FOUND);
+        if (str_starts_with($attachment->getFilePath(), 'mongo://')) {
+            $mongoId = $attachment->getMongoFileId();
+            $stream = $this->mongoFileStorageService->download($mongoId);
+            
+            if (!$stream) {
+                return $this->json(['message' => 'Binary content not found in MongoDB'], Response::HTTP_NOT_FOUND);
+            }
+
+            $response = new StreamedResponse(function () use ($stream) {
+                fpassthru($stream);
+                fclose($stream);
+            });
+
+            $response->headers->set('Content-Type', $attachment->getFileType() ?? 'application/octet-stream');
+            $response->headers->set('Content-Disposition', 'inline; filename="' . $attachment->getFileName() . '"');
+
+            return $response;
         }
 
-        $binaryData = is_resource($content) ? stream_get_contents($content) : $content;
-
-        $response = new Response($binaryData);
-        $response->headers->set('Content-Type', $attachment->getFileType() ?? 'application/octet-stream');
-        $response->headers->set('Content-Disposition', 'inline; filename="' . $attachment->getFileName() . '"');
-
-        return $response;
+        return $this->json(['message' => 'Binary content not found or unsupported storage'], Response::HTTP_NOT_FOUND);
     }
 
     #[Route('/{attachmentUuid}', name: 'delete', methods: ['DELETE'])]
@@ -440,6 +429,11 @@ class TaskAttachmentController extends AbstractController
                         $this->googleDriveService->deleteFile($accessToken, $driveId);
                     }
                 }
+            }
+
+            // --- MongoDB Cleanup ---
+            if ($attachment->getMongoFileId()) {
+                $this->mongoFileStorageService->delete($attachment->getMongoFileId());
             }
 
             $entityManager->remove($attachment);

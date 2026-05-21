@@ -11,6 +11,7 @@ use App\Entity\ProjectMember;
 use App\Entity\User;
 use App\Enum\IconType;
 use App\Enum\ProjectGlobalRole;
+use App\Service\AuditLogService;
 use App\Service\OrganCacheService;
 use App\Service\OrganPermissionService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,7 +28,8 @@ class OrganController extends AbstractController
     public function __construct(
         private readonly OrganPermissionService $permissionService,
         private readonly OrganCacheService $organCacheService,
-        private readonly \App\Service\TaskCacheService $taskCacheService
+        private readonly \App\Service\TaskCacheService $taskCacheService,
+        private readonly AuditLogService $auditLogService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -197,6 +199,9 @@ class OrganController extends AbstractController
         if (!$this->permissionService->hasPermission($user, $organ, 'ORGAN_VIEW')) {
             return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
         }
+
+        // Log consultation
+        $this->auditLogService->logConsultation($user, null, $organ);
 
         $summary = $this->organCacheService->getOrganSummary($organ, function () use ($organ, $entityManager) {
             $links = $entityManager->getRepository(OrganLink::class)->findBy(['organ' => $organ, 'deletedAt' => null]);

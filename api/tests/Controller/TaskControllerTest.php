@@ -259,7 +259,7 @@ class TaskControllerTest extends ApiTestCase
         $this->assertResponseIsSuccessful();
         $data = $this->getResponseContent($client);
 
-        $this->assertCount(2, $data); // 1 comment + 1 auto-generated 'CREATE' history
+        $this->assertCount(3, $data); // 1 comment + 2 auto-generated history (CREATE task + COMMENT_ADD)
 
         $types = array_column($data, 'type');
         $this->assertContains('COMMENT', $types);

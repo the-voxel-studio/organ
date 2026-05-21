@@ -44,8 +44,14 @@ class TaskAttachment
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $deletedAt = null;
 
-    #[ORM\Column(type: Types::BLOB, nullable: true, options: ["columnDefinition" => "LONGBLOB"])]
-    private $fileContent = null;
+    #[ORM\Column(length: 48, nullable: true)]
+    private ?string $mongoFileId = null;
+
+    #[ORM\Column(type: Types::INTEGER, options: ['default' => 1])]
+    private int $fileVersion = 1;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $checksum = null;
 
     public function __construct()
     {
@@ -166,14 +172,38 @@ class TaskAttachment
         return $this;
     }
 
-    public function getFileContent()
+    public function getMongoFileId(): ?string
     {
-        return $this->fileContent;
+        return $this->mongoFileId;
     }
 
-    public function setFileContent($fileContent): static
+    public function setMongoFileId(?string $mongoFileId): static
     {
-        $this->fileContent = $fileContent;
+        $this->mongoFileId = $mongoFileId;
+
+        return $this;
+    }
+
+    public function getFileVersion(): int
+    {
+        return $this->fileVersion;
+    }
+
+    public function setFileVersion(int $fileVersion): static
+    {
+        $this->fileVersion = $fileVersion;
+
+        return $this;
+    }
+
+    public function getChecksum(): ?string
+    {
+        return $this->checksum;
+    }
+
+    public function setChecksum(?string $checksum): static
+    {
+        $this->checksum = $checksum;
 
         return $this;
     }

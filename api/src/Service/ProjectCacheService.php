@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Project;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -14,7 +15,8 @@ class ProjectCacheService
     private const CACHE_TTL = 3600; // 1 hour
 
     public function __construct(
-        private readonly CacheInterface $cache
+        private readonly CacheInterface $cache,
+        private readonly EntityManagerInterface $entityManager
     ) {}
 
     /**
@@ -25,6 +27,27 @@ class ProjectCacheService
         return $this->cache->get(self::SUMMARY_CACHE_PREFIX . $project->getUuid(), function (ItemInterface $item) use ($fetcher) {
             $item->expiresAfter(self::CACHE_TTL);
             return $fetcher();
+        });
+    }
+
+    /**
+     * Get project summary by UUID (useful for NoSQL joins).
+     */
+    public function getProjectSummaryByUuid(string $uuid): ?array
+    {
+        return $this->cache->get(self::SUMMARY_CACHE_PREFIX . $uuid, function (ItemInterface $item) use ($uuid) {
+            $item->expiresAfter(self::CACHE_TTL);
+            
+            $project = $this->entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
+            if (!$project) {
+                return null;
+            }
+
+            return [
+                'uuid' => $project->getUuid(),
+                'title' => $project->getTitle(),
+                'color' => $project->getColor(),
+            ];
         });
     }
 

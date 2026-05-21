@@ -434,6 +434,7 @@ export declare const messages: {
     "organ.show.add_task": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "organ.show.sort_by": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "organ.show.sort_priority": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
+    "organ.show.sort_due_date": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "organ.show.sort_date": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "organ.show.filter_by": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "organ.show.filter_me": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
@@ -565,6 +566,7 @@ export declare const messages: {
     "task.modal.loading": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "task.modal.hints.required": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "task.modal.hints.optional": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
+    "task.modal.hints.priority_range": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "task.modal.fields.title": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "task.modal.fields.description": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;
     "task.modal.fields.status": Message<{ 'messages+intl-icu': { parameters: NoParametersType } }, 'fr'>;

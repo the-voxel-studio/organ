@@ -13,11 +13,13 @@ use App\Entity\ProjectDriveConfig;
 use App\Enum\IconType;
 use App\Enum\ProjectGlobalRole;
 use App\Enum\ProjectStatus;
+use App\Service\AuditLogService;
 use App\Service\ProjectCacheService;
 use App\Service\UserCacheService;
 use App\Service\GoogleDriveService;
 use App\Service\ProjectDriveCacheService;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,7 +34,9 @@ class ProjectController extends AbstractController
         private readonly ProjectCacheService $projectCacheService,
         private readonly UserCacheService $userCacheService,
         private readonly GoogleDriveService $googleDriveService,
-        private readonly ProjectDriveCacheService $driveCacheService
+        private readonly ProjectDriveCacheService $driveCacheService,
+        private readonly DocumentManager $dm,
+        private readonly AuditLogService $auditLogService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -197,6 +201,9 @@ class ProjectController extends AbstractController
         $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project, 'deletedAt' => null]);
         if (!$membership) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
 
+        // Log consultation
+        $this->auditLogService->logConsultation($user, $project);
+
         // 1. Project Info
         $summary = $this->getProjectSummary($project);
 
@@ -247,15 +254,16 @@ class ProjectController extends AbstractController
             }
         }
 
-        // 4. Unified Project Activity Feed (TaskHistory, Comments, Attachments)
+        // 4. Unified Project Activity Feed (AuditLog, Comments, Attachments)
+        // a. Fetch Comments & Attachments from SQL
         $conn = $entityManager->getConnection();
-        $sql = "
-            SELECT 
+        $sqlSql = "
+            (SELECT 
                 'COMMENT' as type, 
                 tc.content as detail, 
                 tc.created_at, 
-                NULL as field_name, 
-                NULL as action_type, 
+                NULL as field_name,
+                NULL as action_type,
                 u.first_name as user_first_name,
                 u.last_name as user_last_name,
                 t.title as task_title,
@@ -265,30 +273,11 @@ class ProjectController extends AbstractController
             JOIN tasks t ON tc.task_id = t.id
             JOIN organs o ON t.organ_id = o.id
             JOIN users u ON tc.user_id = u.id
-            WHERE o.project_id = :projectId AND tc.deleted_at IS NULL
+            WHERE o.project_id = :projectId AND tc.deleted_at IS NULL)
 
             UNION ALL
 
-            SELECT 
-                'HISTORY' as type, 
-                NULL as detail, 
-                th.created_at, 
-                th.field_name, 
-                th.action_type, 
-                u.first_name as user_first_name,
-                u.last_name as user_last_name,
-                t.title as task_title,
-                t.uuid as task_uuid,
-                o.title as organ_title
-            FROM task_history th
-            JOIN tasks t ON th.task_id = t.id
-            JOIN organs o ON t.organ_id = o.id
-            LEFT JOIN users u ON th.user_id = u.id
-            WHERE o.project_id = :projectId AND th.action_type NOT IN ('DELETE', 'ASSIGNEE_REMOVE')
-
-            UNION ALL
-
-            SELECT 
+            (SELECT 
                 'ATTACHMENT' as type, 
                 ta.file_name as detail, 
                 ta.created_at, 
@@ -303,14 +292,59 @@ class ProjectController extends AbstractController
             JOIN tasks t ON ta.task_id = t.id
             JOIN organs o ON t.organ_id = o.id
             LEFT JOIN users u ON ta.uploaded_by = u.id
-            WHERE o.project_id = :projectId AND ta.deleted_at IS NULL
+            WHERE o.project_id = :projectId AND ta.deleted_at IS NULL)
 
             ORDER BY created_at DESC
-            LIMIT 10
+            LIMIT 50
         ";
+        $sqlItems = $conn->executeQuery($sqlSql, ['projectId' => $project->getId()])->fetchAllAssociative();
 
-        $resultSet = $conn->executeQuery($sql, ['projectId' => $project->getId()]);
-        $activities = $resultSet->fetchAllAssociative();
+        // b. Fetch Audit Logs from MongoDB
+        $mongoLogs = $this->dm->getRepository(\App\Document\AuditLog::class)->createQueryBuilder()
+            ->field('projectUuid')->equals($project->getUuid())
+            ->sort('createdAt', 'desc')
+            ->limit(50)
+            ->getQuery()
+            ->execute();
+
+        $activities = [];
+
+        foreach ($sqlItems as $item) {
+            $activities[] = [
+                'type' => $item['type'],
+                'detail' => $item['detail'],
+                'created_at' => (new \DateTime($item['created_at']))->format(\DateTimeInterface::ATOM),
+                'field_name' => $item['field_name'],
+                'action_type' => $item['action_type'],
+                'user_first_name' => $item['user_first_name'],
+                'user_last_name' => $item['user_last_name'],
+                'task_title' => $item['task_title'],
+                'task_uuid' => $item['task_uuid'],
+                'organ_title' => $item['organ_title']
+            ];
+        }
+
+        foreach ($mongoLogs as $log) {
+            $uSum = $log->getUserUuid() ? $this->userCacheService->getUserSummaryByUuid($log->getUserUuid()) : null;
+
+            $activities[] = [
+                'type' => 'HISTORY',
+                'action_type' => $log->getActionType(),
+                'field_name' => $log->getFieldName(),
+                'old_value' => $log->getOldValues(),
+                'new_value' => $log->getNewValues(),
+                'created_at' => $log->getCreatedAt() ? $log->getCreatedAt()->format(\DateTimeInterface::ATOM) : null,
+                'user_first_name' => $uSum['firstName'] ?? 'System',
+                'user_last_name' => $uSum['lastName'] ?? '',
+                'task_title' => $log->getTaskUuid(), // UUID as placeholder
+                'task_uuid' => $log->getTaskUuid(),
+                'organ_title' => 'Organ Update'
+            ];
+        }
+
+        // c. Sort and limit
+        usort($activities, fn($a, $b) => strcmp($b['created_at'], $a['created_at']));
+        $activities = array_slice($activities, 0, 10);
 
         return $this->json([
             'project' => array_merge($summary, [
@@ -321,7 +355,7 @@ class ProjectController extends AbstractController
             'organs' => $organsData,
             'members' => $membersData,
             'activities' => $activities,
-            'securityLogs' => [] // Optional: Keep or remove
+            'securityLogs' => [] 
         ]);
     }
 
@@ -528,8 +562,11 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{uuid}/stats', name: 'stats', methods: ['GET'])]
-    public function stats(string $uuid, EntityManagerInterface $entityManager): JsonResponse
-    {
+    public function stats(
+        string $uuid, 
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
         /** @var User|null $user */
         $user = $this->getUser();
         if (!$user) return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
@@ -537,6 +574,37 @@ class ProjectController extends AbstractController
         $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
         if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
 
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project, 'deletedAt' => null]);
+        if (!$membership) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+
+        $days = $request->query->getInt('days', 7);
+        $start = (new \DateTime())->modify("-{$days} days")->setTime(0, 0, 0);
+
+        // Fetch daily stats from MongoDB
+        $stats = $this->dm->getRepository(\App\Document\DailyStat::class)->createQueryBuilder()
+            ->field('projectUuid')->equals($project->getUuid())
+            ->field('organUuid')->equals(null) // Global project stats
+            ->field('date')->gte($start)
+            ->sort('date', 'asc')
+            ->getQuery()
+            ->execute();
+
+        $data = [];
+        foreach ($stats as $stat) {
+            $data[] = [
+                'date' => $stat->getDate()->format('Y-m-d'),
+                'tasksCreated' => $stat->getTasksCreated(),
+                'tasksCompleted' => $stat->getTasksCompleted(),
+                'tasksCanceled' => $stat->getTasksCanceled(),
+                'commentsAdded' => $stat->getCommentsAdded(),
+                'attachmentsAdded' => $stat->getAttachmentsAdded(),
+                'membersActive' => $stat->getMembersActive(),
+                'consultations' => $stat->getExtra()['consultations'] ?? 0,
+                'statusChanges' => $stat->getStatusChanges(),
+            ];
+        }
+
+        // Add current SQL stats for real-time overview
         $conn = $entityManager->getConnection();
         $sql = '
             SELECT 
@@ -549,11 +617,75 @@ class ProjectController extends AbstractController
             LEFT JOIN tasks t ON o.id = t.organ_id AND t.deleted_at IS NULL
             WHERE p.uuid = :uuid
             GROUP BY o.id, t.status
-            ORDER BY o.title, t.status
         ';
+        $currentStats = $conn->executeQuery($sql, ['uuid' => $uuid])->fetchAllAssociative();
+
+        return $this->json([
+            'history' => $data,
+            'current' => $currentStats
+        ]);
+    }
+
+    #[Route('/{uuid}/audit', name: 'audit', methods: ['GET'])]
+    public function audit(
+        string $uuid,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if (!$user) return $this->json(['message' => 'Not authenticated'], Response::HTTP_UNAUTHORIZED);
+
+        $project = $entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
+        if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+
+        $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project, 'deletedAt' => null]);
         
-        $resultSet = $conn->executeQuery($sql, ['uuid' => $uuid]);
-        return $this->json($resultSet->fetchAllAssociative());
+        // Only ADMIN or MANAGER can see detailed audit
+        if (!$membership || !in_array($membership->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
+
+        $limit = $request->query->getInt('limit', 100);
+        $offset = $request->query->getInt('offset', 0);
+        $dateStr = $request->query->get('date'); // Expected YYYY-MM-DD
+        
+        $qb = $this->dm->getRepository(\App\Document\AuditLog::class)->createQueryBuilder()
+            ->field('projectUuid')->equals($project->getUuid())
+            ->sort('createdAt', 'desc')
+            ->limit($limit)
+            ->skip($offset);
+
+        if ($dateStr) {
+            try {
+                $start = new \DateTime($dateStr . ' 00:00:00');
+                $end = new \DateTime($dateStr . ' 23:59:59');
+                $qb->field('createdAt')->range($start, $end);
+            } catch (\Exception $e) {
+                return $this->json(['message' => 'Invalid date format. Use YYYY-MM-DD.'], Response::HTTP_BAD_REQUEST);
+            }
+        }
+
+        $logs = $qb->getQuery()->execute();
+        
+        $data = [];
+        foreach ($logs as $log) {
+            $uSum = $log->getUserUuid() ? $this->userCacheService->getUserSummaryByUuid($log->getUserUuid()) : null;
+            $data[] = [
+                'id' => $log->getId(),
+                'actionType' => $log->getActionType(),
+                'fieldName' => $log->getFieldName(),
+                'oldValues' => $log->getOldValues(),
+                'newValues' => $log->getNewValues(),
+                'context' => $log->getContext(),
+                'createdAt' => $log->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'user' => $uSum,
+                'taskUuid' => $log->getTaskUuid(),
+                'organUuid' => $log->getOrganUuid(),
+            ];
+        }
+
+        return $this->json($data);
     }
 
     private function getProjectSummary(Project $project): array
