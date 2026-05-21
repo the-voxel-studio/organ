@@ -16,6 +16,8 @@ use App\Enum\ProjectStatus;
 use App\Service\AuditLogService;
 use App\Service\ProjectCacheService;
 use App\Service\UserCacheService;
+use App\Service\OrganCacheService;
+use App\Service\TaskService;
 use App\Service\GoogleDriveService;
 use App\Service\ProjectDriveCacheService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -33,6 +35,8 @@ class ProjectController extends AbstractController
     public function __construct(
         private readonly ProjectCacheService $projectCacheService,
         private readonly UserCacheService $userCacheService,
+        private readonly OrganCacheService $organCacheService,
+        private readonly TaskService $taskService,
         private readonly GoogleDriveService $googleDriveService,
         private readonly ProjectDriveCacheService $driveCacheService,
         private readonly DocumentManager $dm,
@@ -326,6 +330,8 @@ class ProjectController extends AbstractController
 
         foreach ($mongoLogs as $log) {
             $uSum = $log->getUserUuid() ? $this->userCacheService->getUserSummaryByUuid($log->getUserUuid()) : null;
+            $oSum = $log->getOrganUuid() ? $this->organCacheService->getOrganSummaryByUuid($log->getOrganUuid()) : null;
+            $tSum = $log->getTaskUuid() ? $this->taskService->getTaskSummaryByUuid($log->getTaskUuid()) : null;
 
             $activities[] = [
                 'type' => 'HISTORY',
@@ -336,9 +342,9 @@ class ProjectController extends AbstractController
                 'created_at' => $log->getCreatedAt() ? $log->getCreatedAt()->format(\DateTimeInterface::ATOM) : null,
                 'user_first_name' => $uSum['firstName'] ?? 'System',
                 'user_last_name' => $uSum['lastName'] ?? '',
-                'task_title' => $log->getTaskUuid(), // UUID as placeholder
+                'task_title' => $tSum['title'] ?? ($log->getTaskUuid() ? 'Deleted Task' : null),
                 'task_uuid' => $log->getTaskUuid(),
-                'organ_title' => 'Organ Update'
+                'organ_title' => $oSum['title'] ?? ($log->getOrganUuid() ? 'Deleted Organ' : 'System Update')
             ];
         }
 
@@ -671,6 +677,9 @@ class ProjectController extends AbstractController
         $data = [];
         foreach ($logs as $log) {
             $uSum = $log->getUserUuid() ? $this->userCacheService->getUserSummaryByUuid($log->getUserUuid()) : null;
+            $oSum = $log->getOrganUuid() ? $this->organCacheService->getOrganSummaryByUuid($log->getOrganUuid()) : null;
+            $tSum = $log->getTaskUuid() ? $this->taskService->getTaskSummaryByUuid($log->getTaskUuid()) : null;
+
             $data[] = [
                 'id' => $log->getId(),
                 'actionType' => $log->getActionType(),
@@ -681,7 +690,9 @@ class ProjectController extends AbstractController
                 'createdAt' => $log->getCreatedAt()->format(\DateTimeInterface::ATOM),
                 'user' => $uSum,
                 'taskUuid' => $log->getTaskUuid(),
+                'taskTitle' => $tSum['title'] ?? null,
                 'organUuid' => $log->getOrganUuid(),
+                'organTitle' => $oSum['title'] ?? null,
             ];
         }
 

@@ -6,6 +6,7 @@ namespace App\Service;
 
 use App\Entity\Organ;
 use App\Entity\Project;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -19,8 +20,30 @@ class OrganCacheService
     private const MEMBER_LIST_CACHE_PREFIX = 'organ_members_list_';
 
     public function __construct(
-        private readonly CacheInterface $cache
+        private readonly CacheInterface $cache,
+        private readonly EntityManagerInterface $entityManager
     ) {}
+
+    /**
+     * Get organ summary by UUID (useful for NoSQL joins).
+     */
+    public function getOrganSummaryByUuid(string $uuid): ?array
+    {
+        return $this->cache->get(self::SUMMARY_CACHE_PREFIX . $uuid, function (ItemInterface $item) use ($uuid) {
+            $item->expiresAfter(self::CACHE_TTL);
+
+            $organ = $this->entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
+            if (!$organ) {
+                return null;
+            }
+
+            return [
+                'uuid' => $organ->getUuid(),
+                'title' => $organ->getTitle(),
+                'projectUuid' => $organ->getProject()->getUuid(),
+            ];
+        });
+    }
 
     /**
      * Get organ members list summary for an organ.
