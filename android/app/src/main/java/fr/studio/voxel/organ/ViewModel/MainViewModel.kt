@@ -4,69 +4,61 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectVisual
 import fr.studio.voxel.organ.R
+import fr.studio.voxel.organ.network.ApiClient
+import fr.studio.voxel.organ.network.services.Project
+import fr.studio.voxel.organ.network.services.ProjectApiService
+import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectStateSticker
+import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
+
+    private val projectService = ApiClient.createService(ProjectApiService::class.java)
+
+    var projects by mutableStateOf<List<Project>?>(null)
+        private set
+
+    var isLoading by mutableStateOf(false)
+        private set
+
+    var error by mutableStateOf<String?>(null)
+        private set
+
+    init{
+        fetchProjects()
+    }
+
+    fun fetchProjects(){
+        viewModelScope.launch {
+            isLoading = true
+            error = null
+            try{
+                val response = projectService.getProjects()
+
+                if(response.isSuccessful){
+                    projects = response.body() ?: emptyList()
+                }else{
+                    error = "Erreur serveur : ${response.code()}"
+                }
+            } catch (e: Exception){
+                error = "Problème réseau : ${e.localizedMessage}"
+            }finally {
+                isLoading = false
+            }
+        }
+    }
+
+    //Future fonction à ajouter à l'ajout de projet
+    fun refresh(){
+        fetchProjects()
+    }
 
     var users by mutableStateOf(listOf<User>())
         private set
 
     //=====A l'avenir les projets viendront de la BDD=====
-    var projects by mutableStateOf<List<Project>?>(
-        listOf(
-            Project(
-                id = 1,
-                name = "Projet Alpha",
-                description = "Le but de ce projet et de reconstruire la planète entière.",
-                dateCreation = "06/05/2026",
-                color = "0xFF5EAA6C",
-                visual = ProjectVisual.Emoji("🧬"),
-                state = "Active",
-                memberIds = listOf(1, 2),
-                organs = listOf(
-                    Organ(1, "Design", listOf(1)),
-                    Organ(2, "Développement", listOf(2))
-                )
-            ),
-            Project(
-                id = 2,
-                name = "Projet Bêta",
-                description = "Ecrire un livre en entier de A à Z.",
-                dateCreation = "28/10/2025",
-                color = "0xFF1E4589",
-                visual = ProjectVisual.SvgIcon(R.drawable.menu_tache),
-                state = "Terminée",
-                memberIds = listOf(3),
-                organs = listOf(
-                    Organ(3, "Marketing", listOf(3))
-                )
-            ),
-            Project(
-                id = 3,
-                name = "Projet Gamma",
-                description = "Tuer l'enderdragon dans minecraft.",
-                dateCreation = "01/01/2026",
-                color = "0xFFAEBAEF",
-                visual = ProjectVisual.Emoji("🚀"),
-                state = "Archivée",
-                memberIds = listOf(1, 4),
-                organs = emptyList()
-            ),
-            Project(
-                id = 4,
-                name = "Projet X",
-                description = "faire tout le frontend d'un site web.",
-                dateCreation = "31/12/2024",
-                color = "0xFF8A60BE",
-                visual = ProjectVisual.SvgIcon(R.drawable.poubelle_logo),
-                state = "En Attente",
-                memberIds = listOf(1, 4),
-                organs = emptyList()
-            )
-       )
-    )
-        private set
 
     var tasks by mutableStateOf(
         listOf(
@@ -99,7 +91,7 @@ class MainViewModel : ViewModel() {
         private set
 
     // Pour les tests, fonction de réinitialisation
-    fun clearProjects() {
+    /*fun clearProjects() {
         projects = emptyList() // L'utilisateur existe mais n'a aucun projet
     }
 
@@ -127,5 +119,5 @@ class MainViewModel : ViewModel() {
                 )
             } else project
         }
-    }
+    }*/
 }

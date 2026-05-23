@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fr.studio.voxel.organ.network.ApiClient
+import fr.studio.voxel.organ.network.services.Project
 import fr.studio.voxel.organ.network.services.ProjectApiService
 import kotlinx.coroutines.launch
 

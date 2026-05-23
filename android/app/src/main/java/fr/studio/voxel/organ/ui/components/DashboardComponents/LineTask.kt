@@ -22,8 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import fr.studio.voxel.organ.ViewModel.Project
 import fr.studio.voxel.organ.ViewModel.Task
+import fr.studio.voxel.organ.network.services.Project
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 
 @Composable
@@ -32,8 +32,8 @@ fun LineTask(
     projects: List<Project>,
     modifier: Modifier = Modifier
 ){
-    val project = projects.find{it.id == task.projectId}!!
-    val organ = project.organs.find{it.id == task.organId}!!
+    val project = projects.find{it.id == task.projectId} ?: return
+    val organ = project.organs?.find{it.id == task.organId} ?: return
 
     Row(
         modifier = Modifier
@@ -86,7 +86,7 @@ fun LineTask(
 
         ) {
             Text(
-                text = project.name ,
+                text = project.title ,
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold
                 ),

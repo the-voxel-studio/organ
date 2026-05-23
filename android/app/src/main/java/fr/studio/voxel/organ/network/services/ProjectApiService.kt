@@ -1,6 +1,8 @@
 package fr.studio.voxel.organ.network.services
 
-import fr.studio.voxel.organ.ViewModel.Project
+import com.google.gson.annotations.SerializedName
+import fr.studio.voxel.organ.ViewModel.Organ
+import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectVisual
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -57,3 +59,41 @@ data class InvitationRequest(
     val email: String,
     val role: String? = null
 )
+
+data class Project(
+    val id: Int?,
+    val uuid: String,
+    val title: String,
+    val description: String?,
+    val color: String,
+
+    @SerializedName("status")
+    val state: String?,
+
+    @SerializedName("iconType")
+    val iconType: String?,
+
+    @SerializedName("iconData")
+    val iconData: String?,
+
+    @SerializedName("createdAt")
+    val dateCreation: String,
+
+    @SerializedName("deletedAt")
+    val dateSuppression: String?,
+
+    // Relations (si votre API les renvoie dans le même objet)
+    val memberIds: List<Int>? = emptyList(),
+    val organs: List<Organ>? = emptyList()
+) {
+    /**
+     * Helper calculé : Transforme les colonnes icon_type/data en objet ProjectVisual
+     * que vos composants Compose (ProjectIconBadge) comprennent déjà.
+     */
+    val visual: ProjectVisual?
+        get() = when (iconType) {
+            "EMOJI" -> iconData?.let { ProjectVisual.Emoji(it) }
+            "SVG" -> iconData.let { ProjectVisual.SvgXml(it) }
+            else -> null
+        }
+}

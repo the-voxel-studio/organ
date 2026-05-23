@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.Column
 
 import androidx.compose.runtime.Composable
 
-import fr.studio.voxel.organ.ViewModel.Project
+import fr.studio.voxel.organ.network.services.Project
 
 @Composable
 fun ProjectItem(
@@ -16,7 +16,7 @@ fun ProjectItem(
 
     Column {
         SecondaryButton(
-            text = project.name,
+            text = project.title,
             isSelected = isSelected,
             onClick = onClick
         )

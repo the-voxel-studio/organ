@@ -67,7 +67,6 @@ fun SideBar(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Header(navigateUp = {})
 
             Row(
@@ -105,6 +104,7 @@ fun SideBar(
                 iconRes = R.drawable.dashboard_logo,
                 isSelected = (previousRoute == OrganScreen.Dashboard.name),
                 onClick = {
+                    sidebarVM.clearSelection()
                     navController.navigate(OrganScreen.Dashboard.name) {
                         // Évite d'empiler plusieurs fois la même page
                         popUpTo(OrganScreen.Dashboard.name) { inclusive = true }
@@ -137,11 +137,16 @@ fun SideBar(
                 ) {
                     //Liste des projets
                     projects.forEach { project ->
-                        val projectRoute = "${OrganScreen.Project.name}/${project.id}"
+                        val projectRoute = "${OrganScreen.Project.name}/${project.uuid}"
                         ProjectItem(
                             project = project,
-                            isSelected = currentRoute == projectRoute,
-                            onClick = { navController.navigate(projectRoute) }
+                            isSelected = sidebarVM.selectedProjectUuid == project.uuid,
+                            onClick = {
+                                sidebarVM.selectProject(project.uuid)
+                                navController.navigate(projectRoute) {
+                                    launchSingleTop = true
+                                }
+                            }
                         )
                     }
                 }

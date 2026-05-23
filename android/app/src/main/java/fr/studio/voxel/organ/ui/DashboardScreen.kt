@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ import androidx.navigation.NavHostController
 import fr.studio.voxel.organ.ui.components.HeaderComponents.Header
 import fr.studio.voxel.organ.OrganScreen
 import fr.studio.voxel.organ.R
+import fr.studio.voxel.organ.ViewModel.DashboardViewModel
 import fr.studio.voxel.organ.ViewModel.MainViewModel
 import fr.studio.voxel.organ.ui.components.AddButton
 import fr.studio.voxel.organ.ui.components.DashboardComponents.PriorityTask
@@ -39,8 +42,9 @@ import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 @Composable
 fun Dashboard(
     navController: NavHostController,
-    dashVM : MainViewModel = viewModel()
+    mainVM : MainViewModel = viewModel()
 ){
+
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
@@ -180,7 +184,24 @@ fun Dashboard(
                     }
 
                 }
-                ProjectSticker(projectsList = dashVM.projects ?: emptyList())
+                when{
+                    mainVM.isLoading && mainVM.projects.isNullOrEmpty() -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.padding(vertical = 32.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    mainVM.error != null -> {
+                        Text(
+                            text = mainVM.error ?: "Erreur inconnue",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    }
+                    else -> {
+                        ProjectSticker(projectsList = mainVM.projects ?: emptyList())
+                    }
+                }
             }
             item{
                 Spacer(modifier = Modifier.height(50.dp))
@@ -190,6 +211,6 @@ fun Dashboard(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp)
-        ){ }
+        ){/*Ajouter un projet*/ }
     }
 }
