@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject, tap } from 'rxjs';
 import {
   ProjectSummary,
   ProjectDetailedViewResponse,
@@ -19,6 +19,8 @@ import {
 export class ProjectService {
   private http = inject(HttpClient);
 
+  readonly projectsChanged$ = new Subject<void>();
+
   getProjects(): Observable<ProjectSummary[]> {
     return this.http.get<ProjectSummary[]>('/api/projects');
   }
@@ -28,7 +30,9 @@ export class ProjectService {
   }
 
   createProject(req: CreateProjectRequest): Observable<CreateProjectResponse> {
-    return this.http.post<CreateProjectResponse>('/api/projects', req);
+    return this.http.post<CreateProjectResponse>('/api/projects', req).pipe(
+      tap(() => this.projectsChanged$.next())
+    );
   }
 
   getProjectDetailed(uuid: string): Observable<ProjectDetailedViewResponse> {
@@ -36,17 +40,23 @@ export class ProjectService {
   }
 
   updateProject(uuid: string, req: UpdateProjectRequest): Observable<UpdateProjectResponse> {
-    return this.http.put<UpdateProjectResponse>(`/api/projects/${uuid}`, req);
+    return this.http.put<UpdateProjectResponse>(`/api/projects/${uuid}`, req).pipe(
+      tap(() => this.projectsChanged$.next())
+    );
   }
 
   deleteProject(uuid: string, permanent: boolean = false): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`/api/projects/${uuid}`, {
       params: { permanent: String(permanent) }
-    });
+    }).pipe(
+      tap(() => this.projectsChanged$.next())
+    );
   }
 
   restoreProject(uuid: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`/api/projects/${uuid}/restore`, {});
+    return this.http.post<{ message: string }>(`/api/projects/${uuid}/restore`, {}).pipe(
+      tap(() => this.projectsChanged$.next())
+    );
   }
 
   getProjectStats(uuid: string): Observable<ProjectStatsResponse> {

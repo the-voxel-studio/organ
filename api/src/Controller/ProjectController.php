@@ -306,6 +306,7 @@ class ProjectController extends AbstractController
         // b. Fetch Audit Logs from MongoDB
         $mongoLogs = $this->dm->getRepository(\App\Document\AuditLog::class)->createQueryBuilder()
             ->field('projectUuid')->equals($project->getUuid())
+            ->field('actionType')->notEqual('CONSULTATION')
             ->sort('createdAt', 'desc')
             ->limit(50)
             ->getQuery()

@@ -55,6 +55,8 @@ services:
       MERCURE_PUBLISHER_JWT_KEY: ${MERCURE_JWT_SECRET}
       MERCURE_SUBSCRIBER_JWT_KEY: ${MERCURE_JWT_SECRET}
       MERCURE_CORS_ALLOWED_ORIGINS: '*'
+      MERCURE_EXTRA_DIRECTIVES: |
+        cors_origins *
       SERVER_NAME: ':80' 
     ports:
       - "9090:80" # Hub Mercure sur http://localhost:9090

@@ -1,7 +1,8 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { gsap } from 'gsap';
 import { MorphSVGPlugin } from 'gsap/MorphSVGPlugin';
+import { ToastService } from './services/toast.service';
 
 // Enregistrement du plugin (désormais public)
 gsap.registerPlugin(MorphSVGPlugin);
@@ -14,6 +15,7 @@ gsap.registerPlugin(MorphSVGPlugin);
 })
 export class App implements OnInit {
   protected readonly title = signal('front-angular');
+  protected toastService = inject(ToastService);
 
   ngOnInit() {
     console.log('GSAP MorphSVGPlugin chargé avec succès !');

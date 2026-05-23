@@ -39,6 +39,10 @@ export class TaskService {
     return this.http.put<TaskResponse>(`/api/projects/${projectUuid}/organs/${organUuid}/tasks/${taskUuid}`, req);
   }
 
+  patchTask(projectUuid: string, organUuid: string, taskUuid: string, req: Partial<UpdateTaskRequest>): Observable<TaskResponse> {
+    return this.http.patch<TaskResponse>(`/api/projects/${projectUuid}/organs/${organUuid}/tasks/${taskUuid}`, req);
+  }
+
   deleteTask(projectUuid: string, organUuid: string, taskUuid: string, permanent: boolean = false): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(`/api/projects/${projectUuid}/organs/${organUuid}/tasks/${taskUuid}`, {
       params: { permanent: String(permanent) }

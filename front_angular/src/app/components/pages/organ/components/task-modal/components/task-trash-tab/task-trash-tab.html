@@ -1,0 +1,64 @@
+<div class="space-y-8 animate-in fade-in slide-in-from-top-2 duration-300">
+    <!-- Deleted Attachments -->
+    <div class="space-y-4">
+        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Pièces jointes supprimées</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div *ngFor="let dAtt of deletedAttachments" class="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl shadow-sm">
+                <span class="text-xs font-bold text-gray-900 truncate max-w-[200px]" [title]="dAtt.fileName">{{ dAtt.fileName }}</span>
+                <div class="flex items-center gap-1">
+                    <button (click)="onRestoreAttachment(dAtt.uuid)" 
+                            class="p-2 text-gray-400 hover:text-black transition-colors cursor-pointer" 
+                            title="Restaurer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l5 5m-5-5l5-5"/>
+                        </svg>
+                    </button>
+                    <button *ngIf="hasAttachmentHardDeletePerm" 
+                            (click)="onHardDeleteAttachment(dAtt.uuid)" 
+                            class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg cursor-pointer" 
+                            title="Supprimer définitivement">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <p *ngIf="deletedAttachments.length === 0" class="text-xs text-gray-400 italic font-medium ml-1">Aucun fichier en corbeille</p>
+        </div>
+    </div>
+
+    <!-- Deleted Comments -->
+    <div class="space-y-4">
+        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Commentaires supprimés</p>
+        <div class="space-y-4">
+            <div *ngFor="let dCom of deletedComments" class="flex gap-4">
+                <div class="flex-grow space-y-1">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-black text-gray-900">{{ dCom.user.firstName }} {{ dCom.user.lastName }}</span>
+                        <div class="flex items-center gap-1">
+                            <button (click)="onRestoreComment(dCom.uuid)" 
+                                    class="p-1.5 text-gray-400 hover:text-black transition-all cursor-pointer" 
+                                    title="Restaurer">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l5 5m-5-5l5-5"/>
+                                </svg>
+                            </button>
+                            <button *ngIf="hasCommentDeletePerm" 
+                                    (click)="onHardDeleteComment(dCom.uuid)" 
+                                    class="p-1.5 text-rose-500 cursor-pointer" 
+                                    title="Supprimer définitivement">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs text-gray-400 line-through">
+                        {{ dCom.content }}
+                    </div>
+                </div>
+            </div>
+            <p *ngIf="deletedComments.length === 0" class="text-xs text-gray-400 italic font-medium ml-1">Aucun commentaire en corbeille</p>
+        </div>
+    </div>
+</div>

@@ -37,9 +37,9 @@ class TaskService
         // 1. Project ADMIN has total control (Cached)
         if ($this->isProjectAdmin($user, $project)) return true;
 
-        $isManager = ($task->getManager() === $user);
+        $isManager = $task->getManager() && $user && ($task->getManager()->getId() === $user->getId());
         $isAssignee = $this->isAssignee($user, $task);
-        $isCreator = ($task->getCreatedBy() === $user);
+        $isCreator = $task->getCreatedBy() && $user && ($task->getCreatedBy()->getId() === $user->getId());
 
         // 2. Exact permission check (for non-variant permissions like COMMENT_CREATE)
         if ($this->organPermissionService->hasPermission($user, $organ, $action)) {
@@ -79,8 +79,9 @@ class TaskService
     {
         if ($this->isProjectAdmin($user, $task->getOrgan()->getProject())) return true;
 
-        $isManager = ($task->getManager() === $user);
+        $isManager = $task->getManager() && $user && ($task->getManager()->getId() === $user->getId());
         $isAssignee = $this->isAssignee($user, $task);
+        $isCreator = $task->getCreatedBy() && $user && ($task->getCreatedBy()->getId() === $user->getId());
 
         if ($this->organPermissionService->hasPermission($user, $task->getOrgan(), 'TASK_EDIT_ALL')) {
             return true;
@@ -91,10 +92,10 @@ class TaskService
         }
 
         return match ($fieldName) {
-            'priority', 'expiresAt', 'startDate', 'manager' => $isManager,
-            'estimatedHours' => $isManager || $isAssignee,
-            'title', 'description' => $isManager || $isAssignee,
-            default => $isManager,
+            'priority', 'expiresAt', 'startDate', 'manager' => $isManager || $isCreator,
+            'estimatedHours' => $isManager || $isAssignee || $isCreator,
+            'title', 'description' => $isManager || $isAssignee || $isCreator,
+            default => $isManager || $isCreator,
         };
     }
 
@@ -102,7 +103,7 @@ class TaskService
     {
         if ($this->isProjectAdmin($user, $task->getOrgan()->getProject())) return true;
 
-        $isManager = ($task->getManager() === $user);
+        $isManager = $task->getManager() && $user && ($task->getManager()->getId() === $user->getId());
         $isAssignee = $this->isAssignee($user, $task);
 
         if (!$this->can($user, $task, 'TASK_STATUS_CHANGE')) return false;

@@ -1,0 +1,615 @@
+<!-- Background Glow - Subtle ambiance -->
+<div class="fixed top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.05] pointer-events-none blur-[120px] -z-10" 
+     [style.background-color]="highlightColor"></div>
+
+<div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8"
+     [style.--project-color]="highlightColor"
+     [style.--project-color-light]="highlightColor + '1a'"
+     [style.--project-color-semi]="highlightColor + '33'">
+
+  <!-- Back Link & Title -->
+  <div class="mb-8">
+    @if (isEdit) {
+      <a [routerLink]="['/organ', projectUuid, organUuid]"
+         class="text-sm font-medium transition-colors flex items-center gap-2 hover:opacity-80 cursor-pointer"
+         [style.color]="highlightColor">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Retour à l'organ
+      </a>
+    } @else {
+      <a [routerLink]="['/project', projectUuid]"
+         class="text-sm font-medium transition-colors flex items-center gap-2 hover:opacity-80 cursor-pointer"
+         [style.color]="highlightColor">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Retour au projet
+      </a>
+    }
+    <h1 class="text-4xl font-bold text-gray-900 mt-4">
+      {{ isEdit ? 'Modifier l\'organ' : 'Créer un nouvel organ' }}
+    </h1>
+  </div>
+
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center min-h-[300px]">
+      <div class="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin" [style.border-color]="highlightColor" [style.border-top-color]="'transparent'"></div>
+      <p class="mt-4 text-gray-500 font-medium">Chargement de la configuration...</p>
+    </div>
+  } @else {
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-12">
+      
+      <!-- --- SECTION 1: GENERAL INFO --- -->
+      <div class="space-y-8" [class.opacity-50]="!canEditInfo()" [class.pointer-events-none]="!canEditInfo()" [class.grayscale-[0.5]]="!canEditInfo()">
+        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+                [style.background-color]="highlightColor + '1a'" [style.color]="highlightColor">1</span>
+          Informations générales
+          @if (!canEditInfo()) {
+            <span class="text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 px-2 py-1 rounded ml-2">Lecture seule</span>
+          }
+        </h3>
+
+        <!-- Organ Name -->
+        <div class="space-y-2">
+          <label for="name" class="block text-sm font-semibold text-gray-700">Nom de l'organ</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            </div>
+            <input type="text" id="name" [(ngModel)]="organTitle" [readonly]="!canEditInfo()"
+                   class="block w-full pl-11 pr-4 py-4 bg-gray-50 border-transparent focus:border-bubblegum focus:bg-white focus:ring-0 rounded-2xl text-gray-900 placeholder-gray-400 transition-all font-medium border border-transparent focus:border-gray-200 outline-none"
+                   placeholder="ex: Département Dev, Pôle Design...">
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-2">
+          <label for="description" class="block text-sm font-semibold text-gray-700">Description</label>
+          <textarea id="description" [(ngModel)]="organDescription" rows="3" [readonly]="!canEditInfo()"
+                    class="block w-full px-4 py-4 bg-gray-50 border border-transparent focus:border-gray-200 focus:bg-white focus:ring-0 rounded-2xl text-gray-900 placeholder-gray-400 transition-all font-medium resize-none outline-none"
+                    placeholder="Décrivez brièvement le rôle de cet organe..."></textarea>
+        </div>
+
+        <!-- Visual Identity (Color & Icon) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+          
+          <!-- Accent Color -->
+          <div class="space-y-4">
+            <label class="block text-sm font-semibold text-gray-700">Couleur d'accentuation</label>
+            <div class="flex flex-wrap gap-3 items-center">
+              @for (color of standardColors; track color) {
+                <button type="button" (click)="setHighlightColor(color)" class="relative group cursor-pointer" [disabled]="!canEditInfo()">
+                  <div class="w-10 h-10 rounded-full border-2 transition-all group-hover:scale-110 flex items-center justify-center" 
+                       [style.background-color]="color"
+                       [class.border-black]="highlightColor === color"
+                       [class.border-transparent]="highlightColor !== color">
+                    @if (highlightColor === color) {
+                      <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    }
+                  </div>
+                </button>
+              }
+              
+              <!-- Custom color picker -->
+              <button type="button" (click)="triggerColorPicker(picker)" class="relative group cursor-pointer" [disabled]="!canEditInfo()">
+                <input #picker type="color" class="sr-only" [value]="isCustomColor() ? highlightColor : '#000000'" (input)="onCustomColorChange($event)">
+                <div class="w-10 h-10 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-500 transition-all group-hover:scale-110"
+                     [style.background-color]="isCustomColor() ? highlightColor : ''"
+                     [class.border-solid]="isCustomColor()"
+                     [class.border-black]="isCustomColor()">
+                  @if (!isCustomColor()) {
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                  }
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Icon Mode tabs -->
+          <div class="space-y-4">
+            <label class="block text-sm font-semibold text-gray-700">Icône de l'organ</label>
+            
+            <div class="flex flex-wrap gap-2 p-1 bg-gray-50 rounded-xl w-fit">
+              <button type="button" (click)="switchIconMode('BLOB')" [disabled]="!canEditInfo()"
+                      class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                      [class.bg-white]="iconType === 'BLOB'" [class.shadow-sm]="iconType === 'BLOB'" [class.text-gray-900]="iconType === 'BLOB'" [class.text-gray-500]="iconType !== 'BLOB'">Image</button>
+              <button type="button" (click)="switchIconMode('EMOJI')" [disabled]="!canEditInfo()"
+                      class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                      [class.bg-white]="iconType === 'EMOJI'" [class.shadow-sm]="iconType === 'EMOJI'" [class.text-gray-900]="iconType === 'EMOJI'" [class.text-gray-500]="iconType !== 'EMOJI'">Emoji</button>
+              <button type="button" (click)="switchIconMode('SVG')" [disabled]="!canEditInfo()"
+                      class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                      [class.bg-white]="iconType === 'SVG'" [class.shadow-sm]="iconType === 'SVG'" [class.text-gray-900]="iconType === 'SVG'" [class.text-gray-500]="iconType !== 'SVG'">SVG</button>
+            </div>
+
+            <!-- Image Upload Section -->
+            @if (iconType === 'BLOB') {
+              <div>
+                <label class="flex items-center justify-center w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-bubblegum transition-all group overflow-hidden">
+                  <input type="file" class="sr-only" accept="image/*" (change)="onImageUploaded($event)" [disabled]="!canEditInfo()">
+                  @if (!iconData) {
+                    <div class="text-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-8 w-8 text-gray-400 group-hover:text-bubblegum" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                      </svg>
+                      <span class="mt-2 block text-xs font-semibold text-gray-400 group-hover:text-bubblegum">Upload</span>
+                    </div>
+                  } @else {
+                    <img [src]="iconData" class="w-full h-full object-cover">
+                  }
+                </label>
+              </div>
+            }
+
+            <!-- Emoji Input Section -->
+            @if (iconType === 'EMOJI') {
+              <div class="flex items-center gap-4">
+                <input type="text" [value]="iconData" (input)="onEmojiInput($event)" [readonly]="!canEditInfo()"
+                       class="w-16 h-16 text-3xl text-center bg-gray-50 border-2 border-dashed border-gray-200 focus:border-bubblegum focus:bg-white rounded-2xl outline-none transition-all"
+                       placeholder="🚀" maxlength="2">
+              </div>
+            }
+
+            <!-- SVG Code Section -->
+            @if (iconType === 'SVG') {
+              <div class="space-y-3">
+                <textarea [(ngModel)]="iconData" rows="3" [readonly]="!canEditInfo()"
+                          class="block w-full px-4 py-3 bg-gray-50 border-2 border-dashed border-gray-200 focus:border-bubblegum focus:bg-white rounded-2xl text-xs font-mono transition-all resize-none outline-none"
+                          placeholder="<svg ...>...</svg>"></textarea>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- --- SECTION 2: ROLES & PERMISSIONS --- -->
+      <div class="space-y-8" [class.opacity-50]="!canManageRoles()" [class.pointer-events-none]="!canManageRoles()" [class.grayscale-[0.5]]="!canManageRoles()">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+                  [style.background-color]="highlightColor + '1a'" [style.color]="highlightColor">2</span>
+            Rôles et Permissions
+            @if (!canManageRoles()) {
+              <span class="text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 px-2 py-1 rounded ml-2">Lecture seule</span>
+            }
+          </h3>
+          @if (canManageRoles()) {
+            <button type="button" (click)="addNewRole()"
+                    class="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition-all active:scale-95 cursor-pointer">
+              + Nouveau rôle
+            </button>
+          }
+        </div>
+
+        <p class="text-xs text-gray-500 font-medium">
+          Définissez les rôles disponibles dans cet organ. Cliquez sur l'icône de réglages d'un rôle pour configurer ses permissions.
+        </p>
+
+        <!-- Presets quick buttons -->
+        @if (canManageRoles()) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button type="button" (click)="addPresetRole('responsible')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+              <div>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-lg">👑</span>
+                  <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Responsable</p>
+                </div>
+                <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+                  Contrôle total sur l'Organ, les rôles et toutes les tâches.
+                </p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
+                <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </div>
+            </button>
+
+            <button type="button" (click)="addPresetRole('manager')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+              <div>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-lg">📂</span>
+                  <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Manager</p>
+                </div>
+                <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+                  Gère l'intégralité du cycle de vie des tâches, les assignations et les membres.
+                </p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
+                <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </div>
+            </button>
+
+            <button type="button" (click)="addPresetRole('participant')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+              <div>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-lg">👨‍💻</span>
+                  <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Participant</p>
+                </div>
+                <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+                  Peut créer des tâches et gérer ses propres tickets et commentaires.
+                </p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
+                <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </div>
+            </button>
+
+            <button type="button" (click)="addPresetRole('observer')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+              <div>
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-lg">👁️</span>
+                  <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Observateur</p>
+                </div>
+                <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+                  Accès en lecture seule avec possibilité de commenter.
+                </p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
+                <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </div>
+            </button>
+          </div>
+        }
+
+        <!-- Active roles list -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          @for (role of roles; track role.id) {
+            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between group">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-xl shrink-0">
+                  {{ role.iconData || '👤' }}
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-gray-900 truncate">{{ role.name || 'Sans titre' }}</p>
+                  <div class="flex items-center gap-2">
+                    <p class="text-[10px] text-gray-400 uppercase font-black shrink-0">{{ role.permissions.length }} permission{{ role.permissions.length > 1 ? 's' : '' }}</p>
+                    @if (role.description) {
+                      <span class="text-gray-300">•</span>
+                      <p class="text-[10px] text-gray-400 font-medium italic truncate" [title]="role.description">{{ role.description }}</p>
+                    }
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0 ml-4">
+                <button type="button" (click)="openRoleModal(role.id)"
+                        class="p-2 text-gray-400 transition-colors cursor-pointer hover:opacity-80"
+                        [style.color]="highlightColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                @if (roles.length > 1) {
+                  <button type="button" (click)="removeRole(role.id)"
+                          class="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- --- SECTION 3: MEMBERS --- -->
+      <div class="space-y-8" [class.opacity-50]="!canManageMembers()" [class.pointer-events-none]="!canManageMembers()" [class.grayscale-[0.5]]="!canManageMembers()">
+        <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+                [style.background-color]="highlightColor + '1a'" [style.color]="highlightColor">3</span>
+          Membres de l'Organ
+          @if (!canManageMembers()) {
+            <span class="text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 px-2 py-1 rounded ml-2">Lecture seule</span>
+          }
+        </h3>
+
+        @if (canManageMembers()) {
+          <div class="flex gap-3">
+            <select [(ngModel)]="selectedMemberUuid"
+                    class="flex-grow h-14 px-6 bg-gray-50 border border-transparent focus:border-gray-200 focus:bg-white rounded-2xl text-gray-900 font-medium transition-all outline-none appearance-none">
+              <option value="">Sélectionner un membre du projet...</option>
+              @for (member of projectMembers; track member.uuid) {
+                <option [value]="member.user.uuid">{{ member.user.firstName }} {{ member.user.lastName }} ({{ member.user.email }})</option>
+              }
+            </select>
+            <button type="button" (click)="addMember()"
+                    class="px-8 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all active:scale-95 cursor-pointer">
+              Ajouter
+            </button>
+          </div>
+        }
+
+        <!-- Added members list -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          @for (member of addedMembers; track member.userUuid) {
+            <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center font-black"
+                       [style.color]="highlightColor">
+                    {{ (member.name || '').charAt(0) }}
+                  </div>
+                  <div>
+                    <p class="text-sm font-bold text-gray-900">{{ member.name }}</p>
+                    <p class="text-[10px] text-gray-400 font-medium">{{ member.email }}</p>
+                  </div>
+                </div>
+                @if (canManageMembers()) {
+                  <button type="button" (click)="removeMember(member.userUuid)"
+                          class="p-2 text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                  </button>
+                }
+              </div>
+              
+              <!-- Roles toggle buttons -->
+              <div class="flex flex-wrap gap-2">
+                @for (role of roles; track role.id) {
+                  <button type="button" 
+                          (click)="toggleMemberRole(member.userUuid, role.id)"
+                          [disabled]="!canManageMembers()"
+                          class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer"
+                          [style.background-color]="isMemberRoleActive(member.userUuid, role.id) ? highlightColor : 'white'"
+                          [style.border-color]="isMemberRoleActive(member.userUuid, role.id) ? highlightColor : '#f3f4f6'"
+                          [style.color]="isMemberRoleActive(member.userUuid, role.id) ? 'white' : '#6b7280'">
+                    {{ role.name || 'Rôle' }}
+                  </button>
+                }
+              </div>
+            </div>
+          } @empty {
+            <p class="text-sm text-gray-400 italic col-span-full">Aucun membre ajouté à l'Organ pour le moment.</p>
+          }
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-8 border-t border-gray-100 flex items-center justify-end gap-4">
+        @if (errorMessage()) {
+          <div class="text-red-500 font-semibold text-sm mr-auto">{{ errorMessage() }}</div>
+        }
+        
+        <a [routerLink]="isEdit ? ['/organ', projectUuid, organUuid] : ['/project', projectUuid]"
+           class="px-8 py-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-2xl hover:bg-gray-50 transition-all active:scale-95 cursor-pointer">
+          Annuler
+        </a>
+        
+        <button type="button" (click)="onSubmit()" [disabled]="isSubmitting()"
+                class="px-10 py-4 text-white font-bold rounded-2xl transition-all shadow-lg active:scale-95 flex items-center gap-3 cursor-pointer shadow-current/20 disabled:opacity-50"
+                [style.background-color]="highlightColor">
+          @if (isSubmitting()) {
+            <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          }
+          {{ isEdit ? 'Mettre à jour' : 'Créer l\'organ' }}
+        </button>
+      </div>
+
+    </div>
+
+    <!-- --- SECTION 4: DANGER ZONE --- -->
+    @if (canDeleteOrgan()) {
+      <div class="mt-20 border-t-2 border-red-50/50 px-4">
+        <div class="bg-red-50/30 rounded-3xl border border-red-100 p-8 space-y-6">
+          <div>
+            <h3 class="text-xl font-bold text-red-600 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="m4.84 19 8.16-14 8.16 14H4.84Z"/></svg>
+              Zone de danger
+            </h3>
+            <p class="text-sm text-red-500/70 font-medium mt-1">Actions irréversibles pour cet organ</p>
+          </div>
+
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-2xl border border-red-100/50 shadow-sm">
+            <div class="space-y-1">
+              <p class="font-bold text-gray-900">Supprimer cet organ</p>
+              <p class="text-xs text-gray-500 leading-relaxed">Une fois supprimé, l'organ et ses tâches ne seront plus accessibles. <br>Cette action peut être annulée depuis la corbeille du projet.</p>
+            </div>
+            <button type="button" (click)="openDeleteModal()"
+                    class="px-6 py-3 bg-red-50 text-red-600 font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-red-600 hover:text-white transition-all active:scale-95 border border-red-100 cursor-pointer whitespace-nowrap">
+              Supprimer l'organ
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<!-- --- MODAL POUR ÉDITER UN RÔLE (Permissions) --- -->
+@if (showRoleModal) {
+  <div class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="fixed inset-0 bg-black/20 backdrop-blur-md transition-opacity cursor-pointer" (click)="closeRoleModal()"></div>
+
+      <div class="relative z-10 bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden border border-gray-100 transform transition-all">
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-black text-gray-900">Configurer le rôle</h3>
+            <button type="button" (click)="closeRoleModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+
+          <div class="space-y-6">
+            <div class="grid grid-cols-4 gap-4">
+              <div class="col-span-1 space-y-2">
+                <label class="text-sm font-bold text-gray-700">Icône</label>
+                <input #inputEmoji type="text" [(ngModel)]="modalRoleEmoji" (input)="onModalRoleEmojiInput($event)"
+                       class="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:ring-0 rounded-xl text-center text-xl font-medium transition-all outline-none"
+                       (focus)="inputEmoji.style.borderColor = highlightColor"
+                       (blur)="inputEmoji.style.borderColor = 'transparent'"
+                       placeholder="👤" maxlength="2">
+              </div>
+              <div class="col-span-3 space-y-2">
+                <label class="text-sm font-bold text-gray-700">Nom du rôle</label>
+                <input #inputName type="text" [(ngModel)]="modalRoleName"
+                       class="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:ring-0 rounded-xl text-gray-900 font-medium transition-all outline-none"
+                       (focus)="inputName.style.borderColor = highlightColor"
+                       (blur)="inputName.style.borderColor = 'transparent'"
+                       placeholder="Nom du rôle">
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <label class="text-sm font-bold text-gray-700">Permissions</label>
+              
+              <div class="space-y-10 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                
+                <!-- Category 1: Organ Management -->
+                <div class="space-y-4">
+                  <h4 class="text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Gestion de l'Organ</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @for (perm of organPermissions; track perm.name) {
+                      <label (click)="toggleModalPermission(perm.name)"
+                             class="relative flex items-start gap-4 p-4 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent group"
+                             [class.opacity-70]="isPermissionMandatory(perm.name)"
+                             [class.pointer-events-none]="isPermissionMandatory(perm.name)"
+                             [class.border-bubblegum/30]="isPermissionChecked(perm.name)"
+                             [class.bg-bubblegum/10]="isPermissionChecked(perm.name)"
+                             [style.border-color]="isPermissionChecked(perm.name) ? highlightColor + '40' : ''"
+                             [style.background-color]="isPermissionChecked(perm.name) ? highlightColor + '05' : '#f9fafb'">
+                        <div class="mt-1 shrink-0">
+                          <!-- Modern Custom Checkbox -->
+                          <div class="w-5 h-5 border-2 rounded-md bg-white transition-all duration-200 flex items-center justify-center shrink-0"
+                               [style.background-color]="isPermissionChecked(perm.name) ? highlightColor : 'white'"
+                               [style.border-color]="isPermissionChecked(perm.name) ? highlightColor : '#d1d5db'">
+                            <svg class="w-3.5 h-3.5 text-white" [class.opacity-0]="!isPermissionChecked(perm.name)" [class.opacity-100]="isPermissionChecked(perm.name)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex-grow">
+                          <p class="text-[13px] font-bold text-gray-900 group-hover:text-bubblegum transition-colors">{{ getPermissionLabel(perm.name) }}</p>
+                          <p class="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">{{ getPermissionDescription(perm.name) }}</p>
+                        </div>
+                      </label>
+                    }
+                  </div>
+                </div>
+
+                <!-- Category 2: Task Management -->
+                <div class="space-y-4">
+                  <h4 class="text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Gestion des Tâches</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @for (perm of taskPermissions; track perm.name) {
+                      <label (click)="toggleModalPermission(perm.name)"
+                             class="relative flex items-start gap-4 p-4 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent group"
+                             [class.border-bubblegum/30]="isPermissionChecked(perm.name)"
+                             [class.bg-bubblegum/10]="isPermissionChecked(perm.name)"
+                             [style.border-color]="isPermissionChecked(perm.name) ? highlightColor + '40' : ''"
+                             [style.background-color]="isPermissionChecked(perm.name) ? highlightColor + '05' : '#f9fafb'">
+                        <div class="mt-1 shrink-0">
+                          <div class="w-5 h-5 border-2 rounded-md bg-white transition-all duration-200 flex items-center justify-center shrink-0"
+                               [style.background-color]="isPermissionChecked(perm.name) ? highlightColor : 'white'"
+                               [style.border-color]="isPermissionChecked(perm.name) ? highlightColor : '#d1d5db'">
+                            <svg class="w-3.5 h-3.5 text-white" [class.opacity-0]="!isPermissionChecked(perm.name)" [class.opacity-100]="isPermissionChecked(perm.name)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex-grow">
+                          <p class="text-[13px] font-bold text-gray-900 group-hover:text-bubblegum transition-colors">{{ getPermissionLabel(perm.name) }}</p>
+                          <p class="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">{{ getPermissionDescription(perm.name) }}</p>
+                        </div>
+                      </label>
+                    }
+                  </div>
+                </div>
+
+                <!-- Category 3: Interaction & Files -->
+                <div class="space-y-4">
+                  <h4 class="text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Interactions & Fichiers</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @for (perm of interactionPermissions; track perm.name) {
+                      <label (click)="toggleModalPermission(perm.name)"
+                             class="relative flex items-start gap-4 p-4 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent group"
+                             [class.border-bubblegum/30]="isPermissionChecked(perm.name)"
+                             [class.bg-bubblegum/10]="isPermissionChecked(perm.name)"
+                             [style.border-color]="isPermissionChecked(perm.name) ? highlightColor + '40' : ''"
+                             [style.background-color]="isPermissionChecked(perm.name) ? highlightColor + '05' : '#f9fafb'">
+                        <div class="mt-1 shrink-0">
+                          <div class="w-5 h-5 border-2 rounded-md bg-white transition-all duration-200 flex items-center justify-center shrink-0"
+                               [style.background-color]="isPermissionChecked(perm.name) ? highlightColor : 'white'"
+                               [style.border-color]="isPermissionChecked(perm.name) ? highlightColor : '#d1d5db'">
+                            <svg class="w-3.5 h-3.5 text-white" [class.opacity-0]="!isPermissionChecked(perm.name)" [class.opacity-100]="isPermissionChecked(perm.name)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex-grow">
+                          <p class="text-[13px] font-bold text-gray-900 group-hover:text-bubblegum transition-colors">{{ getPermissionLabel(perm.name) }}</p>
+                          <p class="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">{{ getPermissionDescription(perm.name) }}</p>
+                        </div>
+                      </label>
+                    }
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          
+          @if (modalRoleError) {
+            <p class="text-sm text-red-500 font-semibold px-8 mt-2">{{ modalRoleError }}</p>
+          }
+        </div>
+        
+        <div class="bg-gray-50 px-8 py-6 flex justify-end gap-3">
+          <button type="button" (click)="closeRoleModal()" class="px-6 py-3 font-bold text-gray-500 hover:text-gray-700 cursor-pointer">Annuler</button>
+          <button type="button" (click)="saveRole()" class="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 active:scale-95 transition-all cursor-pointer">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- --- MODAL DE SUPPRESSION DE L'ORGAN --- -->
+@if (showDeleteModal) {
+  <div class="fixed inset-0 z-[110] overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="fixed inset-0 bg-red-900/10 backdrop-blur-sm transition-opacity cursor-pointer" (click)="closeDeleteModal()"></div>
+
+      <div class="relative z-10 bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-red-50 transform transition-all">
+        <div class="p-10 text-center">
+          <div class="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center text-red-500 mx-auto mb-6 border border-red-100/50">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+          </div>
+          
+          <h3 class="text-2xl font-black text-gray-900 mb-4">Supprimer cet organ ?</h3>
+          <p class="text-gray-500 font-medium leading-relaxed mb-8">
+            Êtes-vous sûr de vouloir supprimer l'organ <span class="font-bold text-gray-900">"{{ organTitle }}"</span> ? 
+            Toutes les tâches rattachées seront également envoyées à la corbeille.
+          </p>
+
+          <div class="flex flex-col gap-3">
+            <button type="button" (click)="confirmDelete()"
+                    class="w-full py-4 bg-red-600 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-red-600/20 hover:bg-red-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer">
+              @if (isSubmitting()) {
+                <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              }
+              Confirmer la suppression
+            </button>
+            <button type="button" (click)="closeDeleteModal()"
+                    class="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all cursor-pointer">
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- --- LOADING OVERLAY --- -->
+@if (isSubmitting()) {
+  <div class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md transition-all duration-300">
+    <div class="relative">
+      <div class="w-24 h-24 border-4 rounded-full animate-spin" [style.border-color]="highlightColor + '1a'" [style.border-top-color]="highlightColor"></div>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <span class="text-3xl">🏗️</span>
+      </div>
+    </div>
+    <p class="mt-8 text-xl font-black text-gray-900 tracking-tight animate-pulse">
+      {{ loadingText() }}
+    </p>
+    <p class="mt-2 text-sm text-gray-400 font-bold uppercase tracking-widest">Étape de configuration finale</p>
+  </div>
+}

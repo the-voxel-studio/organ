@@ -1,6 +1,7 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterOutlet, NavigationEnd } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService } from '../../../services/auth.service';
 import { ProjectService } from '../../../services/project.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -21,19 +22,24 @@ export class LoggedLayoutComponent implements OnInit, OnDestroy {
   private projectService = inject(ProjectService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  private sanitizer = inject(DomSanitizer);
   private destroy$ = new Subject<void>();
 
   // State signals
   projects = signal<ProjectSummary[]>([]);
-  notifications = signal<NotificationResponse[]>([]);
   isNotificationsOpen = signal(false);
   isProfileOpen = signal(false);
   activeRoute = signal('');
+  hoveredNotificationUuid = signal<string | null>(null);
+  private hoverTimeouts = new Map<string, any>();
 
-  // Computed properties
-  unreadNotificationsCount = computed(() => {
-    return this.notifications().filter(n => !n.isRead).length;
-  });
+  // Sidebar resizing properties
+  sidebarWidth = 368; // default w-92 is 368px
+  isResizing = false;
+
+  // Bound properties from service
+  notifications = this.notificationService.notifications;
+  unreadNotificationsCount = this.notificationService.unreadNotificationsCount;
 
   currentUserInitials = computed(() => {
     const user = this.authService.currentUser();
@@ -44,6 +50,12 @@ export class LoggedLayoutComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit() {
+    // Load saved sidebar width
+    const savedWidth = localStorage.getItem('sidebar_width');
+    if (savedWidth) {
+      this.sidebarWidth = parseInt(savedWidth, 10);
+    }
+
     // Set initial route
     this.activeRoute.set(this.router.url);
 
@@ -60,6 +72,16 @@ export class LoggedLayoutComponent implements OnInit, OnDestroy {
         this.isProfileOpen.set(false);
       });
 
+    // Track projects change to reload sidebar data
+    this.projectService.projectsChanged$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadSidebarData();
+      });
+
+    // Initialize notification stream (loads notifications + connects Mercure)
+    this.notificationService.initialize();
+
     // Load dynamic data
     this.loadSidebarData();
   }
@@ -67,6 +89,9 @@ export class LoggedLayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    // Disconnect Mercure EventSource when layout is destroyed
+    this.notificationService.disconnect();
+    this.clearAllHoverTimeouts();
   }
 
   loadSidebarData() {
@@ -77,16 +102,6 @@ export class LoggedLayoutComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Failed to load projects', err);
-      }
-    });
-
-    // Get notifications list
-    this.notificationService.getNotifications().subscribe({
-      next: (data) => {
-        this.notifications.set(data);
-      },
-      error: (err) => {
-        console.error('Failed to load notifications', err);
       }
     });
   }
@@ -110,31 +125,78 @@ export class LoggedLayoutComponent implements OnInit, OnDestroy {
   closeDropdowns() {
     this.isNotificationsOpen.set(false);
     this.isProfileOpen.set(false);
+    this.clearAllHoverTimeouts();
   }
 
   markAllNotificationsAsRead() {
-    const unread = this.notifications().filter(n => !n.isRead);
+    const unread = this.notifications().filter(n => !n.isRead && !n.isRealInvite);
     if (unread.length === 0) return;
 
     unread.forEach(notification => {
-      this.notificationService.markAsRead(notification.uuid).subscribe({
-        next: () => {
-          // Update notification item in list
-          this.notifications.update(list =>
-            list.map(n => n.uuid === notification.uuid ? { ...n, isRead: true } : n)
-          );
-        }
-      });
+      this.notificationService.markAsRead(notification.uuid).subscribe();
     });
   }
 
   markNotificationAsRead(uuid: string, event: MouseEvent) {
     event.stopPropagation();
-    this.notificationService.markAsRead(uuid).subscribe({
+    this.notificationService.markAsRead(uuid).subscribe();
+  }
+
+  onMouseEnterNotification(notif: NotificationResponse) {
+    if (notif.isRead || notif.isRealInvite) return;
+
+    this.hoveredNotificationUuid.set(notif.uuid);
+
+    const timeout = setTimeout(() => {
+      this.notificationService.markAsRead(notif.uuid).subscribe({
+        next: () => {
+          if (this.hoveredNotificationUuid() === notif.uuid) {
+            this.hoveredNotificationUuid.set(null);
+          }
+        }
+      });
+      this.hoverTimeouts.delete(notif.uuid);
+    }, 450); // 450ms hover to read
+
+    this.hoverTimeouts.set(notif.uuid, timeout);
+  }
+
+  onMouseLeaveNotification(notif: NotificationResponse) {
+    if (this.hoveredNotificationUuid() === notif.uuid) {
+      this.hoveredNotificationUuid.set(null);
+    }
+    const timeout = this.hoverTimeouts.get(notif.uuid);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.hoverTimeouts.delete(notif.uuid);
+    }
+  }
+
+  private clearAllHoverTimeouts() {
+    this.hoverTimeouts.forEach(timeout => clearTimeout(timeout));
+    this.hoverTimeouts.clear();
+    this.hoveredNotificationUuid.set(null);
+  }
+
+  acceptInvite(uuid: string, event: MouseEvent) {
+    event.stopPropagation();
+    this.notificationService.acceptInvitation(uuid).subscribe({
       next: () => {
-        this.notifications.update(list =>
-          list.map(n => n.uuid === uuid ? { ...n, isRead: true } : n)
-        );
+        // Refresh the whole page to load new projects and update navigation
+        window.location.reload();
+      },
+      error: (err) => {
+        console.error('Failed to accept invitation:', err);
+        alert(err?.error?.message || 'Erreur lors de l\'acceptation de l\'invitation.');
+      }
+    });
+  }
+
+  refuseInvite(uuid: string, event: MouseEvent) {
+    event.stopPropagation();
+    this.notificationService.refuseInvitation(uuid).subscribe({
+      error: (err) => {
+        console.error('Failed to refuse invitation:', err);
       }
     });
   }
@@ -153,5 +215,37 @@ export class LoggedLayoutComponent implements OnInit, OnDestroy {
 
   getProjectColorHex(color: string): string {
     return color || '#FF7EB6';
+  }
+
+  startResizing(event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isResizing = true;
+  }
+
+  @HostListener('document:mousemove', ['$event'])
+  onMouseMove(event: MouseEvent) {
+    if (!this.isResizing) return;
+    
+    let newWidth = event.clientX;
+    
+    // Bounds check
+    if (newWidth < 240) newWidth = 240;
+    if (newWidth > 480) newWidth = 480;
+    
+    this.sidebarWidth = newWidth;
+  }
+
+  @HostListener('document:mouseup')
+  onMouseUp() {
+    if (this.isResizing) {
+      this.isResizing = false;
+      localStorage.setItem('sidebar_width', String(this.sidebarWidth));
+    }
+  }
+
+  safeSvg(svgContent: string | null | undefined): SafeHtml {
+    if (!svgContent) return '';
+    return this.sanitizer.bypassSecurityTrustHtml(svgContent);
   }
 }

@@ -1,0 +1,315 @@
+<div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+  <header class="mb-10">
+    <h1 class="text-3xl font-black text-black mb-2">Paramètres</h1>
+    <p class="text-gray-500 font-medium">Gérez vos informations personnelles et vos préférences de compte.</p>
+  </header>
+
+  <div class="grid grid-cols-1 gap-8">
+
+    <!-- Information Personnelle -->
+    <section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-8">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="p-3 bg-bubblegum/10 rounded-2xl text-bubblegum">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-black">Profil</h2>
+            <p class="text-sm text-gray-500 font-medium">Vos informations visibles sur la plateforme.</p>
+          </div>
+        </div>
+
+        <!-- Alert Zones -->
+        <div *ngIf="profileError" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-xl">
+          <span>{{ profileError }}</span>
+        </div>
+        <div *ngIf="profileSuccess" class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-bold rounded-r-xl">
+          <span>{{ profileSuccess }}</span>
+        </div>
+
+        <form (submit)="onSubmitProfile($event)" class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label for="firstName" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Prénom</label>
+              <input type="text" name="firstName" id="firstName" [(ngModel)]="firstName" 
+                     maxlength="50" required
+                     class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none font-medium">
+            </div>
+            <div>
+              <label for="lastName" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Nom</label>
+              <input type="text" name="lastName" id="lastName" [(ngModel)]="lastName" 
+                     maxlength="50" required
+                     class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none font-medium">
+            </div>
+          </div>
+
+          <div>
+            <label for="email" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Adresse E-mail</label>
+            <ng-container *ngIf="currentUser()?.authWithGoogle; else emailEditable">
+              <div class="relative group">
+                <input type="email" name="email" id="email" [value]="email" readonly class="w-full px-5 py-4 bg-gray-100 border border-gray-200 rounded-2xl text-gray-500 cursor-not-allowed font-medium outline-none">
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+                    <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd"/>
+                  </svg>
+                </div>
+              </div>
+              <p class="mt-2 text-[10px] font-bold text-highlight uppercase tracking-wider flex items-center gap-1.5">
+                <span class="w-1 h-1 bg-highlight rounded-full"></span>
+                Géré par Google : L'adresse e-mail ne peut pas être modifiée ici.
+              </p>
+            </ng-container>
+            <ng-template #emailEditable>
+              <input type="email" name="email" id="email" [(ngModel)]="email" required class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none font-medium">
+            </ng-template>
+          </div>
+
+          <div class="pt-4">
+            <button type="submit" [disabled]="isProfileLoading" class="px-8 py-4 bg-black hover:bg-black/90 text-white font-bold rounded-2xl shadow-lg transition-all transform hover:-translate-y-1 active:scale-[0.98] flex items-center gap-3 cursor-pointer disabled:opacity-75 disabled:cursor-wait">
+              <svg *ngIf="isProfileLoading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Enregistrer les modifications
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Connexion & Sécurité -->
+    <section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-8">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="p-3 bg-highlight/10 rounded-2xl text-highlight">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-black">Sécurité</h2>
+            <p class="text-sm text-gray-500 font-medium">Gerez votre mot de passe et vos connexions tierces.</p>
+          </div>
+        </div>
+
+        <div class="space-y-8">
+          <!-- Google Link -->
+          <div class="p-6 bg-gray-50 rounded-3xl border border-gray-100">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
+                  <svg class="w-6 h-6" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-bold text-black">Compte Google</p>
+                  <p class="text-xs text-gray-500 font-medium">
+                    {{ currentUser()?.authWithGoogle ? 'Compte lie avec succes' : 'Non lie' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Google Link Button Container -->
+              <div *ngIf="currentUser()?.authWithGoogle" class="px-4 py-2 bg-green-50 text-green-700 text-xs font-black uppercase tracking-widest rounded-xl border border-green-100 flex items-center gap-2 self-start sm:self-auto">
+                <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                Lie
+              </div>
+
+              <div *ngIf="!currentUser()?.authWithGoogle">
+                <!-- Hidden Google Login library button for programmatic triggering -->
+                <div class="hidden">
+                  <asl-google-signin-button type="icon" size="large" #googleBtnContainer></asl-google-signin-button>
+                </div>
+
+                <button type="button" (click)="triggerGoogleLink()" [disabled]="isGoogleLinking" class="px-6 py-2.5 bg-white border border-gray-200 hover:border-bubblegum hover:text-bubblegum text-gray-700 text-sm font-bold rounded-xl transition-all shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-wait">
+                  <svg *ngIf="isGoogleLinking" class="animate-spin h-4 w-4 text-bubblegum" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Lier mon compte
+                </button>
+              </div>
+            </div>
+
+            <!-- Google Alert Zones -->
+            <div *ngIf="googleError" class="mt-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-xl">
+              <span>{{ googleError }}</span>
+            </div>
+            <div *ngIf="googleSuccess" class="mt-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-bold rounded-r-xl">
+              <span>{{ googleSuccess }}</span>
+            </div>
+          </div>
+
+          <!-- Password Form (Only displayed if not exclusively authenticated by Google) -->
+          <ng-container *ngIf="!currentUser()?.authWithGoogle">
+            <div class="h-px bg-gray-50"></div>
+
+            <div class="px-2">
+              <h3 class="font-bold text-black mb-4">Modifier le mot de passe</h3>
+              
+              <!-- Password Alert Zones -->
+              <div *ngIf="passwordError" class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-xl">
+                <span>{{ passwordError }}</span>
+              </div>
+              <div *ngIf="passwordSuccess" class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-bold rounded-r-xl">
+                <span>{{ passwordSuccess }}</span>
+              </div>
+
+              <form (submit)="onSubmitPassword($event)" class="space-y-4 max-w-md">
+                <div class="relative">
+                  <label for="current_password" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Mot de passe actuel</label>
+                  <div class="relative">
+                    <input [type]="showCurrentPassword ? 'text' : 'password'" name="currentPassword" id="current_password" [(ngModel)]="currentPassword" required class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum transition-all outline-none font-medium">
+                    <button type="button" (click)="showCurrentPassword = !showCurrentPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors p-2 cursor-pointer">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="relative">
+                  <label for="new_password" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Nouveau mot de passe</label>
+                  <div class="relative">
+                    <input [type]="showNewPassword ? 'text' : 'password'" name="newPassword" id="new_password" [(ngModel)]="newPassword" required minlength="8" class="w-full px-5 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum transition-all outline-none font-medium">
+                    <button type="button" (click)="showNewPassword = !showNewPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors p-2 cursor-pointer">
+                      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <button type="submit" [disabled]="isPasswordLoading" class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-all flex items-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-wait">
+                  <svg *ngIf="isPasswordLoading" class="animate-spin h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Mettre a jour le mot de passe
+                </button>
+              </form>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sessions Area -->
+    <section class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+      <div class="p-8">
+        <div class="flex items-center gap-4 mb-8">
+          <div class="p-3 bg-bubblegum/10 rounded-2xl text-bubblegum">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25"/>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-black">Sessions actives</h2>
+            <p class="text-sm text-gray-500 font-medium">Appareils actuellement connectes a votre compte.</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <div *ngIf="isConnectionsLoading()" class="flex items-center justify-center p-8">
+            <svg class="animate-spin h-8 w-8 text-bubblegum" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+
+          <ng-container *ngIf="!isConnectionsLoading()">
+            <div *ngFor="let conn of connections()" class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 mb-3 group transition-all hover:bg-white hover:shadow-sm">
+              <div class="flex items-center gap-4">
+                <div class="p-2.5 bg-white rounded-xl text-gray-400 border border-gray-100 shadow-sm group-hover:text-highlight transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
+                  </svg>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <p class="font-bold text-black text-sm">{{ conn.deviceName }} • {{ conn.browserName }}</p>
+                    <span *ngIf="conn.isCurrent" class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-black uppercase tracking-widest rounded-md">Actuelle</span>
+                  </div>
+                  <p class="text-xs text-gray-500 font-medium">
+                    {{ conn.location }} • <span class="text-gray-400">{{ conn.ipAddress }}</span>
+                  </p>
+                  <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-bold">
+                    Derniere activite : {{ formatRelativeDate(conn.lastUsedAt) }}
+                  </p>
+                </div>
+              </div>
+              
+              <button type="button" 
+                      (click)="onRevokeConnection(conn)"
+                      class="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all md:opacity-0 md:group-hover:opacity-100 cursor-pointer">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <p *ngIf="connections().length === 0" class="text-sm text-gray-500 italic p-4">Aucune session active</p>
+          </ng-container>
+        </div>
+      </div>
+    </section>
+
+    <!-- Danger Zone -->
+    <section class="bg-red-50/30 rounded-3xl border border-red-100 overflow-hidden">
+      <div class="p-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="p-3 bg-red-100 rounded-2xl text-red-600">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+              <path d="M9.1709 4C9.58273 2.83481 10.694 2 12.0002 2C13.3064 2 14.4177 2.83481 14.8295 4" stroke="currentColor" stroke-linecap="round"></path>
+              <path d="M20.5001 6H3.5" stroke="currentColor"  stroke-linecap="round"></path>
+              <path d="M18.8332 8.5L18.3732 15.3991C18.1962 18.054 18.1077 19.3815 17.2427 20.1907C16.3777 21 15.0473 21 12.3865 21H11.6132C8.95235 21 7.62195 21 6.75694 20.1907C5.89194 19.3815 5.80344 18.054 5.62644 15.3991L5.1665 8.5" stroke="currentColor" stroke-linecap="round"></path>
+              <path d="M9.5 11L10 16" stroke="currentColor"  stroke-linecap="round"></path>
+              <path d="M14.5 11L14 16" stroke="currentColor"  stroke-linecap="round"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-red-900">Supprimer le compte</h2>
+            <p class="text-sm text-red-700/60 font-medium">Cette action est irreversible. Toutes vos donnees seront perdues.</p>
+          </div>
+        </div>
+        <button type="button" (click)="onOpenDeleteModal()" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-200 transition-all active:scale-[0.98] cursor-pointer">
+          Supprimer mon compte Organ
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- Generic Confirmation Modal for Session Invalidation -->
+<app-confirmation-modal
+  [isOpen]="isDisconnectModalOpen"
+  [title]="'Deconnecter l\'appareil ?'"
+  [message]="'Cet appareil sera immediatement deconnecte. Vous devrez vous reconnecter pour acceder de nouveau a votre compte sur ce terminal.'"
+  [confirmLabel]="'Deconnecter'"
+  [cancelLabel]="'Annuler'"
+  [type]="'primary'"
+  [isLoading]="isDisconnectLoading"
+  (confirm)="confirmRevokeConnection()"
+  (cancel)="isDisconnectModalOpen = false">
+</app-confirmation-modal>
+
+<!-- Generic Confirmation Modal for Account Deletion -->
+<app-confirmation-modal
+  [isOpen]="isDeleteModalOpen"
+  [title]="'Desactiver le compte ?'"
+  [message]="'Votre compte sera immediatement <span class=\'text-red-600 font-bold text-base uppercase\'>desactive</span> pour une periode de <span class=\'text-black font-bold\'>30 jours</span>.<br/><br/>Pendant ce delai, vos donnees resteront conservees mais vous ne serez plus visible. A l\'issue de ces 30 jours, votre compte et toutes ses donnees seront <span class=\'text-black font-bold italic\'>definitivement supprimes</span>.'"
+  [infoTitle]="'Comment annuler ?'"
+  [infoText]="'Il vous suffit de vous reconnecter a votre compte Organ avant la fin du delai de 30 jours pour annuler automatiquement la procedure de suppression.'"
+  [confirmLabel]="'Confirmer la desactivation'"
+  [cancelLabel]="'Annuler'"
+  [type]="'danger'"
+  [isLoading]="isDeleteLoading"
+  (confirm)="confirmDeleteAccount()"
+  (cancel)="isDeleteModalOpen = false">
+</app-confirmation-modal>

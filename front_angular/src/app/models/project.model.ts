@@ -1,5 +1,5 @@
 export type ProjectStatus = 'ACTIVE' | 'ARCHIVED' | 'TRASHED' | 'DRAFT' | 'IN_PROGRESS' | 'COMPLETED';
-export type IconType = 'ICON' | 'EMOJI' | 'IMAGE';
+export type IconType = 'ICON' | 'EMOJI' | 'IMAGE' | 'SVG' | 'BLOB';
 
 export interface ProjectSummary {
   uuid: string;

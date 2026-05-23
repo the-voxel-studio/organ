@@ -1,25 +1,113 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
+import { ProjectService } from '../../../services/project.service';
+import { ProjectDetailedViewResponse } from '../../../models/project.model';
+
+// Sub-components
+import { ProjectHeaderComponent } from './components/project-header/project-header';
+import { OrganCardComponent } from './components/organ-card/organ-card';
+import { ProjectTagsPanelComponent } from './components/project-tags-panel/project-tags-panel';
+import { ProjectAboutComponent } from './components/project-about/project-about';
+import { ProjectActivityFeedComponent } from './components/project-activity-feed/project-activity-feed';
 
 @Component({
   selector: 'app-project',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="p-8">
-      <h1 class="text-2xl font-bold mb-4">Projet (Placeholder)</h1>
-      <p class="text-gray-600">UUID du projet : {{ projectUuid }}</p>
-    </div>
-  `
+  imports: [
+    CommonModule,
+    RouterLink,
+    ProjectHeaderComponent,
+    OrganCardComponent,
+    ProjectTagsPanelComponent,
+    ProjectAboutComponent,
+    ProjectActivityFeedComponent
+  ],
+  templateUrl: './project.html'
 })
-export class ProjectComponent implements OnInit {
+export class ProjectComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private projectService = inject(ProjectService);
+  private destroy$ = new Subject<void>();
+
+  // State signals
   projectUuid: string | null = null;
+  projectData = signal<ProjectDetailedViewResponse | null>(null);
+  isLoading = signal(true);
+  errorMessage = signal<string | null>(null);
+
+  // Placeholder alert helpers
+  showNotImplementedAlert = signal(false);
+  notImplementedFeatureName = '';
+
+  // Esc key listener handler
+  private escHandler = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      if (this.showNotImplementedAlert()) this.closeNotImplementedAlert();
+    }
+  };
+
+  // Computed properties
+  canManage = computed(() => {
+    const data = this.projectData();
+    if (!data) return false;
+    const role = data.project.role;
+    return role === 'ADMIN' || role === 'MANAGER';
+  });
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      this.projectUuid = params.get('uuid');
+    window.addEventListener('keydown', this.escHandler);
+
+    this.route.paramMap
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        const uuid = params.get('uuid');
+        if (uuid) {
+          this.projectUuid = uuid;
+          this.loadProjectDetails();
+        } else {
+          this.errorMessage.set('UUID du projet manquant.');
+          this.isLoading.set(false);
+        }
+      });
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('keydown', this.escHandler);
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  loadProjectDetails() {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    this.projectService.getProjectDetailed(this.projectUuid!).subscribe({
+      next: (data) => {
+        this.projectData.set(data);
+        this.isLoading.set(false);
+      },
+      error: (err: any) => {
+        console.error('Failed to load project details', err);
+        this.errorMessage.set(err?.error?.message || 'Projet non trouvé ou accès refusé.');
+        this.isLoading.set(false);
+      }
     });
+  }
+
+  getProjectColor(): string {
+    return this.projectData()?.project.color || '#FF7EB6';
+  }
+
+  // Placeholder actions
+  openNotImplementedAlert(featureName: string) {
+    this.notImplementedFeatureName = featureName;
+    this.showNotImplementedAlert.set(true);
+  }
+
+  closeNotImplementedAlert() {
+    this.showNotImplementedAlert.set(false);
   }
 }

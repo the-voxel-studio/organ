@@ -52,33 +52,37 @@ export class RegisterComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (user) => {
-          // If the user just logged out, suppress the stale Google authState re-emit
-          if (sessionStorage.getItem(GOOGLE_SUPPRESS_KEY)) {
-            sessionStorage.removeItem(GOOGLE_SUPPRESS_KEY);
-            return;
-          }
+          this.ngZone.run(() => {
+            // If the user just logged out, suppress the stale Google authState re-emit
+            if (sessionStorage.getItem(GOOGLE_SUPPRESS_KEY)) {
+              sessionStorage.removeItem(GOOGLE_SUPPRESS_KEY);
+              return;
+            }
 
-          if (user) {
-            this.isLoading.set(true);
-            this.errorMessage.set(null);
-            
-            this.authService.loginWithGoogle({ token: user.idToken, idToken: user.idToken }).subscribe({
-              next: () => {
-                this.isLoading.set(false);
-                this.router.navigate(['/dashboard']);
-              },
-              error: (err) => {
-                this.isLoading.set(false);
-                this.errorMessage.set(err.error?.message || "Une erreur est survenue lors de la connexion Google.");
-              }
-            });
-          } else {
-            this.isLoading.set(false);
-          }
+            if (user) {
+              this.isLoading.set(true);
+              this.errorMessage.set(null);
+              
+              this.authService.loginWithGoogle({ token: user.idToken, idToken: user.idToken }).subscribe({
+                next: () => {
+                  this.isLoading.set(false);
+                  this.router.navigate(['/dashboard']);
+                },
+                error: (err) => {
+                  this.isLoading.set(false);
+                  this.errorMessage.set(err.error?.message || "Une erreur est survenue lors de la connexion Google.");
+                }
+              });
+            } else {
+              this.isLoading.set(false);
+            }
+          });
         },
         error: (err) => {
-          console.error('Google Auth Error:', err);
-          this.isLoading.set(false);
+          this.ngZone.run(() => {
+            console.error('Google Auth Error:', err);
+            this.isLoading.set(false);
+          });
         }
       });
   }

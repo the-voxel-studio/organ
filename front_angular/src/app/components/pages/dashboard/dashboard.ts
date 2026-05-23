@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DashboardService } from '../../../services/dashboard.service';
 import { DashboardResponse } from '../../../models/dashboard.model';
 
@@ -12,6 +13,7 @@ import { DashboardResponse } from '../../../models/dashboard.model';
 })
 export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
+  private sanitizer = inject(DomSanitizer);
 
   // State signals
   dashboardData = signal<DashboardResponse | null>(null);
@@ -55,5 +57,10 @@ export class DashboardComponent implements OnInit {
     } catch (e) {
       return '-';
     }
+  }
+
+  safeSvg(svgContent: string | null | undefined): SafeHtml {
+    if (!svgContent) return '';
+    return this.sanitizer.bypassSecurityTrustHtml(svgContent);
   }
 }

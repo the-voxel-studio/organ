@@ -16,11 +16,7 @@ window.fetch = async (...args) => {
         
         // Avoid infinite loop if the refresh request itself returns 401
         // Also avoid redirecting on login/register routes where 401 is a normal "invalid credentials" response
-        if (
-            url.includes('/api/auth/refresh') || 
-            url.includes('/api/auth/login') || 
-            url.includes('/api/auth/register')
-        ) {
+        if (url.includes('/api/auth')) {
             return response;
         }
 

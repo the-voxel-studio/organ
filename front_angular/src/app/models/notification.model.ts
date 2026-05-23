@@ -6,6 +6,7 @@ export interface NotificationResponse {
   taskUuid?: string | null;
   createdAt?: string; // ISO DateTime
   deletedAt?: string; // ISO DateTime
+  isRealInvite?: boolean;
 }
 
 export interface SubscribeUrlResponse {

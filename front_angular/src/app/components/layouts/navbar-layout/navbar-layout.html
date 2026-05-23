@@ -1,0 +1,20 @@
+<div class="min-h-screen flex flex-col bg-off-white text-gray-900 font-sans antialiased">
+  <!-- Minimal Navbar -->
+  <nav class="sticky top-0 z-50 bg-white/60 backdrop-blur-md border-b border-gray-100 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
+        <div class="flex items-center">
+          <a routerLink="/dashboard" class="flex items-center gap-3 group cursor-pointer">
+            <app-dynamic-logo id="navbar-layout-logo" size="48px"></app-dynamic-logo>
+            <span class="text-2xl font-extrabold tracking-tight text-black">Organ</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="flex-grow overflow-y-auto px-4 py-4 pb-12">
+    <router-outlet></router-outlet>
+  </main>
+</div>

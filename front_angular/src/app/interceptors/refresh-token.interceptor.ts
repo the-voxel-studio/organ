@@ -14,9 +14,11 @@ export const refreshTokenInterceptor: HttpInterceptorFn = (req:
             // Si l'API retourne 401 Unauthorized                              
             if (error instanceof HttpErrorResponse && error.status === 401) {
 
-                // Sécurité pour éviter de boucler si la requête de refresh elle-même échoue                                                                
-                if (req.url.includes('/api/auth/refresh')) {
-                    authService.clearSessionState();
+                // Security: do not refresh for authentication endpoints
+                if (req.url.includes('/api/auth')) {
+                    if (req.url.includes('/api/auth/refresh')) {
+                        authService.clearSessionState();
+                    }
                     return throwError(() => error);
                 }
 

@@ -1,0 +1,28 @@
+<div class="space-y-6">
+    <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        Historique d'activité
+    </h3>
+    <div class="space-y-6 pl-4 border-l-2 border-gray-100">
+        <div *ngFor="let item of timeline" class="relative space-y-1">
+            <!-- timeline dot -->
+            <span class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-gray-200 border-2 border-white"></span>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-black text-gray-800">{{ item.userName }}</span>
+                <span class="text-[10px] text-gray-400">{{ formatDateString(item.createdAt) }}</span>
+            </div>
+            <p class="text-xs text-gray-500">
+                {{ formatTimelineDetail(item) }}
+            </p>
+        </div>
+    </div>
+    
+    <div *ngIf="hasMoreTimeline" class="flex justify-center">
+        <button (click)="onLoadMore()" 
+                class="px-6 py-2 bg-white border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-black hover:border-gray-200 transition-all shadow-sm cursor-pointer">
+            Charger plus
+        </button>
+    </div>
+</div>

@@ -303,74 +303,105 @@ class TaskController extends AbstractController
         // 2. Specialized permissions for specific fields
         if (isset($data['status'])) {
             $status = TaskStatus::tryFrom($data['status']);
-            if (!$status || !$this->taskService->canChangeStatus($user, $task, $status)) {
-                return $this->json(['message' => 'Permission denied to change to this status or invalid status'], Response::HTTP_FORBIDDEN);
+            if ($status && $status !== $task->getStatus()) {
+                if (!$this->taskService->canChangeStatus($user, $task, $status)) {
+                    return $this->json(['message' => 'Permission denied to change to this status or invalid status'], Response::HTTP_FORBIDDEN);
+                }
+                $task->setStatus($status);
             }
-            $task->setStatus($status);
         }
 
         if (isset($data['statusMessage'])) {
-            if (!$this->taskService->can($user, $task, 'TASK_STATUS_CHANGE')) {
-                return $this->json(['message' => 'Permission denied to change status message'], Response::HTTP_FORBIDDEN);
+            $newStatusMsg = empty($data['statusMessage']) ? null : $data['statusMessage'];
+            if ($newStatusMsg !== $task->getStatusMessage()) {
+                if (!$this->taskService->can($user, $task, 'TASK_STATUS_CHANGE')) {
+                    return $this->json(['message' => 'Permission denied to change status message'], Response::HTTP_FORBIDDEN);
+                }
+                $task->setStatusMessage($newStatusMsg);
             }
-            $task->setStatusMessage(empty($data['statusMessage']) ? null : $data['statusMessage']);
         }
 
         if (isset($data['priority'])) {
-            if (!$this->taskService->canEditField($user, $task, 'priority')) {
-                return $this->json(['message' => 'Permission denied to change priority'], Response::HTTP_FORBIDDEN);
+            $newPriority = (int)$data['priority'];
+            if ($newPriority !== $task->getPriority()) {
+                if (!$this->taskService->canEditField($user, $task, 'priority')) {
+                    return $this->json(['message' => 'Permission denied to change priority'], Response::HTTP_FORBIDDEN);
+                }
+                $task->setPriority($newPriority);
             }
-            $task->setPriority((int)$data['priority']);
         }
 
         if (array_key_exists('startDate', $data) || array_key_exists('expiresAt', $data)) {
-            if (!$this->taskService->canEditField($user, $task, 'expiresAt')) {
-                return $this->json(['message' => 'Permission denied to manage dates'], Response::HTTP_FORBIDDEN);
-            }
-            if (array_key_exists('startDate', $data)) {
-                $task->setStartDate(empty($data['startDate']) ? null : new \DateTime($data['startDate']));
-            }
-            if (array_key_exists('expiresAt', $data)) {
-                $task->setExpiresAt(empty($data['expiresAt']) ? null : new \DateTime($data['expiresAt']));
+            $newStart = empty($data['startDate']) ? null : new \DateTime($data['startDate']);
+            $newExpires = empty($data['expiresAt']) ? null : new \DateTime($data['expiresAt']);
+            
+            $startChanged = array_key_exists('startDate', $data) && 
+                ($task->getStartDate() ? $task->getStartDate()->format('Y-m-d H:i:s') : null) !== ($newStart ? $newStart->format('Y-m-d H:i:s') : null);
+            $expiresChanged = array_key_exists('expiresAt', $data) && 
+                ($task->getExpiresAt() ? $task->getExpiresAt()->format('Y-m-d H:i:s') : null) !== ($newExpires ? $newExpires->format('Y-m-d H:i:s') : null);
+
+            if ($startChanged || $expiresChanged) {
+                if (!$this->taskService->canEditField($user, $task, 'expiresAt')) {
+                    return $this->json(['message' => 'Permission denied to manage dates'], Response::HTTP_FORBIDDEN);
+                }
+                if (array_key_exists('startDate', $data)) {
+                    $task->setStartDate($newStart);
+                }
+                if (array_key_exists('expiresAt', $data)) {
+                    $task->setExpiresAt($newExpires);
+                }
             }
         }
 
         if (isset($data['estimatedHours'])) {
-            if (!$this->taskService->canEditField($user, $task, 'estimatedHours')) {
-                return $this->json(['message' => 'Permission denied to manage estimates'], Response::HTTP_FORBIDDEN);
+            $newEst = empty($data['estimatedHours']) ? null : (string)$data['estimatedHours'];
+            if ($newEst !== $task->getEstimatedHours()) {
+                if (!$this->taskService->canEditField($user, $task, 'estimatedHours')) {
+                    return $this->json(['message' => 'Permission denied to manage estimates'], Response::HTTP_FORBIDDEN);
+                }
+                $task->setEstimatedHours($newEst);
             }
-            $task->setEstimatedHours(empty($data['estimatedHours']) ? null : (string)$data['estimatedHours']);
         }
 
         if (array_key_exists('managerUuid', $data)) {
-            if (!$this->taskService->canEditField($user, $task, 'manager')) {
-                return $this->json(['message' => 'Permission denied to change manager'], Response::HTTP_FORBIDDEN);
-            }
-            if (empty($data['managerUuid'])) {
-                $task->setManager(null);
-            } else {
-                $manager = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $data['managerUuid']]);
-                if ($manager) {
-                    if (!$this->permissionService->isOrganMember($manager, $organ)) {
-                        return $this->json(['message' => 'Selected manager is not a member of this organ'], Response::HTTP_BAD_REQUEST);
+            $currentManagerUuid = $task->getManager() ? $task->getManager()->getUuid() : null;
+            $newManagerUuid = empty($data['managerUuid']) ? null : $data['managerUuid'];
+            if ($newManagerUuid !== $currentManagerUuid) {
+                if (!$this->taskService->canEditField($user, $task, 'manager')) {
+                    return $this->json(['message' => 'Permission denied to change manager'], Response::HTTP_FORBIDDEN);
+                }
+                if (empty($data['managerUuid'])) {
+                    $task->setManager(null);
+                } else {
+                    $manager = $entityManager->getRepository(User::class)->findOneBy(['uuid' => $data['managerUuid']]);
+                    if ($manager) {
+                        if (!$this->permissionService->isOrganMember($manager, $organ)) {
+                            return $this->json(['message' => 'Selected manager is not a member of this organ'], Response::HTTP_BAD_REQUEST);
+                        }
+                        $task->setManager($manager);
                     }
-                    $task->setManager($manager);
                 }
             }
         }
 
         if (isset($data['title'])) {
-            if (!$this->taskService->canEditField($user, $task, 'title')) {
-                return $this->json(['message' => 'Permission denied to change title'], Response::HTTP_FORBIDDEN);
+            $newTitle = $data['title'];
+            if ($newTitle !== $task->getTitle()) {
+                if (!$this->taskService->canEditField($user, $task, 'title')) {
+                    return $this->json(['message' => 'Permission denied to change title'], Response::HTTP_FORBIDDEN);
+                }
+                $task->setTitle($newTitle);
             }
-            $task->setTitle($data['title']);
         }
 
         if (isset($data['description'])) {
-            if (!$this->taskService->canEditField($user, $task, 'description')) {
-                return $this->json(['message' => 'Permission denied to change description'], Response::HTTP_FORBIDDEN);
+            $newDesc = empty($data['description']) ? null : $data['description'];
+            if ($newDesc !== $task->getDescription()) {
+                if (!$this->taskService->canEditField($user, $task, 'description')) {
+                    return $this->json(['message' => 'Permission denied to change description'], Response::HTTP_FORBIDDEN);
+                }
+                $task->setDescription($newDesc);
             }
-            $task->setDescription(empty($data['description']) ? null : $data['description']);
         }
 
         $errors = $validator->validate($task);
@@ -475,11 +506,17 @@ class TaskController extends AbstractController
         $user = $this->getUser();
         
         // Add granular field edit permissions
-        $fields = ['priority', 'expiresAt', 'estimatedHours', 'title', 'description', 'manager'];
+        $fields = ['priority', 'expiresAt', 'estimatedHours', 'title', 'description', 'manager', 'status'];
         $editableFields = [];
         foreach ($fields as $field) {
-            if ($this->taskService->canEditField($user, $task, $field)) {
-                $editableFields[] = $field;
+            if ($field === 'status') {
+                if ($this->taskService->can($user, $task, 'TASK_STATUS_CHANGE')) {
+                    $editableFields[] = 'status';
+                }
+            } else {
+                if ($this->taskService->canEditField($user, $task, $field)) {
+                    $editableFields[] = $field;
+                }
             }
         }
 
@@ -488,9 +525,9 @@ class TaskController extends AbstractController
             'editableFields' => $editableFields,
             'isProjectAdmin' => $this->taskService->isProjectAdmin($user, $project),
             'taskOwnership' => [
-                'isManager' => ($task->getManager() === $user),
+                'isManager' => $task->getManager() && $user && ($task->getManager()->getId() === $user->getId()),
                 'isAssignee' => $this->taskService->isAssignee($user, $task),
-                'isCreator' => ($task->getCreatedBy() === $user),
+                'isCreator' => $task->getCreatedBy() && $user && ($task->getCreatedBy()->getId() === $user->getId()),
             ]
         ]);
     }

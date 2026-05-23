@@ -1,0 +1,270 @@
+<div class="space-y-12">
+    <form (submit)="$event.preventDefault()" class="space-y-8">
+        <!-- Title -->
+        <div class="space-y-2">
+            <div class="flex items-center justify-between ml-1">
+                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Titre de la tâche</label>
+                <span class="text-[9px] font-bold uppercase tracking-tighter" [style.color]="highlightColor">(requis)</span>
+            </div>
+            <input type="text" [ngModel]="title" (ngModelChange)="titleChange.emit($event)" name="title" [disabled]="!canEditField('title')" required maxlength="200" placeholder="Ex: Finaliser le design de l'accueil"
+                   class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-lg font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
+                   [style.--highlight-color]="highlightColor">
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-2">
+            <div class="flex items-center justify-between ml-1">
+                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Description détaillée</label>
+                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
+            </div>
+            <textarea [ngModel]="description" (ngModelChange)="descriptionChange.emit($event)" name="description" [disabled]="!canEditField('description')" rows="4" maxlength="4000" placeholder="Expliquez ici ce qui doit être fait..."
+                      class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm transition-all outline-none shadow-sm resize-none focus:border-[var(--highlight-color)]"
+                      [style.--highlight-color]="highlightColor"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Status -->
+            <div class="space-y-2">
+                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Statut</label>
+                <div class="relative">
+                    <select [ngModel]="status" (ngModelChange)="statusChange.emit($event)" name="status" [disabled]="!canEditField('status')"
+                            class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold transition-all outline-none shadow-sm appearance-none cursor-pointer focus:border-[var(--highlight-color)]"
+                            [style.--highlight-color]="highlightColor">
+                        <option value="TODO">À faire</option>
+                        <option value="IN_PROGRESS">En cours</option>
+                        <option value="WAITING">En attente</option>
+                        <option value="DONE">Terminé</option>
+                        <option value="CANCELED">Annulé</option>
+                    </select>
+                    <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Priority -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between ml-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Priorité</label>
+                    <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">Entre 1 (faible) et 10 (urgent)</span>
+                </div>
+                <input type="number" [ngModel]="priority" (ngModelChange)="priority = $event; validatePriority()" name="priority" [disabled]="!canEditField('priority')" min="1" max="10" step="1"
+                       class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
+                       [style.--highlight-color]="highlightColor">
+            </div>
+        </div>
+
+        <!-- Status Message (Conditional) -->
+        <div *ngIf="isStatusMessageVisible()" class="space-y-2 transition-all duration-300">
+            <div class="flex items-center justify-between ml-1">
+                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Message de statut</label>
+                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
+            </div>
+            <textarea [ngModel]="statusMessage" (ngModelChange)="statusMessageChange.emit($event)" name="statusMessage" rows="2" placeholder="Expliquez pourquoi le statut a changé ou donnez des précisions..."
+                      class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm transition-all outline-none shadow-sm resize-none focus:border-[var(--highlight-color)]"
+                      [style.--highlight-color]="highlightColor"></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Start Date -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between ml-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Date de début</label>
+                    <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <input type="date" [ngModel]="startDate_date" (ngModelChange)="startDate_dateChange.emit($event)" name="startDate_date" [disabled]="!canEditField('startDate')"
+                           class="flex-[3] min-w-[120px] px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
+                           [style.--highlight-color]="highlightColor">
+                    <input type="time" [ngModel]="startDate_time" (ngModelChange)="startDate_timeChange.emit($event)" name="startDate_time" [disabled]="!canEditField('startDate')"
+                           class="flex-[2] min-w-[90px] px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
+                           [style.--highlight-color]="highlightColor">
+                </div>
+            </div>
+
+            <!-- Due Date / Expiry -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between ml-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Échéance</label>
+                    <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <input type="date" [ngModel]="expiresAt_date" (ngModelChange)="expiresAt_dateChange.emit($event)" name="expiresAt_date" [disabled]="!canEditField('expiresAt')"
+                           class="flex-[3] min-w-[120px] px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
+                           [style.--highlight-color]="highlightColor">
+                    <input type="time" [ngModel]="expiresAt_time" (ngModelChange)="expiresAt_timeChange.emit($event)" name="expiresAt_time" [disabled]="!canEditField('expiresAt')"
+                           class="flex-[2] min-w-[90px] px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
+                           [style.--highlight-color]="highlightColor">
+                </div>
+            </div>
+
+            <!-- Estimated Hours -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between ml-1">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Temps estimé (h)</label>
+                    <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
+                </div>
+                <input type="number" step="0.5" [ngModel]="estimatedHours" (ngModelChange)="estimatedHoursChange.emit($event)" name="estimatedHours" placeholder="0.0" [disabled]="!canEditField('estimatedHours')"
+                       class="w-full px-5 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
+                       [style.--highlight-color]="highlightColor">
+            </div>
+        </div>
+
+        <!-- Manager / Responsable -->
+        <div class="space-y-2">
+            <div class="flex items-center justify-between ml-1">
+                <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Responsable</label>
+                <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
+            </div>
+            <div class="relative">
+                <select [ngModel]="managerUuid" (ngModelChange)="managerUuidChange.emit($event)" name="managerUuid" [disabled]="!canEditField('managerUuid')"
+                        class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold transition-all outline-none shadow-sm appearance-none cursor-pointer focus:border-[var(--highlight-color)]"
+                        [style.--highlight-color]="highlightColor">
+                    <option value="">Non assigné</option>
+                    <option *ngFor="let m of members" [value]="m.uuid">{{ m.firstName }} {{ m.lastName }}</option>
+                </select>
+                <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!-- SUB-RESOURCES SECTIONS -->
+    <div class="space-y-12">
+        
+        <!-- Assignees -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    Assignés
+                </h3>
+                <div *ngIf="!isTaskTrashed && (hasPerm('TASK_ASSIGN_OTHERS', isTaskOwner()) || hasPerm('TASK_ASSIGN_SELF'))" 
+                     class="relative">
+                    <button (click)="toggleUserPicker()" 
+                            class="text-[10px] font-black uppercase tracking-widest hover:opacity-70 transition-opacity cursor-pointer animate-in fade-in"
+                            [style.color]="highlightColor">+ Ajouter</button>
+                    
+                    <!-- User Picker Dropdown -->
+                    <div *ngIf="showUserPicker()" class="absolute right-0 mt-2 w-64 bg-white border border-gray-100 shadow-2xl rounded-2xl p-2 z-20">
+                        <input type="text" [(ngModel)]="userSearchQuery" placeholder="Rechercher..." class="w-full px-3 py-2 text-xs border-b border-gray-50 outline-none mb-1">
+                        <div class="max-h-48 overflow-y-auto custom-scrollbar">
+                            <button *ngFor="let m of getFilteredMembers()" 
+                                    (click)="addAssignee(m)"
+                                    type="button" 
+                                    class="w-full text-left px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                                <span class="truncate">{{ m.firstName }} {{ m.lastName }}</span>
+                                <span class="opacity-0 group-hover:opacity-100 shrink-0" [style.color]="highlightColor">+</span>
+                            </button>
+                            <p *ngIf="getFilteredMembers().length === 0" class="text-[10px] text-gray-400 italic p-3 text-center">Aucun membre disponible</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+                <div *ngFor="let a of assignees" class="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs font-bold text-gray-700">
+                    <span class="truncate max-w-[120px]">{{ a.firstName }} {{ a.lastName }}</span>
+                    <button *ngIf="!isTaskTrashed && (hasPerm('TASK_ASSIGN_OTHERS', isTaskOwner()) || hasPerm('TASK_ASSIGN_SELF'))" 
+                            (click)="removeAssignee(a.uuid)" 
+                            type="button" 
+                            class="text-gray-400 hover:text-rose-500 transition-colors cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <p *ngIf="assignees.length === 0" class="text-xs text-gray-400 italic font-medium ml-1">Aucune personne assignée</p>
+            </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                    Étiquettes
+                </h3>
+                <div *ngIf="!isTaskTrashed && hasPerm('TASK_TAG_MANAGE', isTaskOwner())" class="relative">
+                    <button (click)="toggleTagPicker()" 
+                            class="text-[10px] font-black uppercase tracking-widest hover:opacity-70 transition-opacity cursor-pointer"
+                            [style.color]="highlightColor">+ Ajouter</button>
+                    
+                    <!-- Tag Picker Dropdown -->
+                    <div *ngIf="showTagPicker()" class="absolute right-0 mt-2 w-64 bg-white border border-gray-100 shadow-2xl rounded-2xl p-2 z-20">
+                        <div class="max-h-48 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                            <button *ngFor="let t of getFilteredTags()" 
+                                    (click)="addTag(t)"
+                                    type="button" 
+                                    class="w-full text-left px-3 py-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2 cursor-pointer">
+                                <span class="w-2 h-2 rounded-full" [style.backgroundColor]="t.color"></span>
+                                <span class="truncate">{{ t.name }}</span>
+                            </button>
+                            <p *ngIf="getFilteredTags().length === 0" class="text-[10px] text-gray-400 italic p-3 text-center">Aucune étiquette disponible</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap gap-2">
+                <div *ngFor="let t of tags" 
+                     class="flex items-center gap-2 px-3 py-1 bg-white border border-gray-100 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm"
+                     [style.color]="t.color">
+                    <span class="w-1.5 h-1.5 rounded-full" [style.backgroundColor]="t.color"></span>
+                    <span class="truncate max-w-[100px]">{{ t.name }}</span>
+                    <button *ngIf="!isTaskTrashed && hasPerm('TASK_TAG_MANAGE', isTaskOwner())" 
+                            (click)="removeTag(t.uuid)" 
+                            type="button" 
+                            class="text-gray-300 hover:text-rose-500 transition-colors cursor-pointer">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <p *ngIf="tags.length === 0" class="text-xs text-gray-400 italic font-medium ml-1">Aucune étiquette</p>
+            </div>
+        </div>
+
+        <!-- Dependencies -->
+        <div class="space-y-4">
+            <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                Dépendances
+            </h3>
+            
+            <div class="space-y-2">
+                <div *ngFor="let d of dependencies" class="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl group shadow-sm hover:shadow transition-shadow">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        <span class="text-xs font-bold text-gray-900 truncate" [title]="d.title">{{ d.title }}</span>
+                    </div>
+                    <button *ngIf="!isTaskTrashed && hasPerm('TASK_DEPENDENCY_MANAGE', isTaskOwner())" 
+                            (click)="removeDependency(d.uuid)" 
+                            type="button" 
+                            class="p-2 text-gray-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div *ngIf="!isTaskTrashed && hasPerm('TASK_DEPENDENCY_MANAGE', isTaskOwner())" class="relative">
+                <button (click)="toggleDependencyPicker()" 
+                        class="w-full py-3 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-400 hover:text-gray-600 transition-all cursor-pointer">
+                    + Ajouter une dépendance
+                </button>
+                
+                <!-- Dependency Picker Dropdown -->
+                <div *ngIf="showDependencyPicker()" class="absolute left-0 mt-2 w-full bg-white border border-gray-100 shadow-2xl rounded-2xl p-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <input type="text" [(ngModel)]="taskSearchQuery" placeholder="Rechercher une tâche..." class="w-full px-3 py-2 text-xs border-b border-gray-50 outline-none mb-1">
+                    <div class="max-h-48 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                        <button *ngFor="let t of getFilteredTasks()" 
+                                (click)="addDependency(t)"
+                                type="button" 
+                                class="w-full text-left px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-between group cursor-pointer">
+                            <span class="truncate">{{ t.title }}</span>
+                            <span class="opacity-0 group-hover:opacity-100 shrink-0" [style.color]="highlightColor">+</span>
+                        </button>
+                        <p *ngIf="getFilteredTasks().length === 0" class="text-[10px] text-gray-400 italic p-3 text-center">Aucune tâche disponible</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

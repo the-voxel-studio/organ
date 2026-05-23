@@ -61,4 +61,10 @@ class UserCacheService
     {
         $this->cache->delete(self::CACHE_PREFIX . $uuid);
     }
+
+    public function refresh(User $user): void
+    {
+        $this->invalidate($user->getUuid());
+        $this->getUserSummary($user);
+    }
 }
