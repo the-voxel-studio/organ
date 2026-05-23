@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -23,8 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
-import fr.studio.voxel.organ.ViewModel.Project
+import fr.studio.voxel.organ.network.services.Project
 
 @Composable
 fun ProjectSticker(
@@ -51,11 +47,19 @@ fun ProjectSticker(
                     verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    val cleanString = project.color.removePrefix("0x")
-                    val projectColor = Color(cleanString.toLong(16))
+                    val projectColor = try {
+                        val colorStr = project.color.removePrefix("0x").removePrefix("#")
+
+                        val parseStr = if (colorStr.length == 6) "FF$colorStr" else colorStr
+
+                        Color(parseStr.toLong(16))
+                    } catch (e: Exception) {
+                        MaterialTheme.colorScheme.primary
+                    }
 
                     ProjectIconBadge(
                         visual = project.visual,
+                        projectColor = projectColor
                     )
 
                     ProjectStateSticker(state = project.state, color = projectColor)
@@ -64,7 +68,7 @@ fun ProjectSticker(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = project.name,
+                    text = project.title,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     lineHeight = 1.5.em
@@ -73,7 +77,7 @@ fun ProjectSticker(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = project.description,
+                    text = project.description ?: "Aucune description",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     lineHeight = 1.5.em
@@ -96,8 +100,10 @@ fun ProjectSticker(
                         color = MaterialTheme.colorScheme.outline
                     )
 
+                    val dateCreation = project.dateCreation.take(10)
+
                     Text(
-                        text = project.dateCreation,
+                        text = dateCreation,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )

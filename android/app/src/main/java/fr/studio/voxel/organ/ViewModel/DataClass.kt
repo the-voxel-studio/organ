@@ -8,18 +8,6 @@ data class Organ(
     val memberIds: List<Int>
 )
 
-data class Project(
-    val id: Int,
-    val name: String,
-    val description : String,
-    val dateCreation : String,
-    val color : String,
-    val visual: ProjectVisual,
-    val state : String,
-    val memberIds: List<Int>,
-    val organs: List<Organ>
-)
-
 data class User(
     val id: Int,
     val firstName: String,

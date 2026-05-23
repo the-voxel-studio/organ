@@ -17,7 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
+import coil.compose.AsyncImage
 
 /**
  * Structure permettant de définir le visuel d'un projet :
@@ -26,6 +26,7 @@ import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 sealed class ProjectVisual {
     data class Emoji(val text: String) : ProjectVisual()
     data class SvgIcon(val resId: Int) : ProjectVisual()
+    data class SvgXml(val xmlContent: String?) : ProjectVisual() // Nouveau cas
 }
 
 /**
@@ -38,7 +39,8 @@ sealed class ProjectVisual {
  */
 @Composable
 fun ProjectIconBadge(
-    visual: ProjectVisual,
+    visual: ProjectVisual?,
+    projectColor : Color,
     modifier: Modifier = Modifier,
     badgeSize: Dp = 56.dp,
     iconSize: Dp = 32.dp
@@ -47,7 +49,7 @@ fun ProjectIconBadge(
         modifier = modifier
             .size(badgeSize)
             .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.background)
+            .background(if (visual!=null) MaterialTheme.colorScheme.background else projectColor)
             .border(1.dp, MaterialTheme.colorScheme.onSurface,RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
@@ -64,9 +66,19 @@ fun ProjectIconBadge(
                     painter = painterResource(id = visual.resId),
                     contentDescription = "Icône du projet",
                     modifier = Modifier.size(iconSize),
-                    // Crucial pour préserver le bleu et le rose d'origine (comme ton ADN)
                     tint = Color.Unspecified
                 )
+            }
+            is ProjectVisual.SvgXml -> {
+                AsyncImage(
+                    model = visual.xmlContent?.toByteArray(),
+                    contentDescription = "SVG du projet",
+                    modifier = Modifier.size(iconSize)
+                )
+            }
+
+            null -> {
+                // le badge est un carré de couleur
             }
         }
     }

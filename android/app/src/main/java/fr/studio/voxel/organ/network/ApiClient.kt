@@ -27,9 +27,9 @@ object ApiClient {
             .addInterceptor(logging)
             .cookieJar(cookieJar)
             .authenticator(authenticator)
-            .connectTimeout(30, TimeUnit.SECONDS) // Temps pour établir la connexion
-            .readTimeout(30, TimeUnit.SECONDS)    // Temps pour recevoir les données
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS) // Temps pour établir la connexion
+            .readTimeout(60, TimeUnit.SECONDS)    // Temps pour recevoir les données
+            .writeTimeout(60, TimeUnit.SECONDS)
             .build()
 
         retrofit = Retrofit.Builder()

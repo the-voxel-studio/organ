@@ -1,5 +1,6 @@
 package fr.studio.voxel.organ.ViewModel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -116,7 +117,9 @@ class AuthViewModel : ViewModel() {
                     authError = "Erreur lors de l'inscription."
                 }
             } catch (e: Exception){
-                authError = "Problème réseau: ${e.localizedMessage}"
+                // Affiche le message technique (ex: "Connection refused", "CLEARTEXT communication not permitted")
+                authError = "Erreur : ${e.localizedMessage}"
+                Log.e("API_ERROR", "Détail : ", e)
             } finally {
                 isLoading = false
             }

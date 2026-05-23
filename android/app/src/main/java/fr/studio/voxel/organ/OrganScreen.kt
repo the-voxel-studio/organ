@@ -11,6 +11,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.padding
 import androidx.navigation.compose.composable
 import androidx.compose.animation.slideOutHorizontally
+import androidx.lifecycle.viewmodel.compose.viewModel
+import fr.studio.voxel.organ.ViewModel.MainViewModel
 import fr.studio.voxel.organ.ui.AuthMode
 import fr.studio.voxel.organ.ui.AuthScreen
 import fr.studio.voxel.organ.ui.SideBar
@@ -31,6 +33,8 @@ enum class OrganScreen {
 fun OrganApp(
     navController: NavHostController = rememberNavController()
 ){
+    val mainVM: MainViewModel = viewModel()
+
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -73,12 +77,12 @@ fun OrganApp(
                 enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
                 exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) }
             ){
-                SideBar(navController = navController, utilisateur = "Michel JeTestLeNomLongEncorePlusLongCarFautTronquer")
+                SideBar(navController = navController, utilisateur = "Michel JeTestLeNomLongEncorePlusLongCarFautTronquer", mainVM = mainVM)
 
             }
 
             composable(route = OrganScreen.Dashboard.name){
-                Dashboard(navController = navController)
+                Dashboard(navController = navController, mainVM = mainVM)
             }
         }
 

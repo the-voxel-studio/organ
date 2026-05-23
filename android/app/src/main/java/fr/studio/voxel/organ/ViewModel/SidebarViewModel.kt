@@ -8,16 +8,14 @@ import androidx.lifecycle.ViewModel
 class SidebarViewModel : ViewModel(
 ) {
 
-    var selectedProjectId by mutableStateOf<Int?>(null)
-    var selectedOrganId by mutableStateOf<Int?>(null)
+    var selectedProjectUuid by mutableStateOf<String?>(null)
 
-    fun selectProject(id: Int) {
-        selectedProjectId = id
-        selectedOrganId = null
+    fun selectProject(uuid: String) {
+        selectedProjectUuid = uuid
     }
 
-    fun selectOrgan(id: Int) {
-        selectedOrganId = id
+    fun clearSelection() {
+        selectedProjectUuid = null
     }
 }
 
