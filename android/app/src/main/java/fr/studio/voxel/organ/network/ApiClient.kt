@@ -5,6 +5,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object ApiClient {
     private const val BASE_URL = "http://10.0.2.2:8001" // Android Emulator's localhost
@@ -26,6 +27,9 @@ object ApiClient {
             .addInterceptor(logging)
             .cookieJar(cookieJar)
             .authenticator(authenticator)
+            .connectTimeout(30, TimeUnit.SECONDS) // Temps pour établir la connexion
+            .readTimeout(30, TimeUnit.SECONDS)    // Temps pour recevoir les données
+            .writeTimeout(30, TimeUnit.SECONDS)
             .build()
 
         retrofit = Retrofit.Builder()
