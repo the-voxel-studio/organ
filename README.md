@@ -43,7 +43,7 @@ Le diagramme suivant illustre l'architecture générale de l'API backend :
 
 ## Configuration de l'Environnement
 
-Le projet nécessite trois fichiers `.env`. **Ne réfléchissez pas trop :** les valeurs ci-dessous sont des exemples valides pour le développement local. Copiez-collez sans crainte.
+Le projet nécessite quatres fichiers `.env`. **Ne réfléchissez pas trop :** les valeurs ci-dessous sont des exemples valides pour le développement local. Copiez-collez sans crainte.
 
 > **Important :** Dans les exemples ci-dessous, les valeurs entourées de `< >` (ex: `<VOTRE_ID_CLIENT>`) doivent être remplacées par vos propres valeurs réelles obtenues lors de la configuration de vos services (Google Cloud, etc.) ou des placeholders valides.
 
@@ -113,7 +113,7 @@ NOTIFICATION_BASE_URL=http://localhost:8000
 ###< REALTIME ###
 ```
 
-### 3. Frontend (`front/.env`)
+### 3. Frontend PHP (`front_php/.env`)
 ```dotenv
 ###> SYMFONY CORE ###
 APP_ENV=dev
@@ -131,6 +131,10 @@ API_URL=http://api-nginx
 ###> AUTHENTICATION ###
 GOOGLE_CLIENT_ID=<VOTRE_ID_CLIENT>.apps.googleusercontent.com
 ###< AUTHENTICATION ###
+```
+### 4. Frontend Angular (`front_angular/.env`)
+```dotenv
+NG_APP_GOOGLE_CLIENT_ID=<VOTRE_ID_CLIENT>.apps.googleusercontent.com
 ```
 
 ---
