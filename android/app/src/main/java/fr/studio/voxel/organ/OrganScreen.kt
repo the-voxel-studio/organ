@@ -44,6 +44,7 @@ fun OrganApp(
             ){
                 AuthScreen(
                     mode = AuthMode.SIGN_IN,
+                    navController = navController,
                     onModeSwitch = { targetMode ->
                         if (targetMode == AuthMode.SIGN_UP) {
                             navController.navigate(OrganScreen.SignUp.name)
@@ -57,6 +58,7 @@ fun OrganApp(
             ){
                 AuthScreen(
                     mode = AuthMode.SIGN_UP,
+                    navController = navController,
                     onModeSwitch = { targetMode ->
                         if (targetMode == AuthMode.SIGN_IN) {
                             // On revient en arrière ou on force la route de connexion

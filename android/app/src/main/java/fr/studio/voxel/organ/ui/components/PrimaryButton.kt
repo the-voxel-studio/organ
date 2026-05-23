@@ -37,7 +37,8 @@ fun PrimaryButton(
     color : Color = MaterialTheme.colorScheme.primary,
     pressedColor : Color = MaterialTheme.colorScheme.secondary,
     @DrawableRes icon : Int? = null,
-    iconTint : Color = colorText
+    iconTint : Color = colorText,
+    enabled : Boolean = true
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -55,14 +56,16 @@ fun PrimaryButton(
 
     ElevatedButton(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier
             .graphicsLayer(
-                scaleX = scale,
-                scaleY = scale
+                scaleX = if (enabled) scale else 1f,
+                scaleY = if (enabled) scale else 1f
             ),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.elevatedButtonColors(
-            containerColor = backgroundColor
+            containerColor = if (enabled) backgroundColor else color.copy(alpha = 0.5f),
+            contentColor = if (enabled) colorText else colorText.copy(alpha = 0.5f)
         ),
         interactionSource = interactionSource,
         elevation = ButtonDefaults.elevatedButtonElevation(

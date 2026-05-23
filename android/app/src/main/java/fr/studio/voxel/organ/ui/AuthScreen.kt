@@ -21,6 +21,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import fr.studio.voxel.organ.OrganScreen
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ViewModel.AuthViewModel
 import fr.studio.voxel.organ.ui.components.HeaderComponents.Header
@@ -34,9 +36,26 @@ enum class AuthMode{
 @Composable
 fun AuthScreen(
     mode : AuthMode,
+    navController: NavController,
     onModeSwitch : (AuthMode) -> Unit,
     viewModel: AuthViewModel = viewModel()
 ){
+    LaunchedEffect(viewModel.navigateToDashboard) {
+        if(viewModel.navigateToDashboard){
+            navController.navigate(OrganScreen.Dashboard.name){
+                popUpTo(OrganScreen.SignIn.name){inclusive = true}
+            }
+            viewModel.onNavigated()
+        }
+    }
+
+    LaunchedEffect(viewModel.registrationSuccess) {
+        if(viewModel.registrationSuccess){
+            onModeSwitch(AuthMode.SIGN_IN)
+            viewModel.onRegistrationHandled()
+        }
+    }
+
     val hasError = viewModel.authError != null
     val showPasswordError = mode == AuthMode.SIGN_UP && viewModel.password.isNotEmpty() && !viewModel.isPasswordValid
     val showConfirmError = mode == AuthMode.SIGN_UP && viewModel.confirmPassword.isNotEmpty() && !viewModel.passwordsMatch
@@ -299,6 +318,7 @@ fun AuthScreen(
 
                 PrimaryButton(
                     onClick = { viewModel.handleAuth(mode) },
+                    enabled = checked,
                     text = (if (mode == AuthMode.SIGN_UP) "Créer mon compte".uppercase() else "Se connecter").uppercase(),
                     modifier = Modifier.fillMaxWidth(),
                     colorText = MaterialTheme.colorScheme.surface
