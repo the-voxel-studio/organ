@@ -11,102 +11,27 @@
     <div class="flex gap-8 min-w-max pr-8">
         
         <!-- Kanban Columns -->
-        <div *ngFor="let col of [
+        <ng-container *ngFor="let col of [
                     {status: 'TODO', label: 'À Faire', dot: 'bg-slate-300'},
                     {status: 'IN_PROGRESS', label: 'En Cours', dot: 'bg-[var(--highlight-color)]'},
                     {status: 'WAITING', label: 'En Attente', dot: 'bg-amber-400'},
                     {status: 'DONE', label: 'Terminé', dot: 'bg-green-400'},
                     {status: 'CANCELED', label: 'Annulé', dot: 'bg-rose-400'}
-                 ]" 
-             class="space-y-6 w-[350px]"
-             [class.hidden]="selectedStatuses.length > 0 && !selectedStatuses.includes(col.status)">
-            
-            <div class="flex items-center justify-between px-4">
-                <h5 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
-                    <span class="w-2 h-2 rounded-full" [class]="col.dot" [style.backgroundColor]="col.status === 'IN_PROGRESS' ? highlightColor : ''"></span>
-                    {{ col.label }}
-                </h5>
-                <span class="text-[10px] font-black text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-                    {{ getColumnCount(col.status) }}
-                </span>
-            </div>
-            
-            <!-- Column Drop Area -->
-            <div (dragover)="onDragOver($event)"
-                 (drop)="onDrop($event, col.status)"
-                 (dragenter)="onDragEnter(col.status)"
-                 (dragleave)="onDragLeave()"
-                 class="min-h-[600px] rounded-[2.5rem] p-6 flex flex-col gap-4 transition-all shadow-inner border-2 border-transparent"
-                 [class.border-dashed]="activeDragOverColumn === col.status"
-                 [style.borderColor]="activeDragOverColumn === col.status ? highlightColor : ''"
-                 [style.background]="'linear-gradient(180deg, ' + highlightColor + '14 0%, ' + highlightColor + '05 100%)'">
-                
-                <!-- Task Cards -->
-                <div *ngFor="let task of getTasksByStatus(col.status)" 
-                     draggable="true" 
-                     (dragstart)="onDragStart($event, task)"
-                     (click)="onTaskClick(task.uuid)"
-                     class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:border-[var(--highlight-color)]"
-                     [style.--highlight-color]="highlightColor">
-                    
-                    <div class="flex flex-col gap-4">
-                        <div class="flex items-start justify-between gap-4">
-                            <h4 class="text-sm font-bold text-gray-900 leading-tight group-hover:text-black truncate" [title]="task.title">{{ task.title }}</h4>
-                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider shrink-0"
-                                  [class]="getPriorityColor(task.priority)">
-                                P{{ task.priority }}
-                            </span>
-                        </div>
-                        
-                        <!-- Tags list inside card -->
-                        <div *ngIf="task.tags && task.tags.length > 0" class="flex flex-wrap gap-1.5">
-                            <span *ngFor="let t of task.tags" 
-                                  class="px-2 py-0.5 bg-gray-50 text-[9px] font-black uppercase tracking-widest rounded border truncate max-w-[80px]" 
-                                  [style.color]="t.color"
-                                  [style.borderColor]="t.color + '20'"
-                                  [title]="t.name">{{ t.name }}</span>
-                        </div>
-
-                        <p *ngIf="task.description" class="text-xs text-gray-400 line-clamp-2">{{ task.description }}</p>
-
-                        <!-- Bottom card meta -->
-                        <div class="flex items-center justify-between pt-3 border-t border-gray-50">
-                            <div class="flex -space-x-2">
-                                <div *ngFor="let assignee of task.assignees.slice(0, 3)"
-                                     class="w-7 h-7 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 uppercase"
-                                     [title]="assignee.firstName + ' ' + assignee.lastName">
-                                    {{ assignee.firstName[0] }}{{ assignee.lastName[0] }}
-                                </div>
-                                <div *ngIf="task.assignees.length > 3" 
-                                     class="w-7 h-7 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[9px] font-black text-gray-500 uppercase">
-                                    +{{ task.assignees.length - 3 }}
-                                </div>
-                                <div *ngIf="task.assignees.length === 0" 
-                                     class="w-7 h-7 rounded-full border-2 border-white bg-gray-50 flex items-center justify-center text-[10px] text-gray-300">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div *ngIf="task.expiresAt" 
-                                     class="flex items-center gap-1.5 px-2 py-1 bg-rose-50 text-rose-600 rounded-lg text-[10px] font-black uppercase tracking-widest">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z" /></svg>
-                                    {{ formatDate(task.expiresAt) }}
-                                </div>
-                                <div *ngIf="task.commentCount > 0" class="flex items-center gap-1 text-[9px] font-bold text-gray-400">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
-                                    {{ task.commentCount }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Empty Column state -->
-                <div *ngIf="getTasksByStatus(col.status).length === 0" class="py-12 text-center">
-                    <p class="text-xs text-gray-400 font-medium italic">Aucune tâche</p>
-                </div>
-            </div>
-
-        </div>
+                 ]">
+            <app-kanban-column
+                 *ngIf="selectedStatuses.length === 0 || selectedStatuses.includes(col.status)"
+                 [column]="col"
+                 [tasks]="getTasksByStatus(col.status)"
+                 [allTasks]="allTasks"
+                 [highlightColor]="highlightColor"
+                 [hasTaskEditAll]="hasTaskEditAll"
+                 [currentUserId]="currentUserId"
+                 [activeDragOverColumn]="activeDragOverColumn"
+                 (taskClicked)="taskClicked.emit($event)"
+                 (taskStatusChanged)="taskStatusChanged.emit($event)"
+                 (dragEnterColumn)="activeDragOverColumn = $event"
+                 (dragLeaveColumn)="activeDragOverColumn = null">
+            </app-kanban-column>
+        </ng-container>
     </div>
 </div>

@@ -1,0 +1,70 @@
+<!-- --- SECTION 3: MEMBERS --- -->
+<div class="space-y-8" [class.opacity-50]="!canManage" [class.pointer-events-none]="!canManage" [class.grayscale-[0.5]]="!canManage">
+  <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+    <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+          [style.background-color]="highlightColor + '1a'" [style.color]="highlightColor">3</span>
+    Membres de l'Organ
+    @if (!canManage) {
+      <span class="text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 px-2 py-1 rounded ml-2">Lecture seule</span>
+    }
+  </h3>
+
+  @if (canManage) {
+    <div class="flex gap-3">
+      <select [(ngModel)]="selectedMemberUuid"
+              class="flex-grow h-14 px-6 bg-gray-50 border border-transparent focus:border-gray-200 focus:bg-white rounded-2xl text-gray-900 font-medium transition-all outline-none appearance-none">
+        <option value="">Sélectionner un membre du projet...</option>
+        @for (member of projectMembers; track member.uuid) {
+          <option [value]="member.user.uuid">{{ member.user.firstName }} {{ member.user.lastName }} ({{ member.user.email }})</option>
+        }
+      </select>
+      <button type="button" (click)="addMember()"
+              class="px-8 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all active:scale-95 cursor-pointer">
+        Ajouter
+      </button>
+    </div>
+  }
+
+  <!-- Added members list -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    @for (member of addedMembers; track member.userUuid) {
+      <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center font-black"
+                 [style.color]="highlightColor">
+              {{ (member.name || '').charAt(0) }}
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-900">{{ member.name }}</p>
+              <p class="text-[10px] text-gray-400 font-medium">{{ member.email }}</p>
+            </div>
+          </div>
+          @if (canManage) {
+            <button type="button" (click)="removeMember(member.userUuid)"
+                    class="p-2 text-gray-300 hover:text-red-500 transition-colors cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          }
+        </div>
+        
+        <!-- Roles toggle buttons -->
+        <div class="flex flex-wrap gap-2">
+          @for (role of roles; track role.id) {
+            <button type="button" 
+                    (click)="toggleMemberRole(member.userUuid, role.id)"
+                    [disabled]="!canManage"
+                    class="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer disabled:cursor-not-allowed"
+                    [style.background-color]="isMemberRoleActive(member.userUuid, role.id) ? highlightColor : 'white'"
+                    [style.border-color]="isMemberRoleActive(member.userUuid, role.id) ? highlightColor : '#f3f4f6'"
+                    [style.color]="isMemberRoleActive(member.userUuid, role.id) ? 'white' : '#6b7280'">
+              {{ role.name || 'Rôle' }}
+            </button>
+          }
+        </div>
+      </div>
+    } @empty {
+      <p class="text-sm text-gray-400 italic col-span-full">Aucun membre ajouté à l'Organ pour le moment.</p>
+    }
+  </div>
+</div>

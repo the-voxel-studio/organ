@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { ProjectService } from '../../../services/project.service';
 import { OrganService } from '../../../services/organ.service';
@@ -10,11 +10,21 @@ import { PermissionService } from '../../../services/permission.service';
 import { AuthService } from '../../../services/auth.service';
 import { AvailablePermission } from '../../../models/permission.model';
 import { IconType } from '../../../models/project.model';
+import { OrganRolesComponent } from './components/organ-roles/organ-roles';
+import { OrganMembersComponent } from './components/organ-members/organ-members';
+import { OrganDangerZoneComponent } from './components/organ-danger-zone/organ-danger-zone';
 
 @Component({
   selector: 'app-organ-edit',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    ReactiveFormsModule,
+    OrganRolesComponent,
+    OrganMembersComponent,
+    OrganDangerZoneComponent
+  ],
   templateUrl: './organ-edit.html'
 })
 export class OrganEditComponent implements OnInit, OnDestroy {
@@ -25,6 +35,7 @@ export class OrganEditComponent implements OnInit, OnDestroy {
   private organRoleService = inject(OrganRoleService);
   private permissionService = inject(PermissionService);
   protected authService = inject(AuthService);
+  private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
 
   // Page mode & metadata
@@ -36,12 +47,30 @@ export class OrganEditComponent implements OnInit, OnDestroy {
   loadingText = signal('Chargement...');
   errorMessage = signal<string | null>(null);
 
-  // Form states
-  organTitle = '';
-  organDescription = '';
-  highlightColor = '#FF7EB6';
-  iconType: IconType = 'BLOB';
-  iconData: string | null = null;
+  // Reactive Form
+  organForm = this.fb.group({
+    title: ['', [Validators.required, Validators.maxLength(100)]],
+    description: ['', [Validators.maxLength(500)]],
+    highlightColor: ['#FF7EB6'],
+    iconType: ['BLOB' as IconType],
+    iconData: [null as string | null]
+  });
+
+  // Getters/setters to map existing code seamlessly
+  get organTitle(): string { return this.organForm.get('title')?.value || ''; }
+  set organTitle(val: string) { this.organForm.get('title')?.setValue(val); }
+
+  get organDescription(): string { return this.organForm.get('description')?.value || ''; }
+  set organDescription(val: string) { this.organForm.get('description')?.setValue(val); }
+
+  get highlightColor(): string { return this.organForm.get('highlightColor')?.value || '#FF7EB6'; }
+  set highlightColor(val: string) { this.organForm.get('highlightColor')?.setValue(val); }
+
+  get iconType(): IconType { return this.organForm.get('iconType')?.value as IconType || 'BLOB'; }
+  set iconType(val: IconType) { this.organForm.get('iconType')?.setValue(val); }
+
+  get iconData(): string | null { return this.organForm.get('iconData')?.value || null; }
+  set iconData(val: string | null) { this.organForm.get('iconData')?.setValue(val); }
 
   // Project Theme Color
   projectColor = '#FF7EB6';
@@ -58,22 +87,11 @@ export class OrganEditComponent implements OnInit, OnDestroy {
 
   // Local Roles
   roles: any[] = [];
-  editingRoleId: string | null = null;
 
   // Members list
   projectMembers: any[] = []; // All members from project detailed view
   addedMembers: any[] = []; // Local members in this organ
   initialMembers: any[] = []; // Initial members state for diffing
-  selectedMemberUuid = '';
-
-  // Modals management
-  showRoleModal = false;
-  modalRoleName = '';
-  modalRoleEmoji = '👤';
-  modalRolePermissions: string[] = [];
-  modalRoleError = '';
-
-  showDeleteModal = false;
 
   // Standard theme colors
   standardColors = ['#FF7EB6', '#4ADE80', '#60A5FA', '#FBBF24', '#A78BFA', '#FF5722', '#3F51B5'];
@@ -563,200 +581,15 @@ export class OrganEditComponent implements OnInit, OnDestroy {
     }
   }
 
-  // --- Role management handlers ---
-  addPresetRole(presetKey: 'responsible' | 'manager' | 'participant' | 'reviewer' | 'tester' | 'observer' | 'guest') {
-    if (!this.canManageRoles()) return;
-    const preset = this.presets[presetKey];
-    if (!preset) return;
-
-    const newRole = {
-      id: 'role-' + Date.now() + Math.random(),
-      name: preset.name,
-      iconType: 'EMOJI',
-      iconData: preset.iconData,
-      permissions: [...preset.permissions]
-    };
-
-    this.roles.push(newRole);
-  }
-
-  addNewRole() {
-    if (!this.canManageRoles()) return;
-    const newRole = {
-      id: 'role-' + Date.now() + Math.random(),
-      name: '',
-      iconType: 'EMOJI',
-      iconData: '👤',
-      permissions: ['ORGAN_VIEW'],
-      isNew: true
-    };
-    this.roles.push(newRole);
-    this.openRoleModal(newRole.id);
-  }
-
-  removeRole(id: string) {
-    if (!this.canManageRoles()) return;
-    if (this.roles.length <= 1) return;
-    this.roles = this.roles.filter(r => r.id !== id);
-    // Also remove from added members
+  onRolesChanged(updatedRoles: any[]) {
+    this.roles = updatedRoles;
+    // Keep members' roles synchronized by removing any roles that no longer exist
+    const roleIds = new Set(updatedRoles.map(r => r.id));
     this.addedMembers.forEach(m => {
-      m.roles = m.roles.filter((rid: string) => rid !== id);
+      if (m.roles) {
+        m.roles = m.roles.filter((rid: string) => roleIds.has(rid));
+      }
     });
-  }
-
-  openRoleModal(id: string) {
-    const role = this.roles.find(r => r.id === id);
-    if (!role) return;
-
-    this.editingRoleId = id;
-    this.modalRoleName = role.name;
-    this.modalRoleEmoji = role.iconType === 'EMOJI' ? (role.iconData || '👤') : '👤';
-    this.modalRolePermissions = [...role.permissions];
-    this.modalRoleError = '';
-    this.showRoleModal = true;
-  }
-
-  closeRoleModal() {
-    if (this.editingRoleId) {
-      const role = this.roles.find(r => r.id === this.editingRoleId);
-      // Remove role if it was a newly created one and we cancelled
-      if (role && role.isNew) {
-        this.roles = this.roles.filter(r => r.id !== this.editingRoleId);
-      }
-    }
-    this.showRoleModal = false;
-    this.editingRoleId = null;
-  }
-
-  isPermissionMandatory(permName: string): boolean {
-    return permName === 'ORGAN_VIEW';
-  }
-
-  isPermissionChecked(permName: string): boolean {
-    if (this.isPermissionMandatory(permName)) return true;
-    let checked = this.modalRolePermissions.includes(permName);
-    if (permName === 'ORGAN_MANAGE_ROLES' && this.modalRolePermissions.includes('ORGAN_MANAGE_MEMBERS')) {
-      checked = true;
-    }
-    return checked;
-  }
-
-  toggleModalPermission(permName: string) {
-    if (this.isPermissionMandatory(permName)) return; // Mandatory
-    const idx = this.modalRolePermissions.indexOf(permName);
-    if (idx !== -1) {
-      this.modalRolePermissions.splice(idx, 1);
-    } else {
-      this.modalRolePermissions.push(permName);
-    }
-
-    // Couple logic
-    if (permName === 'ORGAN_MANAGE_ROLES') {
-      if (this.modalRolePermissions.includes('ORGAN_MANAGE_ROLES')) {
-        if (!this.modalRolePermissions.includes('ORGAN_MANAGE_MEMBERS')) {
-          this.modalRolePermissions.push('ORGAN_MANAGE_MEMBERS');
-        }
-      }
-    }
-  }
-
-  saveRole() {
-    const name = this.modalRoleName.trim();
-    if (!name) {
-      this.modalRoleError = 'Le nom du rôle est obligatoire.';
-      return;
-    }
-
-    const role = this.roles.find(r => r.id === this.editingRoleId);
-    if (!role) return;
-
-    role.name = name;
-    role.iconData = this.modalRoleEmoji.trim() || '👤';
-    role.iconType = 'EMOJI';
-    role.permissions = [...this.modalRolePermissions];
-    if (!role.permissions.includes('ORGAN_VIEW')) {
-      role.permissions.push('ORGAN_VIEW');
-    }
-
-    // Couple logic: if ORGAN_MANAGE_ROLES is present, ensure ORGAN_MANAGE_MEMBERS is too
-    if (role.permissions.includes('ORGAN_MANAGE_ROLES')) {
-      if (!role.permissions.includes('ORGAN_MANAGE_MEMBERS')) {
-        role.permissions.push('ORGAN_MANAGE_MEMBERS');
-      }
-    } else {
-      // If roles manage is removed, also remove members manage
-      const memberIdx = role.permissions.indexOf('ORGAN_MANAGE_MEMBERS');
-      if (memberIdx !== -1) {
-        role.permissions.splice(memberIdx, 1);
-      }
-    }
-
-    delete role.isNew;
-    this.showRoleModal = false;
-    this.editingRoleId = null;
-  }
-
-  onModalRoleEmojiInput(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const val = input.value.trim();
-    if (!val) return;
-
-    const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-    const segments = Array.from(segmenter.segment(val));
-    const firstGrapheme = segments[0]?.segment;
-
-    const emojiRegex = /\p{Extended_Pictographic}/u;
-    if (firstGrapheme && emojiRegex.test(firstGrapheme)) {
-      this.modalRoleEmoji = firstGrapheme;
-      input.value = firstGrapheme;
-    } else {
-      input.value = '';
-      this.modalRoleEmoji = '';
-    }
-  }
-
-  // --- Member management handlers ---
-  addMember() {
-    if (!this.canManageMembers()) return;
-    const userUuid = this.selectedMemberUuid;
-    if (!userUuid) return;
-    if (this.addedMembers.some(m => m.userUuid === userUuid)) return;
-
-    const projMember = this.projectMembers.find(m => m.user.uuid === userUuid);
-    if (!projMember) return;
-
-    this.addedMembers.push({
-      userUuid: userUuid,
-      name: projMember.user.firstName + ' ' + projMember.user.lastName,
-      email: projMember.user.email,
-      roles: []
-    });
-
-    this.selectedMemberUuid = '';
-  }
-
-  removeMember(userUuid: string) {
-    if (!this.canManageMembers()) return;
-    this.addedMembers = this.addedMembers.filter(m => m.userUuid !== userUuid);
-  }
-
-  toggleMemberRole(userUuid: string, roleId: string) {
-    if (!this.canManageMembers()) return;
-    const member = this.addedMembers.find(m => m.userUuid === userUuid);
-    if (!member) return;
-
-    const idx = member.roles.indexOf(roleId);
-    if (idx !== -1) {
-      member.roles.splice(idx, 1);
-    } else {
-      member.roles.push(roleId);
-    }
-  }
-
-  isMemberRoleActive(userUuid: string, roleId: string): boolean {
-    const member = this.addedMembers.find(m => m.userUuid === userUuid);
-    if (!member) return false;
-    return member.roles.includes(roleId);
   }
 
   // --- Form submission ---
@@ -929,31 +762,5 @@ export class OrganEditComponent implements OnInit, OnDestroy {
     }
   }
 
-  // --- Organ deletion ---
-  openDeleteModal() {
-    if (!this.canDeleteOrgan()) return;
-    this.showDeleteModal = true;
-  }
 
-  closeDeleteModal() {
-    this.showDeleteModal = false;
-  }
-
-  async confirmDelete() {
-    if (!this.canDeleteOrgan()) return;
-    this.isSubmitting.set(true);
-    this.loadingText.set("Suppression de l'organ...");
-
-    try {
-      await firstValueFrom(this.organService.deleteOrgan(this.projectUuid!, this.organUuid!, false));
-      this.isSubmitting.set(false);
-      this.showDeleteModal = false;
-      this.router.navigate(['/project', this.projectUuid]);
-    } catch (err: any) {
-      console.error('Failed to delete organ', err);
-      this.errorMessage.set(err?.error?.message || 'Erreur lors de la suppression de l\'organ.');
-      this.isSubmitting.set(false);
-      this.showDeleteModal = false;
-    }
-  }
 }

@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService, GOOGLE_SUPPRESS_KEY } from '../../../services/auth.service';
 import { SocialAuthService, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Subject, takeUntil } from 'rxjs';
@@ -12,7 +12,7 @@ import { Subject, takeUntil } from 'rxjs';
   imports: [
     CommonModule,
     RouterLink,
-    FormsModule,
+    ReactiveFormsModule,
     GoogleSigninButtonModule
   ],
   templateUrl: './register.html'
@@ -22,17 +22,20 @@ export class RegisterComponent implements OnInit, OnDestroy {
   private socialAuthService = inject(SocialAuthService);
   private router = inject(Router);
   private ngZone = inject(NgZone);
+  private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
 
   @ViewChild('googleBtnContainer', { static: false }) googleBtnContainer!: ElementRef;
 
-  // Form Fields
-  firstName = '';
-  lastName = '';
-  email = '';
-  password = '';
-  confirmPassword = '';
-  agreement = false;
+  // Form Group
+  registerForm = this.fb.group({
+    firstName: ['', [Validators.required, Validators.maxLength(50)]],
+    lastName: ['', [Validators.required, Validators.maxLength(50)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    confirmPassword: ['', [Validators.required]],
+    agreement: [false, [Validators.requiredTrue]]
+  });
 
   // Status State
   isLoading = signal(false);
@@ -106,14 +109,14 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   triggerGoogleLogin() {
-    if (!this.agreement) {
+    if (!this.registerForm.get('agreement')?.value) {
       this.errorMessage.set("Vous devez accepter les conditions d'utilisation.");
       return;
     }
-
+ 
     const nativeEl = this.googleBtnContainer.nativeElement as HTMLElement;
     const googleButton = nativeEl.querySelector('div[role="button"]') || nativeEl.querySelector('iframe');
-
+ 
     if (googleButton) {
       this.isLoading.set(true);
       this.errorMessage.set(null);
@@ -151,29 +154,30 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   onSubmit() {
-    if (!this.agreement) {
-      this.errorMessage.set("Vous devez accepter les conditions d'utilisation.");
+    if (this.registerForm.invalid) {
+      if (this.registerForm.get('agreement')?.invalid) {
+        this.errorMessage.set("Vous devez accepter les conditions d'utilisation.");
+      } else {
+        this.errorMessage.set("Veuillez remplir correctement tous les champs.");
+      }
       return;
     }
-
-    if (this.password !== this.confirmPassword) {
+ 
+    const formVals = this.registerForm.value;
+ 
+    if (formVals.password !== formVals.confirmPassword) {
       this.errorMessage.set("Les deux mots de passe ne correspondent pas.");
       return;
     }
-
-    if (this.password.length < 8) {
-      this.errorMessage.set("Le mot de passe doit faire au moins 8 caractères.");
-      return;
-    }
-
+ 
     this.isLoading.set(true);
     this.errorMessage.set(null);
-
+ 
     this.authService.register({
-      firstName: this.firstName,
-      lastName: this.lastName,
-      email: this.email,
-      password: this.password
+      firstName: formVals.firstName || '',
+      lastName: formVals.lastName || '',
+      email: formVals.email || '',
+      password: formVals.password || ''
     }).subscribe({
       next: () => {
         this.isLoading.set(false);

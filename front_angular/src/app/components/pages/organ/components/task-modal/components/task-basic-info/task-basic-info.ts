@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { TaskResponse, TaskStatus, TaskPermissionsResponse, TaskTagSummary } from '../../../../../../../models/task.model';
 import { OrganMember } from '../../../../../../../models/organ.model';
 import { TagResponse } from '../../../../../../../models/tag.model';
@@ -8,43 +8,11 @@ import { TagResponse } from '../../../../../../../models/tag.model';
 @Component({
   selector: 'app-task-basic-info',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './task-basic-info.html'
 })
 export class TaskBasicInfoComponent {
-  // Two-way bindings
-  @Input() title: string = '';
-  @Output() titleChange = new EventEmitter<string>();
-
-  @Input() description: string = '';
-  @Output() descriptionChange = new EventEmitter<string>();
-
-  @Input() status: TaskStatus = 'TODO';
-  @Output() statusChange = new EventEmitter<TaskStatus>();
-
-  @Input() priority: number = 1;
-  @Output() priorityChange = new EventEmitter<number>();
-
-  @Input() statusMessage: string = '';
-  @Output() statusMessageChange = new EventEmitter<string>();
-
-  @Input() startDate_date: string = '';
-  @Output() startDate_dateChange = new EventEmitter<string>();
-
-  @Input() startDate_time: string = '';
-  @Output() startDate_timeChange = new EventEmitter<string>();
-
-  @Input() expiresAt_date: string = '';
-  @Output() expiresAt_dateChange = new EventEmitter<string>();
-
-  @Input() expiresAt_time: string = '';
-  @Output() expiresAt_timeChange = new EventEmitter<string>();
-
-  @Input() managerUuid: string = '';
-  @Output() managerUuidChange = new EventEmitter<string>();
-
-  @Input() estimatedHours: string = '';
-  @Output() estimatedHoursChange = new EventEmitter<string>();
+  @Input({ required: true }) taskForm!: FormGroup;
 
   // Normal inputs
   @Input() taskId: string | null = null;
@@ -164,19 +132,19 @@ export class TaskBasicInfoComponent {
   }
 
   validatePriority() {
-    if (this.priority < 1) {
-      this.priority = 1;
-      this.priorityChange.emit(1);
-    } else if (this.priority > 10) {
-      this.priority = 10;
-      this.priorityChange.emit(10);
-    } else {
-      this.priorityChange.emit(this.priority);
+    const control = this.taskForm.get('priority');
+    if (!control) return;
+    let val = control.value;
+    if (val === null || val === undefined || val === '') return;
+    if (val < 1) {
+      control.setValue(1);
+    } else if (val > 10) {
+      control.setValue(10);
     }
   }
 
   isStatusMessageVisible(): boolean {
-    return this.status !== this.initialStatus;
+    return this.taskForm.get('status')?.value !== this.initialStatus;
   }
 
   hasPerm(permBaseName: string, isOwner = false): boolean {

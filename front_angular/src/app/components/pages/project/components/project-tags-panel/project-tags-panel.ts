@@ -1,6 +1,6 @@
 import { Component, Input, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { TagService } from '../../../../../services/tag.service';
 import { TagResponse } from '../../../../../models/tag.model';
@@ -8,7 +8,7 @@ import { TagResponse } from '../../../../../models/tag.model';
 @Component({
   selector: 'app-project-tags-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     @if (showTagsPanel()) {
       <div class="mb-12 animate-in fade-in slide-in-from-top-4 duration-200">
@@ -62,12 +62,11 @@ import { TagResponse } from '../../../../../models/tag.model';
 
           <!-- Tag Form -->
           @if (showTagForm() && canManage) {
-            <form (submit)="saveTag($event)" class="mt-8 p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4 animate-in fade-in duration-200">
+            <form [formGroup]="tagFormGroup" (ngSubmit)="saveTag()" class="mt-8 p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4 animate-in fade-in duration-200">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-2">
                   <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Nom du tag</label>
-                  <input type="text" [(ngModel)]="tagForm.name" name="name" required placeholder="Ex: Prioritaire" 
-                         maxlength="50"
+                  <input type="text" formControlName="name" required placeholder="Ex: Prioritaire" 
                          class="w-full px-5 py-3 bg-white border border-gray-100 focus:border-black rounded-xl text-sm transition-all outline-none shadow-sm"
                          [style.border-color]="tagFormFocused ? projectColor : '#f3f4f6'"
                          (focus)="tagFormFocused = true"
@@ -76,7 +75,7 @@ import { TagResponse } from '../../../../../models/tag.model';
                 <div class="space-y-2">
                   <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Couleur</label>
                   <div class="flex items-center gap-3">
-                    <input type="color" [(ngModel)]="tagForm.color" name="color"
+                    <input type="color" formControlName="color"
                            class="w-12 h-12 bg-white border border-gray-100 rounded-xl cursor-pointer p-1 shadow-sm">
                     <span class="text-xs text-gray-500 font-medium">Choisissez une couleur pour ce tag</span>
                   </div>
@@ -86,8 +85,8 @@ import { TagResponse } from '../../../../../models/tag.model';
                 <button type="button" (click)="toggleTagForm()" class="px-6 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
                   Annuler
                 </button>
-                <button type="submit" [disabled]="isSavingTag()" 
-                        class="px-8 py-3 bg-black text-white font-bold rounded-xl hover:bg-black/90 transition-all shadow-lg active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                <button type="submit" [disabled]="isSavingTag() || tagFormGroup.invalid" 
+                        class="px-8 py-3 bg-black text-white font-bold rounded-xl hover:bg-black/90 transition-all shadow-lg active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                   @if (isSavingTag()) {
                     <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   }
@@ -161,6 +160,7 @@ export class ProjectTagsPanelComponent {
   @Input({ required: true }) projectColor!: string;
 
   private tagService = inject(TagService);
+  private fb = inject(FormBuilder);
 
   // States
   showTagsPanel = signal(false);
@@ -171,8 +171,12 @@ export class ProjectTagsPanelComponent {
   showConfirmModal = signal(false);
   showErrorModal = signal(false);
 
-  // Form & Modals data
-  tagForm = { name: '', color: '#808080' };
+  // Form Group
+  tagFormGroup = this.fb.group({
+    name: ['', [Validators.required, Validators.maxLength(50)]],
+    color: ['#808080']
+  });
+
   editingTag: TagResponse | null = null;
   tagToDelete: TagResponse | null = null;
   tagFormFocused = false;
@@ -209,7 +213,7 @@ export class ProjectTagsPanelComponent {
   }
 
   clearTagForm() {
-    this.tagForm = { name: '', color: '#808080' };
+    this.tagFormGroup.reset({ name: '', color: '#808080' });
     this.editingTag = null;
   }
 
@@ -230,21 +234,20 @@ export class ProjectTagsPanelComponent {
 
   startEditTag(tag: TagResponse) {
     this.editingTag = tag;
-    this.tagForm = {
+    this.tagFormGroup.setValue({
       name: tag.name,
       color: tag.color
-    };
+    });
     this.showTagForm.set(true);
   }
 
-  saveTag(event: Event) {
-    event.preventDefault();
-    if (!this.tagForm.name || !this.projectUuid) return;
+  saveTag() {
+    if (this.tagFormGroup.invalid || !this.projectUuid) return;
 
     this.isSavingTag.set(true);
     const req = {
-      name: this.tagForm.name,
-      color: this.tagForm.color
+      name: this.tagFormGroup.value.name || '',
+      color: this.tagFormGroup.value.color || '#808080'
     };
 
     const action$: Observable<any> = this.editingTag

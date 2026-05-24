@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Subject, takeUntil, firstValueFrom, Observable } from 'rxjs';
 import { ProjectService } from '../../../services/project.service';
 import { ProjectMemberService } from '../../../services/project-member.service';
@@ -19,7 +19,7 @@ import { ProjectDangerZoneComponent } from './components/project-danger-zone/pro
   imports: [
     CommonModule,
     RouterLink,
-    FormsModule,
+    ReactiveFormsModule,
     ProjectVisualIdentityComponent,
     ProjectMembersInviteComponent,
     ProjectGoogleDriveComponent,
@@ -33,6 +33,7 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
   private projectService = inject(ProjectService);
   private memberService = inject(ProjectMemberService);
   protected authService = inject(AuthService);
+  private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
 
   // Page mode & metadata
@@ -42,13 +43,35 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
   isSubmitting = signal(false);
   errorMessage = signal<string | null>(null);
 
-  // Form states
-  projectTitle = '';
-  projectDescription = '';
-  projectStatus = 'ACTIVE';
-  projectColor = '#FF7EB6';
-  projectIconType = 'BLOB';
-  projectIconData: string | null = null;
+  // Reactive Form
+  projectForm = this.fb.group({
+    title: ['', [Validators.required, Validators.maxLength(100)]],
+    description: ['', [Validators.maxLength(1000)]],
+    status: ['ACTIVE'],
+    color: ['#FF7EB6'],
+    iconType: ['BLOB'],
+    iconData: [null as string | null]
+  });
+
+  // Getters/setters to map existing logic seamlessly
+  get projectTitle(): string { return this.projectForm.get('title')?.value || ''; }
+  set projectTitle(val: string) { this.projectForm.get('title')?.setValue(val); }
+
+  get projectDescription(): string { return this.projectForm.get('description')?.value || ''; }
+  set projectDescription(val: string) { this.projectForm.get('description')?.setValue(val); }
+
+  get projectStatus(): string { return this.projectForm.get('status')?.value || 'ACTIVE'; }
+  set projectStatus(val: string) { this.projectForm.get('status')?.setValue(val); }
+
+  get projectColor(): string { return this.projectForm.get('color')?.value || '#FF7EB6'; }
+  set projectColor(val: string) { this.projectForm.get('color')?.setValue(val); }
+
+  get projectIconType(): string { return this.projectForm.get('iconType')?.value || 'BLOB'; }
+  set projectIconType(val: string) { this.projectForm.get('iconType')?.setValue(val); }
+
+  get projectIconData(): string | null { return this.projectForm.get('iconData')?.value || null; }
+  set projectIconData(val: string | null) { this.projectForm.get('iconData')?.setValue(val); }
+
   userRole = 'MEMBER';
 
   // Google client ID for BYOS
@@ -128,12 +151,6 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
         this.projectIconType = data.project.iconType || 'BLOB';
         this.projectIconData = data.project.iconData;
         this.userRole = data.project.role;
-
-        // Security check: only ADMIN can edit project settings
-        if (this.userRole !== 'ADMIN') {
-          this.router.navigate(['/project', this.projectUuid]);
-          return;
-        }
 
         const user = this.authService.currentUser();
         const currentUserEmail = user?.email || '';

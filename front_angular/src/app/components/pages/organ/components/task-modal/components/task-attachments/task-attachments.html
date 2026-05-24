@@ -45,15 +45,22 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                     </svg>
                 </div>
-                <span class="text-xs font-bold truncate" [style.color]="highlightColor">{{ uploadFileName }}</span>
+                <div class="flex flex-col min-w-0">
+                    <span class="text-xs font-bold truncate" [style.color]="highlightColor">{{ uploadFileName }}</span>
+                    <span class="text-[10px] font-medium text-gray-400">
+                        {{ uploadProgress() < 80 ? 'Envoi vers Google Drive...' : uploadProgress() < 100 ? 'Confirmation...' : 'Finalisation...' }}
+                    </span>
+                </div>
             </div>
+            <span class="text-xs font-black tabular-nums" [style.color]="highlightColor">{{ uploadProgress() }}%</span>
         </div>
         <div class="w-full h-2 rounded-full overflow-hidden" [style.backgroundColor]="highlightColor + '1a'">
-            <div class="h-full bg-loading transition-all duration-300 ease-out" 
-                 [style.width]="'100%'"
+            <div class="h-full transition-all duration-500 ease-out rounded-full"
+                 [style.width]="uploadProgress() + '%'"
                  [style.backgroundColor]="highlightColor"></div>
         </div>
     </div>
+
 
     <div *ngIf="canAddAttachment" class="relative">
         <input type="file" (change)="uploadFile($event)" class="hidden" id="task-file-input">

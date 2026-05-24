@@ -1,19 +1,26 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DashboardService } from '../../../services/dashboard.service';
 import { DashboardResponse } from '../../../models/dashboard.model';
+
+// Sub-components
+import { PriorityTasksComponent } from './components/priority-tasks/priority-tasks';
+import { ProjectGridComponent } from './components/project-grid/project-grid';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule,
+    RouterLink,
+    PriorityTasksComponent,
+    ProjectGridComponent
+  ],
   templateUrl: './dashboard.html'
 })
 export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
-  private sanitizer = inject(DomSanitizer);
 
   // State signals
   dashboardData = signal<DashboardResponse | null>(null);
@@ -39,28 +46,5 @@ export class DashboardComponent implements OnInit {
         this.isLoading.set(false);
       }
     });
-  }
-
-  getProjectColorHex(color: string | null | undefined): string {
-    return color || '#FF7EB6';
-  }
-
-  formatDate(dateString: string | null): string {
-    if (!dateString) return '-';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      });
-    } catch (e) {
-      return '-';
-    }
-  }
-
-  safeSvg(svgContent: string | null | undefined): SafeHtml {
-    if (!svgContent) return '';
-    return this.sanitizer.bypassSecurityTrustHtml(svgContent);
   }
 }

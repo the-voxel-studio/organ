@@ -20,6 +20,8 @@ import { LegalNoticeComponent } from './components/pages/legal/legal-notice/lega
 import { PrivacyPolicyComponent } from './components/pages/legal/privacy-policy/privacy-policy';
 import { TermsComponent } from './components/pages/legal/terms/terms';
 import { authGuard } from './guards/auth.guard';
+import { organPermissionGuard } from './guards/organ-permission.guard';
+import { projectRoleGuard } from './guards/project-role.guard';
 
 export const routes: Routes = [
   // Routes publiques (LandingLayoutComponent)
@@ -60,9 +62,19 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'project/new', component: ProjectEditComponent },
-      { path: 'project/:uuid/settings', component: ProjectEditComponent },
+      { 
+        path: 'project/:uuid/settings', 
+        component: ProjectEditComponent,
+        canActivate: [projectRoleGuard],
+        data: { roles: ['ADMIN'] }
+      },
       { path: 'project/:projectUuid/organ/new', component: OrganEditComponent },
-      { path: 'project/:projectUuid/organ/:organUuid/settings', component: OrganEditComponent }
+      { 
+        path: 'project/:projectUuid/organ/:organUuid/settings', 
+        component: OrganEditComponent,
+        canActivate: [organPermissionGuard],
+        data: { permission: 'ORGAN_EDIT' }
+      }
     ]
   },
 
@@ -74,7 +86,12 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'project/:uuid', component: ProjectComponent },
-      { path: 'project/:uuid/trash', component: ProjectTrashComponent },
+      { 
+        path: 'project/:uuid/trash', 
+        component: ProjectTrashComponent,
+        canActivate: [projectRoleGuard],
+        data: { roles: ['ADMIN', 'MANAGER'] }
+      },
       { path: 'organ/:projectUuid/:organUuid', component: OrganComponent },
       { path: 'organ/:projectUuid/:organUuid/trash', component: OrganTrashComponent },
       { path: 'settings', component: SettingsComponent },

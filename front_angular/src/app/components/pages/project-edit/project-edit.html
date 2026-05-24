@@ -19,7 +19,7 @@
     </div>
   } @else {
     <!-- Main Form Box -->
-    <form (submit)="submitForm($event)" class="px-4">
+    <form [formGroup]="projectForm" (submit)="submitForm($event)" class="px-4">
       <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-8">
         
         <!-- Nom du projet -->
@@ -29,20 +29,20 @@
             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
             </div>
-            <input type="text" id="name" [(ngModel)]="projectTitle" name="title" required
+            <input type="text" id="name" formControlName="title" required
                    class="block w-full pl-11 pr-4 py-4 bg-gray-50 border-transparent focus:border-bubblegum focus:bg-white focus:ring-0 rounded-2xl text-gray-900 placeholder-gray-400 transition-all font-medium"
                    placeholder="Ex: Refonte du site web">
           </div>
         </div>
-
+ 
         <!-- Description -->
         <div class="space-y-2">
           <label for="description" class="block text-sm font-semibold text-gray-700">Description</label>
-          <textarea id="description" [(ngModel)]="projectDescription" name="description" rows="3"
+          <textarea id="description" formControlName="description" rows="3"
                     class="block w-full px-4 py-4 bg-gray-50 border-transparent focus:border-bubblegum focus:bg-white focus:ring-0 rounded-2xl text-gray-900 placeholder-gray-400 transition-all font-medium resize-none"
                     placeholder="Décrivez brièvement les objectifs du projet..."></textarea>
         </div>
-
+ 
         <!-- Statut (uniquement en édition) -->
         @if (isEdit) {
           <div class="space-y-2 animate-in fade-in duration-150">
@@ -51,7 +51,7 @@
               <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </div>
-              <select id="status" [(ngModel)]="projectStatus" name="status"
+              <select id="status" formControlName="status"
                       class="block w-full pl-11 pr-10 py-4 bg-gray-50 border-transparent focus:border-bubblegum focus:bg-white focus:ring-0 rounded-2xl text-gray-900 font-medium appearance-none transition-all cursor-pointer">
                 <option value="ACTIVE">Actif</option>
                 <option value="ARCHIVED">Archivé</option>
@@ -63,7 +63,7 @@
             </div>
           </div>
         }
-
+ 
         <!-- Identité visuelle -->
         <app-project-visual-identity
           [initialColor]="projectColor"
@@ -72,9 +72,9 @@
           (colorChanged)="onColorChanged($event)"
           (iconChanged)="onIconChanged($event)">
         </app-project-visual-identity>
-
+ 
         <hr class="border-gray-100">
-
+ 
         <!-- Inviter des membres -->
         <app-project-members-invite
           [invites]="invites"
@@ -83,9 +83,9 @@
           (memberRemoved)="onMemberRemoved($event)"
           (roleChanged)="onRoleChanged($event)">
         </app-project-members-invite>
-
+ 
       </div>
-
+ 
       <!-- Action buttons -->
       <div class="mt-8 flex items-center justify-end gap-4 px-4">
         @if (errorMessage()) {
@@ -95,7 +95,7 @@
            class="px-8 py-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-2xl hover:bg-gray-50 transition-all active:scale-95 cursor-pointer">
           Annuler
         </a>
-        <button type="submit" [disabled]="isSubmitting() || !projectTitle.trim()"
+        <button type="submit" [disabled]="isSubmitting() || projectForm.invalid"
                 class="px-10 py-4 bg-bubblegum text-white font-bold rounded-2xl hover:brightness-105 transition-all shadow-lg shadow-bubblegum/20 active:scale-95 flex items-center gap-3 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
           @if (isSubmitting()) {
             <span class="animate-spin">

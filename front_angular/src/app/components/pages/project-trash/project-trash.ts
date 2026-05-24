@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil, firstValueFrom, Observable } from 'rxjs';
@@ -16,10 +16,22 @@ import { TrashedOrganSummary } from '../../../models/organ.model';
 import { ProjectMemberSummary } from '../../../models/project-member.model';
 import { TagResponse } from '../../../models/tag.model';
 
+// Sub-components
+import { TrashedOrgansComponent } from './components/trashed-organs/trashed-organs';
+import { TrashedMembersComponent } from './components/trashed-members/trashed-members';
+import { TrashedTagsComponent } from './components/trashed-tags/trashed-tags';
+
 @Component({
   selector: 'app-project-trash',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    FormsModule,
+    TrashedOrgansComponent,
+    TrashedMembersComponent,
+    TrashedTagsComponent
+  ],
   templateUrl: './project-trash.html'
 })
 export class ProjectTrashComponent implements OnInit, OnDestroy {
@@ -49,9 +61,6 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
 
   // Layout states
   searchQuery = signal('');
-  organsCollapsed = signal(false);
-  membersCollapsed = signal(false);
-  tagsCollapsed = signal(false);
 
   // Modals management
   showRestoreModal = signal(false);
@@ -78,32 +87,6 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
       this.closeBulkRestoreModal();
     }
   };
-
-  // Live filtered lists
-  filteredOrgans = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const list = this.organs();
-    if (!query) return list;
-    return list.filter(o => o.title.toLowerCase().includes(query));
-  });
-
-  filteredMembers = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const list = this.members();
-    if (!query) return list;
-    return list.filter(m => 
-      m.user.firstName.toLowerCase().includes(query) || 
-      m.user.lastName.toLowerCase().includes(query) || 
-      m.user.email.toLowerCase().includes(query)
-    );
-  });
-
-  filteredTags = computed(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const list = this.tags();
-    if (!query) return list;
-    return list.filter(t => t.name.toLowerCase().includes(query));
-  });
 
   ngOnInit() {
     window.addEventListener('keydown', this.escHandler);
@@ -140,20 +123,13 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    // 1. Fetch project info to check permissions and layout colors
+    // Fetch project info
     this.projectService.getProjectDetailed(this.projectUuid!).subscribe({
       next: (data) => {
         this.projectTitle = data.project.title;
         this.projectColor = data.project.color;
         this.userRole = data.project.role;
 
-        // Security check: Only ADMIN or MANAGER can access project trash
-        if (this.userRole !== 'ADMIN' && this.userRole !== 'MANAGER') {
-          this.router.navigate(['/project', this.projectUuid]);
-          return;
-        }
-
-        // 2. Load trashed elements in parallel
         this.loadTrashContent();
       },
       error: (err) => {
@@ -177,7 +153,6 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
     this.memberService.getTrashedMembers(uuid).subscribe({
       next: (members) => {
         this.members.set(members);
-        // Pre-detect batch deletions to auto-check them, like PHP version
         this.preselectBatchDeletions(members);
       },
       error: (err) => console.error('Failed to load trashed members', err)
@@ -197,16 +172,14 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
   }
 
   preselectBatchDeletions(members: ProjectMemberSummary[]) {
-    // Count deleted members grouped by minute
     const counts: { [key: string]: number } = {};
     members.forEach(m => {
       if (m.deletedAt) {
-        const key = m.deletedAt.slice(0, 16); // group by minute: "YYYY-MM-DD HH:MM"
+        const key = m.deletedAt.slice(0, 16);
         counts[key] = (counts[key] || 0) + 1;
       }
     });
 
-    // Auto-check members deleted in batch
     const selected = new Set<string>();
     members.forEach(m => {
       if (m.deletedAt) {
@@ -326,38 +299,6 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Collapsing behaviors
-  toggleSection(section: 'organs' | 'members' | 'tags') {
-    if (section === 'organs') this.organsCollapsed.update(v => !v);
-    else if (section === 'members') this.membersCollapsed.update(v => !v);
-    else this.tagsCollapsed.update(v => !v);
-  }
-
-  // Checkboxes behaviors
-  onMemberChecked(uuid: string, event: Event) {
-    const isChecked = (event.target as HTMLInputElement).checked;
-    this.selectedMembers.update(set => {
-      if (isChecked) {
-        set.add(uuid);
-      } else {
-        set.delete(uuid);
-      }
-      return new Set(set);
-    });
-  }
-
-  selectAllMembers() {
-    const visibleUuids = this.filteredMembers().map(m => m.uuid);
-    this.selectedMembers.update(set => {
-      visibleUuids.forEach(uuid => set.add(uuid));
-      return new Set(set);
-    });
-  }
-
-  deselectAllMembers() {
-    this.selectedMembers.set(new Set());
-  }
-
   // Bulk Actions
   openBulkRestoreModal() {
     this.modalErrorMessage.set(null);
@@ -401,36 +342,12 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Utility helpers
-  safeSvg(svgContent: string | null | undefined): SafeHtml {
-    if (!svgContent) return '';
-    return this.sanitizer.bypassSecurityTrustHtml(svgContent);
-  }
-
   getProjectColorHex(): string {
     return this.projectColor || '#FF7EB6';
   }
 
-  formatDate(dateString: string | null | undefined): string {
-    if (!dateString) return '-';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (e) {
-      return '-';
-    }
-  }
-
-  isMemberDeletedInBatch(member: ProjectMemberSummary): boolean {
-    if (!member.deletedAt) return false;
-    const key = member.deletedAt.slice(0, 16);
-    const count = this.members().filter(m => m.deletedAt && m.deletedAt.slice(0, 16) === key).length;
-    return count > 1;
+  safeSvg(svgContent: string | null | undefined): SafeHtml {
+    if (!svgContent) return '';
+    return this.sanitizer.bypassSecurityTrustHtml(svgContent);
   }
 }

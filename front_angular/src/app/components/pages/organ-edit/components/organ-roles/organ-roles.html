@@ -1,0 +1,273 @@
+<!-- --- SECTION 2: ROLES & PERMISSIONS --- -->
+<div class="space-y-8" [class.opacity-50]="!canManage" [class.pointer-events-none]="!canManage" [class.grayscale-[0.5]]="!canManage">
+  <div class="flex items-center justify-between">
+    <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+      <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+            [style.background-color]="highlightColor + '1a'" [style.color]="highlightColor">2</span>
+      Rôles et Permissions
+      @if (!canManage) {
+        <span class="text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 px-2 py-1 rounded ml-2">Lecture seule</span>
+      }
+    </h3>
+    @if (canManage) {
+      <button type="button" (click)="addNewRole()"
+              class="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition-all active:scale-95 cursor-pointer">
+        + Nouveau rôle
+      </button>
+    }
+  </div>
+
+  <p class="text-xs text-gray-500 font-medium">
+    Définissez les rôles disponibles dans cet organ. Cliquez sur l'icône de réglages d'un rôle pour configurer ses permissions.
+  </p>
+
+  <!-- Presets quick buttons -->
+  @if (canManage) {
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <button type="button" (click)="addPresetRole('responsible')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-lg">👑</span>
+            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Responsable</p>
+          </div>
+          <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+            Contrôle total sur l'Organ, les rôles et toutes les tâches.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
+          <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </button>
+
+      <button type="button" (click)="addPresetRole('manager')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-lg">📂</span>
+            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Manager</p>
+          </div>
+          <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+            Gère l'intégralité du cycle de vie des tâches, les assignations et les membres.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
+          <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </button>
+
+      <button type="button" (click)="addPresetRole('participant')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-lg">👨‍💻</span>
+            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Participant</p>
+          </div>
+          <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+            Peut créer des tâches et gérer ses propres tickets et commentaires.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
+          <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </button>
+
+      <button type="button" (click)="addPresetRole('observer')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-lg">👁️</span>
+            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Observateur</p>
+          </div>
+          <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+            Accès en lecture seule avec possibilité de commenter.
+          </p>
+        </div>
+        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
+          <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </div>
+      </button>
+    </div>
+  }
+
+  <!-- Active roles list -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    @for (role of roles; track role.id) {
+      <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex items-center justify-between group">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-xl shrink-0">
+            {{ role.iconData || '👤' }}
+          </div>
+          <div class="min-w-0">
+            <p class="font-bold text-gray-900 truncate">{{ role.name || 'Sans titre' }}</p>
+            <div class="flex items-center gap-2">
+              <p class="text-[10px] text-gray-400 uppercase font-black shrink-0">{{ role.permissions.length }} permission{{ role.permissions.length > 1 ? 's' : '' }}</p>
+              @if (role.description) {
+                <span class="text-gray-300">•</span>
+                <p class="text-[10px] text-gray-400 font-medium italic truncate" [title]="role.description">{{ role.description }}</p>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 ml-4">
+          <button type="button" (click)="openRoleModal(role.id)"
+                  class="p-2 text-gray-400 transition-colors cursor-pointer hover:opacity-80"
+                  [style.color]="highlightColor">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+          @if (roles.length > 1 && canManage) {
+            <button type="button" (click)="removeRole(role.id)"
+                    class="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- --- MODAL POUR ÉDITER UN RÔLE (Permissions) --- -->
+@if (showRoleModal) {
+  <div class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="fixed inset-0 bg-black/20 backdrop-blur-md transition-opacity cursor-pointer" (click)="closeRoleModal()"></div>
+
+      <div class="relative z-10 bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden border border-gray-100 transform transition-all animate-in zoom-in-95 duration-200">
+        <div class="p-8">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-2xl font-black text-gray-900">Configurer le rôle</h3>
+            <button type="button" (click)="closeRoleModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+
+          <div class="space-y-6">
+            <div class="grid grid-cols-4 gap-4">
+              <div class="col-span-1 space-y-2">
+                <label class="text-sm font-bold text-gray-700">Icône</label>
+                <input #inputEmoji type="text" [(ngModel)]="modalRoleEmoji" (input)="onModalRoleEmojiInput($event)"
+                       class="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:ring-0 rounded-xl text-center text-xl font-medium transition-all outline-none"
+                       [style.border-color]="highlightColor"
+                       placeholder="👤" maxlength="2">
+              </div>
+              <div class="col-span-3 space-y-2">
+                <label class="text-sm font-bold text-gray-700">Nom du rôle</label>
+                <input #inputName type="text" [(ngModel)]="modalRoleName"
+                       class="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:ring-0 rounded-xl text-gray-900 font-medium transition-all outline-none"
+                       [style.border-color]="highlightColor"
+                       placeholder="Nom du rôle">
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <label class="text-sm font-bold text-gray-700">Permissions</label>
+              
+              <div class="space-y-10 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                
+                <!-- Category 1: Organ Management -->
+                <div class="space-y-4">
+                  <h4 class="text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Gestion de l'Organ</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @for (perm of organPermissions; track perm.name) {
+                      <label (click)="toggleModalPermission(perm.name)"
+                             class="relative flex items-start gap-4 p-4 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent group"
+                             [class.opacity-70]="isPermissionMandatory(perm.name)"
+                             [class.pointer-events-none]="isPermissionMandatory(perm.name)"
+                             [class.border-bubblegum/30]="isPermissionChecked(perm.name)"
+                             [class.bg-bubblegum/10]="isPermissionChecked(perm.name)"
+                             [style.border-color]="isPermissionChecked(perm.name) ? highlightColor + '40' : ''"
+                             [style.background-color]="isPermissionChecked(perm.name) ? highlightColor + '05' : '#f9fafb'">
+                        <div class="mt-1 shrink-0">
+                          <div class="w-5 h-5 border-2 rounded-md bg-white transition-all duration-200 flex items-center justify-center shrink-0"
+                               [style.background-color]="isPermissionChecked(perm.name) ? highlightColor : 'white'"
+                               [style.border-color]="isPermissionChecked(perm.name) ? highlightColor : '#d1d5db'">
+                            <svg class="w-3.5 h-3.5 text-white" [class.opacity-0]="!isPermissionChecked(perm.name)" [class.opacity-100]="isPermissionChecked(perm.name)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex-grow">
+                          <p class="text-[13px] font-bold text-gray-900 group-hover:text-bubblegum transition-colors">{{ getPermissionLabel(perm.name) }}</p>
+                          <p class="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">{{ getPermissionDescription(perm.name) }}</p>
+                        </div>
+                      </label>
+                    }
+                  </div>
+                </div>
+
+                <!-- Category 2: Task Management -->
+                <div class="space-y-4">
+                  <h4 class="text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Gestion des Tâches</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @for (perm of taskPermissions; track perm.name) {
+                      <label (click)="toggleModalPermission(perm.name)"
+                             class="relative flex items-start gap-4 p-4 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent group"
+                             [class.border-bubblegum/30]="isPermissionChecked(perm.name)"
+                             [class.bg-bubblegum/10]="isPermissionChecked(perm.name)"
+                             [style.border-color]="isPermissionChecked(perm.name) ? highlightColor + '40' : ''"
+                             [style.background-color]="isPermissionChecked(perm.name) ? highlightColor + '05' : '#f9fafb'">
+                        <div class="mt-1 shrink-0">
+                          <div class="w-5 h-5 border-2 rounded-md bg-white transition-all duration-200 flex items-center justify-center shrink-0"
+                               [style.background-color]="isPermissionChecked(perm.name) ? highlightColor : 'white'"
+                               [style.border-color]="isPermissionChecked(perm.name) ? highlightColor : '#d1d5db'">
+                            <svg class="w-3.5 h-3.5 text-white" [class.opacity-0]="!isPermissionChecked(perm.name)" [class.opacity-100]="isPermissionChecked(perm.name)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex-grow">
+                          <p class="text-[13px] font-bold text-gray-900 group-hover:text-bubblegum transition-colors">{{ getPermissionLabel(perm.name) }}</p>
+                          <p class="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">{{ getPermissionDescription(perm.name) }}</p>
+                        </div>
+                      </label>
+                    }
+                  </div>
+                </div>
+
+                <!-- Category 3: Interaction & Files -->
+                <div class="space-y-4">
+                  <h4 class="text-xs font-black uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2">Interactions & Fichiers</h4>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @for (perm of interactionPermissions; track perm.name) {
+                      <label (click)="toggleModalPermission(perm.name)"
+                             class="relative flex items-start gap-4 p-4 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent group"
+                             [class.border-bubblegum/30]="isPermissionChecked(perm.name)"
+                             [class.bg-bubblegum/10]="isPermissionChecked(perm.name)"
+                             [style.border-color]="isPermissionChecked(perm.name) ? highlightColor + '40' : ''"
+                             [style.background-color]="isPermissionChecked(perm.name) ? highlightColor + '05' : '#f9fafb'">
+                        <div class="mt-1 shrink-0">
+                          <div class="w-5 h-5 border-2 rounded-md bg-white transition-all duration-200 flex items-center justify-center shrink-0"
+                               [style.background-color]="isPermissionChecked(perm.name) ? highlightColor : 'white'"
+                               [style.border-color]="isPermissionChecked(perm.name) ? highlightColor : '#d1d5db'">
+                            <svg class="w-3.5 h-3.5 text-white" [class.opacity-0]="!isPermissionChecked(perm.name)" [class.opacity-100]="isPermissionChecked(perm.name)" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
+                        <div class="flex-grow">
+                          <p class="text-[13px] font-bold text-gray-900 group-hover:text-bubblegum transition-colors">{{ getPermissionLabel(perm.name) }}</p>
+                          <p class="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">{{ getPermissionDescription(perm.name) }}</p>
+                        </div>
+                      </label>
+                    }
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          
+          @if (modalRoleError) {
+            <p class="text-sm text-red-500 font-semibold px-8 mt-2">{{ modalRoleError }}</p>
+          }
+        </div>
+        
+        <div class="bg-gray-50 px-8 py-6 flex justify-end gap-3">
+          <button type="button" (click)="closeRoleModal()" class="px-6 py-3 font-bold text-gray-500 hover:text-gray-700 cursor-pointer">Annuler</button>
+          <button type="button" (click)="saveRole()" class="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 active:scale-95 transition-all cursor-pointer">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

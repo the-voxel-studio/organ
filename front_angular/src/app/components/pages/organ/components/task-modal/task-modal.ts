@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { TaskService } from '../../../../../services/task.service';
 import { TaskCommentService } from '../../../../../services/task-comment.service';
 import { TaskAttachmentService } from '../../../../../services/task-attachment.service';
@@ -28,7 +28,7 @@ import { TaskTrashTabComponent } from './components/task-trash-tab/task-trash-ta
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    ReactiveFormsModule,
     TaskBasicInfoComponent,
     TaskCommentsComponent,
     TaskAttachmentsComponent,
@@ -56,6 +56,7 @@ export class TaskModalComponent implements OnInit, OnDestroy {
   private organService = inject(OrganService);
   private tagService = inject(TagService);
   public authService = inject(AuthService);
+  private fb = inject(FormBuilder);
 
   // Visibility states
   isOpen = signal(false);
@@ -70,18 +71,54 @@ export class TaskModalComponent implements OnInit, OnDestroy {
   isTaskTrashed = signal(false);
   initialStatus: TaskStatus = 'TODO';
   
-  // Bound form values
-  title = '';
-  description = '';
-  status: TaskStatus = 'TODO';
-  priority = 1;
-  statusMessage = '';
-  startDate_date = '';
-  startDate_time = '';
-  expiresAt_date = '';
-  expiresAt_time = '';
-  managerUuid = '';
-  estimatedHours = '';
+  // Form Group
+  taskForm = this.fb.group({
+    title: ['', [Validators.required, Validators.maxLength(200)]],
+    description: ['', [Validators.maxLength(4000)]],
+    status: ['TODO' as TaskStatus],
+    priority: [1, [Validators.min(1), Validators.max(10)]],
+    statusMessage: [''],
+    startDate_date: [''],
+    startDate_time: [''],
+    expiresAt_date: [''],
+    expiresAt_time: [''],
+    managerUuid: [''],
+    estimatedHours: ['']
+  });
+
+  // Getters/setters mapping back to form controllers
+  get title(): string { return this.taskForm.get('title')?.value || ''; }
+  set title(val: string) { this.taskForm.get('title')?.setValue(val); }
+
+  get description(): string { return this.taskForm.get('description')?.value || ''; }
+  set description(val: string) { this.taskForm.get('description')?.setValue(val); }
+
+  get status(): TaskStatus { return this.taskForm.get('status')?.value as TaskStatus || 'TODO'; }
+  set status(val: TaskStatus) { this.taskForm.get('status')?.setValue(val); }
+
+  get priority(): number { return this.taskForm.get('priority')?.value || 1; }
+  set priority(val: number) { this.taskForm.get('priority')?.setValue(val); }
+
+  get statusMessage(): string { return this.taskForm.get('statusMessage')?.value || ''; }
+  set statusMessage(val: string) { this.taskForm.get('statusMessage')?.setValue(val); }
+
+  get startDate_date(): string { return this.taskForm.get('startDate_date')?.value || ''; }
+  set startDate_date(val: string) { this.taskForm.get('startDate_date')?.setValue(val); }
+
+  get startDate_time(): string { return this.taskForm.get('startDate_time')?.value || ''; }
+  set startDate_time(val: string) { this.taskForm.get('startDate_time')?.setValue(val); }
+
+  get expiresAt_date(): string { return this.taskForm.get('expiresAt_date')?.value || ''; }
+  set expiresAt_date(val: string) { this.taskForm.get('expiresAt_date')?.setValue(val); }
+
+  get expiresAt_time(): string { return this.taskForm.get('expiresAt_time')?.value || ''; }
+  set expiresAt_time(val: string) { this.taskForm.get('expiresAt_time')?.setValue(val); }
+
+  get managerUuid(): string { return this.taskForm.get('managerUuid')?.value || ''; }
+  set managerUuid(val: string) { this.taskForm.get('managerUuid')?.setValue(val); }
+
+  get estimatedHours(): string { return this.taskForm.get('estimatedHours')?.value || ''; }
+  set estimatedHours(val: string) { this.taskForm.get('estimatedHours')?.setValue(val); }
 
   // Dropdown list data
   members: OrganMember[] = [];
@@ -245,17 +282,19 @@ export class TaskModalComponent implements OnInit, OnDestroy {
   }
 
   resetForm() {
-    this.title = '';
-    this.description = '';
-    this.status = 'TODO';
-    this.priority = 1;
-    this.statusMessage = '';
-    this.startDate_date = '';
-    this.startDate_time = '';
-    this.expiresAt_date = '';
-    this.expiresAt_time = '';
-    this.managerUuid = '';
-    this.estimatedHours = '';
+    this.taskForm.reset({
+      title: '',
+      description: '',
+      status: 'TODO',
+      priority: 1,
+      statusMessage: '',
+      startDate_date: '',
+      startDate_time: '',
+      expiresAt_date: '',
+      expiresAt_time: '',
+      managerUuid: '',
+      estimatedHours: ''
+    });
     this.taskData = null;
     this.attachments = [];
     this.comments = [];
@@ -426,8 +465,8 @@ export class TaskModalComponent implements OnInit, OnDestroy {
 
   // Task creation/edition submission
   saveTask() {
-    if (!this.title.trim()) {
-      this.showError('Champs requis', 'Veuillez saisir un titre pour la tâche.');
+    if (this.taskForm.invalid) {
+      this.showError('Champs requis', 'Veuillez saisir un titre valide pour la tâche.');
       return;
     }
 

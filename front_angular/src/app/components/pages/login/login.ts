@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService, GOOGLE_SUPPRESS_KEY } from '../../../services/auth.service';
 import { SocialAuthService, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Subject, takeUntil } from 'rxjs';
@@ -12,7 +12,7 @@ import { Subject, takeUntil } from 'rxjs';
   imports: [
     CommonModule,
     RouterLink,
-    FormsModule,
+    ReactiveFormsModule,
     GoogleSigninButtonModule
   ],
   templateUrl: './login.html'
@@ -23,15 +23,20 @@ export class LoginComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private ngZone = inject(NgZone);
+  private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
   private popupPollTimer: ReturnType<typeof setInterval> | null = null;
 
   @ViewChild('googleBtnContainer', { static: false }) googleBtnContainer!: ElementRef;
 
+  // Reactive Form
+  loginForm = this.fb.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]],
+    agreement: [false, [Validators.requiredTrue]]
+  });
+
   // State
-  email = '';
-  password = '';
-  agreement = false;
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
@@ -118,7 +123,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   triggerGoogleLogin() {
-    if (!this.agreement) {
+    if (!this.loginForm.get('agreement')?.value) {
       this.errorMessage.set("Vous devez accepter les conditions d'utilisation.");
       return;
     }
@@ -189,8 +194,12 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   onSubmit() {
-    if (!this.agreement) {
-      this.errorMessage.set("Vous devez accepter les conditions d'utilisation.");
+    if (this.loginForm.invalid) {
+      if (this.loginForm.get('agreement')?.invalid) {
+        this.errorMessage.set("Vous devez accepter les conditions d'utilisation.");
+      } else {
+        this.errorMessage.set("Veuillez remplir correctement tous les champs.");
+      }
       return;
     }
 
@@ -198,9 +207,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
+    const emailVal = this.loginForm.value.email || '';
+    const passwordVal = this.loginForm.value.password || '';
+
     this.authService.login({
-      username: this.email,
-      password: this.password
+      username: emailVal,
+      password: passwordVal
     }).subscribe({
       next: () => {
         this.isLoading.set(false);

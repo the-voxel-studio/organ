@@ -63,17 +63,7 @@
               <!-- Form & Sub-resources content -->
               <div *ngIf="!isLoading()" class="space-y-12">
                   <app-task-basic-info
-                      [(title)]="title"
-                      [(description)]="description"
-                      [(status)]="status"
-                      [(priority)]="priority"
-                      [(statusMessage)]="statusMessage"
-                      [(startDate_date)]="startDate_date"
-                      [(startDate_time)]="startDate_time"
-                      [(expiresAt_date)]="expiresAt_date"
-                      [(expiresAt_time)]="expiresAt_time"
-                      [(managerUuid)]="managerUuid"
-                      [(estimatedHours)]="estimatedHours"
+                      [taskForm]="taskForm"
                       [taskId]="taskId()"
                       [highlightColor]="highlightColor"
                       [isTaskTrashed]="isTaskTrashed()"
@@ -97,47 +87,55 @@
                       (dependencyRemoved)="removeDependency($event)">
                   </app-task-basic-info>
 
-                  <app-task-links
-                      [links]="links"
-                      [highlightColor]="highlightColor"
-                      [isTaskTrashed]="isTaskTrashed()"
-                      [canManageLinks]="!isTaskTrashed() && hasPerm('TASK_LINK_MANAGE', isTaskOwner())"
-                      (linkAdded)="addLink($event)"
-                      (linkRemoved)="removeLink($event)">
-                  </app-task-links>
+                  <div class="pt-8 border-t border-gray-100">
+                      <app-task-links
+                          [links]="links"
+                          [highlightColor]="highlightColor"
+                          [isTaskTrashed]="isTaskTrashed()"
+                          [canManageLinks]="!isTaskTrashed() && hasPerm('TASK_LINK_MANAGE', isTaskOwner())"
+                          (linkAdded)="addLink($event)"
+                          (linkRemoved)="removeLink($event)">
+                      </app-task-links>
+                  </div>
 
-                  <app-task-attachments *ngIf="taskId()"
-                      [projectUuid]="projectUuid"
-                      [organUuid]="organUuid"
-                      [taskId]="taskId()!"
-                      [attachments]="attachments"
-                      [highlightColor]="highlightColor"
-                      [isTaskTrashed]="isTaskTrashed()"
-                      [canAddAttachment]="!isTaskTrashed() && hasPerm('ATTACHMENT_ADD', isTaskOwner())"
-                      [canDeleteAttachment]="!isTaskTrashed() && hasPerm('ATTACHMENT_DELETE', isTaskOwner())"
-                      (attachmentChanged)="refreshTaskData()"
-                      (uploadStateChange)="isUploading.set($event)"
-                      (errorOccurred)="showError($event.title, $event.message)">
-                  </app-task-attachments>
+                  <div *ngIf="taskId()" class="pt-8 border-t border-gray-100">
+                      <app-task-attachments
+                          [projectUuid]="projectUuid"
+                          [organUuid]="organUuid"
+                          [taskId]="taskId()!"
+                          [attachments]="attachments"
+                          [highlightColor]="highlightColor"
+                          [isTaskTrashed]="isTaskTrashed()"
+                          [canAddAttachment]="!isTaskTrashed() && hasPerm('ATTACHMENT_ADD', isTaskOwner())"
+                          [canDeleteAttachment]="!isTaskTrashed() && hasPerm('ATTACHMENT_DELETE', isTaskOwner())"
+                          (attachmentChanged)="refreshTaskData()"
+                          (uploadStateChange)="isUploading.set($event)"
+                          (errorOccurred)="showError($event.title, $event.message)">
+                      </app-task-attachments>
+                  </div>
 
-                  <app-task-comments *ngIf="taskId()"
-                      [comments]="comments"
-                      [highlightColor]="highlightColor"
-                      [isTaskTrashed]="isTaskTrashed()"
-                      [currentUserId]="authService.currentUser()?.uuid || ''"
-                      [canAddComment]="!isTaskTrashed() && hasPerm('COMMENT_CREATE', isTaskOwner())"
-                      [hasCommentDeleteAll]="hasPerm('COMMENT_DELETE_ALL')"
-                      [hasCommentDeleteOwn]="hasPerm('COMMENT_DELETE_OWN')"
-                      (commentAdded)="addComment($event)"
-                      (commentDeleted)="deleteComment($event)">
-                  </app-task-comments>
+                  <div *ngIf="taskId()" class="pt-8 border-t border-gray-100">
+                      <app-task-comments
+                          [comments]="comments"
+                          [highlightColor]="highlightColor"
+                          [isTaskTrashed]="isTaskTrashed()"
+                          [currentUserId]="authService.currentUser()?.uuid || ''"
+                          [canAddComment]="!isTaskTrashed() && hasPerm('COMMENT_CREATE', isTaskOwner())"
+                          [hasCommentDeleteAll]="hasPerm('COMMENT_DELETE_ALL')"
+                          [hasCommentDeleteOwn]="hasPerm('COMMENT_DELETE_OWN')"
+                          (commentAdded)="addComment($event)"
+                          (commentDeleted)="deleteComment($event)">
+                      </app-task-comments>
+                  </div>
 
-                  <app-task-timeline *ngIf="taskId() && timeline.length > 0"
-                      [timeline]="timeline"
-                      [hasMoreTimeline]="hasMoreTimeline()"
-                      [highlightColor]="highlightColor"
-                      (loadMore)="loadTimeline(true)">
-                  </app-task-timeline>
+                  <div *ngIf="taskId() && timeline.length > 0" class="pt-8 border-t border-gray-100">
+                      <app-task-timeline
+                          [timeline]="timeline"
+                          [hasMoreTimeline]="hasMoreTimeline()"
+                          [highlightColor]="highlightColor"
+                          (loadMore)="loadTimeline(true)">
+                      </app-task-timeline>
+                  </div>
 
                   <!-- Task Trash / Restoration Section (Only visible in edit mode) -->
                   <div *ngIf="taskId()" class="pt-12 border-t border-gray-100 space-y-6">

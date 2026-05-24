@@ -1,12 +1,12 @@
 <div class="space-y-12">
-    <form (submit)="$event.preventDefault()" class="space-y-8">
+    <form [formGroup]="taskForm" (submit)="$event.preventDefault()" class="space-y-8">
         <!-- Title -->
         <div class="space-y-2">
             <div class="flex items-center justify-between ml-1">
                 <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Titre de la tâche</label>
                 <span class="text-[9px] font-bold uppercase tracking-tighter" [style.color]="highlightColor">(requis)</span>
             </div>
-            <input type="text" [ngModel]="title" (ngModelChange)="titleChange.emit($event)" name="title" [disabled]="!canEditField('title')" required maxlength="200" placeholder="Ex: Finaliser le design de l'accueil"
+            <input type="text" formControlName="title" [disabled]="!canEditField('title')" required maxlength="200" placeholder="Ex: Finaliser le design de l'accueil"
                    class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-lg font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
                    [style.--highlight-color]="highlightColor">
         </div>
@@ -17,7 +17,7 @@
                 <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Description détaillée</label>
                 <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
             </div>
-            <textarea [ngModel]="description" (ngModelChange)="descriptionChange.emit($event)" name="description" [disabled]="!canEditField('description')" rows="4" maxlength="4000" placeholder="Expliquez ici ce qui doit être fait..."
+            <textarea formControlName="description" [disabled]="!canEditField('description')" rows="4" maxlength="4000" placeholder="Expliquez ici ce qui doit être fait..."
                       class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm transition-all outline-none shadow-sm resize-none focus:border-[var(--highlight-color)]"
                       [style.--highlight-color]="highlightColor"></textarea>
         </div>
@@ -27,7 +27,7 @@
             <div class="space-y-2">
                 <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Statut</label>
                 <div class="relative">
-                    <select [ngModel]="status" (ngModelChange)="statusChange.emit($event)" name="status" [disabled]="!canEditField('status')"
+                    <select formControlName="status" [disabled]="!canEditField('status')"
                             class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold transition-all outline-none shadow-sm appearance-none cursor-pointer focus:border-[var(--highlight-color)]"
                             [style.--highlight-color]="highlightColor">
                         <option value="TODO">À faire</option>
@@ -48,7 +48,7 @@
                     <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Priorité</label>
                     <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">Entre 1 (faible) et 10 (urgent)</span>
                 </div>
-                <input type="number" [ngModel]="priority" (ngModelChange)="priority = $event; validatePriority()" name="priority" [disabled]="!canEditField('priority')" min="1" max="10" step="1"
+                <input type="number" formControlName="priority" (input)="validatePriority()" [disabled]="!canEditField('priority')" min="1" max="10" step="1"
                        class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
                        [style.--highlight-color]="highlightColor">
             </div>
@@ -60,7 +60,7 @@
                 <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Message de statut</label>
                 <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
             </div>
-            <textarea [ngModel]="statusMessage" (ngModelChange)="statusMessageChange.emit($event)" name="statusMessage" rows="2" placeholder="Expliquez pourquoi le statut a changé ou donnez des précisions..."
+            <textarea formControlName="statusMessage" rows="2" placeholder="Expliquez pourquoi le statut a changé ou donnez des précisions..."
                       class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm transition-all outline-none shadow-sm resize-none focus:border-[var(--highlight-color)]"
                       [style.--highlight-color]="highlightColor"></textarea>
         </div>
@@ -73,10 +73,10 @@
                     <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <input type="date" [ngModel]="startDate_date" (ngModelChange)="startDate_dateChange.emit($event)" name="startDate_date" [disabled]="!canEditField('startDate')"
+                    <input type="date" formControlName="startDate_date" [disabled]="!canEditField('startDate')"
                            class="flex-[3] min-w-[120px] px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
                            [style.--highlight-color]="highlightColor">
-                    <input type="time" [ngModel]="startDate_time" (ngModelChange)="startDate_timeChange.emit($event)" name="startDate_time" [disabled]="!canEditField('startDate')"
+                    <input type="time" formControlName="startDate_time" [disabled]="!canEditField('startDate')"
                            class="flex-[2] min-w-[90px] px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
                            [style.--highlight-color]="highlightColor">
                 </div>
@@ -89,10 +89,10 @@
                     <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <input type="date" [ngModel]="expiresAt_date" (ngModelChange)="expiresAt_dateChange.emit($event)" name="expiresAt_date" [disabled]="!canEditField('expiresAt')"
+                    <input type="date" formControlName="expiresAt_date" [disabled]="!canEditField('expiresAt')"
                            class="flex-[3] min-w-[120px] px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
                            [style.--highlight-color]="highlightColor">
-                    <input type="time" [ngModel]="expiresAt_time" (ngModelChange)="expiresAt_timeChange.emit($event)" name="expiresAt_time" [disabled]="!canEditField('expiresAt')"
+                    <input type="time" formControlName="expiresAt_time" [disabled]="!canEditField('expiresAt')"
                            class="flex-[2] min-w-[90px] px-4 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
                            [style.--highlight-color]="highlightColor">
                 </div>
@@ -104,7 +104,7 @@
                     <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Temps estimé (h)</label>
                     <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
                 </div>
-                <input type="number" step="0.5" [ngModel]="estimatedHours" (ngModelChange)="estimatedHoursChange.emit($event)" name="estimatedHours" placeholder="0.0" [disabled]="!canEditField('estimatedHours')"
+                <input type="number" step="0.5" formControlName="estimatedHours" placeholder="0.0" [disabled]="!canEditField('estimatedHours')"
                        class="w-full px-5 py-3 bg-white border border-gray-100 rounded-xl text-sm font-bold transition-all outline-none shadow-sm focus:border-[var(--highlight-color)]"
                        [style.--highlight-color]="highlightColor">
             </div>
@@ -117,7 +117,7 @@
                 <span class="text-[9px] font-bold text-gray-300 uppercase tracking-tighter">(facultatif)</span>
             </div>
             <div class="relative">
-                <select [ngModel]="managerUuid" (ngModelChange)="managerUuidChange.emit($event)" name="managerUuid" [disabled]="!canEditField('managerUuid')"
+                <select formControlName="managerUuid" [disabled]="!canEditField('managerUuid')"
                         class="w-full px-6 py-4 bg-white border border-gray-100 rounded-2xl text-sm font-bold transition-all outline-none shadow-sm appearance-none cursor-pointer focus:border-[var(--highlight-color)]"
                         [style.--highlight-color]="highlightColor">
                     <option value="">Non assigné</option>

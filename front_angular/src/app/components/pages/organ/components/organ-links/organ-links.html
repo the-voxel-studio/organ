@@ -1,0 +1,98 @@
+<div *ngIf="showLinksPanel()" class="animate-in fade-in slide-in-from-top-4 duration-300 mt-6">
+    <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg font-bold text-black flex items-center gap-3">
+            <div class="p-2 rounded-xl" [style.backgroundColor]="highlightColor + '1a'" [style.color]="highlightColor">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+            </div>
+            Liens utiles de l'Organ
+        </h3>
+        
+        <button *ngIf="canManageLinks" 
+                (click)="toggleLinkForm()" 
+                class="px-4 py-2 bg-white border border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm cursor-pointer"
+                [style.color]="highlightColor">
+            {{ showLinkForm() ? 'Fermer le formulaire' : '+ Ajouter un lien' }}
+        </button>
+    </div>
+
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div *ngFor="let link of links" class="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm group">
+                <div class="flex flex-col min-w-0">
+                    <a [href]="link.url" target="_blank" class="text-sm font-semibold hover:underline flex items-center gap-1 truncate" [style.color]="highlightColor">
+                        {{ link.description || link.url }}
+                        <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                    <span class="text-xs text-gray-400 truncate max-w-[200px]" *ngIf="link.description">{{ link.url }}</span>
+                </div>
+                <div *ngIf="canManageLinks" class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                    <button (click)="editLink(link)" 
+                            class="p-2 text-gray-400 hover:text-black transition-colors cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                    </button>
+                    <button (click)="openDeleteConfirm(link)" 
+                            class="p-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                    </button>
+                </div>
+            </div>
+            <p *ngIf="links.length === 0" class="text-sm text-gray-500 italic col-span-full">Aucun lien associé à cet Organ.</p>
+        </div>
+
+        <!-- Add/Edit Link Form -->
+        <form *ngIf="showLinkForm()" [formGroup]="linkForm" (ngSubmit)="onSubmit()" class="mt-8 p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">URL du lien</label>
+                    <input type="url" formControlName="url" required placeholder="https://..." 
+                           class="w-full px-5 py-3 bg-white border border-gray-100 focus:border-highlight rounded-xl text-sm transition-all outline-none shadow-sm"
+                           [style.borderColor]="editingLinkUuid ? highlightColor : ''">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Description (optionnel)</label>
+                    <input type="text" formControlName="description" placeholder="Ex: Documentation API" 
+                           class="w-full px-5 py-3 bg-white border border-gray-100 focus:border-highlight rounded-xl text-sm transition-all outline-none shadow-sm"
+                           [style.borderColor]="editingLinkUuid ? highlightColor : ''">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button" (click)="toggleLinkForm()" class="px-6 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
+                    Annuler
+                </button>
+                <button type="submit" [disabled]="isSavingLink || linkForm.invalid"
+                        class="px-8 py-3 bg-black text-white font-bold rounded-xl hover:bg-black/90 transition-all shadow-lg active:scale-95 flex items-center gap-2 cursor-pointer">
+                    <div *ngIf="isSavingLink" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    Enregistrer le lien
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression de lien -->
+<div *ngIf="showDeleteConfirm()" 
+     class="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" (click)="closeDeleteConfirm()"></div>
+    <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
+        <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        </div>
+
+        <div class="text-center space-y-2">
+            <h3 class="text-xl font-bold text-gray-900">Confirmation</h3>
+            <p class="text-sm text-gray-500 leading-relaxed">Voulez-vous vraiment supprimer le lien "{{ linkToDelete?.url }}" ?</p>
+        </div>
+
+        <div class="flex flex-col gap-3 pt-2">
+            <button type="button" (click)="confirmDeleteLink()" [disabled]="isDeletingLink()"
+                    class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-95 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50">
+                <div *ngIf="isDeletingLink()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Confirmer la suppression
+            </button>
+            <button type="button" (click)="closeDeleteConfirm()" [disabled]="isDeletingLink()"
+                    class="w-full py-4 bg-white border border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50">
+                Annuler
+            </button>
+        </div>
+    </div>
+</div>

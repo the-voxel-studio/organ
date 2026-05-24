@@ -1,0 +1,37 @@
+<div class="space-y-6 w-[350px]">
+    
+    <div class="flex items-center justify-between px-4">
+        <h5 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
+            <span class="w-2 h-2 rounded-full" [class]="column.dot" [style.backgroundColor]="column.status === 'IN_PROGRESS' ? highlightColor : ''"></span>
+            {{ column.label }}
+        </h5>
+        <span class="text-[10px] font-black text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+            {{ columnCount() }}
+        </span>
+    </div>
+    
+    <!-- Column Drop Area -->
+    <div (dragover)="onDragOver($event)"
+         (drop)="onDrop($event)"
+         (dragenter)="onDragEnter()"
+         (dragleave)="onDragLeave()"
+         class="min-h-[600px] rounded-[2.5rem] p-6 flex flex-col gap-4 transition-all shadow-inner border-2 border-transparent"
+         [class.border-dashed]="activeDragOverColumn === column.status"
+         [style.borderColor]="activeDragOverColumn === column.status ? highlightColor : ''"
+         [style.background]="'linear-gradient(180deg, ' + highlightColor + '14 0%, ' + highlightColor + '05 100%)'">
+        
+        <!-- Task Cards -->
+        <app-kanban-card *ngFor="let task of tasks"
+            [task]="task"
+            [highlightColor]="highlightColor"
+            [hasTaskEditAll]="hasTaskEditAll"
+            [currentUserId]="currentUserId"
+            (cardClicked)="taskClicked.emit($event)">
+        </app-kanban-card>
+        
+        <!-- Empty Column state -->
+        <div *ngIf="tasks.length === 0" class="py-12 text-center">
+            <p class="text-xs text-gray-400 font-medium italic">Aucune tâche</p>
+        </div>
+    </div>
+</div>

@@ -2,8 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild } fro
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, forkJoin } from 'rxjs';
 
 // Services
 import { OrganService } from '../../../services/organ.service';
@@ -14,7 +13,7 @@ import { AuthService } from '../../../services/auth.service';
 import { ToastService } from '../../../services/toast.service';
 
 // Models
-import { OrganDetailResponse, OrganPermissionsResponse, OrganMember } from '../../../models/organ.model';
+import { OrganDetailResponse } from '../../../models/organ.model';
 import { TaskResponse, TaskStatus } from '../../../models/task.model';
 import { OrganLinkSummary } from '../../../models/organ-link.model';
 
@@ -22,11 +21,21 @@ import { OrganLinkSummary } from '../../../models/organ-link.model';
 import { TaskModalComponent } from './components/task-modal/task-modal';
 import { KanbanViewComponent } from './components/kanban-view/kanban-view';
 import { ListViewComponent } from './components/list-view/list-view';
+import { OrganLinksComponent } from './components/organ-links/organ-links';
+import { OrganFiltersComponent } from './components/organ-filters/organ-filters';
 
 @Component({
   selector: 'app-organ',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TaskModalComponent, KanbanViewComponent, ListViewComponent],
+  imports: [
+    CommonModule, 
+    RouterLink, 
+    TaskModalComponent, 
+    KanbanViewComponent, 
+    ListViewComponent,
+    OrganLinksComponent,
+    OrganFiltersComponent
+  ],
   templateUrl: './organ.html'
 })
 export class OrganComponent implements OnInit, OnDestroy {
@@ -43,8 +52,9 @@ export class OrganComponent implements OnInit, OnDestroy {
   
   private destroy$ = new Subject<void>();
 
-  // Task Modal ViewChild
+  // ViewChild components
   @ViewChild('taskModal') taskModal!: TaskModalComponent;
+  @ViewChild('linksPanel') linksPanel!: OrganLinksComponent;
 
   // Routing params
   projectUuid: string | null = null;
@@ -56,7 +66,6 @@ export class OrganComponent implements OnInit, OnDestroy {
   projectColor = signal<string>('#FF7DD4');
   
   allTasks = signal<TaskResponse[]>([]);
-  filteredTasks: TaskResponse[] = [];
   permissions = signal<string[]>([]);
   isProjectAdmin = signal<boolean>(false);
 
@@ -65,30 +74,76 @@ export class OrganComponent implements OnInit, OnDestroy {
 
   // View state
   activeView: 'kanban' | 'list' = 'kanban';
-  showFilterMenu = signal(false);
 
-  // Filters & Sorting state
-  sortBy: 'priority' | 'dueDate' | 'date' | null = null;
-  sortOrder: 'asc' | 'desc' = 'asc';
-  filterMe = false;
-  minPriority = 0;
-  selectedStatuses: any[] = [];
+  // Filters & Sorting state signals
+  sortBy = signal<'priority' | 'dueDate' | 'date' | null>(null);
+  sortOrder = signal<'asc' | 'desc'>('asc');
+  filterMe = signal<boolean>(false);
+  minPriority = signal<number>(0);
+  selectedStatuses = signal<string[]>([]);
+
+  // Computed task list
+  filteredTasks = computed(() => {
+    let list = this.allTasks();
+
+    // 1. Filter by "me"
+    if (this.filterMe()) {
+      const currentUserId = this.authService.currentUser()?.uuid;
+      list = list.filter(t => 
+        t.manager?.uuid === currentUserId || 
+        t.assignees?.some(a => a.uuid === currentUserId) ||
+        t.createdBy?.uuid === currentUserId
+      );
+    }
+
+    // 2. Filter by minimum priority
+    if (this.minPriority() > 0) {
+      list = list.filter(t => t.priority >= this.minPriority());
+    }
+
+    // 3. Filter by selected statuses
+    const statuses = this.selectedStatuses();
+    if (statuses.length > 0) {
+      list = list.filter(t => statuses.includes(t.status));
+    }
+
+    // 4. Special filter for Due Date sorting (exclude null due dates if sorting by due date)
+    const sort = this.sortBy();
+    const order = this.sortOrder();
+    if (sort === 'dueDate') {
+      list = list.filter(t => t.expiresAt !== null && t.expiresAt !== undefined);
+    }
+
+    // 5. Sorting
+    if (sort) {
+      list = [...list].sort((a, b) => {
+        let valA: any = 0;
+        let valB: any = 0;
+
+        if (sort === 'priority') {
+          valA = a.priority;
+          valB = b.priority;
+        } else if (sort === 'date') {
+          valA = new Date(a.createdAt).getTime();
+          valB = new Date(b.createdAt).getTime();
+        } else if (sort === 'dueDate') {
+          valA = a.expiresAt ? new Date(a.expiresAt).getTime() : 0;
+          valB = b.expiresAt ? new Date(b.expiresAt).getTime() : 0;
+        }
+
+        if (valA < valB) return order === 'asc' ? -1 : 1;
+        if (valA > valB) return order === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return list;
+  });
 
   // Links Panel state
-  showLinksPanel = signal(false);
   links = signal<OrganLinkSummary[]>([]);
   linksLoaded = false;
-  
-  // Link Form state
-  showLinkForm = signal(false);
-  newLinkUrl = '';
-  newLinkDesc = '';
-  editingLinkUuid: string | null = null;
   isSavingLink = signal(false);
-
-  // Link deletion confirm modal
-  showLinkDeleteConfirm = signal(false);
-  linkToDelete: OrganLinkSummary | null = null;
 
   // Drag and Drop styling helpers
   activeDragOverColumn: any = null;
@@ -96,17 +151,7 @@ export class OrganComponent implements OnInit, OnDestroy {
   // Dynamic colors
   highlightColor = computed(() => this.organData()?.highlightColor || '#FF7DD4');
 
-  // Esc key listener handler
-  private escHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      if (this.showFilterMenu()) this.showFilterMenu.set(false);
-      if (this.showLinkDeleteConfirm()) this.closeLinkDeleteConfirm();
-    }
-  };
-
   ngOnInit() {
-    window.addEventListener('keydown', this.escHandler);
-
     this.route.paramMap
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
@@ -118,6 +163,17 @@ export class OrganComponent implements OnInit, OnDestroy {
         } else {
           this.errorMessage.set('UUIDs manquants.');
           this.isLoading.set(false);
+        }
+      });
+
+    this.route.queryParamMap
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(queryParams => {
+        const view = queryParams.get('view');
+        if (view === 'list') {
+          this.activeView = 'list';
+        } else {
+          this.activeView = 'kanban';
         }
       });
 
@@ -137,7 +193,6 @@ export class OrganComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    window.removeEventListener('keydown', this.escHandler);
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -146,48 +201,36 @@ export class OrganComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    // 1. Fetch project info to get the project title and project color
-    this.projectService.getProjectDetailed(this.projectUuid!).subscribe({
-      next: (projData: any) => {
-        this.projectTitle.set(projData.project.title);
-        this.projectColor.set(projData.project.color || '#FF7DD4');
-        const role = projData.project.role;
+    forkJoin({
+      project: this.projectService.getProjectDetailed(this.projectUuid!),
+      organ: this.organService.getOrgan(this.projectUuid!, this.organUuid!),
+      permissions: this.organService.getOrganPermissions(this.projectUuid!, this.organUuid!)
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: ({ project, organ, permissions }) => {
+        this.projectTitle.set(project.project.title);
+        this.projectColor.set(project.project.color || '#FF7DD4');
+        const role = project.project.role;
         this.isProjectAdmin.set(role === 'ADMIN' || role === 'MANAGER');
-      },
-      error: (err: any) => console.error('Failed to load project details', err)
-    });
 
-    // 2. Fetch Organ details
-    this.organService.getOrgan(this.projectUuid!, this.organUuid!).subscribe({
-      next: (organ) => {
         this.organData.set(organ);
-        
-        // 3. Fetch permissions
-        this.organService.getOrganPermissions(this.projectUuid!, this.organUuid!).subscribe({
-          next: (res) => {
-            this.permissions.set(res.permissions);
-            
-            // Check if user has read permission
-            if (!this.hasPermission('ORGAN_VIEW')) {
-              this.toastService.error('Accès refusé', "Vous n'avez pas la permission de voir cet Organ.");
-              this.router.navigate(['/project', this.projectUuid]);
-              return;
-            }
+        this.permissions.set(permissions.permissions);
 
-            // 4. Fetch Tasks
-            this.loadTasks();
-          },
-          error: (err) => {
-            console.error('Failed to load permissions', err);
-            this.toastService.error('Accès refusé', err?.error?.message || 'Erreur lors du chargement des permissions.');
-            this.router.navigate(['/project', this.projectUuid]);
-          }
-        });
+        // Check if user has read permission
+        if (!this.hasPermission('ORGAN_VIEW')) {
+          this.toastService.error('Accès refusé', "Vous n'avez pas la permission de voir cet Organ.");
+          this.router.navigate(['/project', this.projectUuid]);
+          return;
+        }
+
+        // Fetch Tasks
+        this.loadTasks();
       },
-      error: (err) => {
-        console.error('Failed to load organ details', err);
-        this.toastService.error('Accès refusé', err?.error?.message || 'Organ non trouvé ou accès refusé.');
-        this.router.navigate(['/project', this.projectUuid]);
+      error: (err: any) => {
+        console.error('Failed to load organ details and tasks', err);
+        this.errorMessage.set(err?.error?.message || 'Projet non trouvé ou accès refusé.');
+        this.isLoading.set(false);
       }
     });
   }
@@ -196,7 +239,6 @@ export class OrganComponent implements OnInit, OnDestroy {
     this.taskService.getTasks(this.projectUuid!, this.organUuid!).subscribe({
       next: (tasks) => {
         this.allTasks.set(tasks);
-        this.applyFiltersAndSort();
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -214,96 +256,30 @@ export class OrganComponent implements OnInit, OnDestroy {
     return perms.includes('ALL') || perms.includes(permissionName);
   }
 
-  // --- FILTERS & SORTING ---
-  toggleFilterMenu() {
-    this.showFilterMenu.update(v => !v);
+  // --- FILTERS CALLBACKS ---
+  onFilterMeChange(val: boolean) {
+    this.filterMe.set(val);
   }
 
-  setSort(sort: 'priority' | 'dueDate' | 'date') {
-    if (this.sortBy === sort) {
-      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = sort;
-      this.sortOrder = 'asc';
-    }
-    this.applyFiltersAndSort();
+  onMinPriorityChange(val: number) {
+    this.minPriority.set(val);
   }
 
-  setPriorityFilter(priority: number) {
-    this.minPriority = this.minPriority === priority ? 0 : priority;
-    this.applyFiltersAndSort();
+  onSelectedStatusesChange(val: string[]) {
+    this.selectedStatuses.set(val);
   }
 
-  toggleStatusFilter(status: any) {
-    if (this.selectedStatuses.includes(status)) {
-      this.selectedStatuses = this.selectedStatuses.filter(s => s !== status);
-    } else {
-      this.selectedStatuses.push(status);
-    }
-    this.applyFiltersAndSort();
+  onSortChange(event: { sortBy: 'priority' | 'dueDate' | 'date' | null, sortOrder: 'asc' | 'desc' }) {
+    this.sortBy.set(event.sortBy);
+    this.sortOrder.set(event.sortOrder);
   }
 
-  resetFilters() {
-    this.sortBy = null;
-    this.sortOrder = 'asc';
-    this.filterMe = false;
-    this.minPriority = 0;
-    this.selectedStatuses = [];
-    this.applyFiltersAndSort();
-  }
-
-  applyFiltersAndSort() {
-    let tasks = [...this.allTasks()];
-
-    // 1. Filter by "me"
-    if (this.filterMe) {
-      const currentUserId = this.authService.currentUser()?.uuid;
-      tasks = tasks.filter(t => 
-        t.manager?.uuid === currentUserId || 
-        t.assignees?.some(a => a.uuid === currentUserId) ||
-        t.createdBy?.uuid === currentUserId
-      );
-    }
-
-    // 2. Filter by minimum priority
-    if (this.minPriority > 0) {
-      tasks = tasks.filter(t => t.priority >= this.minPriority);
-    }
-
-    // 3. Filter by selected statuses
-    if (this.selectedStatuses.length > 0) {
-      tasks = tasks.filter(t => this.selectedStatuses.includes(t.status));
-    }
-
-    // 4. Special filter for Due Date sorting (exclude null due dates if sorting by due date)
-    if (this.sortBy === 'dueDate') {
-      tasks = tasks.filter(t => t.expiresAt !== null && t.expiresAt !== undefined);
-    }
-
-    // 5. Sorting
-    if (this.sortBy) {
-      tasks.sort((a, b) => {
-        let valA: any = 0;
-        let valB: any = 0;
-
-        if (this.sortBy === 'priority') {
-          valA = a.priority;
-          valB = b.priority;
-        } else if (this.sortBy === 'date') {
-          valA = new Date(a.createdAt).getTime();
-          valB = new Date(b.createdAt).getTime();
-        } else if (this.sortBy === 'dueDate') {
-          valA = a.expiresAt ? new Date(a.expiresAt).getTime() : 0;
-          valB = b.expiresAt ? new Date(b.expiresAt).getTime() : 0;
-        }
-
-        if (valA < valB) return this.sortOrder === 'asc' ? -1 : 1;
-        if (valA > valB) return this.sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      });
-    }
-
-    this.filteredTasks = tasks;
+  onResetFilters() {
+    this.sortBy.set(null);
+    this.sortOrder.set('asc');
+    this.filterMe.set(false);
+    this.minPriority.set(0);
+    this.selectedStatuses.set([]);
   }
 
   onTaskStatusChanged(event: { taskUuid: string, newStatus: TaskStatus }) {
@@ -315,7 +291,6 @@ export class OrganComponent implements OnInit, OnDestroy {
       const originalStatus = tasks[index].status;
       tasks[index].status = newStatus;
       this.allTasks.set(tasks);
-      this.applyFiltersAndSort();
 
       this.taskService.patchTask(this.projectUuid!, this.organUuid!, taskUuid, { status: newStatus }).subscribe({
         next: () => {
@@ -326,7 +301,6 @@ export class OrganComponent implements OnInit, OnDestroy {
           // Revert
           tasks[index].status = originalStatus;
           this.allTasks.set(tasks);
-          this.applyFiltersAndSort();
           this.toastService.error('Erreur', err?.error?.message || 'Erreur lors du changement de colonne.');
         }
       });
@@ -335,17 +309,14 @@ export class OrganComponent implements OnInit, OnDestroy {
 
   // --- VIEWS COMMUTATION ---
   toggleView(view: 'kanban' | 'list') {
-    this.activeView = view;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { view },
+      queryParamsHandling: 'merge'
+    });
   }
 
-  // --- LINKS PANEL PANEL ---
-  toggleLinksPanel() {
-    this.showLinksPanel.update(v => !v);
-    if (this.showLinksPanel() && !this.linksLoaded) {
-      this.loadLinks();
-    }
-  }
-
+  // --- LINKS CALLBACKS ---
   loadLinks() {
     this.linkService.getLinks(this.projectUuid!, this.organUuid!).subscribe({
       next: (links) => {
@@ -356,93 +327,46 @@ export class OrganComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleLinkForm() {
-    this.showLinkForm.update(v => !v);
-    if (!this.showLinkForm()) {
-      this.clearLinkForm();
-    }
-  }
-
-  clearLinkForm() {
-    this.newLinkUrl = '';
-    this.newLinkDesc = '';
-    this.editingLinkUuid = null;
-  }
-
-  editLink(link: OrganLinkSummary) {
-    this.newLinkUrl = link.url;
-    this.newLinkDesc = link.description || '';
-    this.editingLinkUuid = link.uuid;
-    this.showLinkForm.set(true);
-  }
-
-  saveLink() {
-    if (!this.newLinkUrl.trim()) return;
+  onAddLink(event: { url: string; description?: string }) {
     this.isSavingLink.set(true);
-
-    if (this.editingLinkUuid) {
-      // Update
-      this.linkService.updateLink(this.projectUuid!, this.organUuid!, this.editingLinkUuid, {
-        url: this.newLinkUrl,
-        description: this.newLinkDesc || undefined
-      }).subscribe({
-        next: () => {
-          this.clearLinkForm();
-          this.showLinkForm.set(false);
-          this.loadLinks();
-          this.isSavingLink.set(false);
-        },
-        error: (err) => {
-          console.error('Failed to update link', err);
-          this.isSavingLink.set(false);
-        }
-      });
-    } else {
-      // Create
-      this.linkService.createLink(this.projectUuid!, this.organUuid!, {
-        url: this.newLinkUrl,
-        description: this.newLinkDesc || undefined
-      }).subscribe({
-        next: () => {
-          this.clearLinkForm();
-          this.showLinkForm.set(false);
-          this.loadLinks();
-          this.isSavingLink.set(false);
-        },
-        error: (err) => {
-          console.error('Failed to create link', err);
-          this.isSavingLink.set(false);
-        }
-      });
-    }
-  }
-
-  deleteLink(link: OrganLinkSummary) {
-    this.linkToDelete = link;
-    this.showLinkDeleteConfirm.set(true);
-  }
-
-  closeLinkDeleteConfirm() {
-    this.showLinkDeleteConfirm.set(false);
-    this.linkToDelete = null;
-  }
-
-  confirmDeleteLink() {
-    if (!this.linkToDelete) return;
-
-    this.linkService.deleteLink(this.projectUuid!, this.organUuid!, this.linkToDelete.uuid, false).subscribe({
+    this.linkService.createLink(this.projectUuid!, this.organUuid!, event).subscribe({
       next: () => {
-        this.closeLinkDeleteConfirm();
         this.loadLinks();
+        this.isSavingLink.set(false);
+        if (this.linksPanel) {
+          this.linksPanel.closeLinkForm();
+        }
       },
       error: (err) => {
-        console.error('Failed to delete link', err);
-        this.closeLinkDeleteConfirm();
+        console.error('Failed to create link', err);
+        this.isSavingLink.set(false);
+        this.toastService.error('Erreur', 'Impossible de créer le lien.');
       }
     });
   }
 
-  // --- TASK MODAL ACTIONS ---
+  onUpdateLink(event: { uuid: string; url: string; description?: string }) {
+    this.isSavingLink.set(true);
+    this.linkService.updateLink(this.projectUuid!, this.organUuid!, event.uuid, {
+      url: event.url,
+      description: event.description
+    }).subscribe({
+      next: () => {
+        this.loadLinks();
+        this.isSavingLink.set(false);
+        if (this.linksPanel) {
+          this.linksPanel.closeLinkForm();
+        }
+      },
+      error: (err) => {
+        console.error('Failed to update link', err);
+        this.isSavingLink.set(false);
+        this.toastService.error('Erreur', 'Impossible de modifier le lien.');
+      }
+    });
+  }
+
+  // ---- TASK MODAL ACTIONS ----
   openTaskCreate() {
     if (this.taskModal) {
       this.taskModal.openForCreate();

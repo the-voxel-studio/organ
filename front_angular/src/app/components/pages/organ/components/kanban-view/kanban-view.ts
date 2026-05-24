@@ -1,12 +1,12 @@
 import { Component, Input, Output, EventEmitter, AfterViewInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskResponse, TaskStatus } from '../../../../../models/task.model';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { KanbanColumnComponent } from './components/kanban-column/kanban-column';
 
 @Component({
   selector: 'app-kanban-view',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, KanbanColumnComponent],
   templateUrl: './kanban-view.html'
 })
 export class KanbanViewComponent implements AfterViewInit, OnDestroy {
@@ -24,12 +24,10 @@ export class KanbanViewComponent implements AfterViewInit, OnDestroy {
   @ViewChild('topScrollThumb')    topScrollThumbRef!: ElementRef<HTMLDivElement>;
   @ViewChild('kanbanContainer')   kanbanContainerRef!: ElementRef<HTMLDivElement>;
 
-  activeDragOverColumn: any = null;
+  activeDragOverColumn: string | null = null;
 
   private resizeObserver?: ResizeObserver;
   private isSyncing = false;
-
-  constructor(private sanitizer: DomSanitizer) {}
 
   ngAfterViewInit(): void {
     this.setupTopScroll();
@@ -66,81 +64,5 @@ export class KanbanViewComponent implements AfterViewInit, OnDestroy {
 
   getTasksByStatus(status: string): TaskResponse[] {
     return this.tasks.filter(t => t.status === status);
-  }
-
-  getColumnCount(status: string): number {
-    return this.allTasks.filter(t => t.status === status).length;
-  }
-
-  isTaskAssigneeOrManager(task: TaskResponse): boolean {
-    if (!this.currentUserId) return false;
-    return task.manager?.uuid === this.currentUserId ||
-           task.assignees.some(a => a.uuid === this.currentUserId);
-  }
-
-  onDragStart(event: DragEvent, task: TaskResponse) {
-    if (!this.hasTaskEditAll && !this.isTaskAssigneeOrManager(task)) {
-      event.preventDefault();
-      return;
-    }
-    event.dataTransfer?.setData('text/plain', task.uuid);
-    event.dataTransfer?.setData('text/status', task.status);
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-    }
-  }
-
-  onDragOver(event: DragEvent) {
-    event.preventDefault(); // Necessary to allow drop
-  }
-
-  onDragEnter(status: any) {
-    this.activeDragOverColumn = status;
-  }
-
-  onDragLeave() {
-    this.activeDragOverColumn = null;
-  }
-
-  onDrop(event: DragEvent, newStatus: any) {
-    event.preventDefault();
-    this.activeDragOverColumn = null;
-
-    const taskUuid = event.dataTransfer?.getData('text/plain');
-    const oldStatus = event.dataTransfer?.getData('text/status') as TaskStatus;
-    const statusVal = newStatus as TaskStatus;
-
-    if (!taskUuid || oldStatus === statusVal) return;
-
-    this.taskStatusChanged.emit({ taskUuid, newStatus: statusVal });
-  }
-
-  onTaskClick(taskUuid: string) {
-    this.taskClicked.emit(taskUuid);
-  }
-
-  safeSvg(svgContent: string | null | undefined): SafeHtml {
-    if (!svgContent) return '';
-    return this.sanitizer.bypassSecurityTrustHtml(svgContent);
-  }
-
-  formatDate(dateString: string | null | undefined): string {
-    if (!dateString) return '-';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: 'short'
-      });
-    } catch (e) {
-      return '-';
-    }
-  }
-
-  getPriorityColor(priority: number): string {
-    if (priority <= 3) return 'bg-slate-100 text-slate-600';
-    if (priority <= 5) return 'bg-blue-50 text-blue-600';
-    if (priority <= 7) return 'bg-amber-50 text-amber-600';
-    return 'bg-rose-50 text-rose-600';
   }
 }

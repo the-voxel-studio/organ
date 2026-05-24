@@ -17,14 +17,13 @@
   </div>
 }
 
-<form (submit)="onSubmit(); $event.preventDefault()">
+<form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
   <div class="space-y-6">
     <!-- Email -->
     <div>
       <label for="username" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-widest">Adresse E-mail</label>
       <input type="email" 
-             [(ngModel)]="email" 
-             name="email" 
+             formControlName="email" 
              id="username" 
              class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none" 
              autocomplete="email" 
@@ -32,7 +31,7 @@
              autofocus 
              placeholder="nom@exemple.com">
     </div>
-
+ 
     <!-- Password -->
     <div class="relative">
       <div class="flex justify-between items-center mb-2">
@@ -41,8 +40,7 @@
       </div>
       <div class="relative">
         <input [type]="showPassword() ? 'text' : 'password'" 
-               [(ngModel)]="password" 
-               name="password" 
+               formControlName="password" 
                id="password" 
                class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none" 
                autocomplete="current-password" 
@@ -64,14 +62,13 @@
         </button>
       </div>
     </div>
-
+ 
     <!-- Agreement -->
     <div class="flex items-center justify-center py-2">
       <label class="relative flex items-center group cursor-pointer">
         <input type="checkbox" 
                id="agreement" 
-               [(ngModel)]="agreement" 
-               name="agreement" 
+               formControlName="agreement" 
                class="peer sr-only">
         
         <!-- Custom Checkbox -->
@@ -83,7 +80,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-
+ 
         <!-- Label Text (Full Legal Version) -->
         <span class="ml-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed select-none group-hover:text-gray-600 transition-colors">
           J'accepte les 
@@ -97,7 +94,7 @@
         </span>
       </label>
     </div>
-
+ 
     <button type="submit" 
             [disabled]="isLoading()"
             class="w-full py-4 bg-bubblegum hover:bg-bubblegum/90 text-white font-black text-lg rounded-2xl shadow-xl shadow-bubblegum/20 transition-all transform hover:-translate-y-1 active:scale-[0.98] uppercase tracking-widest cursor-pointer flex items-center justify-center gap-3 disabled:opacity-50">
