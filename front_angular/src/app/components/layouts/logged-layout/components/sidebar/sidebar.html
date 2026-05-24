@@ -1,0 +1,96 @@
+<aside class="relative flex flex-col h-screen px-5 py-8 overflow-y-visible bg-white border-r border-gray-100 shrink-0" [style.width.px]="sidebarWidth">
+  
+  <!-- Logo -->
+  <div class="mb-10 px-2 flex items-center justify-center">
+    <a routerLink="/dashboard" class="flex items-center gap-3 group">
+      <app-dynamic-logo id="nav-logo" size="48px"></app-dynamic-logo>
+      <span class="text-2xl font-extrabold tracking-tight text-black">Organ</span>
+    </a>
+  </div>
+
+  <!-- Top Quick Actions -->
+  <div class="flex items-center justify-around gap-6 mb-10 px-2">
+    <!-- Corbeille Link -->
+    <a routerLink="/trash" 
+       class="text-black/80 hover:text-red-500 transition-colors duration-200 cursor-pointer"
+       title="Corbeille">
+      <span class="sr-only">Corbeille</span>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+      </svg>
+    </a>
+
+    <!-- Notification Center Component -->
+    <app-notification-center></app-notification-center>
+  </div>
+
+  <!-- Main Navigation MENU -->
+  <nav class="flex-1 space-y-2 overflow-y-auto px-2">
+    <!-- Dashboard button -->
+    <a routerLink="/dashboard" 
+       class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all group mb-1 border"
+       [ngClass]="activeRoute() === '/dashboard' 
+                  ? 'text-white bg-bubblegum shadow-sm shadow-bubblegum/20 border-transparent' 
+                  : 'text-black/80 bg-white border-pastel-pink/40 hover:bg-pastel-pink/20 hover:text-bubblegum hover:border-pastel-pink/80'">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" 
+           class="w-5 h-5"
+           [ngClass]="activeRoute() === '/dashboard' ? 'text-white' : 'text-black/40 group-hover:text-bubblegum'">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z"/>
+      </svg>
+      <span class="font-bold">Dashboard</span>
+    </a>
+
+    <!-- Projects section -->
+    @if (projects().length > 0) {
+      <div class="pt-5 pb-2 px-4">
+        <span class="text-[10px] font-black uppercase tracking-widest text-black/30">Mes Projets</span>
+      </div>
+
+      @for (project of projects(); track project.uuid) {
+        <a [routerLink]="['/project', project.uuid]" 
+           class="flex items-center justify-between px-4 py-3 rounded-xl transition-all group mb-1 border"
+           [style.background-color]="isProjectActive(project.uuid) ? getProjectColorHex(project.color) : 'transparent'"
+           [style.box-shadow]="isProjectActive(project.uuid) ? '0 4px 12px ' + getProjectColorHex(project.color) + '40' : 'none'"
+           [ngClass]="isProjectActive(project.uuid) 
+                      ? 'text-white border-transparent shadow-sm' 
+                      : 'text-black/80 bg-white border-pastel-pink/40 hover:bg-pastel-pink/20 hover:text-bubblegum'">
+          <div class="flex items-center gap-3">
+            <div class="w-6 h-6 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
+                 [ngClass]="isProjectActive(project.uuid) ? 'bg-white/40 ring-1 ring-white/50' : 'bg-gray-50'">
+              @if (project.iconData) {
+                @if (project.iconType === 'EMOJI') {
+                  <span class="text-xs">{{ project.iconData }}</span>
+                } @else if (project.iconType === 'BLOB' || project.iconType === 'IMAGE') {
+                  <img [src]="project.iconData" class="w-full h-full object-cover" alt="icon">
+                } @else if (project.iconType === 'SVG' || project.iconType === 'ICON') {
+                  <div class="w-4 h-4 flex items-center justify-center text-[8px]"
+                       [ngClass]="isProjectActive(project.uuid) ? 'text-white' : 'text-gray-500'"
+                       [innerHTML]="safeSvg(project.iconData)">
+                  </div>
+                } @else {
+                  <div class="w-full h-full" [style.background-color]="getProjectColorHex(project.color)"></div>
+                }
+              } @else {
+                <div class="w-full h-full" [style.background-color]="getProjectColorHex(project.color)"></div>
+              }
+            </div>
+            <span class="font-bold text-sm truncate max-w-[150px]" [title]="project.title">{{ project.title }}</span>
+          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" 
+               class="w-4 h-4 transition-transform group-hover:translate-x-1"
+               [ngClass]="isProjectActive(project.uuid) ? 'text-white' : 'text-bubblegum'">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+          </svg>
+        </a>
+      }
+    }
+  </nav>
+
+  <!-- User Profile Section -->
+  <app-user-dropdown></app-user-dropdown>
+  
+  <!-- Resizing handle -->
+  <div (mousedown)="startResizing($event)"
+       class="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-bubblegum/30 active:bg-bubblegum/60 z-50 transition-colors duration-150 border-r-2 border-transparent active:border-bubblegum hover:border-bubblegum/40">
+  </div>
+</aside>
