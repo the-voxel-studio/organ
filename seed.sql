@@ -104,19 +104,21 @@ INSERT INTO organ_roles (id, uuid, organ_id, name, icon_type, icon_data) VALUES
 (3, UUID(), 2, 'Frontend Lead', 'EMOJI', '🎨'),
 (4, UUID(), 3, 'Designer', 'EMOJI', '✏️'),
 (5, UUID(), 4, 'Community Manager', 'EMOJI', '🤳'),
-(6, UUID(), 5, 'DevOps', 'EMOJI', '⚙️');
+(6, UUID(), 5, 'DevOps', 'EMOJI', '⚙️'),
+(7, UUID(), 1, 'Manager', 'EMOJI', '💼');
 
 -- Permissions mapping
 INSERT INTO organ_role_permissions (role_id, permission_id) SELECT 1, id FROM permissions;
 INSERT INTO organ_role_permissions (role_id, permission_id) SELECT 3, id FROM permissions;
 INSERT INTO organ_role_permissions (role_id, permission_id) SELECT 6, id FROM permissions;
+INSERT INTO organ_role_permissions (role_id, permission_id) SELECT 7, id FROM permissions WHERE name IN ('ORGAN_VIEW', 'TASK_CREATE', 'TASK_EDIT_OWN', 'COMMENT_CREATE', 'ATTACHMENT_ADD', 'TASK_STATUS_CHANGE_OWN', 'TASK_PRIORITY_CHANGE_OWN', 'TASK_DATES_MANAGE_OWN', 'TASK_ESTIMATE_MANAGE_OWN', 'TASK_ASSIGN_SELF', 'TASK_VALIDATE', 'TASK_LINK_MANAGE_OWN', 'TASK_TAG_MANAGE_OWN', 'TASK_TAG_HARD_DELETE', 'TASK_DEPENDENCY_MANAGE_OWN', 'COMMENT_EDIT_OWN', 'COMMENT_DELETE_OWN', 'COMMENT_HARD_DELETE_OWN', 'ATTACHMENT_DELETE_OWN', 'ATTACHMENT_HARD_DELETE_OWN');
 INSERT INTO organ_role_permissions (role_id, permission_id) SELECT 2, id FROM permissions WHERE name IN ('ORGAN_VIEW', 'TASK_CREATE', 'TASK_EDIT_OWN', 'COMMENT_CREATE', 'ATTACHMENT_ADD');
 INSERT INTO organ_role_permissions (role_id, permission_id) SELECT 4, id FROM permissions WHERE name IN ('ORGAN_VIEW', 'TASK_CREATE', 'TASK_EDIT_ALL', 'COMMENT_CREATE');
 INSERT INTO organ_role_permissions (role_id, permission_id) SELECT 5, id FROM permissions WHERE name IN ('ORGAN_VIEW', 'TASK_CREATE', 'TASK_STATUS_CHANGE_ALL', 'COMMENT_CREATE');
 
 -- User Roles mapping
 INSERT INTO user_organ_roles (user_id, role_id) VALUES 
-(1, 1), (3, 2), (4, 3), (5, 4), (2, 5), (1, 6);
+(1, 1), (2, 7), (3, 2), (4, 3), (5, 4), (2, 5), (1, 6);
 
 -- =========================================================================
 -- TAGS
