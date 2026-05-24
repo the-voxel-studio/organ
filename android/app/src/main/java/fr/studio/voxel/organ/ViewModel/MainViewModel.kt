@@ -79,20 +79,26 @@ class MainViewModel : ViewModel() {
     suspend fun fetchAllTasks() {
         val allTasks = mutableStateListOf<Task>()
         val currentProjects = projects ?: return
+        val userUuid = currentUser?.uuid ?: return
 
         try {
             for (project in currentProjects) {
                 project.organs?.forEach { organ ->
                     val response = taskService.getTasks(project.uuid, organ.uuid)
-
                     if (response.isSuccessful) {
-                        val enrichedTasks = response.body()?.map{ task ->
+                        val organTasks = response.body() ?: emptyList()
+                        val myTasks = organTasks.filter{ task ->
+                            task.createdBy?.uuid == userUuid || task.manager?.uuid == userUuid
+                        }.map { task ->
                             task.copy(
                                 projectName = project.title,
                                 organName = organ.title
                             )
                         }
-                        if(enrichedTasks != null) allTasks.addAll(enrichedTasks)
+                        allTasks.addAll(myTasks)
+                    } else{
+                        println("DEBUG: Erreur ${response.code()} sur le projet ${project.title}")
+                        if (response.code() == 403) { error = "Accès refusé aux tâches de certains projets" }
                     }
                 }
             }

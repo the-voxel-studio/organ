@@ -29,13 +29,8 @@ import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 @Composable
 fun LineTask(
     task: Task,
-    projects: List<Project>,
     modifier: Modifier = Modifier
 ){
-    val project = projects.find { project ->
-        project.organs?.any { it.id == task.organId } == true
-    }
-    val organ = project?.organs?.find{it.id == task.organId}
 
     Row(
         modifier = Modifier

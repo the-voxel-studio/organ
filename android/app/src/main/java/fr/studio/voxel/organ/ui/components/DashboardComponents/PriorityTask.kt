@@ -79,7 +79,7 @@ fun PriorityTask(
             }
         } else if(tasks.isNotEmpty()){
             tasks.forEach { task ->
-                LineTask(task = task, projects = projects)
+                LineTask(task = task)
             }
         }else{
             Text("Aucune tâche urgente", modifier = Modifier.padding(16.dp))
