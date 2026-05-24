@@ -11,12 +11,15 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.padding
 import androidx.navigation.compose.composable
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.studio.voxel.organ.ViewModel.MainViewModel
+import fr.studio.voxel.organ.network.ApiClient
 import fr.studio.voxel.organ.ui.AuthMode
 import fr.studio.voxel.organ.ui.AuthScreen
 import fr.studio.voxel.organ.ui.SideBar
 import fr.studio.voxel.organ.ui.Dashboard
+import fr.studio.voxel.organ.ui.Parameter
 
 
 enum class OrganScreen {
@@ -26,14 +29,19 @@ enum class OrganScreen {
     Sidebar,
     Project,
     Organ,
-    Task
+    Task,
+    Parameter,
+    Notification
 }
 
 @Composable
 fun OrganApp(
     navController: NavHostController = rememberNavController()
 ){
-    val mainVM: MainViewModel = viewModel()
+    val context = LocalContext.current
+    val mainVM: MainViewModel = viewModel(
+        viewModelStoreOwner = context as MainActivity
+    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -53,7 +61,8 @@ fun OrganApp(
                         if (targetMode == AuthMode.SIGN_UP) {
                             navController.navigate(OrganScreen.SignUp.name)
                         }
-                    }
+                    },
+                    mainVM = mainVM
                 )
             }
 
@@ -68,7 +77,8 @@ fun OrganApp(
                             // On revient en arrière ou on force la route de connexion
                             navController.popBackStack()
                         }
-                    }
+                    },
+                    mainVM = mainVM
                 )
             }
 
@@ -77,12 +87,30 @@ fun OrganApp(
                 enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
                 exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) }
             ){
-                SideBar(navController = navController, utilisateur = "Michel JeTestLeNomLongEncorePlusLongCarFautTronquer", mainVM = mainVM)
+                SideBar(
+                    navController = navController,
+                    mainVM = mainVM,
+                    onModifButtonClicked = {
+                        navController.navigate(OrganScreen.Parameter.name)
+                    }
+                )
 
             }
 
             composable(route = OrganScreen.Dashboard.name){
                 Dashboard(navController = navController, mainVM = mainVM)
+            }
+
+            composable (route = OrganScreen.Parameter.name){
+                Parameter(
+                    onDeleteButtonClicked = {
+                        ApiClient.getTokenStorage().clear()
+                        mainVM.clearData()
+                        navController.navigate(OrganScreen.SignIn.name){
+                            popUpTo(0)
+                        }
+                    }
+                )
             }
         }
 

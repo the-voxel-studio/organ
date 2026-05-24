@@ -27,8 +27,8 @@ object ApiClient {
             .addInterceptor(logging)
             .cookieJar(cookieJar)
             .authenticator(authenticator)
-            .connectTimeout(60, TimeUnit.SECONDS) // Temps pour établir la connexion
-            .readTimeout(60, TimeUnit.SECONDS)    // Temps pour recevoir les données
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .build()
 

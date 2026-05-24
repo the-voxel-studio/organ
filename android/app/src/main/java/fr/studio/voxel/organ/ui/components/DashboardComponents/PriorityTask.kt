@@ -3,26 +3,29 @@ package fr.studio.voxel.organ.ui.components.DashboardComponents
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.studio.voxel.organ.ViewModel.MainViewModel
+import fr.studio.voxel.organ.ViewModel.sharedMainViewModel
 
 @Composable
 fun PriorityTask(
-    mainVM: MainViewModel = viewModel(),
-    modifier : Modifier = Modifier
+    mainVM: MainViewModel = sharedMainViewModel()
 ){
     Column(
         modifier = Modifier
@@ -66,12 +69,22 @@ fun PriorityTask(
         Spacer(Modifier.height(24.dp))
 
         val projects = mainVM.projects ?: emptyList()
-        val tasks = mainVM.tasks
-        if(tasks.isNotEmpty()){
+        val tasks = mainVM.priorityTask
+        if(mainVM.isLoading && tasks.isEmpty()){
+            Box(
+                Modifier.fillMaxWidth().padding(32.dp),
+                contentAlignment = Alignment.Center
+            ){
+                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+            }
+        } else if(tasks.isNotEmpty()){
             tasks.forEach { task ->
                 LineTask(task = task, projects = projects)
             }
+        }else{
+            Text("Aucune tâche urgente", modifier = Modifier.padding(16.dp))
         }
+
 
     }
 

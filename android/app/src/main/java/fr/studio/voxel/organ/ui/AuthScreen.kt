@@ -25,6 +25,7 @@ import androidx.navigation.NavController
 import fr.studio.voxel.organ.OrganScreen
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ViewModel.AuthViewModel
+import fr.studio.voxel.organ.ViewModel.MainViewModel
 import fr.studio.voxel.organ.ui.components.HeaderComponents.Header
 import fr.studio.voxel.organ.ui.components.PrimaryButton
 import fr.studio.voxel.organ.ui.components.SignUpComponents.LoginRedirectText
@@ -38,10 +39,12 @@ fun AuthScreen(
     mode : AuthMode,
     navController: NavController,
     onModeSwitch : (AuthMode) -> Unit,
-    viewModel: AuthViewModel = viewModel()
+    viewModel: AuthViewModel = viewModel(),
+    mainVM : MainViewModel = viewModel()
 ){
     LaunchedEffect(viewModel.navigateToDashboard) {
         if(viewModel.navigateToDashboard){
+            mainVM.fetchProjects()
             navController.navigate(OrganScreen.Dashboard.name){
                 popUpTo(OrganScreen.SignIn.name){inclusive = true}
             }

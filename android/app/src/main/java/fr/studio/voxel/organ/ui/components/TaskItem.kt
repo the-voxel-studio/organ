@@ -16,7 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import fr.studio.voxel.organ.ViewModel.Task
+import fr.studio.voxel.organ.network.services.Task
 import fr.studio.voxel.organ.ui.theme.AppColorScheme
 import fr.studio.voxel.organ.ui.theme.AppTypography
 
@@ -40,7 +40,7 @@ fun TaskItem(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${task.progress}/10",
+                    text = "${task.priority}/10",
                     style = AppTypography.labelLarge,
                     color = AppColorScheme.onSurface
                 )
@@ -66,7 +66,7 @@ fun TaskItem(
 
             // Nom de la tâche
             Text(
-                text = task.name,
+                text = task.title,
                 style = AppTypography.bodyLarge,
                 color = AppColorScheme.onSurface
             )
@@ -78,11 +78,13 @@ fun TaskItem(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                Text(
-                    text = task.deadline,
-                    style = AppTypography.labelSmall,
-                    color = AppColorScheme.onSurface.copy(alpha = 0.6f)
-                )
+                task.expiresAt?.let {
+                    Text(
+                        text = it,
+                        style = AppTypography.labelSmall,
+                        color = AppColorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
     }

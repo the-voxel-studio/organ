@@ -34,6 +34,7 @@ import fr.studio.voxel.organ.OrganScreen
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ViewModel.DashboardViewModel
 import fr.studio.voxel.organ.ViewModel.MainViewModel
+import fr.studio.voxel.organ.ViewModel.sharedMainViewModel
 import fr.studio.voxel.organ.ui.components.AddButton
 import fr.studio.voxel.organ.ui.components.DashboardComponents.PriorityTask
 import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectSticker
@@ -42,7 +43,7 @@ import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 @Composable
 fun Dashboard(
     navController: NavHostController,
-    mainVM : MainViewModel = viewModel()
+    mainVM : MainViewModel = sharedMainViewModel()
 ){
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -133,7 +134,7 @@ fun Dashboard(
             }
 
             item {
-                PriorityTask()
+                PriorityTask(mainVM = mainVM)
             }
 
             item {

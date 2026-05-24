@@ -1,7 +1,6 @@
 package fr.studio.voxel.organ.network.services
 
 import com.google.gson.annotations.SerializedName
-import fr.studio.voxel.organ.ViewModel.Organ
 import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectVisual
 import retrofit2.Response
 import retrofit2.http.*
