@@ -17,6 +17,7 @@ import fr.studio.voxel.organ.ViewModel.MainViewModel
 import fr.studio.voxel.organ.network.ApiClient
 import fr.studio.voxel.organ.ui.AuthMode
 import fr.studio.voxel.organ.ui.AuthScreen
+import fr.studio.voxel.organ.ui.CreateProject
 import fr.studio.voxel.organ.ui.SideBar
 import fr.studio.voxel.organ.ui.Dashboard
 import fr.studio.voxel.organ.ui.Parameter
@@ -28,7 +29,9 @@ enum class OrganScreen {
     Dashboard,
     Sidebar,
     Project,
+    CreateProject,
     Organ,
+    CreateOrgan,
     Task,
     Parameter,
     Notification
@@ -111,6 +114,10 @@ fun OrganApp(
                         }
                     }
                 )
+            }
+
+            composable (route = OrganScreen.CreateProject.name){
+                CreateProject()
             }
         }
 
