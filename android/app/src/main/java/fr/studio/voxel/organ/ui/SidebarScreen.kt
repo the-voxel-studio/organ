@@ -31,6 +31,7 @@ import androidx.navigation.NavHostController
 import fr.studio.voxel.organ.OrganScreen
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ViewModel.MainViewModel
+import fr.studio.voxel.organ.ViewModel.sharedMainViewModel
 import fr.studio.voxel.organ.domain.model.SidebarViewModel
 import fr.studio.voxel.organ.ui.components.FooterComponents.Footer
 import fr.studio.voxel.organ.ui.components.HeaderComponents.Header
@@ -41,9 +42,9 @@ import fr.studio.voxel.organ.ui.components.SidebarComponents.SecondaryButton
 @Composable
 fun SideBar(
     navController: NavHostController,
-    mainVM: MainViewModel = viewModel(),
+    mainVM: MainViewModel = sharedMainViewModel(),
     sidebarVM: SidebarViewModel = viewModel(),
-    utilisateur : String
+    onModifButtonClicked : () -> Unit = {}
 ){
     // Récupère la route de la page juste avant la Sidebar
     val previousRoute = navController.previousBackStackEntry?.destination?.route
@@ -164,7 +165,10 @@ fun SideBar(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Footer(utilisateur = utilisateur)
+            val userName = mainVM.currentUser?.firstName ?: "Prénom"
+            val userLastName = mainVM.currentUser?.lastName ?: "Nom"
+
+            Footer(utilisateur = "$userName $userLastName", onModifButtonClicked = onModifButtonClicked)
         }
     }
 }

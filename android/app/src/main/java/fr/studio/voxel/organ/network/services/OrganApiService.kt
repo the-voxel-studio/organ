@@ -1,6 +1,6 @@
 package fr.studio.voxel.organ.network.services
 
-import fr.studio.voxel.organ.ViewModel.Organ
+import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectVisual
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -70,3 +70,23 @@ interface OrganApiService {
 data class AssignRoleRequest(
     val userUuid: String
 )
+
+data class Organ(
+    val id: Int?,
+    val uuid: String,
+    val projectId: Int,
+    val title: String,
+    val description: String?,
+    val iconType : String?,
+    val iconData: String?,
+    val highlightColor: String,
+    val createdAt: String,
+    val deletedAt: String?
+){
+    val visual: ProjectVisual?
+        get() = when (iconType) {
+            "EMOJI" -> iconData?.let { ProjectVisual.Emoji(it) }
+            "SVG" -> iconData.let { ProjectVisual.SvgXml(it) }
+            else -> null
+        }
+}

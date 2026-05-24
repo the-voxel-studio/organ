@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.R
-import fr.studio.voxel.organ.ViewModel.Task
+import fr.studio.voxel.organ.network.services.Task
 import fr.studio.voxel.organ.ui.components.TaskComponents.TaskCountBadge
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 import fr.studio.voxel.organ.ui.theme.MaterialTypography

@@ -21,7 +21,8 @@ import fr.studio.voxel.organ.ui.components.IconButtonPressable
 @Composable
 fun Footer(
     modifier: Modifier = Modifier,
-    utilisateur: String
+    utilisateur: String,
+    onModifButtonClicked : () -> Unit = {}
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -60,7 +61,7 @@ fun Footer(
             IconButtonPressable(
                 icon = R.drawable.icon_settings,
                 contentDescription = "Settings",
-                onClick = { /* TODO */ },
+                onClick = onModifButtonClicked,
                 modifier = Modifier.size(40.dp)
             )
         }

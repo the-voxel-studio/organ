@@ -77,7 +77,9 @@ class AuthViewModel : ViewModel() {
 
                if(response.isSuccessful){
                    navigateToDashboard = true
-               }else{
+               } else if (response.code() == 401) {
+                   authError = "Le mail ou le mot de passe sont incorrects"
+               } else {
                    authError = "Erreur: ${response.code()}"
                }
            }catch (e: Exception){
@@ -117,8 +119,8 @@ class AuthViewModel : ViewModel() {
                     authError = "Erreur lors de l'inscription."
                 }
             } catch (e: Exception){
-                // Affiche le message technique (ex: "Connection refused", "CLEARTEXT communication not permitted")
                 authError = "Erreur : ${e.localizedMessage}"
+                // Affiche le message technique (ex: "Connection refused", "CLEARTEXT communication not permitted")
                 Log.e("API_ERROR", "Détail : ", e)
             } finally {
                 isLoading = false

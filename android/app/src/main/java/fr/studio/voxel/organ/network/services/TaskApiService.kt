@@ -1,6 +1,5 @@
 package fr.studio.voxel.organ.network.services
 
-import fr.studio.voxel.organ.ViewModel.Task
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -80,4 +79,25 @@ interface TaskApiService {
 
 data class AssigneeRequest(
     val userUuid: String
+)
+
+data class Task(
+    val id: Int?,
+    val uuid: String,
+    val organId: Int?,
+    val createdBy:User?,
+    val manager: User?,
+    val title: String,
+    val description: String?,
+    val priority: Int,
+    val status: String,
+    val estimatedHours: String?,
+    val startDate: String?,
+    val expiresAt: String?,
+    val createdAt: String?,
+    val updatedAt: String?,
+    val validedAt: String?,
+    val deletedAt: String?,
+    val projectName: String? = null,
+    val organName: String? = null
 )

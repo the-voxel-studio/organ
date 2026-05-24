@@ -22,18 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import fr.studio.voxel.organ.ViewModel.Task
 import fr.studio.voxel.organ.network.services.Project
+import fr.studio.voxel.organ.network.services.Task
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 
 @Composable
 fun LineTask(
     task: Task,
-    projects: List<Project>,
     modifier: Modifier = Modifier
 ){
-    val project = projects.find{it.id == task.projectId} ?: return
-    val organ = project.organs?.find{it.id == task.organId} ?: return
 
     Row(
         modifier = Modifier
@@ -56,14 +53,14 @@ fun LineTask(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = task.progress.toString(),
+                    text = task.priority.toString(),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
             Text(
-                text = task.name,
+                text = task.title,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.width(70.dp)
@@ -73,12 +70,13 @@ fun LineTask(
         //Spacer(modifier = Modifier.width(20.dp))
 
         Text(
-            text = task.deadline,
+            text = task.expiresAt ?: "_",
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Bold
             ),
             color = MaterialTheme.colorScheme.onPrimary
         )
+
 
         //Spacer(modifier = Modifier.width(20.dp))
 
@@ -86,7 +84,7 @@ fun LineTask(
 
         ) {
             Text(
-                text = project.title ,
+                text = task.projectName ?: "Projet Inconnu",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold
                 ),
@@ -97,7 +95,7 @@ fun LineTask(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = organ.name,
+                text = task.organName ?: "...",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontWeight = FontWeight.Bold
                 ),
