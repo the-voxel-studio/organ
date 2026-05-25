@@ -33,7 +33,9 @@ class StatsAggregationService
             // Project level
             $this->updateStat($statsMap, $pUuid, null, $log, $start);
             // Organ level
-            $this->updateStat($statsMap, $pUuid, $oUuid, $log, $start);
+            if ($oUuid !== null) {
+                $this->updateStat($statsMap, $pUuid, $oUuid, $log, $start);
+            }
         }
 
         foreach ($statsMap as $pUuid => $organs) {
@@ -101,6 +103,13 @@ class StatsAggregationService
             case 'CONSULTATION':
                 $extra = $stat->getExtra();
                 $extra['consultations'] = ($extra['consultations'] ?? 0) + 1;
+                if ($log->getTaskUuid()) {
+                    $extra['task_views'] = ($extra['task_views'] ?? 0) + 1;
+                } elseif ($log->getOrganUuid()) {
+                    $extra['organ_views'] = ($extra['organ_views'] ?? 0) + 1;
+                } else {
+                    $extra['project_views'] = ($extra['project_views'] ?? 0) + 1;
+                }
                 $stat->setExtra($extra);
                 break;
         }

@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Subject, takeUntil, firstValueFrom, Observable } from 'rxjs';
+import { Subject, takeUntil, firstValueFrom } from 'rxjs';
 import { ProjectService } from '../../../services/project.service';
 import { ProjectMemberService } from '../../../services/project-member.service';
 import { AuthService } from '../../../services/auth.service';
@@ -14,7 +14,7 @@ import { ProjectGoogleDriveComponent } from './components/project-google-drive/p
 import { ProjectDangerZoneComponent } from './components/project-danger-zone/project-danger-zone';
 
 @Component({
-  selector: 'app-project-edit',
+  selector: 'app-project-settings',
   standalone: true,
   imports: [
     CommonModule,
@@ -25,9 +25,9 @@ import { ProjectDangerZoneComponent } from './components/project-danger-zone/pro
     ProjectGoogleDriveComponent,
     ProjectDangerZoneComponent
   ],
-  templateUrl: './project-edit.html'
+  templateUrl: './project-settings.html'
 })
-export class ProjectEditComponent implements OnInit, OnDestroy {
+export class ProjectSettingsComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private projectService = inject(ProjectService);
@@ -38,7 +38,6 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
 
   // Page mode & metadata
   projectUuid: string | null = null;
-  isEdit = false;
   isLoading = signal(true);
   isSubmitting = signal(false);
   errorMessage = signal<string | null>(null);
@@ -81,67 +80,32 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
   invites: any[] = [];
   removedMemberUuids: string[] = [];
 
-  // Esc key listener handler
-  private escHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      // General close handler if modals are present in parent
-    }
-  };
-
   ngOnInit() {
-    window.addEventListener('keydown', this.escHandler);
-
-    // Get google client ID from env config
     this.googleClientId = (import.meta as any).env.NG_APP_GOOGLE_CLIENT_ID || '';
 
     this.route.paramMap
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
-        const uuid = params.get('uuid');
-        if (uuid) {
-          this.projectUuid = uuid;
-          this.isEdit = true;
+        const projectUuid = params.get('projectUuid');
+        if (projectUuid) {
+          this.projectUuid = projectUuid;
           this.loadProjectDetails();
         } else {
-          this.isEdit = false;
-          this.initCreationMode();
+          this.errorMessage.set('UUID du projet manquant.');
+          this.isLoading.set(false);
         }
       });
   }
 
   ngOnDestroy() {
-    window.removeEventListener('keydown', this.escHandler);
     this.destroy$.next();
     this.destroy$.complete();
-  }
-
-  initCreationMode() {
-    this.isLoading.set(false);
-    this.projectNameInit();
-  }
-
-  projectNameInit() {
-    const user = this.authService.currentUser();
-    const email = user?.email || '';
-    const firstName = user?.firstName || 'Créateur';
-    this.invites = [
-      {
-        email,
-        name: firstName,
-        role: 'ADMIN',
-        isCreator: true,
-        isExisting: false,
-        isPending: false,
-        roleChanged: false
-      }
-    ];
   }
 
   loadProjectDetails() {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    // 1. Fetch details
     this.projectService.getProjectDetailed(this.projectUuid!).subscribe({
       next: (data) => {
         this.projectTitle = data.project.title;
@@ -170,7 +134,7 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
           };
         });
 
-        // 2. Fetch invitations
+        // Fetch invitations
         this.memberService.getInvitations(this.projectUuid!).subscribe({
           next: (invitations) => {
             const mappedInvites = invitations.map(inv => ({
@@ -242,7 +206,6 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
     const idx = event.index;
     const newRole = event.role;
     
-    // Rule: there can only be one ADMIN. If promoting someone else to ADMIN, demote current ADMIN.
     if (newRole === 'ADMIN') {
       this.invites.forEach((invite, i) => {
         if (i !== idx && invite.role === 'ADMIN') {
@@ -257,7 +220,6 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
       this.invites[idx].roleChanged = true;
     }
 
-    // Ensure there is always at least one ADMIN (defaulting to the creator)
     const hasAdmin = this.invites.some(invite => invite.role === 'ADMIN');
     if (!hasAdmin) {
       const creator = this.invites.find(invite => invite.isCreator);
@@ -268,7 +230,6 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Page actions
   onProjectDeleted() {
     this.router.navigate(['/dashboard']);
   }
@@ -283,42 +244,35 @@ export class ProjectEditComponent implements OnInit, OnDestroy {
     const projectData = {
       title: this.projectTitle,
       description: this.projectDescription || undefined,
-      status: this.isEdit ? this.projectStatus as any : 'ACTIVE',
+      status: this.projectStatus as any,
       color: this.projectColor,
       iconType: this.projectIconType as any,
       iconData: this.projectIconData || undefined
     };
 
-    const action$: Observable<any> = this.isEdit
-      ? this.projectService.updateProject(this.projectUuid!, projectData)
-      : this.projectService.createProject(projectData);
-
-    action$.subscribe({
-      next: async (res: any) => {
-        const uuid = this.isEdit ? this.projectUuid! : res.uuid;
+    this.projectService.updateProject(this.projectUuid!, projectData).subscribe({
+      next: async () => {
+        const uuid = this.projectUuid!;
 
         try {
-          if (this.isEdit) {
-            // 1. Process deletions
-            for (const memberUuid of this.removedMemberUuids) {
-              await firstValueFrom(this.memberService.removeMember(uuid, memberUuid));
+          // 1. Process deletions
+          for (const memberUuid of this.removedMemberUuids) {
+            await firstValueFrom(this.memberService.removeMember(uuid, memberUuid));
+          }
+
+          // 2. Process role changes (promoting new admin first)
+          const roleUpdates = this.invites.filter(m => m.isExisting && m.roleChanged && !m.isPending);
+          roleUpdates.sort((a, b) => (b.role === 'ADMIN' ? 1 : 0) - (a.role === 'ADMIN' ? 1 : 0));
+
+          const hasAdminPromotion = roleUpdates.some(m => m.role === 'ADMIN');
+          const user = this.authService.currentUser();
+          const currentUserEmail = user?.email || '';
+
+          for (const member of roleUpdates) {
+            if (hasAdminPromotion && member.email === currentUserEmail && member.role === 'MANAGER') {
+              continue;
             }
-
-            // 2. Process role changes (promoting new admin first)
-            const roleUpdates = this.invites.filter(m => m.isExisting && m.roleChanged && !m.isPending);
-            roleUpdates.sort((a, b) => (b.role === 'ADMIN' ? 1 : 0) - (a.role === 'ADMIN' ? 1 : 0));
-
-            const hasAdminPromotion = roleUpdates.some(m => m.role === 'ADMIN');
-            const user = this.authService.currentUser();
-            const currentUserEmail = user?.email || '';
-
-            for (const member of roleUpdates) {
-              // Skip current user MANAGER demotion request if someone else is promoted to ADMIN
-              if (hasAdminPromotion && member.email === currentUserEmail && member.role === 'MANAGER') {
-                continue;
-              }
-              await firstValueFrom(this.memberService.updateMemberRole(uuid, member.uuid, { role: member.role }));
-            }
+            await firstValueFrom(this.memberService.updateMemberRole(uuid, member.uuid, { role: member.role }));
           }
 
           // 3. Process new invitations

@@ -63,9 +63,9 @@ export class ProjectComponent implements OnInit, OnDestroy {
     this.route.paramMap
       .pipe(takeUntil(this.destroy$))
       .subscribe(params => {
-        const uuid = params.get('uuid');
-        if (uuid) {
-          this.projectUuid = uuid;
+        const projectUuid = params.get('projectUuid');
+        if (projectUuid) {
+          this.projectUuid = projectUuid;
           this.loadProjectDetails();
         } else {
           this.errorMessage.set('UUID du projet manquant.');

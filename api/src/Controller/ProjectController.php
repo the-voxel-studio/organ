@@ -582,16 +582,23 @@ class ProjectController extends AbstractController
         if (!$project) return $this->json(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
 
         $membership = $entityManager->getRepository(ProjectMember::class)->findOneBy(['user' => $user, 'project' => $project, 'deletedAt' => null]);
-        if (!$membership) return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+
+        // Only ADMIN or MANAGER can see detailed audit
+        if (!$membership || !in_array($membership->getGlobalRole(), [ProjectGlobalRole::ADMIN, ProjectGlobalRole::MANAGER], true)) {
+            return $this->json(['message' => 'Access denied'], Response::HTTP_FORBIDDEN);
+        }
 
         $days = $request->query->getInt('days', 7);
         $start = (new \DateTime())->modify("-{$days} days")->setTime(0, 0, 0);
+        $todayStart = (new \DateTime())->setTime(0, 0, 0);
+        $todayEnd = (new \DateTime())->setTime(23, 59, 59);
 
-        // Fetch daily stats from MongoDB
+        // Fetch daily stats from MongoDB up to yesterday
         $stats = $this->dm->getRepository(\App\Document\DailyStat::class)->createQueryBuilder()
             ->field('projectUuid')->equals($project->getUuid())
             ->field('organUuid')->equals(null) // Global project stats
             ->field('date')->gte($start)
+            ->field('date')->lt($todayStart)
             ->sort('date', 'asc')
             ->getQuery()
             ->execute();
@@ -610,6 +617,69 @@ class ProjectController extends AbstractController
                 'statusChanges' => $stat->getStatusChanges(),
             ];
         }
+
+        // Dynamically aggregate today's live stats from audit logs
+        $todayLogs = $this->dm->getRepository(\App\Document\AuditLog::class)->createQueryBuilder()
+            ->field('projectUuid')->equals($project->getUuid())
+            ->field('createdAt')->gte($todayStart)
+            ->field('createdAt')->lte($todayEnd)
+            ->getQuery()
+            ->execute();
+
+        $todayCreated = 0;
+        $todayCompleted = 0;
+        $todayCanceled = 0;
+        $todayComments = 0;
+        $todayAttachments = 0;
+        $todayConsultations = 0;
+        $todayStatusChanges = [];
+        $activeUsers = [];
+
+        foreach ($todayLogs as $log) {
+            switch ($log->getActionType()) {
+                case 'CREATE':
+                    $todayCreated++;
+                    break;
+                case 'STATUS_CHANGE':
+                    $newVal = $log->getNewValues()['status'] ?? null;
+                    if ($newVal === 'DONE') {
+                        $todayCompleted++;
+                    } elseif ($newVal === 'CANCELED') {
+                        $todayCanceled++;
+                    }
+                    
+                    $oldVal = $log->getOldValues()['status'] ?? 'UNKNOWN';
+                    $transition = "{$oldVal}_TO_{$newVal}";
+                    $todayStatusChanges[$transition] = ($todayStatusChanges[$transition] ?? 0) + 1;
+                    break;
+                case 'COMMENT_ADD':
+                    $todayComments++;
+                    break;
+                case 'ATTACHMENT_ADD':
+                    $todayAttachments++;
+                    break;
+                case 'CONSULTATION':
+                    $todayConsultations++;
+                    break;
+            }
+
+            $uUuid = $log->getUserUuid();
+            if ($uUuid && !in_array($uUuid, $activeUsers, true)) {
+                $activeUsers[] = $uUuid;
+            }
+        }
+
+        $data[] = [
+            'date' => $todayStart->format('Y-m-d'),
+            'tasksCreated' => $todayCreated,
+            'tasksCompleted' => $todayCompleted,
+            'tasksCanceled' => $todayCanceled,
+            'commentsAdded' => $todayComments,
+            'attachmentsAdded' => $todayAttachments,
+            'membersActive' => count($activeUsers),
+            'consultations' => $todayConsultations,
+            'statusChanges' => $todayStatusChanges,
+        ];
 
         // Add current SQL stats for real-time overview
         $conn = $entityManager->getConnection();

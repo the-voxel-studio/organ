@@ -9,19 +9,22 @@ import { RegisterComponent } from './components/pages/register/register';
 import { GetTheAppComponent } from './components/pages/get-the-app/get-the-app';
 import { DashboardComponent } from './components/pages/dashboard/dashboard';
 import { ProjectComponent } from './components/pages/project/project';
-import { ProjectEditComponent } from './components/pages/project-edit/project-edit';
+import { ProjectCreateComponent } from './components/pages/project-create/project-create';
+import { ProjectSettingsComponent } from './components/pages/project-settings/project-settings';
 import { ProjectTrashComponent } from './components/pages/project-trash/project-trash';
 import { OrganComponent } from './components/pages/organ/organ';
-import { OrganEditComponent } from './components/pages/organ-edit/organ-edit';
-import { OrganTrashComponent } from './components/pages/organ/components/organ-trash/organ-trash';
+import { OrganCreateComponent } from './components/pages/organ-create/organ-create';
+import { OrganSettingsComponent } from './components/pages/organ-settings/organ-settings';
+import { OrganTrashComponent } from './components/pages/organ-trash/organ-trash';
 import { SettingsComponent } from './components/pages/settings/settings';
 import { TrashComponent } from './components/pages/trash/trash';
-import { LegalNoticeComponent } from './components/pages/legal/legal-notice/legal-notice';
-import { PrivacyPolicyComponent } from './components/pages/legal/privacy-policy/privacy-policy';
-import { TermsComponent } from './components/pages/legal/terms/terms';
+import { LegalNoticeComponent } from './components/pages/legal-notice/legal-notice';
+import { PrivacyPolicyComponent } from './components/pages/privacy-policy/privacy-policy';
+import { TermsComponent } from './components/pages/terms/terms';
 import { authGuard } from './guards/auth.guard';
 import { organPermissionGuard } from './guards/organ-permission.guard';
 import { projectRoleGuard } from './guards/project-role.guard';
+import { ProjectAnalyticsComponent } from './components/pages/project-analytics/project-analytics';
 
 export const routes: Routes = [
   // Routes publiques (LandingLayoutComponent)
@@ -61,17 +64,17 @@ export const routes: Routes = [
     component: NavbarLayoutComponent,
     canActivate: [authGuard],
     children: [
-      { path: 'project/new', component: ProjectEditComponent },
+      { path: 'project/new', component: ProjectCreateComponent },
       { 
-        path: 'project/:uuid/settings', 
-        component: ProjectEditComponent,
+        path: 'project/:projectUuid/settings', 
+        component: ProjectSettingsComponent,
         canActivate: [projectRoleGuard],
         data: { roles: ['ADMIN'] }
       },
-      { path: 'project/:projectUuid/organ/new', component: OrganEditComponent },
+      { path: 'project/:projectUuid/organ/new', component: OrganCreateComponent },
       { 
         path: 'project/:projectUuid/organ/:organUuid/settings', 
-        component: OrganEditComponent,
+        component: OrganSettingsComponent,
         canActivate: [organPermissionGuard],
         data: { permission: 'ORGAN_EDIT' }
       }
@@ -85,10 +88,16 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', component: DashboardComponent },
-      { path: 'project/:uuid', component: ProjectComponent },
+      { path: 'project/:projectUuid', component: ProjectComponent },
       { 
-        path: 'project/:uuid/trash', 
+        path: 'project/:projectUuid/trash', 
         component: ProjectTrashComponent,
+        canActivate: [projectRoleGuard],
+        data: { roles: ['ADMIN', 'MANAGER'] }
+      },
+      {
+        path: 'project/:projectUuid/analytics',
+        component: ProjectAnalyticsComponent,
         canActivate: [projectRoleGuard],
         data: { roles: ['ADMIN', 'MANAGER'] }
       },

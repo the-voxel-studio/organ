@@ -1,0 +1,148 @@
+<!-- Background Glow - Subtle ambiance -->
+<div class="fixed top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.04] pointer-events-none blur-[120px] -z-10" 
+     [style.background-color]="getProjectColorHex()"></div>
+
+<div class="max-w-6xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+  <header class="mb-10">
+    <!-- Back Link -->
+    <div class="flex items-center justify-between mb-6">
+      <a [routerLink]="['/project', projectUuid]" class="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-black transition-colors group cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-1 transition-transform">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+        Retour au projet
+      </a>
+    </div>
+
+    <!-- Title and Slogan -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <h1 class="text-4xl font-black text-black mb-2 flex items-center gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10" [style.color]="getProjectColorHex()">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125z" />
+          </svg>
+          Analyses & Sécurité
+        </h1>
+        <p class="text-gray-500 font-medium italic">Consultez les statistiques d'activité et le journal d'audit de sécurité pour « {{ projectTitle }} ».</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Slider toggle switch - center of page -->
+  <div class="flex justify-center mb-10">
+    <div class="relative bg-gray-100 p-1.5 rounded-2xl flex gap-1 shadow-inner w-full max-w-[420px]">
+      <!-- Sliding pill indicator -->
+      <div class="absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-6px)] bg-white rounded-xl shadow-sm transition-all duration-300 ease-out transform"
+           [class.translate-x-0]="activeTab() === 'stats'"
+           [class.translate-x-full]="activeTab() === 'audit'">
+      </div>
+      
+      <button (click)="setTab('stats')"
+              class="relative z-10 w-1/2 text-center py-3 rounded-xl font-bold text-sm transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2"
+              [class.text-gray-900]="activeTab() === 'stats'"
+              [class.text-gray-500]="activeTab() !== 'stats'">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5z" />
+        </svg>
+        Statistiques
+      </button>
+      
+      <button (click)="setTab('audit')"
+              class="relative z-10 w-1/2 text-center py-3 rounded-xl font-bold text-sm transition-colors duration-200 cursor-pointer flex items-center justify-center gap-2"
+              [class.text-gray-900]="activeTab() === 'audit'"
+              [class.text-gray-500]="activeTab() !== 'audit'">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z" />
+        </svg>
+        Journal d'audit
+      </button>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <!-- Global Loading State -->
+    <div class="flex flex-col items-center justify-center min-h-[300px]">
+      <div class="w-12 h-12 border-4 border-bubblegum border-t-transparent rounded-full animate-spin" [style.border-color]="getProjectColorHex()" style="border-top-color: transparent"></div>
+      <p class="mt-4 text-gray-500 font-medium">Chargement des données du projet...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <!-- Global Error State -->
+    <div class="bg-red-50 border border-red-200 text-red-800 rounded-3xl p-6 text-center max-w-lg mx-auto">
+      <h3 class="font-bold mb-2">Erreur</h3>
+      <p class="text-sm text-red-600 mb-4">{{ errorMessage() }}</p>
+      <button type="button" (click)="loadProjectDetails()" class="px-6 py-2 bg-black text-white font-bold rounded-xl hover:bg-black/90 transition-all cursor-pointer">
+        Réessayer
+      </button>
+    </div>
+  } @else {
+    <!-- ==================== TABS CONTENT: STATS ==================== -->
+    <div [class.hidden]="activeTab() !== 'stats'">
+      <app-stats-dashboard 
+        [statsData]="statsData()" 
+        [projectColor]="projectColor" 
+        [statsDays]="statsDays()" 
+        (daysChanged)="setStatsDays($event)">
+      </app-stats-dashboard>
+    </div>
+
+    <!-- ==================== TABS CONTENT: AUDIT (INTERACTIVE) ==================== -->
+    <div [class.hidden]="activeTab() !== 'audit'">
+      <!-- Top Section: Interactive Member ranking & Activity insight -->
+      <app-audit-ranking 
+        [memberStats]="memberStats()" 
+        [totalLogsCount]="auditLogs().length" 
+        [mostActiveMember]="mostActiveMember" 
+        [projectColor]="projectColor">
+      </app-audit-ranking>
+
+      <!-- Multi-select Action refinement Box (Full Width) -->
+      <app-audit-filters 
+        [visibleActions]="visibleActions()" 
+        [projectColor]="projectColor" 
+        [isModificationsSelected]="isGroupSelected('modifications')" 
+        [isConsultationsSelected]="isGroupSelected('consultations')" 
+        (toggleAction)="toggleActionVisibility($event)" 
+        (selectAll)="selectAllActions($event)" 
+        (toggleGroup)="toggleGroupActions($event)">
+      </app-audit-filters>
+
+      <!-- Main Audit Layout: Sidebar (Membres & Filtres) + Content (Detail / Logs list) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- SIDEBAR: List of Members & Date/Action Filters -->
+        <div class="md:col-span-1">
+          <app-audit-sidebar 
+            [memberStats]="memberStats()" 
+            [selectedUserUuid]="selectedUserUuid()" 
+            [totalLogsCount]="auditLogs().length" 
+            [auditStartDate]="auditStartDate()" 
+            [auditEndDate]="auditEndDate()" 
+            [projectColor]="projectColor" 
+            (selectMember)="selectMember($event)" 
+            (startDateChange)="auditStartDate.set($event); onFilterChange()" 
+            (endDateChange)="auditEndDate.set($event); onFilterChange()" 
+            (clearDates)="clearDateFilters()">
+          </app-audit-sidebar>
+        </div>
+
+        <!-- CONTENT AREA: Detailed User stats or Global log feed -->
+        <div class="md:col-span-2">
+          <app-audit-timeline 
+            [filteredLogs]="filteredLogs" 
+            [selectedUserUuid]="selectedUserUuid()" 
+            [selectedUserStats]="selectedUserStats" 
+            [auditSortType]="auditSortType()" 
+            [auditOffset]="auditOffset()" 
+            [auditLimit]="auditLimit" 
+            [auditIsLoading]="auditIsLoading()" 
+            [projectColor]="projectColor" 
+            (closeUserFilter)="selectMember(null)" 
+            (sortTypeChange)="auditSortType.set($event)" 
+            (prevPage)="prevPage()" 
+            (nextPage)="nextPage()">
+          </app-audit-timeline>
+        </div>
+      </div>
+    </div>
+  }
+</div>

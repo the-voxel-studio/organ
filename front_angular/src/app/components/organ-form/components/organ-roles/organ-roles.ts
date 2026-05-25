@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AvailablePermission } from '../../../../../models/permission.model';
+import { AvailablePermission } from '../../../../models/permission.model';
 
 @Component({
   selector: 'app-organ-roles',

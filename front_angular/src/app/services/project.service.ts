@@ -59,12 +59,31 @@ export class ProjectService {
     );
   }
 
-  getProjectStats(uuid: string): Observable<ProjectStatsResponse> {
-    return this.http.get<ProjectStatsResponse>(`/api/projects/${uuid}/stats`);
+  getProjectStats(uuid: string, days?: number): Observable<ProjectStatsResponse> {
+    const params: { [key: string]: string } = {};
+    if (days !== undefined) {
+      params['days'] = String(days);
+    }
+    return this.http.get<ProjectStatsResponse>(`/api/projects/${uuid}/stats`, { params });
   }
 
-  getProjectAuditLogs(uuid: string): Observable<ProjectAuditLogItem[]> {
-    return this.http.get<ProjectAuditLogItem[]>(`/api/projects/${uuid}/audit-logs`);
+  getProjectAuditLogs(
+    uuid: string,
+    limit?: number,
+    offset?: number,
+    date?: string
+  ): Observable<ProjectAuditLogItem[]> {
+    const params: { [key: string]: string } = {};
+    if (limit !== undefined) {
+      params['limit'] = String(limit);
+    }
+    if (offset !== undefined) {
+      params['offset'] = String(offset);
+    }
+    if (date) {
+      params['date'] = date;
+    }
+    return this.http.get<ProjectAuditLogItem[]>(`/api/projects/${uuid}/audit`, { params });
   }
 
   getProjectPermissions(uuid: string): Observable<ProjectPermissionsResponse> {

@@ -1,0 +1,33 @@
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+  <!-- Horizontal member activity chart (ranking based on visible checkboxes) -->
+  <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs lg:col-span-2 flex flex-col">
+    <h3 class="text-sm font-black text-gray-900 mb-1 uppercase tracking-wider text-[10px]">Classement d'activité</h3>
+    <p class="text-xs text-gray-400 font-medium mb-4">Classement des membres basé sur les filtres d'actions sélectionnés ci-dessous.</p>
+    <div class="h-44 relative w-full mt-auto">
+      <canvas #memberActivityChart></canvas>
+    </div>
+  </div>
+  
+  <!-- Quick Insight box -->
+  <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs flex flex-col justify-between h-56 lg:h-auto">
+    <div>
+      <h3 class="text-sm font-black text-gray-900 mb-1 uppercase tracking-wider text-[10px]">Activité Globale</h3>
+      <p class="text-xs text-gray-400 font-medium leading-relaxed">Volume total d'actions de sécurité auditées.</p>
+    </div>
+    <div class="my-auto py-2">
+      <span class="text-5xl font-black text-gray-900">{{ totalLogsCount }}</span>
+      <span class="text-xs text-gray-400 font-bold uppercase ml-2">actions</span>
+    </div>
+    <div *ngIf="mostActiveMember" class="pt-3 border-t border-gray-50 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5">
+          <path d="M10 2a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 2zM10 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 0110 15zM10 7a3 3 0 100 6 3 3 0 000-6zM15.657 5.404a.75.75 0 10-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM6.464 14.596a.75.75 0 10-1.06-1.06l-1.06 1.06a.75.75 0 001.06 1.06l1.06-1.06zM18 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0118 10zM5 10a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 015 10zM14.596 15.657a.75.75 0 001.06-1.06l-1.06-1.06a.75.75 0 10-1.06 1.06l1.06 1.06zM5.404 6.464a.75.75 0 001.06-1.06l-1.06-1.06a.75.75 0 10-1.06 1.06l1.06 1.06z" />
+        </svg>
+      </div>
+      <div class="min-w-0">
+        <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Le plus actif (sélectionné)</p>
+        <p class="text-xs font-bold text-gray-800 truncate">{{ mostActiveMember.firstName }} {{ mostActiveMember.lastName }}</p>
+      </div>
+    </div>
+  </div>
+</div>

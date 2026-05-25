@@ -12,6 +12,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 class ProjectCacheService
 {
     private const SUMMARY_CACHE_PREFIX = 'project_summary_';
+    private const MINIMAL_CACHE_PREFIX = 'project_minimal_';
     private const CACHE_TTL = 3600; // 1 hour
 
     public function __construct(
@@ -35,7 +36,7 @@ class ProjectCacheService
      */
     public function getProjectSummaryByUuid(string $uuid): ?array
     {
-        return $this->cache->get(self::SUMMARY_CACHE_PREFIX . $uuid, function (ItemInterface $item) use ($uuid) {
+        return $this->cache->get(self::MINIMAL_CACHE_PREFIX . $uuid, function (ItemInterface $item) use ($uuid) {
             $item->expiresAfter(self::CACHE_TTL);
             
             $project = $this->entityManager->getRepository(Project::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
@@ -57,5 +58,6 @@ class ProjectCacheService
     public function invalidate(string $uuid): void
     {
         $this->cache->delete(self::SUMMARY_CACHE_PREFIX . $uuid);
+        $this->cache->delete(self::MINIMAL_CACHE_PREFIX . $uuid);
     }
 }

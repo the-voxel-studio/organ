@@ -1,0 +1,106 @@
+<!-- Stats Period Filter Buttons -->
+<div class="flex justify-end gap-2 mb-8">
+  <button (click)="daysChanged.emit(7)" 
+          class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm border"
+          [style.background-color]="statsDays === 7 ? getProjectColorHex() : 'white'"
+          [style.border-color]="statsDays === 7 ? getProjectColorHex() : '#f3f4f6'"
+          [style.color]="statsDays === 7 ? 'white' : '#6b7280'">
+    7 derniers jours
+  </button>
+  <button (click)="daysChanged.emit(30)" 
+          class="px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-sm border"
+          [style.background-color]="statsDays === 30 ? getProjectColorHex() : 'white'"
+          [style.border-color]="statsDays === 30 ? getProjectColorHex() : '#f3f4f6'"
+          [style.color]="statsDays === 30 ? 'white' : '#6b7280'">
+    30 derniers jours
+  </button>
+</div>
+
+<!-- KPI Summary Indicator Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+  <!-- KPI 1: Tasks Created -->
+  <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs flex flex-col justify-between h-36">
+    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Tâches créées</span>
+    <div class="flex items-baseline justify-between mt-2">
+      <h2 class="text-4xl font-black text-gray-900">{{ totalCreated }}</h2>
+      <div class="p-2 bg-blue-50 text-blue-500 rounded-xl">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI 2: Tasks Completed -->
+  <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs flex flex-col justify-between h-36">
+    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Terminées</span>
+    <div class="flex items-baseline justify-between mt-2">
+      <h2 class="text-4xl font-black text-gray-900">{{ totalCompleted }}</h2>
+      <div class="p-2 rounded-xl" [style.background-color]="getProjectColorHex() + '12'" [style.color]="getProjectColorHex()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI 3: Completion Rate -->
+  <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs flex flex-col justify-between h-36">
+    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Taux de succès</span>
+    <div class="flex items-baseline justify-between mt-2">
+      <h2 class="text-4xl font-black text-gray-900">{{ completionRate }}%</h2>
+      <div class="p-2 bg-emerald-50 text-emerald-500 rounded-xl">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.94" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI 4: Collaboration -->
+  <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs flex flex-col justify-between h-36">
+    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Collaboration</span>
+    <div class="flex items-baseline justify-between mt-2">
+      <h2 class="text-4xl font-black text-gray-900">{{ totalComments + totalAttachments }}</h2>
+      <div class="p-2 bg-purple-50 text-purple-500 rounded-xl">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Historic Activity Chart -->
+<div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-xs mb-10">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h3 class="text-lg font-bold text-gray-900">Activité historique</h3>
+      <p class="text-xs text-gray-400 font-medium">Évolution quotidienne de la création, complétion et consultation des tâches.</p>
+    </div>
+  </div>
+  <div class="h-80 relative w-full">
+    <canvas #activityChart></canvas>
+  </div>
+</div>
+
+<!-- Secondary charts grid layout -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <!-- Organ distribution chart -->
+  <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-xs">
+    <h3 class="text-lg font-bold text-gray-900 mb-2">Répartition par organe</h3>
+    <p class="text-xs text-gray-400 font-medium mb-6">Répartition du volume des tâches actives et des heures estimées par organe.</p>
+    <div class="h-80 relative w-full">
+      <canvas #organChart></canvas>
+    </div>
+  </div>
+
+  <!-- Task status chart -->
+  <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-xs">
+    <h3 class="text-lg font-bold text-gray-900 mb-2">Statut des tâches</h3>
+    <p class="text-xs text-gray-400 font-medium mb-6">Proportion des tâches du projet selon leur état d'avancement actuel.</p>
+    <div class="h-80 relative w-full">
+      <canvas #taskStatusChart></canvas>
+    </div>
+  </div>
+</div>

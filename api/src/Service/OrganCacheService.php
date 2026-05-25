@@ -14,6 +14,7 @@ class OrganCacheService
 {
     private const LIST_CACHE_PREFIX = 'organ_list_';
     private const SUMMARY_CACHE_PREFIX = 'organ_summary_';
+    private const MINIMAL_CACHE_PREFIX = 'organ_minimal_';
     private const CACHE_TTL = 3600; // 1 hour
 
     private const ROLE_LIST_CACHE_PREFIX = 'organ_role_list_';
@@ -29,7 +30,7 @@ class OrganCacheService
      */
     public function getOrganSummaryByUuid(string $uuid): ?array
     {
-        return $this->cache->get(self::SUMMARY_CACHE_PREFIX . $uuid, function (ItemInterface $item) use ($uuid) {
+        return $this->cache->get(self::MINIMAL_CACHE_PREFIX . $uuid, function (ItemInterface $item) use ($uuid) {
             $item->expiresAfter(self::CACHE_TTL);
 
             $organ = $this->entityManager->getRepository(Organ::class)->findOneBy(['uuid' => $uuid, 'deletedAt' => null]);
@@ -119,5 +120,6 @@ class OrganCacheService
     public function invalidateSummary(string $organUuid): void
     {
         $this->cache->delete(self::SUMMARY_CACHE_PREFIX . $organUuid);
+        $this->cache->delete(self::MINIMAL_CACHE_PREFIX . $organUuid);
     }
 }

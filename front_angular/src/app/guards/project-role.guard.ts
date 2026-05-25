@@ -9,7 +9,7 @@ export const projectRoleGuard: CanActivateFn = (route) => {
   const router = inject(Router);
   const toastService = inject(ToastService);
 
-  const projectUuid = route.paramMap.get('uuid');
+  const projectUuid = route.paramMap.get('projectUuid');
   const allowedRoles = (route.data['roles'] as string[]) || ['ADMIN', 'MANAGER'];
 
   if (!projectUuid) {

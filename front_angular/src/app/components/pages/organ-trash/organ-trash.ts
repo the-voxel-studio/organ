@@ -5,19 +5,19 @@ import { Subject, takeUntil } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 
 // Services
-import { OrganService } from '../../../../../services/organ.service';
-import { TaskService } from '../../../../../services/task.service';
-import { OrganRoleService } from '../../../../../services/organ-role.service';
-import { OrganLinkService } from '../../../../../services/organ-link.service';
+import { OrganService } from '../../../services/organ.service';
+import { TaskService } from '../../../services/task.service';
+import { OrganRoleService } from '../../../services/organ-role.service';
+import { OrganLinkService } from '../../../services/organ-link.service';
 
 // Models
-import { OrganDetailResponse, OrganMember } from '../../../../../models/organ.model';
-import { TaskResponse } from '../../../../../models/task.model';
-import { TrashedOrganRoleSummary, TrashedRoleMember } from '../../../../../models/organ-role.model';
-import { TrashedOrganLinkSummary } from '../../../../../models/organ-link.model';
+import { OrganDetailResponse, OrganMember } from '../../../models/organ.model';
+import { TaskResponse } from '../../../models/task.model';
+import { TrashedOrganRoleSummary, TrashedRoleMember } from '../../../models/organ-role.model';
+import { TrashedOrganLinkSummary } from '../../../models/organ-link.model';
 
 // Components
-import { TaskModalComponent } from '../task-modal/task-modal';
+import { TaskModalComponent } from '../organ/components/task-modal/task-modal';
 
 @Component({
   selector: 'app-organ-trash',
