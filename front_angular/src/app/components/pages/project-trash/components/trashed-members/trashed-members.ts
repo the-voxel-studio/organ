@@ -46,7 +46,7 @@ export class TrashedMembersComponent {
 
   membersCollapsed = signal(false);
 
-  /** Public computed accessor for template use */
+  /** Accesseur calculé pour le template */
   selectedCount = computed(() => this._selectedMembers().size);
 
   filteredMembers = computed(() => {

@@ -24,69 +24,23 @@
   <!-- Presets quick buttons -->
   @if (canManage) {
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <button type="button" (click)="addPresetRole('responsible')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
-        <div>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-lg">👑</span>
-            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Responsable</p>
+      @for (key of getPresetKeys(); track key) {
+        <button type="button" (click)="addPresetRole(key)" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-lg">{{ presets[key]?.iconData || '👤' }}</span>
+              <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">{{ presets[key]?.name }}</p>
+            </div>
+            <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+              {{ presets[key]?.description }}
+            </p>
           </div>
-          <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
-            Contrôle total sur l'Organ, les rôles et toutes les tâches.
-          </p>
-        </div>
-        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
-          <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </div>
-      </button>
-
-      <button type="button" (click)="addPresetRole('manager')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
-        <div>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-lg">📂</span>
-            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Manager</p>
+          <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
+            <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           </div>
-          <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
-            Gère l'intégralité du cycle de vie des tâches, les assignations et les membres.
-          </p>
-        </div>
-        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
-          <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </div>
-      </button>
-
-      <button type="button" (click)="addPresetRole('participant')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
-        <div>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-lg">👨‍💻</span>
-            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Participant</p>
-          </div>
-          <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
-            Peut créer des tâches et gérer ses propres tickets et commentaires.
-          </p>
-        </div>
-        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
-          <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </div>
-      </button>
-
-      <button type="button" (click)="addPresetRole('observer')" class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
-        <div>
-          <div class="flex items-center gap-2 mb-2">
-            <span class="text-lg">👁️</span>
-            <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">Observateur</p>
-          </div>
-          <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
-            Accès en lecture seule avec possibilité de commenter.
-          </p>
-        </div>
-        <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between w-full">
-          <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        </div>
-      </button>
+        </button>
+      }
     </div>
   }
 

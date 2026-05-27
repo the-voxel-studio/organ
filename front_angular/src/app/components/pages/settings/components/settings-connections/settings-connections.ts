@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UserService } from '../../../../../services/user.service';
+import { UserService } from '../../../../../services/api/user.service';
 import { UserConnection } from '../../../../../models/user.model';
 import { ConfirmationModalComponent } from '../../../../confirmation-modal/confirmation-modal';
 

@@ -2,7 +2,7 @@ import { Component, Input, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
-import { TagService } from '../../../../../services/tag.service';
+import { TagService } from '../../../../../services/api/tag.service';
 import { TagResponse } from '../../../../../models/tag.model';
 
 @Component({
@@ -162,7 +162,7 @@ export class ProjectTagsPanelComponent {
   private tagService = inject(TagService);
   private fb = inject(FormBuilder);
 
-  // States
+  // États
   showTagsPanel = signal(false);
   tags = signal<TagResponse[]>([]);
   tagsLoading = signal(false);
@@ -182,7 +182,7 @@ export class ProjectTagsPanelComponent {
   tagFormFocused = false;
   tagErrorMessage = '';
 
-  // Esc key listener handler
+  // Gestion de la touche Échap
   private escHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       if (this.showConfirmModal()) this.closeConfirm();

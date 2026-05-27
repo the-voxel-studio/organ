@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
-import { ProjectService } from '../../../../../services/project.service';
+import { ProjectService } from '../../../../../services/api/project.service';
 import { ProjectSummary } from '../../../../../models/project.model';
 
 @Component({
@@ -22,7 +22,7 @@ export class TrashedProjectsComponent {
   /** Emitted when a project is successfully restored or deleted — parent reloads its list */
   @Output() projectsChanged = new EventEmitter<void>();
 
-  // ---- Modal state ----
+  // ---- État du modal ----
   showRestoreModal = signal(false);
   showDeleteModal  = signal(false);
   isSubmitting     = signal(false);
@@ -69,7 +69,7 @@ export class TrashedProjectsComponent {
     });
   }
 
-  // ---- Delete ----
+  // ---- Suppression ----
   openDeleteModal(project: ProjectSummary) {
     this.selectedProject = project;
     this.modalErrorMessage.set(null);

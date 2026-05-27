@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef, Ng
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { AuthService, GOOGLE_SUPPRESS_KEY } from '../../../services/auth.service';
+import { AuthService, GOOGLE_SUPPRESS_KEY } from '../../../services/api/auth.service';
 import { SocialAuthService, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -37,26 +37,26 @@ export class RegisterComponent implements OnInit, OnDestroy {
     agreement: [false, [Validators.requiredTrue]]
   });
 
-  // Status State
+  // État du statut
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
   showPassword = signal(false);
   showConfirmPassword = signal(false);
 
   ngOnInit() {
-    // Check if already authenticated
+    // Vérifie si déjà authentifié
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/dashboard']);
       return;
     }
 
-    // Google Sign-In redirect state subscription
+    // Souscription à la redirection Google Sign-In
     this.socialAuthService.authState
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (user) => {
           this.ngZone.run(() => {
-            // If the user just logged out, suppress the stale Google authState re-emit
+            // Évite le ré-émetting d'un authState Google expiré après déconnexion
             if (sessionStorage.getItem(GOOGLE_SUPPRESS_KEY)) {
               sessionStorage.removeItem(GOOGLE_SUPPRESS_KEY);
               return;
@@ -181,7 +181,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
     }).subscribe({
       next: () => {
         this.isLoading.set(false);
-        // Navigate to login with success indicator
+        // Redirige vers login avec indicateur de succès
         this.router.navigate(['/login'], { queryParams: { registered: 'true' } });
       },
       error: (err) => {

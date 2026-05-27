@@ -202,7 +202,8 @@ Pour que la connexion Google et l'export Drive fonctionnent, vous devez créer u
     **Solution :** Relancez simplement la commande `docker-compose exec container php bin/console cache:clear` jusqu'à ce que le message disparaisse.
 
 ### Accès aux Services :
-*   **Application :** [http://localhost:8000](http://localhost:8000)
+*   **Application PHP:** [http://localhost:8000](http://localhost:8000)
+*   **Application Angular:** [http://localhost:4200](http://localhost:4200)
 *   **Documentation API :** [http://localhost:8001/api/docs](http://localhost:8001/api/docs)
 
 ---
@@ -211,7 +212,7 @@ Pour que la connexion Google et l'export Drive fonctionnent, vous devez créer u
 
 Pour faciliter le développement, un fichier `seed.sql` est disponible à la racine du projet. Il contient des utilisateurs, des projets, des Organs et des tâches de démonstration.
 
-### Import via phpMyAdmin
+### 1. Import via phpMyAdmin
 1.  Accédez à phpMyAdmin : [http://localhost:8080](http://localhost:8080).
 2.  Connectez-vous avec les identifiants définis dans votre fichier `.env` (par défaut `root` / `root_password`).
 3.  Sélectionnez la base de données `app_database` dans la colonne de gauche.
@@ -219,11 +220,13 @@ Pour faciliter le développement, un fichier `seed.sql` est disponible à la rac
 5.  Choisissez le fichier `seed.sql` présent à la racine du projet.
 6.  Cliquez sur **Importer** en bas de page.
 
-### Import MongoDb
-1.  `cat seed_mongo.js | docker-compose exec -T mongodb mongosh -u root -p mongodb_root_password --authenticationDatabase admin` pour Linux
-2.  `Get-Content seed_mongo.js | docker-compose exec -T mongodb mongosh -u root -p mongodb_root_password --authenticationDatabase admin` pour Windows
+### 2. Import MongoDb
+A la racine du projet, executez cette commande : 
+```bash
+docker compose exec -T api-php php bin/console app:seed:mock-analytics
+```
 
-### Comptes de Test
+### 3. Comptes de Test
 Tous les comptes ci-dessous utilisent le mot de passe : `password`
 
 *   **Administrateur :** `admin@organ.com` (Jean Dupont)

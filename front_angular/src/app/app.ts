@@ -2,7 +2,7 @@ import { Component, signal, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { gsap } from 'gsap';
 import { MorphSVGPlugin } from 'gsap/MorphSVGPlugin';
-import { ToastService } from './services/toast.service';
+import { ToastService } from './services/common/toast.service';
 
 // Enregistrement du plugin (désormais public)
 gsap.registerPlugin(MorphSVGPlugin);

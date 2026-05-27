@@ -593,80 +593,106 @@ class ProjectController extends AbstractController
         $todayStart = (new \DateTime())->setTime(0, 0, 0);
         $todayEnd = (new \DateTime())->setTime(23, 59, 59);
 
-        // Fetch daily stats from MongoDB up to yesterday
-        $stats = $this->dm->getRepository(\App\Document\DailyStat::class)->createQueryBuilder()
-            ->field('projectUuid')->equals($project->getUuid())
-            ->field('organUuid')->equals(null) // Global project stats
-            ->field('date')->gte($start)
-            ->field('date')->lt($todayStart)
-            ->sort('date', 'asc')
-            ->getQuery()
-            ->execute();
+        // Fetch daily stats from MongoDB up to yesterday natively
+        $dailyStatCollection = $this->dm->getDocumentCollection(\App\Document\DailyStat::class);
+        $stats = $dailyStatCollection->find(
+            [
+                'projectUuid' => $project->getUuid(),
+                'organUuid' => null, // Global project stats
+                'date' => [
+                    '$gte' => new \MongoDB\BSON\UTCDateTime($start),
+                    '$lt' => new \MongoDB\BSON\UTCDateTime($todayStart)
+                ]
+            ],
+            [
+                'sort' => ['date' => 1]
+            ]
+        );
 
         $data = [];
         foreach ($stats as $stat) {
+            $dateObj = $stat['date'] ?? null;
+            $dateStr = '';
+            if ($dateObj instanceof \MongoDB\BSON\UTCDateTime) {
+                $dateStr = $dateObj->toDateTime()->format('Y-m-d');
+            }
+            
+            $statusChanges = isset($stat['statusChanges']) ? (array)$stat['statusChanges'] : [];
+            $extra = isset($stat['extra']) ? (array)$stat['extra'] : [];
+
             $data[] = [
-                'date' => $stat->getDate()->format('Y-m-d'),
-                'tasksCreated' => $stat->getTasksCreated(),
-                'tasksCompleted' => $stat->getTasksCompleted(),
-                'tasksCanceled' => $stat->getTasksCanceled(),
-                'commentsAdded' => $stat->getCommentsAdded(),
-                'attachmentsAdded' => $stat->getAttachmentsAdded(),
-                'membersActive' => $stat->getMembersActive(),
-                'consultations' => $stat->getExtra()['consultations'] ?? 0,
-                'statusChanges' => $stat->getStatusChanges(),
+                'date' => $dateStr,
+                'tasksCreated' => $stat['tasksCreated'] ?? 0,
+                'tasksCompleted' => $stat['tasksCompleted'] ?? 0,
+                'tasksCanceled' => $stat['tasksCanceled'] ?? 0,
+                'commentsAdded' => $stat['commentsAdded'] ?? 0,
+                'attachmentsAdded' => $stat['attachmentsAdded'] ?? 0,
+                'membersActive' => $stat['membersActive'] ?? 0,
+                'consultations' => $extra['consultations'] ?? 0,
+                'statusChanges' => $statusChanges,
             ];
         }
 
-        // Dynamically aggregate today's live stats from audit logs
-        $todayLogs = $this->dm->getRepository(\App\Document\AuditLog::class)->createQueryBuilder()
-            ->field('projectUuid')->equals($project->getUuid())
-            ->field('createdAt')->gte($todayStart)
-            ->field('createdAt')->lte($todayEnd)
-            ->getQuery()
-            ->execute();
+        // Dynamically aggregate today's live stats from audit logs natively using a complex aggregation pipeline
+        $auditLogCollection = $this->dm->getDocumentCollection(\App\Document\AuditLog::class);
+        
+        $pipeline = [
+            ['$match' => [
+                'projectUuid' => $project->getUuid(),
+                'createdAt' => [
+                    '$gte' => new \MongoDB\BSON\UTCDateTime($todayStart),
+                    '$lte' => new \MongoDB\BSON\UTCDateTime($todayEnd)
+                ]
+            ]],
+            ['$group' => [
+                '_id' => null,
+                'tasksCreated' => ['$sum' => ['$cond' => [['$eq' => ['$actionType', 'CREATE']], 1, 0]]],
+                'commentsAdded' => ['$sum' => ['$cond' => [['$eq' => ['$actionType', 'COMMENT_ADD']], 1, 0]]],
+                'attachmentsAdded' => ['$sum' => ['$cond' => [['$eq' => ['$actionType', 'ATTACHMENT_ADD']], 1, 0]]],
+                'consultations' => ['$sum' => ['$cond' => [['$eq' => ['$actionType', 'CONSULTATION']], 1, 0]]],
+                'tasksCompleted' => ['$sum' => ['$cond' => [
+                    ['$and' => [
+                        ['$eq' => ['$actionType', 'STATUS_CHANGE']],
+                        ['$eq' => ['$newValues.status', 'DONE']]
+                    ]], 1, 0
+                ]]],
+                'tasksCanceled' => ['$sum' => ['$cond' => [
+                    ['$and' => [
+                        ['$eq' => ['$actionType', 'STATUS_CHANGE']],
+                        ['$eq' => ['$newValues.status', 'CANCELED']]
+                    ]], 1, 0
+                ]]],
+                'activeUsers' => ['$addToSet' => '$userUuid'],
+                'statusTransitions' => ['$push' => ['$cond' => [
+                    ['$eq' => ['$actionType', 'STATUS_CHANGE']],
+                    ['$concat' => [
+                        ['$ifNull' => ['$oldValues.status', 'UNKNOWN']],
+                        '_TO_',
+                        ['$ifNull' => ['$newValues.status', 'UNKNOWN']]
+                    ]],
+                    '$$REMOVE'
+                ]]]
+            ]]
+        ];
 
-        $todayCreated = 0;
-        $todayCompleted = 0;
-        $todayCanceled = 0;
-        $todayComments = 0;
-        $todayAttachments = 0;
-        $todayConsultations = 0;
+        $todayAggregationCursor = $auditLogCollection->aggregate($pipeline);
+        $todayStatsArray = iterator_to_array($todayAggregationCursor);
+        $todayStatsDoc = $todayStatsArray[0] ?? [];
+
+        $todayCreated = $todayStatsDoc['tasksCreated'] ?? 0;
+        $todayCompleted = $todayStatsDoc['tasksCompleted'] ?? 0;
+        $todayCanceled = $todayStatsDoc['tasksCanceled'] ?? 0;
+        $todayComments = $todayStatsDoc['commentsAdded'] ?? 0;
+        $todayAttachments = $todayStatsDoc['attachmentsAdded'] ?? 0;
+        $todayConsultations = $todayStatsDoc['consultations'] ?? 0;
+        
+        $activeUsers = isset($todayStatsDoc['activeUsers']) ? (array)$todayStatsDoc['activeUsers'] : [];
+        $activeUsersCount = count($activeUsers);
+        
         $todayStatusChanges = [];
-        $activeUsers = [];
-
-        foreach ($todayLogs as $log) {
-            switch ($log->getActionType()) {
-                case 'CREATE':
-                    $todayCreated++;
-                    break;
-                case 'STATUS_CHANGE':
-                    $newVal = $log->getNewValues()['status'] ?? null;
-                    if ($newVal === 'DONE') {
-                        $todayCompleted++;
-                    } elseif ($newVal === 'CANCELED') {
-                        $todayCanceled++;
-                    }
-                    
-                    $oldVal = $log->getOldValues()['status'] ?? 'UNKNOWN';
-                    $transition = "{$oldVal}_TO_{$newVal}";
-                    $todayStatusChanges[$transition] = ($todayStatusChanges[$transition] ?? 0) + 1;
-                    break;
-                case 'COMMENT_ADD':
-                    $todayComments++;
-                    break;
-                case 'ATTACHMENT_ADD':
-                    $todayAttachments++;
-                    break;
-                case 'CONSULTATION':
-                    $todayConsultations++;
-                    break;
-            }
-
-            $uUuid = $log->getUserUuid();
-            if ($uUuid && !in_array($uUuid, $activeUsers, true)) {
-                $activeUsers[] = $uUuid;
-            }
+        $statusTransitions = isset($todayStatsDoc['statusTransitions']) ? (array)$todayStatsDoc['statusTransitions'] : [];
+        foreach ($statusTransitions as $transition) {
+            $todayStatusChanges[$transition] = ($todayStatusChanges[$transition] ?? 0) + 1;
         }
 
         $data[] = [
@@ -676,7 +702,7 @@ class ProjectController extends AbstractController
             'tasksCanceled' => $todayCanceled,
             'commentsAdded' => $todayComments,
             'attachmentsAdded' => $todayAttachments,
-            'membersActive' => count($activeUsers),
+            'membersActive' => $activeUsersCount,
             'consultations' => $todayConsultations,
             'statusChanges' => $todayStatusChanges,
         ];
@@ -725,49 +751,97 @@ class ProjectController extends AbstractController
 
         $limit = $request->query->getInt('limit', 100);
         $offset = $request->query->getInt('offset', 0);
-        $dateStr = $request->query->get('date'); // Expected YYYY-MM-DD
+        $startDateStr = $request->query->get('startDate'); // Expected YYYY-MM-DD
+        $endDateStr = $request->query->get('endDate'); // Expected YYYY-MM-DD
+        $dateStr = $request->query->get('date'); // Expected YYYY-MM-DD (fallback)
         
-        $qb = $this->dm->getRepository(\App\Document\AuditLog::class)->createQueryBuilder()
-            ->field('projectUuid')->equals($project->getUuid())
-            ->sort('createdAt', 'desc')
-            ->limit($limit)
-            ->skip($offset);
+        $collection = $this->dm->getDocumentCollection(\App\Document\AuditLog::class);
 
-        if ($dateStr) {
+        $filter = ['projectUuid' => $project->getUuid()];
+
+        if ($startDateStr || $endDateStr) {
+            try {
+                if ($startDateStr && $endDateStr) {
+                    $start = new \DateTime($startDateStr . ' 00:00:00');
+                    $end = new \DateTime($endDateStr . ' 23:59:59');
+                    $filter['createdAt'] = [
+                        '$gte' => new \MongoDB\BSON\UTCDateTime($start),
+                        '$lte' => new \MongoDB\BSON\UTCDateTime($end)
+                    ];
+                } elseif ($startDateStr) {
+                    $start = new \DateTime($startDateStr . ' 00:00:00');
+                    $filter['createdAt'] = [
+                        '$gte' => new \MongoDB\BSON\UTCDateTime($start)
+                    ];
+                } else {
+                    $end = new \DateTime($endDateStr . ' 23:59:59');
+                    $filter['createdAt'] = [
+                        '$lte' => new \MongoDB\BSON\UTCDateTime($end)
+                    ];
+                }
+            } catch (\Exception $e) {
+                return $this->json(['message' => 'Invalid date format. Use YYYY-MM-DD.'], Response::HTTP_BAD_REQUEST);
+            }
+        } elseif ($dateStr) {
             try {
                 $start = new \DateTime($dateStr . ' 00:00:00');
                 $end = new \DateTime($dateStr . ' 23:59:59');
-                $qb->field('createdAt')->range($start, $end);
+                $filter['createdAt'] = [
+                    '$gte' => new \MongoDB\BSON\UTCDateTime($start),
+                    '$lte' => new \MongoDB\BSON\UTCDateTime($end)
+                ];
             } catch (\Exception $e) {
                 return $this->json(['message' => 'Invalid date format. Use YYYY-MM-DD.'], Response::HTTP_BAD_REQUEST);
             }
         }
 
-        $logs = $qb->getQuery()->execute();
+        // Count total documents matching filters natively
+        $totalCount = $collection->countDocuments($filter);
+
+        // Apply pagination and sort natively
+        $options = [
+            'sort' => ['createdAt' => -1],
+            'limit' => $limit,
+            'skip' => $offset
+        ];
+        $logs = $collection->find($filter, $options);
         
         $data = [];
         foreach ($logs as $log) {
-            $uSum = $log->getUserUuid() ? $this->userCacheService->getUserSummaryByUuid($log->getUserUuid()) : null;
-            $oSum = $log->getOrganUuid() ? $this->organCacheService->getOrganSummaryByUuid($log->getOrganUuid()) : null;
-            $tSum = $log->getTaskUuid() ? $this->taskService->getTaskSummaryByUuid($log->getTaskUuid()) : null;
+            $userUuid = $log['userUuid'] ?? null;
+            $organUuid = $log['organUuid'] ?? null;
+            $taskUuid = $log['taskUuid'] ?? null;
+
+            $uSum = $userUuid ? $this->userCacheService->getUserSummaryByUuid($userUuid) : null;
+            $oSum = $organUuid ? $this->organCacheService->getOrganSummaryByUuid($organUuid) : null;
+            $tSum = $taskUuid ? $this->taskService->getTaskSummaryByUuid($taskUuid) : null;
+
+            $createdAtObj = $log['createdAt'] ?? null;
+            $createdAtStr = '';
+            if ($createdAtObj instanceof \MongoDB\BSON\UTCDateTime) {
+                $createdAtStr = $createdAtObj->toDateTime()->format(\DateTimeInterface::ATOM);
+            }
 
             $data[] = [
-                'id' => $log->getId(),
-                'actionType' => $log->getActionType(),
-                'fieldName' => $log->getFieldName(),
-                'oldValues' => $log->getOldValues(),
-                'newValues' => $log->getNewValues(),
-                'context' => $log->getContext(),
-                'createdAt' => $log->getCreatedAt()->format(\DateTimeInterface::ATOM),
+                'id' => (string)$log['_id'],
+                'actionType' => $log['actionType'] ?? null,
+                'fieldName' => $log['fieldName'] ?? null,
+                'oldValues' => isset($log['oldValues']) ? (array)$log['oldValues'] : [],
+                'newValues' => isset($log['newValues']) ? (array)$log['newValues'] : [],
+                'context' => isset($log['context']) ? (array)$log['context'] : [],
+                'createdAt' => $createdAtStr,
                 'user' => $uSum,
-                'taskUuid' => $log->getTaskUuid(),
+                'taskUuid' => $taskUuid,
                 'taskTitle' => $tSum['title'] ?? null,
-                'organUuid' => $log->getOrganUuid(),
+                'organUuid' => $organUuid,
                 'organTitle' => $oSum['title'] ?? null,
             ];
         }
 
-        return $this->json($data);
+        return $this->json([
+            'total' => $totalCount,
+            'logs' => $data
+        ]);
     }
 
     private function getProjectSummary(Project $project): array

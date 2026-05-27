@@ -2,10 +2,10 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil, firstValueFrom } from 'rxjs';
-import { ProjectService } from '../../../services/project.service';
-import { OrganService } from '../../../services/organ.service';
-import { OrganRoleService } from '../../../services/organ-role.service';
-import { PermissionService } from '../../../services/permission.service';
+import { ProjectService } from '../../../services/api/project.service';
+import { OrganService } from '../../../services/api/organ.service';
+import { OrganRoleService } from '../../../services/api/organ-role.service';
+import { PermissionService } from '../../../services/api/permission.service';
 import { AvailablePermission } from '../../../models/permission.model';
 import { OrganFormComponent } from '../../organ-form/organ-form';
 import { OrganDangerZoneComponent } from './components/organ-danger-zone/organ-danger-zone';
@@ -30,7 +30,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
   private permissionService = inject(PermissionService);
   private destroy$ = new Subject<void>();
 
-  // Page mode & metadata
+  // Mode & métadonnées de la page
   projectUuid: string | null = null;
   organUuid: string | null = null;
   isEdit = true;
@@ -39,20 +39,20 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
   loadingText = signal('Chargement...');
   errorMessage = signal<string | null>(null);
 
-  // Project context
+  // Contexte projet
   projectColor = '#FF7EB6';
   projectTitle = '';
 
-  // User permissions
+  // Permissions utilisateur
   userPermissions: string[] = [];
 
-  // Permissions lists
+  // Listes de permissions
   availablePermissions: AvailablePermission[] = [];
   organPermissions: AvailablePermission[] = [];
   taskPermissions: AvailablePermission[] = [];
   interactionPermissions: AvailablePermission[] = [];
 
-  // Presets definition
+  // Définition des presets
   presets = {
     responsible: {
       name: 'Responsable',
@@ -115,13 +115,13 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
     }
   };
 
-  // Shared component inputs data
+  // Entrées du composant partagé
   initialOrganData: any = null;
   initialRoles: any[] = [];
   initialMembers: any[] = [];
   projectMembers: any[] = [];
 
-  // Used for diff comparison on submit
+  // Utilisé pour comparaison diff à la soumission
   originalRoles: any[] = [];
   originalMembers: any[] = [];
 
@@ -151,7 +151,6 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
     this.errorMessage.set(null);
 
     try {
-      // 1. Fetch available permissions
       const perms = await firstValueFrom(this.permissionService.getAvailablePermissions());
       this.availablePermissions = perms;
 
@@ -164,7 +163,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
         p.name.startsWith('COMMENT_') || p.name.startsWith('ATTACHMENT_')
       );
 
-      // Populate presets
+      // Mapper les presets
       const allPermNames = perms.map(p => p.name);
       this.presets.responsible.permissions = allPermNames.filter(p => 
         !['PROJECT_HARD_DELETE', 'ORGAN_HARD_DELETE'].includes(p)
@@ -173,7 +172,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
         !['ORGAN_MANAGE_ROLES', 'ORGAN_HARD_DELETE', 'PROJECT_HARD_DELETE'].includes(p)
       );
 
-      // 2. Fetch project details
+      // Détails du projet
       const projectData = await firstValueFrom(this.projectService.getProjectDetailed(this.projectUuid!));
       this.projectTitle = projectData.project.title;
       this.projectColor = projectData.project.color || '#FF7EB6';
@@ -181,7 +180,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
 
       const projectRole = projectData.project.role || 'MEMBER';
 
-      // 3. Fetch organ details
+      // Détails de l'organ
       const organDetails = await firstValueFrom(this.organService.getOrgan(this.projectUuid!, this.organUuid!));
       this.initialOrganData = {
         title: organDetails.title,
@@ -191,7 +190,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
         iconData: organDetails.iconData || null
       };
 
-      // 4. Fetch user permissions for this organ
+      // Permissions de l'utilisateur sur l'organ
       const userPermsData = await firstValueFrom(this.organService.getOrganPermissions(this.projectUuid!, this.organUuid!));
       this.userPermissions = userPermsData.permissions || [];
 
@@ -199,7 +198,6 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
         this.userPermissions.push('ALL');
       }
 
-      // Check access
       const hasAccess = this.userPermissions.includes('ORGAN_EDIT') || 
                         this.userPermissions.includes('ORGAN_MANAGE_ROLES') || 
                         this.userPermissions.includes('ALL');
@@ -208,7 +206,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // 5. Fetch roles & members
+      // Rôles et permissions
       const rolesData = await firstValueFrom(this.organRoleService.getRoles(this.projectUuid!, this.organUuid!));
       this.initialRoles = rolesData.map(r => ({
         id: r.uuid,
@@ -219,7 +217,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
       }));
       this.originalRoles = JSON.parse(JSON.stringify(this.initialRoles));
 
-      // Build member roles mappings
+      // Pour un membre on fait ses rôles
       const membersMap: { [key: string]: any } = {};
       rolesData.forEach(role => {
         const roleMembers = role.members || [];
@@ -251,7 +249,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Computations for granular permissions
+  // Guard Local pour permissions granulaire
   canEditInfo = computed(() => {
     return this.userPermissions.includes('ORGAN_EDIT') || this.userPermissions.includes('ALL');
   });
@@ -284,7 +282,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
     const finalOrganUuid = this.organUuid!;
 
     try {
-      // 1. Sync organ metadata
+      // Metadata
       if (this.canEditInfo()) {
         this.loadingText.set("Mise à jour de l'organ...");
         const payload = {
@@ -297,19 +295,19 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
         await firstValueFrom(this.organService.updateOrgan(this.projectUuid!, finalOrganUuid, payload));
       }
 
-      // 2. Sync roles
+      // Rôles
       if (this.canManageRoles()) {
         this.loadingText.set("Synchronisation des rôles...");
         const roleIdMap: { [key: string]: string } = {};
 
-        // Delete removed roles
+        // Suppression
         for (const origRole of this.originalRoles) {
           if (!String(origRole.id).startsWith('role-') && !formData.roles.find((r: any) => r.id === origRole.id)) {
             await firstValueFrom(this.organRoleService.deleteRole(this.projectUuid!, finalOrganUuid, origRole.id));
           }
         }
 
-        // Create or Update roles
+        // Création/Modifications
         for (const role of formData.roles) {
           const isNewRole = String(role.id).startsWith('role-');
           const rolePayload = {
@@ -328,11 +326,11 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
           }
         }
 
-        // 3. Sync members assignments
+        // Maj des membres
         if (this.canManageMembers()) {
           this.loadingText.set("Mise à jour des membres...");
 
-          // Process added/modified members
+          // Ajout/Modification Membres
           for (const member of formData.addedMembers) {
             const initialRoles = member.initialRoles || [];
             const currentRolesServer = member.roles.map((id: string) => roleIdMap[id] || id);
@@ -349,7 +347,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
             }
           }
 
-          // Process completely removed members
+          // Suppression Membre
           if (this.originalMembers) {
             const removedMembers = this.originalMembers.filter(initial => 
               !formData.addedMembers.some((current: any) => current.userUuid === initial.userUuid)
@@ -363,7 +361,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
           }
         }
       } else if (this.canManageMembers()) {
-        // If user can only manage members (not roles structure)
+        // Permission spéciale
         this.loadingText.set("Mise à jour des membres...");
         for (const member of formData.addedMembers) {
           const initialRoles = member.initialRoles || [];

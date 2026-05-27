@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProjectService } from '../../../../../services/project.service';
+import { ProjectService } from '../../../../../services/api/project.service';
 
 @Component({
   selector: 'app-project-danger-zone',

@@ -2,7 +2,7 @@ export interface TagResponse {
   uuid: string;
   name: string;
   color: string;
-  deletedAt?: string; // ISO DateTime (returned in trash)
+  deletedAt?: string; // ISO DateTime (retourné dans la corbeille)
 }
 
 export interface CreateTagRequest {

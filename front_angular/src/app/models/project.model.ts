@@ -139,3 +139,38 @@ export interface ProjectAuditLogItem {
   organUuid: string | null;
   organTitle: string | null;
 }
+
+export interface MemberActionStat {
+  type: string;
+  count: number;
+}
+
+export interface BackendMemberStat {
+  uuid: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  actions: MemberActionStat[];
+}
+
+export interface MemberActivityStats {
+  uuid: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  totalActions: number;
+  filteredActionsCount: number; // Actions correspondant aux cases à cocher visibles
+  createdTasks: number;
+  statusChanges: number;
+  comments: number;
+  attachments: number;
+  updates: number;
+  consultations: number;
+  projectConsultations: number;
+  organConsultations: number;
+  taskConsultations: number;
+  totalModifications: number;
+}
+

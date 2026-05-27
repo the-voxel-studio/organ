@@ -33,7 +33,7 @@ export interface TaskResponse {
   attachmentCount: number;
   dependencyCount: number;
   createdAt: string; // ISO DateTime
-  deletedAt?: string; // ISO DateTime (returned in trash)
+  deletedAt?: string; // ISO DateTime (retourné dans la corbeille)
 }
 
 export interface CreateTaskRequest {

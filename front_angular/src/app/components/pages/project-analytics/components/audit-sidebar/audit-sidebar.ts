@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MemberActivityStats } from '../../project-analytics';
+import { MemberActivityStats } from '../../../../../models/project.model';
 
 @Component({
   selector: 'app-audit-sidebar',

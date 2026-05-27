@@ -2,7 +2,7 @@ export interface TaskLinkResponse {
   uuid: string;
   url: string;
   description: string | null;
-  deletedAt?: string; // ISO DateTime (returned in trash)
+  deletedAt?: string; // ISO DateTime (retourné dans la corbeille)
 }
 
 export interface CreateTaskLinkRequest {

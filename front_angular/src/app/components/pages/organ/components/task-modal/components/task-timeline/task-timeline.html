@@ -11,7 +11,7 @@
             <span class="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-gray-200 border-2 border-white"></span>
             <div class="flex items-center gap-2">
                 <span class="text-xs font-black text-gray-800">{{ item.userName }}</span>
-                <span class="text-[10px] text-gray-400">{{ formatDateString(item.createdAt) }}</span>
+                <span class="text-[10px] text-gray-400">{{ item.createdAt | formatDate:'audit' }}</span>
             </div>
             <p class="text-xs text-gray-500">
                 {{ formatTimelineDetail(item) }}

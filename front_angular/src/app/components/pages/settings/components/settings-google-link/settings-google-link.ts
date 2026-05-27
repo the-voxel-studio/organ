@@ -1,8 +1,9 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SocialAuthService, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
-import { AuthService } from '../../../../../services/auth.service';
-import { UserService } from '../../../../../services/user.service';
+import { AuthService } from '../../../../../services/api/auth.service';
+import { UserService } from '../../../../../services/api/user.service';
+import { UserStore } from '../../../../../services/common/user.store';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -14,6 +15,7 @@ import { Subject, takeUntil } from 'rxjs';
 export class SettingsGoogleLinkComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  private userStore = inject(UserStore);
   private socialAuthService = inject(SocialAuthService);
   private ngZone = inject(NgZone);
   private destroy$ = new Subject<void>();
@@ -104,11 +106,8 @@ export class SettingsGoogleLinkComponent implements OnInit, OnDestroy {
     this.userService.linkGoogleAccount({ token: idToken, idToken: idToken }).subscribe({
       next: (res) => {
         this.googleSuccess = "Compte lié avec succès.";
-        this.authService.checkSession().subscribe({
-          complete: () => {
-            this.isGoogleLinking = false;
-          }
-        });
+        this.userStore.linkGoogle(res.user.email, res.user.authWithGoogle);
+        this.isGoogleLinking = false;
       },
       error: (err) => {
         this.isGoogleLinking = false;

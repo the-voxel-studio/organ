@@ -2,7 +2,7 @@ import {
     HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse
 } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../services/api/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
 
 export const refreshTokenInterceptor: HttpInterceptorFn = (req:
@@ -14,7 +14,7 @@ export const refreshTokenInterceptor: HttpInterceptorFn = (req:
             // Si l'API retourne 401 Unauthorized                              
             if (error instanceof HttpErrorResponse && error.status === 401) {
 
-                // Security: do not refresh for authentication endpoints
+                // Sécurité : pas de refresh pour les endpoints d'authentification
                 if (req.url.includes('/api/auth')) {
                     if (req.url.includes('/api/auth/refresh')) {
                         authService.clearSessionState();

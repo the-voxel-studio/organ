@@ -91,7 +91,7 @@
       <!-- Top Section: Interactive Member ranking & Activity insight -->
       <app-audit-ranking 
         [memberStats]="memberStats()" 
-        [totalLogsCount]="auditLogs().length" 
+        [totalLogsCount]="auditTotalLogs()" 
         [mostActiveMember]="mostActiveMember" 
         [projectColor]="projectColor">
       </app-audit-ranking>
@@ -114,13 +114,13 @@
           <app-audit-sidebar 
             [memberStats]="memberStats()" 
             [selectedUserUuid]="selectedUserUuid()" 
-            [totalLogsCount]="auditLogs().length" 
+            [totalLogsCount]="auditTotalLogs()" 
             [auditStartDate]="auditStartDate()" 
             [auditEndDate]="auditEndDate()" 
             [projectColor]="projectColor" 
             (selectMember)="selectMember($event)" 
-            (startDateChange)="auditStartDate.set($event); onFilterChange()" 
-            (endDateChange)="auditEndDate.set($event); onFilterChange()" 
+            (startDateChange)="auditStartDate.set($event); onDateFilterChange()" 
+            (endDateChange)="auditEndDate.set($event); onDateFilterChange()" 
             (clearDates)="clearDateFilters()">
           </app-audit-sidebar>
         </div>

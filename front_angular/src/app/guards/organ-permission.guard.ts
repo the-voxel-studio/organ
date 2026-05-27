@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
-import { OrganService } from '../services/organ.service';
-import { ProjectService } from '../services/project.service';
-import { ToastService } from '../services/toast.service';
+import { OrganService } from '../services/api/organ.service';
+import { ProjectService } from '../services/api/project.service';
+import { ToastService } from '../services/common/toast.service';
 import { catchError, map, of, switchMap } from 'rxjs';
 
 export const organPermissionGuard: CanActivateFn = (route) => {

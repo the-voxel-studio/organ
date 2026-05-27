@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, ElementRef, ViewChild, OnChanges, SimpleChanges, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ElementRef, ViewChild, OnChanges, SimpleChanges, OnDestroy, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { ProjectStatsResponse } from '../../../../../models/project.model';
+import { TranslationService } from '../../../../../services/common/translation.service';
 
 Chart.register(...registerables);
 
@@ -12,6 +13,8 @@ Chart.register(...registerables);
   templateUrl: './stats-dashboard.html'
 })
 export class StatsDashboardComponent implements OnChanges, OnDestroy, AfterViewInit {
+  private translationService = inject(TranslationService);
+
   @Input() statsData: ProjectStatsResponse | null = null;
   @Input() projectColor = '#FF7EB6';
   @Input() statsDays = 7;
@@ -116,7 +119,7 @@ export class StatsDashboardComponent implements OnChanges, OnDestroy, AfterViewI
             {
               label: 'Tâches terminées',
               data: completed,
-              borderColor: highlightColor, // Primary project color
+              borderColor: highlightColor, // Couleur primaire du projet
               backgroundColor: highlightColor + '0d',
               tension: 0.35,
               fill: true,
@@ -190,7 +193,7 @@ export class StatsDashboardComponent implements OnChanges, OnDestroy, AfterViewI
             {
               label: 'Tâches actives',
               data: organTasks,
-              backgroundColor: highlightColor, // Primary project color
+              backgroundColor: highlightColor, // Couleur primaire du projet
               borderRadius: 8
             },
             {
@@ -237,12 +240,12 @@ export class StatsDashboardComponent implements OnChanges, OnDestroy, AfterViewI
     });
 
     const statusKeys = Array.from(statusMap.keys());
-    const statusLabels = statusKeys.map(k => this.translateStatus(k));
+    const statusLabels = statusKeys.map(k => this.translationService.translateStatus(k));
     const statusCounts = statusKeys.map(k => statusMap.get(k)!);
 
     const statusColors: { [key: string]: string } = {
       'TODO': '#cad5e2', // Slate gray (Third color)
-      'IN_PROGRESS': highlightColor, // Primary project color
+      'IN_PROGRESS': highlightColor, // Couleur primaire du projet
       'WAITING': '#ffba00', // Secondary bubblegum color
       'DONE': '#05df72', // Slate gray (Third color)
       'CANCELED': '#ff637e' // Dark slate gray (Third color)
@@ -282,22 +285,6 @@ export class StatsDashboardComponent implements OnChanges, OnDestroy, AfterViewI
     }
   }
 
-  translateStatus(status: string): string {
-    if (!status) return 'Aucun';
-    const statusMap: { [key: string]: string } = {
-      'ACTIVE': 'En cours',
-      'IN_PROGRESS': 'En cours',
-      'COMPLETED': 'Terminé',
-      'DONE': 'Terminé',
-      'WAITING': 'En attente',
-      'DRAFT': 'Brouillon',
-      'ARCHIVED': 'Archivé',
-      'TRASHED': 'Corbeille',
-      'CANCELED': 'Annulé',
-      'TODO': 'À faire'
-    };
-    return statusMap[status.toUpperCase()] || status;
-  }
 
   formatDateLabel(dateStr: string): string {
     try {

@@ -21,7 +21,7 @@ export class OrganRolesComponent {
 
   @Output() rolesChanged = new EventEmitter<any[]>();
 
-  // Modals management
+  // Gestion des modals
   showRoleModal = false;
   editingRoleId: string | null = null;
   modalRoleName = '';
@@ -204,7 +204,11 @@ export class OrganRolesComponent {
     return this.permissionMeta[name]?.description || `Description de la permission ${name}`;
   }
 
-  addPresetRole(presetKey: 'responsible' | 'manager' | 'participant' | 'reviewer' | 'tester' | 'observer' | 'guest') {
+  getPresetKeys(): string[] {
+    return Object.keys(this.presets || {});
+  }
+
+  addPresetRole(presetKey: string) {
     if (!this.canManage) return;
     const preset = this.presets[presetKey];
     if (!preset) return;

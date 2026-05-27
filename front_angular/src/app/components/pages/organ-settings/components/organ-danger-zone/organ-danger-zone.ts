@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { OrganService } from '../../../../../services/organ.service';
+import { OrganService } from '../../../../../services/api/organ.service';
 
 @Component({
   selector: 'app-organ-danger-zone',

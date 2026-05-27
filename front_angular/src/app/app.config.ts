@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { GoogleLoginProvider, SocialAuthServiceConfig, SocialAuthService, SOCIAL_AUTH_CONFIG } from '@abacritt/angularx-social-login';
 
@@ -11,10 +11,13 @@ import { refreshTokenInterceptor } from './interceptors/refresh-token.intercepto
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withInMemoryScrolling({
-      anchorScrolling: 'enabled',
-      scrollPositionRestoration: 'enabled'
-    })),
+    provideRouter(routes, 
+      withInMemoryScrolling({
+        anchorScrolling: 'enabled',
+        scrollPositionRestoration: 'enabled'
+      }),
+      withPreloading(PreloadAllModules)
+    ),
     provideHttpClient(withInterceptors([apiInterceptor, credentialsInterceptor, refreshTokenInterceptor])),
     SocialAuthService,
     {

@@ -5,12 +5,12 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 
 // Services
-import { OrganService } from '../../../services/organ.service';
-import { TaskService } from '../../../services/task.service';
-import { OrganLinkService } from '../../../services/organ-link.service';
-import { ProjectService } from '../../../services/project.service';
-import { AuthService } from '../../../services/auth.service';
-import { ToastService } from '../../../services/toast.service';
+import { OrganService } from '../../../services/api/organ.service';
+import { TaskService } from '../../../services/api/task.service';
+import { OrganLinkService } from '../../../services/api/organ-link.service';
+import { ProjectService } from '../../../services/api/project.service';
+import { AuthService } from '../../../services/api/auth.service';
+import { ToastService } from '../../../services/common/toast.service';
 
 // Models
 import { OrganDetailResponse } from '../../../models/organ.model';
@@ -56,11 +56,11 @@ export class OrganComponent implements OnInit, OnDestroy {
   @ViewChild('taskModal') taskModal!: TaskModalComponent;
   @ViewChild('linksPanel') linksPanel!: OrganLinksComponent;
 
-  // Routing params
+  // Paramètres de route
   projectUuid: string | null = null;
   organUuid: string | null = null;
 
-  // Component states
+  // États du composant
   organData = signal<OrganDetailResponse | null>(null);
   projectTitle = signal<string>('');
   projectColor = signal<string>('#FF7DD4');
@@ -72,10 +72,10 @@ export class OrganComponent implements OnInit, OnDestroy {
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);
 
-  // View state
+  // État de la vue
   activeView: 'kanban' | 'list' = 'kanban';
 
-  // Filters & Sorting state signals
+  // Signaux des filtres & du tri
   sortBy = signal<'priority' | 'dueDate' | 'date' | null>(null);
   sortOrder = signal<'asc' | 'desc'>('asc');
   filterMe = signal<boolean>(false);
@@ -140,12 +140,12 @@ export class OrganComponent implements OnInit, OnDestroy {
     return list;
   });
 
-  // Links Panel state
+  // État du panneau de liens
   links = signal<OrganLinkSummary[]>([]);
   linksLoaded = false;
   isSavingLink = signal(false);
 
-  // Drag and Drop styling helpers
+  // Helpers de style Drag & Drop
   activeDragOverColumn: any = null;
 
   // Dynamic colors
@@ -177,7 +177,7 @@ export class OrganComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Listen to global hash for directly opening a task modal
+    // Écoute le hash global pour ouvrir directement le modal tâche
     this.route.fragment
       .pipe(takeUntil(this.destroy$))
       .subscribe(fragment => {
@@ -217,14 +217,14 @@ export class OrganComponent implements OnInit, OnDestroy {
         this.organData.set(organ);
         this.permissions.set(permissions.permissions);
 
-        // Check if user has read permission
+        // Vérifie si l'utilisateur a la permission de lecture
         if (!this.hasPermission('ORGAN_VIEW')) {
           this.toastService.error('Accès refusé', "Vous n'avez pas la permission de voir cet Organ.");
           this.router.navigate(['/project', this.projectUuid]);
           return;
         }
 
-        // Fetch Tasks
+        // Récupère les tâches
         this.loadTasks();
       },
       error: (err: any) => {
@@ -249,7 +249,7 @@ export class OrganComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Permissions checkers
+  // Vérifications de permissions
   hasPermission(permissionName: string): boolean {
     if (this.isProjectAdmin()) return true;
     const perms = this.permissions();
@@ -284,7 +284,7 @@ export class OrganComponent implements OnInit, OnDestroy {
 
   onTaskStatusChanged(event: { taskUuid: string, newStatus: TaskStatus }) {
     const { taskUuid, newStatus } = event;
-    // Optimistically update
+    // Mise à jour optimiste
     const tasks = [...this.allTasks()];
     const index = tasks.findIndex(t => t.uuid === taskUuid);
     if (index !== -1) {
@@ -294,7 +294,7 @@ export class OrganComponent implements OnInit, OnDestroy {
 
       this.taskService.patchTask(this.projectUuid!, this.organUuid!, taskUuid, { status: newStatus }).subscribe({
         next: () => {
-          this.loadTasks(); // Reload to sync counts and data
+          this.loadTasks(); // Rechargement pour synchro
         },
         error: (err) => {
           console.error('Drag and drop update failed', err);
@@ -366,7 +366,7 @@ export class OrganComponent implements OnInit, OnDestroy {
     });
   }
 
-  // ---- TASK MODAL ACTIONS ----
+  // ---- ACTIONS DU MODAL TÂCHE ----
   openTaskCreate() {
     if (this.taskModal) {
       this.taskModal.openForCreate();

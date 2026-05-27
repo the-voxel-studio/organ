@@ -14,7 +14,7 @@ import { TagResponse } from '../../../../../../../models/tag.model';
 export class TaskBasicInfoComponent {
   @Input({ required: true }) taskForm!: FormGroup;
 
-  // Normal inputs
+  // Inputs standards
   @Input() taskId: string | null = null;
   @Input() highlightColor: string = '#FF7DD4';
   @Input() isTaskTrashed: boolean = false;
@@ -28,16 +28,16 @@ export class TaskBasicInfoComponent {
   @Input() tags: TaskTagSummary[] = [];
   @Input() dependencies: any[] = [];
 
-  // staged lists (for create mode)
+  // Listes temporaires (pour le mode création)
   @Input() stagedAssignees: OrganMember[] = [];
   @Input() stagedTags: TagResponse[] = [];
   @Input() stagedDependencies: TaskResponse[] = [];
 
-  // Permissions state
+  // État des permissions
   @Input() currentPerms: TaskPermissionsResponse | null = null;
   @Input() editableFields: string[] = [];
 
-  // Outputs for sub-resources modifications
+  // Outputs pour modifications des sous-ressources
   @Output() assigneeAdded = new EventEmitter<OrganMember>();
   @Output() assigneeRemoved = new EventEmitter<string>();
   @Output() tagAdded = new EventEmitter<TagResponse>();
@@ -45,7 +45,7 @@ export class TaskBasicInfoComponent {
   @Output() dependencyAdded = new EventEmitter<TaskResponse>();
   @Output() dependencyRemoved = new EventEmitter<string>();
 
-  // Picker states
+  // État des pickers
   showUserPicker = signal(false);
   showTagPicker = signal(false);
   showDependencyPicker = signal(false);
@@ -53,7 +53,7 @@ export class TaskBasicInfoComponent {
   userSearchQuery = '';
   taskSearchQuery = '';
 
-  // Helpers & Actions
+  // Helpers et actions
   toggleUserPicker() {
     this.showUserPicker.update(v => !v);
     if (this.showUserPicker()) {

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { filter, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
-import { AuthService } from '../../../services/auth.service';
+import { AuthService } from '../../../services/api/auth.service';
 import { DynamicLogoComponent } from '../../dynamic-logo/dynamic-logo';
 
 @Component({
@@ -18,10 +18,10 @@ export class LandingNavbarComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private destroy$ = new Subject<void>();
   
-  // Mobile menu open state
+  // État menu mobile
   isMobileMenuOpen = signal(false);
   
-  // Active route state
+  // État route active
   isHome = signal(true);
 
   links = [
@@ -33,10 +33,12 @@ export class LandingNavbarComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit() {
-    // Check if already logged in silently
-    this.authService.checkSession().subscribe({
-      error: () => {}
-    });
+    // Vérifie si déjà loggué
+    if (!this.authService.isAuthenticated()) {
+      this.authService.checkSession().subscribe({
+        error: () => {}
+      });
+    }
 
     this.updateIsHome();
     this.router.events.pipe(

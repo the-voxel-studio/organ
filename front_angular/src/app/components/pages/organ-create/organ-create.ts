@@ -2,10 +2,10 @@ import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil, firstValueFrom } from 'rxjs';
-import { ProjectService } from '../../../services/project.service';
-import { OrganService } from '../../../services/organ.service';
-import { OrganRoleService } from '../../../services/organ-role.service';
-import { PermissionService } from '../../../services/permission.service';
+import { ProjectService } from '../../../services/api/project.service';
+import { OrganService } from '../../../services/api/organ.service';
+import { OrganRoleService } from '../../../services/api/organ-role.service';
+import { PermissionService } from '../../../services/api/permission.service';
 import { AvailablePermission } from '../../../models/permission.model';
 import { OrganFormComponent } from '../../organ-form/organ-form';
 
@@ -28,24 +28,24 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
   private permissionService = inject(PermissionService);
   private destroy$ = new Subject<void>();
 
-  // Page metadata
+  // Métadonnées de page
   projectUuid: string | null = null;
   isLoading = signal(true);
   isSubmitting = signal(false);
   loadingText = signal('Chargement...');
   errorMessage = signal<string | null>(null);
 
-  // Project details
+  // Détails du projet
   projectColor = '#FF7EB6';
   projectTitle = '';
 
-  // Permissions lists
+  // Listes de permissions
   availablePermissions: AvailablePermission[] = [];
   organPermissions: AvailablePermission[] = [];
   taskPermissions: AvailablePermission[] = [];
   interactionPermissions: AvailablePermission[] = [];
 
-  // Presets definition
+  // Définition des presets
   presets = {
     responsible: {
       name: 'Responsable',
@@ -108,7 +108,7 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
     }
   };
 
-  // Roles & Members
+  // Rôles et membres
   initialRoles: any[] = [];
   projectMembers: any[] = [];
 
@@ -136,7 +136,7 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
     this.errorMessage.set(null);
 
     try {
-      // 1. Fetch permissions
+      // 1. Récupère les permissions
       const perms = await firstValueFrom(this.permissionService.getAvailablePermissions());
       this.availablePermissions = perms;
 
@@ -149,7 +149,7 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
         p.name.startsWith('COMMENT_') || p.name.startsWith('ATTACHMENT_')
       );
 
-      // Populate presets
+      // Remplissage des presets
       const allPermNames = perms.map(p => p.name);
       this.presets.responsible.permissions = allPermNames.filter(p => 
         !['PROJECT_HARD_DELETE', 'ORGAN_HARD_DELETE'].includes(p)
@@ -158,7 +158,7 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
         !['ORGAN_MANAGE_ROLES', 'ORGAN_HARD_DELETE', 'PROJECT_HARD_DELETE'].includes(p)
       );
 
-      // 2. Fetch project details
+      // 2. Récupère les détails du projet
       const projectData = await firstValueFrom(this.projectService.getProjectDetailed(this.projectUuid!));
       this.projectTitle = projectData.project.title;
       this.projectColor = projectData.project.color || '#FF7EB6';
@@ -166,13 +166,13 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
 
       const projectRole = projectData.project.role || 'MEMBER';
 
-      // Access control
+      // Contrôle d'accès
       if (projectRole !== 'ADMIN' && projectRole !== 'MANAGER') {
         this.router.navigate(['/project', this.projectUuid]);
         return;
       }
 
-      // Pre-initialize default "Responsable" role
+      // Initialise le rôle "Responsable" par défaut
       this.initialRoles = [
         {
           id: 'role-' + Date.now() + Math.random(),
@@ -212,7 +212,7 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
       const res = await firstValueFrom(this.organService.createOrgan(this.projectUuid!, payload));
       const finalOrganUuid = res.uuid;
 
-      // Create roles
+      // Création des rôles
       this.loadingText.set("Création des rôles...");
       const roleIdMap: { [key: string]: string } = {};
       for (const role of formData.roles) {
@@ -225,7 +225,7 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
         roleIdMap[role.id] = resRole.uuid;
       }
 
-      // Assign members
+      // Affectation des membres
       this.loadingText.set("Affectation des membres...");
       for (const member of formData.addedMembers) {
         const currentRolesServer = member.roles.map((id: string) => roleIdMap[id] || id);

@@ -5,10 +5,10 @@ import { Subject, takeUntil } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 
 // Services
-import { OrganService } from '../../../services/organ.service';
-import { TaskService } from '../../../services/task.service';
-import { OrganRoleService } from '../../../services/organ-role.service';
-import { OrganLinkService } from '../../../services/organ-link.service';
+import { OrganService } from '../../../services/api/organ.service';
+import { TaskService } from '../../../services/api/task.service';
+import { OrganRoleService } from '../../../services/api/organ-role.service';
+import { OrganLinkService } from '../../../services/api/organ-link.service';
 
 // Models
 import { OrganDetailResponse, OrganMember } from '../../../models/organ.model';
@@ -38,7 +38,7 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
 
   @ViewChild('taskModal') taskModal!: TaskModalComponent;
 
-  // Route params
+  // Paramètres de route
   projectUuid: string | null = null;
   organUuid: string | null = null;
 
@@ -46,7 +46,7 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
   organTitle = signal<string>('');
   highlightColor = signal<string>('#FF7DD4');
 
-  // Trashed items lists
+  // Listes des éléments corbeille
   trashedTasks = signal<TaskResponse[]>([]);
   trashedRoles = signal<TrashedOrganRoleSummary[]>([]);
   trashedMembers = signal<TrashedRoleMember[]>([]);
@@ -55,36 +55,36 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);
 
-  // Layout states
+  // États du layout
   searchQuery = signal('');
   tasksCollapsed = signal(false);
   rolesCollapsed = signal(false);
   membersCollapsed = signal(false);
   linksCollapsed = signal(false);
 
-  // User permissions
+  // Permissions utilisateur
   userPermissions = signal<string[]>([]);
   isProjectAdmin = signal<boolean>(false);
 
-  // Modals management
+  // Gestion des modals
   showConfirmModal = signal(false);
   isSubmitting = signal(false);
 
   itemToManage: {
     type: 'task' | 'role' | 'member' | 'link';
-    uuid: string | number; // uorId is a number for member restoration
+    uuid: string | number; // uorId est numérique pour la restauration de membre
     title: string;
     action: 'restore' | 'delete';
   } | null = null;
 
-  // Esc key listener handler
+  // Gestion de la touche Échap
   private escHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       this.closeConfirmModal();
     }
   };
 
-  // Computed filtered lists based on search query
+  // Listes filtrées calculées via la recherche
   filteredTasks = computed(() => {
     const query = this.searchQuery().toLowerCase().trim();
     const list = this.trashedTasks();
@@ -120,7 +120,7 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
     );
   });
 
-  // Action authorizations computed
+  // Autorisations d'actions calculées
   canManageTasks = computed(() => this.hasPermission('TASK_DELETE') || this.hasPermission('ORGAN_EDIT'));
   canManageRoles = computed(() => this.hasPermission('ORGAN_MANAGE_ROLES') || this.hasPermission('ORGAN_EDIT'));
   canManageLinks = computed(() => this.hasPermission('ORGAN_LINK_MANAGE'));
@@ -153,24 +153,24 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    // 1. Fetch Organ details for title & color
+    // 1. Récupère les détails de l'organ (titre & couleur)
     this.organService.getOrgan(this.projectUuid!, this.organUuid!).subscribe({
       next: (organ) => {
         this.organTitle.set(organ.title);
         this.highlightColor.set(organ.highlightColor || '#FF7DD4');
 
-        // 2. Fetch Permissions
+        // 2. Récupère les permissions
         this.organService.getOrganPermissions(this.projectUuid!, this.organUuid!).subscribe({
           next: (res) => {
             this.userPermissions.set(res.permissions);
             
-            // Security check
+            // Vérification de sécurité
             if (!this.hasPermission('ORGAN_VIEW')) {
               this.router.navigate(['/project', this.projectUuid]);
               return;
             }
 
-            // 3. Load all trashed categories in parallel
+            // 3. Charge toutes les catégories de la corbeille en parallèle
             this.loadTrashedContent();
           },
           error: (err) => {
@@ -192,7 +192,7 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
     const pUuid = this.projectUuid!;
     const oUuid = this.organUuid!;
 
-    // Tasks Trash
+    // Corbeille des tâches
     if (this.canManageTasks()) {
       this.taskService.getTrashedTasks(pUuid, oUuid).subscribe({
         next: (tasks) => this.trashedTasks.set(tasks),
@@ -200,21 +200,21 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Roles Trash
+    // Corbeille des rôles
     if (this.canManageRoles()) {
       this.roleService.getTrashedRoles(pUuid, oUuid).subscribe({
         next: (roles) => this.trashedRoles.set(roles),
         error: (err) => console.error('Failed to load trashed roles', err)
       });
 
-      // Members Trash
+      // Corbeille des membres
       this.roleService.getTrashedMembers(pUuid, oUuid).subscribe({
         next: (members) => this.trashedMembers.set(members),
         error: (err) => console.error('Failed to load trashed members', err)
       });
     }
 
-    // Links Trash
+    // Corbeille des liens
     if (this.canManageLinks()) {
       this.linkService.getTrashedLinks(pUuid, oUuid).subscribe({
         next: (links) => this.trashedLinks.set(links),
@@ -222,7 +222,7 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Stop loading spinner
+    // Arrête le spinner de chargement
     setTimeout(() => {
       this.isLoading.set(false);
     }, 400);
@@ -277,7 +277,7 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
         });
       }
     } else {
-      // Hard delete
+      // Suppression définitive
       if (type === 'task') {
         this.taskService.deleteTask(pUuid, oUuid, uuid as string, true).subscribe({
           next: () => this.handleSuccess(type, uuid),
@@ -289,8 +289,8 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
           error: (err) => this.handleError(err)
         });
       } else if (type === 'member') {
-        // Members permanent deletion is unassign role permanently.
-        // We need the roleUuid and userUuid. The TrashedRoleMember object contains role.uuid and user.uuid.
+        // La suppression définitive d'un membre retire le rôle de façon permanente.
+        // Besoin de roleUuid et userUuid. L'objet TrashedRoleMember contient role.uuid et user.uuid.
         const member = this.trashedMembers().find(m => m.uuid === uuid);
         if (member) {
           this.roleService.unassignRole(pUuid, oUuid, member.role.uuid, member.user.uuid, true).subscribe({
@@ -342,10 +342,10 @@ export class OrganTrashComponent implements OnInit, OnDestroy {
     else this.linksCollapsed.update(v => !v);
   }
 
-  // --- TASK MODAL ACTIONS ---
+  // --- ACTIONS DU MODAL TÂCHE ---
   openTaskPreview(taskUuid: string) {
     if (this.taskModal) {
-      this.taskModal.openForEdit(taskUuid, true); // Opens in trashed mode (read-only)
+      this.taskModal.openForEdit(taskUuid, true); // Ouvre en mode corbeille (lecture seule)
     }
   }
 

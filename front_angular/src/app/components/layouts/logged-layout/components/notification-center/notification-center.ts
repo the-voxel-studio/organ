@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NotificationService } from '../../../../../services/notification.service';
+import { NotificationService } from '../../../../../services/api/notification.service';
 import { NotificationResponse } from '../../../../../models/notification.model';
 import { Subject, takeUntil } from 'rxjs';
 

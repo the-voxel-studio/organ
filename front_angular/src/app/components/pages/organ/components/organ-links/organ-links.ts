@@ -2,8 +2,8 @@ import { Component, Input, Output, EventEmitter, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { OrganLinkSummary } from '../../../../../models/organ-link.model';
-import { OrganLinkService } from '../../../../../services/organ-link.service';
-import { ToastService } from '../../../../../services/toast.service';
+import { OrganLinkService } from '../../../../../services/api/organ-link.service';
+import { ToastService } from '../../../../../services/common/toast.service';
 
 @Component({
   selector: 'app-organ-links',
@@ -29,7 +29,7 @@ export class OrganLinksComponent {
   @Output() linksChanged = new EventEmitter<void>();
   @Output() panelOpened = new EventEmitter<void>();
 
-  // Link deletion confirm modal
+  // Modal de confirmation de suppression de lien
   showDeleteConfirm = signal(false);
   isDeletingLink = signal(false);
   linkToDelete: OrganLinkSummary | null = null;
@@ -94,7 +94,7 @@ export class OrganLinksComponent {
     }
   }
 
-  // ---- Link deletion confirm modal ----
+  // ---- Modal confirmation suppression lien ----
   openDeleteConfirm(link: OrganLinkSummary) {
     this.linkToDelete = link;
     this.showDeleteConfirm.set(true);

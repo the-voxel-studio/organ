@@ -6,17 +6,17 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 
 // Services
-import { ProjectService } from '../../../services/project.service';
-import { OrganService } from '../../../services/organ.service';
-import { ProjectMemberService } from '../../../services/project-member.service';
-import { TagService } from '../../../services/tag.service';
+import { ProjectService } from '../../../services/api/project.service';
+import { OrganService } from '../../../services/api/organ.service';
+import { ProjectMemberService } from '../../../services/api/project-member.service';
+import { TagService } from '../../../services/api/tag.service';
 
 // Models
 import { TrashedOrganSummary } from '../../../models/organ.model';
 import { ProjectMemberSummary } from '../../../models/project-member.model';
 import { TagResponse } from '../../../models/tag.model';
 
-// Sub-components
+// Sous-composants
 import { TrashedOrgansComponent } from './components/trashed-organs/trashed-organs';
 import { TrashedMembersComponent } from './components/trashed-members/trashed-members';
 import { TrashedTagsComponent } from './components/trashed-tags/trashed-tags';
@@ -44,13 +44,13 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
   private sanitizer = inject(DomSanitizer);
   private destroy$ = new Subject<void>();
 
-  // State parameters
+  // Paramètres d'état
   projectUuid: string | null = null;
   projectTitle = '';
   projectColor = '#FF7EB6';
   userRole = 'MEMBER';
 
-  // Trashed items signals
+  // Signaux des éléments corbeille
   organs = signal<TrashedOrganSummary[]>([]);
   members = signal<ProjectMemberSummary[]>([]);
   tags = signal<TagResponse[]>([]);
@@ -59,10 +59,10 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
   errorMessage = signal<string | null>(null);
   showRestoredSuccess = signal(false);
 
-  // Layout states
+  // États du layout
   searchQuery = signal('');
 
-  // Modals management
+  // Gestion des modals
   showRestoreModal = signal(false);
   showHardDeleteModal = signal(false);
   showBulkRestoreModal = signal(false);
@@ -79,7 +79,7 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
   // Bulk actions selection
   selectedMembers = signal<Set<string>>(new Set());
 
-  // Esc key listener handler
+  // Gestion de la touche Échap
   private escHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       this.closeRestoreModal();
@@ -123,7 +123,7 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    // Fetch project info
+    // Récupère les infos du projet
     this.projectService.getProjectDetailed(this.projectUuid!).subscribe({
       next: (data) => {
         this.projectTitle = data.project.title;
@@ -143,13 +143,13 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
   loadTrashContent() {
     const uuid = this.projectUuid!;
 
-    // Load Organs
+    // Charge les organs
     this.organService.getTrashedOrgans(uuid).subscribe({
       next: (organs) => this.organs.set(organs),
       error: (err) => console.error('Failed to load trashed organs', err)
     });
 
-    // Load Members
+    // Charge les membres
     this.memberService.getTrashedMembers(uuid).subscribe({
       next: (members) => {
         this.members.set(members);
@@ -158,7 +158,7 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
       error: (err) => console.error('Failed to load trashed members', err)
     });
 
-    // Load Tags
+    // Charge les tags
     this.tagService.getTrashedTags(uuid).subscribe({
       next: (tags) => {
         this.tags.set(tags);
@@ -192,7 +192,7 @@ export class ProjectTrashComponent implements OnInit, OnDestroy {
     this.selectedMembers.set(selected);
   }
 
-  // Unit Actions Modals
+  // Modals d'actions unitaires
   openRestoreModal(type: 'organ' | 'member' | 'tag', uuid: string, title: string) {
     this.itemToManage = { type, uuid, title };
     this.modalErrorMessage.set(null);

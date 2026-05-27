@@ -1,6 +1,6 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProjectDriveService } from '../../../../../services/project-drive.service';
+import { ProjectDriveService } from '../../../../../services/api/project-drive.service';
 import { GoogleDriveFolderInfo } from '../../../../../models/project-drive.model';
 
 @Component({

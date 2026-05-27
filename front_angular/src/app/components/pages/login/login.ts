@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, OnDestroy, ViewChild, ElementRef, Ng
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { AuthService, GOOGLE_SUPPRESS_KEY } from '../../../services/auth.service';
+import { AuthService, GOOGLE_SUPPRESS_KEY } from '../../../services/api/auth.service';
 import { SocialAuthService, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -29,39 +29,39 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   @ViewChild('googleBtnContainer', { static: false }) googleBtnContainer!: ElementRef;
 
-  // Reactive Form
+  // Formulaire réactif
   loginForm = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]],
     agreement: [false, [Validators.requiredTrue]]
   });
 
-  // State
+  // État
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
   showPassword = signal(false);
 
   ngOnInit() {
-    // Check if already authenticated
+    // Redirige si déjà connecté
     if (this.authService.isAuthenticated()) {
       this.router.navigate(['/dashboard']);
       return;
     }
 
-    // Check for registered query parameter
+    // Vérifie si l'utilisateur vient de s'inscrire
     const registered = this.route.snapshot.queryParams['registered'];
     if (registered === 'true') {
       this.successMessage.set("Inscription réussie ! Vous pouvez maintenant vous connecter.");
     }
 
-    // Subscribe to Google auth state changes
+    // Souscrit aux changements d'état Google Auth
     this.socialAuthService.authState
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (user) => {
           this.ngZone.run(() => {
-            // If the user just logged out, suppress the stale Google authState re-emit
+            // Évite la reconnexion auto Google après déconnexion
             if (sessionStorage.getItem(GOOGLE_SUPPRESS_KEY)) {
               sessionStorage.removeItem(GOOGLE_SUPPRESS_KEY);
               return;
@@ -99,9 +99,9 @@ export class LoginComponent implements OnInit, OnDestroy {
       });
   }
 
-  // ── Google popup helpers ────────────────────────────────────────────────
+  // Helpers pour la popup Google
 
-  /** Poll for popup closure every 300 ms and reset loading state when it closes. */
+  /** Vérifie la fermeture de la popup toutes les 300ms */
   private startPopupPoll(popup: Window | null) {
     this.stopPopupPoll();
     if (!popup) return;
@@ -135,7 +135,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.isLoading.set(true);
       this.errorMessage.set(null);
       (googleButton as HTMLElement).click();
-      // Poll for popup window closure — no stale 30s timeout
+      // Watch de la fermeture de la popup
       this.watchForGooglePopupClose();
     } else {
       const google = (window as any).google;
@@ -155,18 +155,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * After the Google button is clicked, poll the open windows list to detect
-   * when the user dismisses the Google popup without signing in.
-   * We check window.open references indirectly by watching a brief delay then
-   * looking for a focused state change — the simplest reliable approach is to
-   * watch for the main window to regain focus (Google popup closed).
-   */
+  /** Détecte quand l'utilisateur ferme la popup sans se connecter */
   private watchForGooglePopupClose() {
-    // Give Google SDK 800 ms to open its popup before we start watching
+    // Laisse 800ms à Google pour ouvrir la popup
     const focusHandler = () => {
-      // Main window regained focus → popup was closed
-      // Give authState 1.5 s to fire; if it doesn't, reset loading
+      // Retour du focus sur la fenêtre principale = popup fermée
+      // Laisse 1.5s à l'authentification pour se lancer
       setTimeout(() => {
         this.ngZone.run(() => {
           if (this.isLoading()) {
@@ -177,7 +171,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       }, 1500);
     };
 
-    // Small delay so the window doesn't immediately detect its own refocus
+    // Délai pour éviter de capter le focus initial
     setTimeout(() => {
       window.addEventListener('focus', focusHandler);
     }, 800);

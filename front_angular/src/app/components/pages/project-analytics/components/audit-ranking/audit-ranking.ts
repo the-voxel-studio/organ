@@ -1,7 +1,7 @@
 import { Component, Input, ElementRef, ViewChild, OnChanges, SimpleChanges, OnDestroy, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
-import { MemberActivityStats } from '../../project-analytics';
+import { MemberActivityStats } from '../../../../../models/project.model';
 
 Chart.register(...registerables);
 
@@ -52,7 +52,7 @@ export class AuditRankingComponent implements OnChanges, OnDestroy, AfterViewIni
       this.memberActivityChart = null;
     }
 
-    // Filter top 5 active members based on checked action types
+    // Filtre le top 5 des membres actifs selon les types d'actions cochés
     const topMembers = this.memberStats.slice(0, 5).filter(m => m.filteredActionsCount > 0);
     const labels = topMembers.map(m => `${m.firstName} ${m.lastName}`);
     const data = topMembers.map(m => m.filteredActionsCount);

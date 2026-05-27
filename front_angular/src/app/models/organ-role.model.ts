@@ -49,7 +49,7 @@ export interface AssignRoleResponse {
 }
 
 export interface TrashedRoleMember {
-  uuid: number; // UserOrganRole DB primary key (numeric)
+  uuid: number; // Clé primaire DB de UserOrganRole (numérique)
   user: {
     uuid: string;
     firstName: string;

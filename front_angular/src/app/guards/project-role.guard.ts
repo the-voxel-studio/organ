@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
-import { ProjectService } from '../services/project.service';
-import { ToastService } from '../services/toast.service';
+import { ProjectService } from '../services/api/project.service';
+import { ToastService } from '../services/common/toast.service';
 import { catchError, map, of } from 'rxjs';
 
 export const projectRoleGuard: CanActivateFn = (route) => {

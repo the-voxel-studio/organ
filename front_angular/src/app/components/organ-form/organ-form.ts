@@ -20,7 +20,7 @@ import { OrganMembersComponent } from './components/organ-members/organ-members'
 export class OrganFormComponent implements OnInit {
   private fb = inject(FormBuilder);
 
-  // Inputs for project context and UI states
+  // Inputs de contexte projet et UI
   @Input({ required: true }) projectColor = '#FF7EB6';
   @Input({ required: true }) projectTitle = '';
   @Input({ required: true }) isEdit = false;
@@ -28,29 +28,29 @@ export class OrganFormComponent implements OnInit {
   @Input({ required: true }) errorMessage: string | null = null;
   @Input({ required: true }) loadingText = 'Enregistrement...';
 
-  // Inputs for permissions and roles presets
+  // Inputs de permissions et rôles presets
   @Input({ required: true }) availablePermissions: AvailablePermission[] = [];
   @Input({ required: true }) organPermissions: AvailablePermission[] = [];
   @Input({ required: true }) taskPermissions: AvailablePermission[] = [];
   @Input({ required: true }) interactionPermissions: AvailablePermission[] = [];
   @Input({ required: true }) presets: any;
 
-  // Inputs for data loading
+  // Inputs pour le chargement des données
   @Input({ required: true }) projectMembers: any[] = [];
   @Input() initialOrganData: any = null;
   @Input() initialRoles: any[] = [];
   @Input() initialMembers: any[] = [];
 
-  // Inputs for granular access controls
+  // Inputs de droits d'accès granulaires
   @Input() canEditInfo = true;
   @Input() canManageRoles = true;
   @Input() canManageMembers = true;
 
-  // Outputs to parent smart components
+  // Outputs vers les composants parents
   @Output() submitForm = new EventEmitter<any>();
   @Output() cancel = new EventEmitter<void>();
 
-  // Local state properties
+  // Propriétés d'état local
   highlightColor = '#FF7EB6';
   iconType: IconType = 'BLOB';
   iconData: string | null = null;
@@ -58,7 +58,7 @@ export class OrganFormComponent implements OnInit {
   roles: any[] = [];
   addedMembers: any[] = [];
 
-  // Reactive Form
+  // Formulaire réactif
   organForm = this.fb.group({
     title: ['', [Validators.required, Validators.maxLength(100)]],
     description: ['', [Validators.maxLength(500)]],
@@ -67,7 +67,7 @@ export class OrganFormComponent implements OnInit {
     iconData: [null as string | null]
   });
 
-  // Getters/setters
+  // Getters et setters
   get organTitle(): string { return this.organForm.get('title')?.value || ''; }
   set organTitle(val: string) { this.organForm.get('title')?.setValue(val); }
 
@@ -139,7 +139,7 @@ export class OrganFormComponent implements OnInit {
   onRolesChanged(updatedRoles: any[]) {
     this.roles = updatedRoles;
     
-    // Cleanup members roles references if roles were deleted
+    // Nettoyage des références de rôles des membres si supprimés
     const roleIds = new Set(this.roles.map(r => r.id));
     this.addedMembers.forEach(m => {
       if (m.roles) {

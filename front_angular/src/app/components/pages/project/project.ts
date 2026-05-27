@@ -2,10 +2,10 @@ import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
-import { ProjectService } from '../../../services/project.service';
+import { ProjectService } from '../../../services/api/project.service';
 import { ProjectDetailedViewResponse } from '../../../models/project.model';
 
-// Sub-components
+// Sous-composants
 import { ProjectHeaderComponent } from './components/project-header/project-header';
 import { OrganCardComponent } from './components/organ-card/organ-card';
 import { ProjectTagsPanelComponent } from './components/project-tags-panel/project-tags-panel';
@@ -32,17 +32,17 @@ export class ProjectComponent implements OnInit, OnDestroy {
   private projectService = inject(ProjectService);
   private destroy$ = new Subject<void>();
 
-  // State signals
+  // Signaux d'état
   projectUuid: string | null = null;
   projectData = signal<ProjectDetailedViewResponse | null>(null);
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);
 
-  // Placeholder alert helpers
+  // Helpers d'alerte temporaires
   showNotImplementedAlert = signal(false);
   notImplementedFeatureName = '';
 
-  // Esc key listener handler
+  // Gestion de la touche Échap
   private escHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       if (this.showNotImplementedAlert()) this.closeNotImplementedAlert();

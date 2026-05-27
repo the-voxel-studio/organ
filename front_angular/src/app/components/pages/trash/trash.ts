@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProjectService } from '../../../services/project.service';
+import { ProjectService } from '../../../services/api/project.service';
 import { ProjectSummary } from '../../../models/project.model';
 import { TrashedProjectsComponent } from './components/trashed-projects/trashed-projects';
 
@@ -13,7 +13,7 @@ import { TrashedProjectsComponent } from './components/trashed-projects/trashed-
 export class TrashComponent implements OnInit {
   private projectService = inject(ProjectService);
 
-  // State signals
+  // Signaux d'état
   trashedProjects = signal<ProjectSummary[]>([]);
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);

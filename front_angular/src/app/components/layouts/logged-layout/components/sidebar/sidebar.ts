@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, inject, signal, HostListener } from '@ang
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { ProjectService } from '../../../../../services/project.service';
+import { ProjectService } from '../../../../../services/api/project.service';
 import { DynamicLogoComponent } from '../../../../dynamic-logo/dynamic-logo';
 import { ProjectSummary } from '../../../../../models/project.model';
 import { Subject, takeUntil, filter } from 'rxjs';

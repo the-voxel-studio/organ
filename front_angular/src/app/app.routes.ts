@@ -1,58 +1,50 @@
 import { Routes } from '@angular/router';
-import { LandingLayoutComponent } from './components/layouts/landing-layout/landing-layout';
-import { LoggedLayoutComponent } from './components/layouts/logged-layout/logged-layout';
-import { AuthLayoutComponent } from './components/layouts/auth-layout/auth-layout';
-import { NavbarLayoutComponent } from './components/layouts/navbar-layout/navbar-layout';
-import { LandingPageComponent } from './components/landing/landing-page/landing-page';
-import { LoginComponent } from './components/pages/login/login';
-import { RegisterComponent } from './components/pages/register/register';
-import { GetTheAppComponent } from './components/pages/get-the-app/get-the-app';
-import { DashboardComponent } from './components/pages/dashboard/dashboard';
-import { ProjectComponent } from './components/pages/project/project';
-import { ProjectCreateComponent } from './components/pages/project-create/project-create';
-import { ProjectSettingsComponent } from './components/pages/project-settings/project-settings';
-import { ProjectTrashComponent } from './components/pages/project-trash/project-trash';
-import { OrganComponent } from './components/pages/organ/organ';
-import { OrganCreateComponent } from './components/pages/organ-create/organ-create';
-import { OrganSettingsComponent } from './components/pages/organ-settings/organ-settings';
-import { OrganTrashComponent } from './components/pages/organ-trash/organ-trash';
-import { SettingsComponent } from './components/pages/settings/settings';
-import { TrashComponent } from './components/pages/trash/trash';
-import { LegalNoticeComponent } from './components/pages/legal-notice/legal-notice';
-import { PrivacyPolicyComponent } from './components/pages/privacy-policy/privacy-policy';
-import { TermsComponent } from './components/pages/terms/terms';
 import { authGuard } from './guards/auth.guard';
 import { organPermissionGuard } from './guards/organ-permission.guard';
 import { projectRoleGuard } from './guards/project-role.guard';
-import { ProjectAnalyticsComponent } from './components/pages/project-analytics/project-analytics';
 
 export const routes: Routes = [
   // Routes publiques (LandingLayoutComponent)
   {
     path: '',
-    component: LandingLayoutComponent,
+    loadComponent: () => import('./components/layouts/landing-layout/landing-layout').then(m => m.LandingLayoutComponent),
     children: [
-      { path: '', component: LandingPageComponent },
-      { path: 'get-the-app', component: GetTheAppComponent },
-      { path: 'legal-notice', component: LegalNoticeComponent },
-      { path: 'privacy-policy', component: PrivacyPolicyComponent },
-      { path: 'terms', component: TermsComponent }
+      { 
+        path: '', 
+        loadComponent: () => import('./components/landing/landing-page/landing-page').then(m => m.LandingPageComponent) 
+      },
+      { 
+        path: 'get-the-app', 
+        loadComponent: () => import('./components/pages/get-the-app/get-the-app').then(m => m.GetTheAppComponent) 
+      },
+      { 
+        path: 'legal-notice', 
+        loadComponent: () => import('./components/pages/legal-notice/legal-notice').then(m => m.LegalNoticeComponent) 
+      },
+      { 
+        path: 'privacy-policy', 
+        loadComponent: () => import('./components/pages/privacy-policy/privacy-policy').then(m => m.PrivacyPolicyComponent) 
+      },
+      { 
+        path: 'terms', 
+        loadComponent: () => import('./components/pages/terms/terms').then(m => m.TermsComponent) 
+      }
     ]
   },
 
   // Routes d'authentification (AuthLayoutComponent)
   {
     path: '',
-    component: AuthLayoutComponent,
+    loadComponent: () => import('./components/layouts/auth-layout/auth-layout').then(m => m.AuthLayoutComponent),
     children: [
       { 
         path: 'login', 
-        component: LoginComponent, 
+        loadComponent: () => import('./components/pages/login/login').then(m => m.LoginComponent), 
         data: { slogan: "L'organisation devient <span class=\"text-bubblegum italic text-balance\">un réflexe.</span>" } 
       },
       { 
         path: 'register', 
-        component: RegisterComponent, 
+        loadComponent: () => import('./components/pages/register/register').then(m => m.RegisterComponent), 
         data: { slogan: "Reprenez le contrôle <span class=\"text-bubblegum italic text-balance\">de votre temps.</span>" } 
       }
     ]
@@ -61,20 +53,26 @@ export const routes: Routes = [
   // Routes protégées avec NavbarLayout (aucun menu ou sidebar)
   {
     path: '',
-    component: NavbarLayoutComponent,
+    loadComponent: () => import('./components/layouts/navbar-layout/navbar-layout').then(m => m.NavbarLayoutComponent),
     canActivate: [authGuard],
     children: [
-      { path: 'project/new', component: ProjectCreateComponent },
+      { 
+        path: 'project/new', 
+        loadComponent: () => import('./components/pages/project-create/project-create').then(m => m.ProjectCreateComponent) 
+      },
       { 
         path: 'project/:projectUuid/settings', 
-        component: ProjectSettingsComponent,
+        loadComponent: () => import('./components/pages/project-settings/project-settings').then(m => m.ProjectSettingsComponent),
         canActivate: [projectRoleGuard],
         data: { roles: ['ADMIN'] }
       },
-      { path: 'project/:projectUuid/organ/new', component: OrganCreateComponent },
+      { 
+        path: 'project/:projectUuid/organ/new', 
+        loadComponent: () => import('./components/pages/organ-create/organ-create').then(m => m.OrganCreateComponent) 
+      },
       { 
         path: 'project/:projectUuid/organ/:organUuid/settings', 
-        component: OrganSettingsComponent,
+        loadComponent: () => import('./components/pages/organ-settings/organ-settings').then(m => m.OrganSettingsComponent),
         canActivate: [organPermissionGuard],
         data: { permission: 'ORGAN_EDIT' }
       }
@@ -84,27 +82,45 @@ export const routes: Routes = [
   // Routes protégées avec Sidebar (LoggedLayoutComponent)
   {
     path: '',
-    component: LoggedLayoutComponent,
+    loadComponent: () => import('./components/layouts/logged-layout/logged-layout').then(m => m.LoggedLayoutComponent),
     canActivate: [authGuard],
     children: [
-      { path: 'dashboard', component: DashboardComponent },
-      { path: 'project/:projectUuid', component: ProjectComponent },
+      { 
+        path: 'dashboard', 
+        loadComponent: () => import('./components/pages/dashboard/dashboard').then(m => m.DashboardComponent) 
+      },
+      { 
+        path: 'project/:projectUuid', 
+        loadComponent: () => import('./components/pages/project/project').then(m => m.ProjectComponent) 
+      },
       { 
         path: 'project/:projectUuid/trash', 
-        component: ProjectTrashComponent,
+        loadComponent: () => import('./components/pages/project-trash/project-trash').then(m => m.ProjectTrashComponent),
         canActivate: [projectRoleGuard],
         data: { roles: ['ADMIN', 'MANAGER'] }
       },
       {
         path: 'project/:projectUuid/analytics',
-        component: ProjectAnalyticsComponent,
+        loadComponent: () => import('./components/pages/project-analytics/project-analytics').then(m => m.ProjectAnalyticsComponent),
         canActivate: [projectRoleGuard],
         data: { roles: ['ADMIN', 'MANAGER'] }
       },
-      { path: 'organ/:projectUuid/:organUuid', component: OrganComponent },
-      { path: 'organ/:projectUuid/:organUuid/trash', component: OrganTrashComponent },
-      { path: 'settings', component: SettingsComponent },
-      { path: 'trash', component: TrashComponent }
+      { 
+        path: 'organ/:projectUuid/:organUuid', 
+        loadComponent: () => import('./components/pages/organ/organ').then(m => m.OrganComponent) 
+      },
+      { 
+        path: 'organ/:projectUuid/:organUuid/trash', 
+        loadComponent: () => import('./components/pages/organ-trash/organ-trash').then(m => m.OrganTrashComponent) 
+      },
+      { 
+        path: 'settings', 
+        loadComponent: () => import('./components/pages/settings/settings').then(m => m.SettingsComponent) 
+      },
+      { 
+        path: 'trash', 
+        loadComponent: () => import('./components/pages/trash/trash').then(m => m.TrashComponent) 
+      }
     ]
   },
 

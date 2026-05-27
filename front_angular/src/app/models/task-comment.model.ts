@@ -6,7 +6,7 @@ export interface TaskCommentResponse {
   user: UserSummary;
   createdAt: string; // ISO DateTime
   updatedAt: string; // ISO DateTime
-  deletedAt?: string; // ISO DateTime (returned in trash)
+  deletedAt?: string; // ISO DateTime (retourné dans la corbeille)
 }
 
 export interface CreateCommentRequest {

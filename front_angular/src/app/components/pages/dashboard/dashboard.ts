@@ -1,10 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { DashboardService } from '../../../services/dashboard.service';
+import { DashboardService } from '../../../services/api/dashboard.service';
 import { DashboardResponse } from '../../../models/dashboard.model';
 
-// Sub-components
+// Sous-composants
 import { PriorityTasksComponent } from './components/priority-tasks/priority-tasks';
 import { ProjectGridComponent } from './components/project-grid/project-grid';
 
@@ -22,7 +22,7 @@ import { ProjectGridComponent } from './components/project-grid/project-grid';
 export class DashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
 
-  // State signals
+  // Signaux d'état
   dashboardData = signal<DashboardResponse | null>(null);
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);

@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { UserService } from '../../../../../services/user.service';
-import { AuthService } from '../../../../../services/auth.service';
+import { UserService } from '../../../../../services/api/user.service';
+import { AuthService } from '../../../../../services/api/auth.service';
 import { ConfirmationModalComponent } from '../../../../confirmation-modal/confirmation-modal';
 
 @Component({

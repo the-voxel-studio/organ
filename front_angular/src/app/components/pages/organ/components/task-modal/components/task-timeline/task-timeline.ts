@@ -1,14 +1,18 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskTimelineItem } from '../../../../../../../models/task.model';
+import { TranslationService } from '../../../../../../../services/common/translation.service';
+import { FormatDatePipe } from '../../../../../../../pipes/format-date.pipe';
 
 @Component({
   selector: 'app-task-timeline',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormatDatePipe],
   templateUrl: './task-timeline.html'
 })
 export class TaskTimelineComponent {
+  private translationService = inject(TranslationService);
+
   @Input({ required: true }) timeline: TaskTimelineItem[] = [];
   @Input({ required: true }) hasMoreTimeline: boolean = false;
   @Input({ required: true }) highlightColor: string = '#FF7DD4';
@@ -19,57 +23,20 @@ export class TaskTimelineComponent {
     this.loadMore.emit();
   }
 
-  formatDateString(dateStr: string | null | undefined): string {
-    if (!dateStr) return '-';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleString('fr-FR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (e) {
-      return dateStr;
-    }
-  }
-
   formatStatus(status: any): string {
     if (!status) return 'À faire';
-    const s = String(status).toUpperCase();
-    switch (s) {
-      case 'TODO': return 'À faire';
-      case 'IN_PROGRESS': return 'En cours';
-      case 'WAITING': return 'En attente';
-      case 'DONE': return 'Terminé';
-      case 'CANCELED': return 'Annulé';
-      default: return status;
-    }
+    return this.translationService.translateStatus(String(status));
   }
 
   formatFieldLabel(field: string | null | undefined): string {
-    if (!field) return 'un champ';
-    switch (field) {
-      case 'title': return 'le titre';
-      case 'description': return 'la description';
-      case 'status': return 'le statut';
-      case 'priority': return 'la priorité';
-      case 'estimatedHours': return 'le temps estimé';
-      case 'startDate': return 'la date de début';
-      case 'expiresAt': return "l'échéance";
-      case 'manager':
-      case 'managerUuid':
-        return 'le responsable';
-      default: return `le champ "${field}"`;
-    }
+    return this.translationService.formatFieldLabel(field);
   }
 
   formatTimelineDetail(item: TaskTimelineItem): string {
     const action = item.actionType;
     const field = item.fieldName;
 
-    // Helper to get value from oldValues/newValues array
+    // Helper pour extraire les valeurs de oldValues/newValues
     const getVal = (obj: any, key: string) => {
       if (!obj) return null;
       if (typeof obj === 'object') {
@@ -113,7 +80,7 @@ export class TaskTimelineComponent {
       }
 
       if (fieldName === 'startDate' || fieldName === 'expiresAt' || fieldName === 'deletedAt') {
-        return this.formatDateString(val);
+        return this.translationService.formatAuditDate(val);
       }
 
       if (fieldName === 'status') {

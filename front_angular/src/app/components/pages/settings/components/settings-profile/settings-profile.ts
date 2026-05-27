@@ -1,8 +1,9 @@
 import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { AuthService } from '../../../../../services/auth.service';
-import { UserService } from '../../../../../services/user.service';
+import { AuthService } from '../../../../../services/api/auth.service';
+import { UserService } from '../../../../../services/api/user.service';
+import { UserStore } from '../../../../../services/common/user.store';
 
 @Component({
   selector: 'app-settings-profile',
@@ -13,6 +14,7 @@ import { UserService } from '../../../../../services/user.service';
 export class SettingsProfileComponent implements OnInit {
   private authService = inject(AuthService);
   private userService = inject(UserService);
+  private userStore = inject(UserStore);
   private fb = inject(FormBuilder);
 
   currentUser = this.authService.currentUser;
@@ -55,11 +57,8 @@ export class SettingsProfileComponent implements OnInit {
     }).subscribe({
       next: (res) => {
         this.profileSuccess = "Profil mis à jour avec succès.";
-        this.authService.checkSession().subscribe({
-          complete: () => {
-            this.isProfileLoading = false;
-          }
-        });
+        this.userStore.updateProfile(res.user.firstName, res.user.lastName, res.user.email);
+        this.isProfileLoading = false;
       },
       error: (err) => {
         this.isProfileLoading = false;

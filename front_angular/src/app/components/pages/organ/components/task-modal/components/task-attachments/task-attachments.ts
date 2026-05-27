@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TaskAttachmentService } from '../../../../../../../services/task-attachment.service';
+import { TaskAttachmentService } from '../../../../../../../services/api/task-attachment.service';
 import { TaskAttachmentResponse } from '../../../../../../../models/task-attachment.model';
 
 @Component({
@@ -35,7 +35,7 @@ export class TaskAttachmentsComponent {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    input.value = ''; // Reset immediately so same file can be re-selected
+    input.value = ''; // Réinitialise pour pouvoir re-sélectionner le même fichier
 
     this.isUploading.set(true);
     this.uploadStateChange.emit(true);
@@ -52,7 +52,7 @@ export class TaskAttachmentsComponent {
       });
 
       if (initResp.action === 'upload_to_drive') {
-        // Step 2a – Drive: get a short-lived access token then upload directly
+        // Étape 2a – Drive : récupère un access token temporaire puis upload directement
         await this.uploadToDrive(file, initResp.folderId, initResp.accessToken);
       } else {
         // Step 2b – Local storage fallback
@@ -87,7 +87,7 @@ export class TaskAttachmentsComponent {
   private async uploadToDrive(file: File, folderId: string, accessToken: string): Promise<void> {
     this.uploadProgress.set(10);
 
-    // Multipart upload to Google Drive API
+    // Upload multipart vers l'API Google Drive
     const metadata = {
       name: file.name,
       parents: [folderId]
