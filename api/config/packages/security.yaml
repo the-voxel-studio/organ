@@ -27,6 +27,9 @@ security:
                 check_path: /api/auth/refresh
             logout:
                 path: /api/auth/logout
+                delete_cookies:
+                    BEARER: { path: '/', domain: null }
+                    refresh_token: { path: '/', domain: null }
 
         api:
             pattern: ^/api
