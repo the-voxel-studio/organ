@@ -8,6 +8,7 @@ import { OrganRoleService } from '../../../services/api/organ-role.service';
 import { PermissionService } from '../../../services/api/permission.service';
 import { AvailablePermission } from '../../../models/permission.model';
 import { OrganFormComponent } from '../../organ-form/organ-form';
+import { SpinnerComponent } from '../../spinner/spinner';
 
 @Component({
   selector: 'app-organ-create',
@@ -15,7 +16,8 @@ import { OrganFormComponent } from '../../organ-form/organ-form';
   imports: [
     CommonModule,
     RouterLink,
-    OrganFormComponent
+    OrganFormComponent,
+    SpinnerComponent
   ],
   templateUrl: './organ-create.html'
 })

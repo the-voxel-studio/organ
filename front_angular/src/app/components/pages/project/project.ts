@@ -11,6 +11,7 @@ import { OrganCardComponent } from './components/organ-card/organ-card';
 import { ProjectTagsPanelComponent } from './components/project-tags-panel/project-tags-panel';
 import { ProjectAboutComponent } from './components/project-about/project-about';
 import { ProjectActivityFeedComponent } from './components/project-activity-feed/project-activity-feed';
+import { SpinnerComponent } from '../../spinner/spinner';
 
 @Component({
   selector: 'app-project',
@@ -22,7 +23,8 @@ import { ProjectActivityFeedComponent } from './components/project-activity-feed
     OrganCardComponent,
     ProjectTagsPanelComponent,
     ProjectAboutComponent,
-    ProjectActivityFeedComponent
+    ProjectActivityFeedComponent,
+    SpinnerComponent
   ],
   templateUrl: './project.html'
 })

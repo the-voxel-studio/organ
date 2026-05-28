@@ -12,10 +12,7 @@
   </div>
 
   @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center min-h-[300px]">
-      <div class="w-12 h-12 border-4 border-t-transparent rounded-full animate-spin" [style.border-color]="projectColor + '1a'" [style.border-top-color]="projectColor"></div>
-      <p class="mt-4 text-gray-500 font-medium">Chargement...</p>
-    </div>
+    <app-spinner [color]="projectColor" size="lg" text="Chargement..." [fullscreen]="true"></app-spinner>
   } @else {
     <app-organ-form
       [projectColor]="projectColor"

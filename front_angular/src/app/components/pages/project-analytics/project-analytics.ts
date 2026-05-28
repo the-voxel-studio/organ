@@ -18,6 +18,7 @@ import { AuditFiltersComponent } from './components/audit-filters/audit-filters'
 import { AuditRankingComponent } from './components/audit-ranking/audit-ranking';
 import { AuditSidebarComponent } from './components/audit-sidebar/audit-sidebar';
 import { AuditTimelineComponent } from './components/audit-timeline/audit-timeline';
+import { SpinnerComponent } from '../../spinner/spinner';
 
 @Component({
   selector: 'app-project-analytics',
@@ -30,7 +31,8 @@ import { AuditTimelineComponent } from './components/audit-timeline/audit-timeli
     AuditFiltersComponent,
     AuditRankingComponent,
     AuditSidebarComponent,
-    AuditTimelineComponent
+    AuditTimelineComponent,
+    SpinnerComponent
   ],
   templateUrl: './project-analytics.html'
 })

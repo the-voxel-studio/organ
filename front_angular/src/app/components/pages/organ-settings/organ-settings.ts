@@ -9,6 +9,7 @@ import { PermissionService } from '../../../services/api/permission.service';
 import { AvailablePermission } from '../../../models/permission.model';
 import { OrganFormComponent } from '../../organ-form/organ-form';
 import { OrganDangerZoneComponent } from './components/organ-danger-zone/organ-danger-zone';
+import { SpinnerComponent } from '../../spinner/spinner';
 
 @Component({
   selector: 'app-organ-settings',
@@ -17,7 +18,8 @@ import { OrganDangerZoneComponent } from './components/organ-danger-zone/organ-d
     CommonModule,
     RouterLink,
     OrganFormComponent,
-    OrganDangerZoneComponent
+    OrganDangerZoneComponent,
+    SpinnerComponent
   ],
   templateUrl: './organ-settings.html'
 })

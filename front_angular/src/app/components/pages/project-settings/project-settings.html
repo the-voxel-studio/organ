@@ -13,10 +13,7 @@
 
   @if (isLoading()) {
     <!-- Loading State -->
-    <div class="flex flex-col items-center justify-center min-h-[300px]">
-      <div class="w-12 h-12 border-4 border-bubblegum border-t-transparent rounded-full animate-spin"></div>
-      <p class="mt-4 text-gray-500 font-medium">Chargement des paramètres...</p>
-    </div>
+    <app-spinner size="lg" text="Chargement des paramètres..." [fullscreen]="true"></app-spinner>
   } @else {
     <div class="px-4">
       <app-project-form
