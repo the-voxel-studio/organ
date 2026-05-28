@@ -33,10 +33,10 @@ class StatsAggregationService
                 'oldValues' => '$oldValues',
                 'taskUuid' => '$taskUuid',
                 'targets' => ['$cond' => [
-                    ['$ne' => ['$organUuid', null]],
+                    ['$ne' => [['$ifNull' => ['$organUuid', null]], null]],
                     [
                         ['projectUuid' => '$projectUuid', 'organUuid' => null],
-                        ['projectUuid' => '$projectUuid', 'organUuid' => '$organUuid']
+                        ['projectUuid' => '$projectUuid', 'organUuid' => ['$ifNull' => ['$organUuid', null]]]
                     ],
                     [
                         ['projectUuid' => '$projectUuid', 'organUuid' => null]
@@ -100,6 +100,8 @@ class StatsAggregationService
 
         $cursor = $collection->aggregate($pipeline);
 
+        $statsToPersist = [];
+
         foreach ($cursor as $row) {
             $pUuid = $row['_id']['projectUuid'] ?? null;
             $oUuid = $row['_id']['organUuid'] ?? null;
@@ -107,30 +109,40 @@ class StatsAggregationService
                 continue;
             }
 
-            // Find or create DailyStat document
-            $existing = $this->dm->getRepository(DailyStat::class)->findOneBy([
-                'date' => $start,
-                'projectUuid' => $pUuid,
-                'organUuid' => $oUuid
-            ]);
+            $cacheKey = sprintf('%s_%s', $pUuid, $oUuid ?? 'null');
 
-            $stat = $existing ?? new DailyStat();
-            if (!$existing) {
-                $stat->setDate($start);
-                $stat->setProjectUuid($pUuid);
-                $stat->setOrganUuid($oUuid);
+            if (isset($statsToPersist[$cacheKey])) {
+                $stat = $statsToPersist[$cacheKey];
+            } else {
+                // Find or create DailyStat document
+                $existing = $this->dm->getRepository(DailyStat::class)->findOneBy([
+                    'date' => $start,
+                    'projectUuid' => $pUuid,
+                    'organUuid' => $oUuid
+                ]);
+
+                $stat = $existing ?? new DailyStat();
+                if (!$existing) {
+                    $stat->setDate($start);
+                    $stat->setProjectUuid($pUuid);
+                    $stat->setOrganUuid($oUuid);
+                }
+                $statsToPersist[$cacheKey] = $stat;
             }
 
-            $stat->setTasksCreated($row['tasksCreated'] ?? 0);
-            $stat->setTasksCompleted($row['tasksCompleted'] ?? 0);
-            $stat->setTasksCanceled($row['tasksCanceled'] ?? 0);
-            $stat->setCommentsAdded($row['commentsAdded'] ?? 0);
-            $stat->setAttachmentsAdded($row['attachmentsAdded'] ?? 0);
+            $stat->setTasksCreated($stat->getTasksCreated() + ($row['tasksCreated'] ?? 0));
+            $stat->setTasksCompleted($stat->getTasksCompleted() + ($row['tasksCompleted'] ?? 0));
+            $stat->setTasksCanceled($stat->getTasksCanceled() + ($row['tasksCanceled'] ?? 0));
+            $stat->setCommentsAdded($stat->getCommentsAdded() + ($row['commentsAdded'] ?? 0));
+            $stat->setAttachmentsAdded($stat->getAttachmentsAdded() + ($row['attachmentsAdded'] ?? 0));
 
             $activeUsers = isset($row['activeUsers']) ? (array)$row['activeUsers'] : [];
-            $stat->setMembersActive(count($activeUsers));
+            $existingExtra = $stat->getExtra();
+            $existingActiveUsers = $existingExtra['active_users'] ?? [];
+            $allActiveUsers = array_unique(array_merge($existingActiveUsers, $activeUsers));
+            $stat->setMembersActive(count($allActiveUsers));
 
-            $statusChanges = [];
+            $statusChanges = $stat->getStatusChanges();
             $statusTransitions = isset($row['statusTransitions']) ? (array)$row['statusTransitions'] : [];
             foreach ($statusTransitions as $transition) {
                 $statusChanges[$transition] = ($statusChanges[$transition] ?? 0) + 1;
@@ -138,11 +150,11 @@ class StatsAggregationService
             $stat->setStatusChanges($statusChanges);
 
             $extra = [
-                'consultations' => $row['consultations'] ?? 0,
-                'task_views' => $row['taskViews'] ?? 0,
-                'organ_views' => $row['organViews'] ?? 0,
-                'project_views' => $row['projectViews'] ?? 0,
-                'active_users' => $activeUsers
+                'consultations' => ($existingExtra['consultations'] ?? 0) + ($row['consultations'] ?? 0),
+                'task_views' => ($existingExtra['task_views'] ?? 0) + ($row['taskViews'] ?? 0),
+                'organ_views' => ($existingExtra['organ_views'] ?? 0) + ($row['organViews'] ?? 0),
+                'project_views' => ($existingExtra['project_views'] ?? 0) + ($row['projectViews'] ?? 0),
+                'active_users' => $allActiveUsers
             ];
             $stat->setExtra($extra);
 
