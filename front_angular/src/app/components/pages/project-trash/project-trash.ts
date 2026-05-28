@@ -20,6 +20,7 @@ import { TagResponse } from '../../../models/tag.model';
 import { TrashedOrgansComponent } from './components/trashed-organs/trashed-organs';
 import { TrashedMembersComponent } from './components/trashed-members/trashed-members';
 import { TrashedTagsComponent } from './components/trashed-tags/trashed-tags';
+import { SpinnerComponent } from '../../spinner/spinner';
 
 @Component({
   selector: 'app-project-trash',
@@ -30,7 +31,8 @@ import { TrashedTagsComponent } from './components/trashed-tags/trashed-tags';
     FormsModule,
     TrashedOrgansComponent,
     TrashedMembersComponent,
-    TrashedTagsComponent
+    TrashedTagsComponent,
+    SpinnerComponent
   ],
   templateUrl: './project-trash.html'
 })

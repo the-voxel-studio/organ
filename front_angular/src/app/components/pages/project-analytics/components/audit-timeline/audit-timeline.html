@@ -101,9 +101,8 @@
 </div>
 
 <!-- Logs Timeline List -->
-<div *ngIf="auditIsLoading" class="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-50 shadow-xs">
-  <div class="w-8 h-8 border-4 border-bubblegum border-t-transparent rounded-full animate-spin" [style.border-color]="getProjectColorHex()" style="border-top-color: transparent"></div>
-  <p class="mt-4 text-xs text-gray-400 font-bold">Chargement des données...</p>
+<div *ngIf="auditIsLoading" class="bg-white rounded-3xl border border-gray-50 shadow-xs py-14">
+  <app-spinner [color]="getProjectColorHex()" size="md" text="Chargement des données..."></app-spinner>
 </div>
 
 <div *ngIf="!auditIsLoading && filteredLogs.length === 0" class="py-16 text-center bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-200">

@@ -1,0 +1,10 @@
+<div [class]="containerClass">
+  <div 
+    [class]="spinnerClass + ' border-bubblegum border-t-transparent rounded-full animate-spin'"
+    [style.border-color]="color ? color : null"
+    [style.border-top-color]="'transparent'">
+  </div>
+  <p *ngIf="text" class="mt-4 text-gray-500 font-medium text-sm text-center">
+    {{ text }}
+  </p>
+</div>

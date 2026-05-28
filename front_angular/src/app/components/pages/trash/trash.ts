@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ProjectService } from '../../../services/api/project.service';
 import { ProjectSummary } from '../../../models/project.model';
 import { TrashedProjectsComponent } from './components/trashed-projects/trashed-projects';
+import { SpinnerComponent } from '../../spinner/spinner';
 
 @Component({
   selector: 'app-trash',
   standalone: true,
-  imports: [CommonModule, TrashedProjectsComponent],
+  imports: [CommonModule, TrashedProjectsComponent, SpinnerComponent],
   templateUrl: './trash.html'
 })
 export class TrashComponent implements OnInit {

@@ -4,9 +4,9 @@ import { RouterLink } from '@angular/router';
 import { DashboardService } from '../../../services/api/dashboard.service';
 import { DashboardResponse } from '../../../models/dashboard.model';
 
-// Sous-composants
 import { PriorityTasksComponent } from './components/priority-tasks/priority-tasks';
 import { ProjectGridComponent } from './components/project-grid/project-grid';
+import { SpinnerComponent } from '../../spinner/spinner';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,7 +15,8 @@ import { ProjectGridComponent } from './components/project-grid/project-grid';
     CommonModule,
     RouterLink,
     PriorityTasksComponent,
-    ProjectGridComponent
+    ProjectGridComponent,
+    SpinnerComponent
   ],
   templateUrl: './dashboard.html'
 })
