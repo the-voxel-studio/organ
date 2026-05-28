@@ -10,7 +10,6 @@ import { AuthService } from '../../../services/api/auth.service';
 import { ProjectGoogleDriveComponent } from './components/project-google-drive/project-google-drive';
 import { ProjectDangerZoneComponent } from './components/project-danger-zone/project-danger-zone';
 import { ProjectFormComponent } from '../../project-form/project-form';
-import { SpinnerComponent } from '../../spinner/spinner';
 
 @Component({
   selector: 'app-project-settings',
@@ -20,8 +19,7 @@ import { SpinnerComponent } from '../../spinner/spinner';
     RouterLink,
     ProjectGoogleDriveComponent,
     ProjectDangerZoneComponent,
-    ProjectFormComponent,
-    SpinnerComponent
+    ProjectFormComponent
   ],
   templateUrl: './project-settings.html'
 })
