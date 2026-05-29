@@ -39,6 +39,7 @@ dependencies {
     implementation("com.airbnb.android:lottie-compose:6.4.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation("io.coil-kt:coil-gif:2.5.0")
+    implementation(libs.androidx.compose.foundation)
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)
@@ -67,4 +68,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation("androidx.compose.material:material-icons-extended")
     implementation("io.coil-kt:coil-svg:2.5.0")
+    implementation("com.github.skydoves:colorpicker-compose:1.0.8")
 }

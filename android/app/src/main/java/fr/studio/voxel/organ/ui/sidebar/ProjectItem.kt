@@ -1,0 +1,24 @@
+package fr.studio.voxel.organ.ui.sidebar
+
+
+import androidx.compose.foundation.layout.Column
+
+import androidx.compose.runtime.Composable
+
+import fr.studio.voxel.organ.network.services.Project
+
+@Composable
+fun ProjectItem(
+    project: Project,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+
+    Column {
+        SecondaryButton(
+            text = project.title,
+            isSelected = isSelected,
+            onClick = onClick
+        )
+    }
+}

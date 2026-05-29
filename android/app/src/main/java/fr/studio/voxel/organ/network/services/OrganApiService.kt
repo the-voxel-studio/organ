@@ -1,6 +1,6 @@
 package fr.studio.voxel.organ.network.services
 
-import fr.studio.voxel.organ.ui.components.DashboardComponents.ProjectVisual
+import fr.studio.voxel.organ.ui.dashboard.ProjectVisual
 import retrofit2.Response
 import retrofit2.http.*
 
