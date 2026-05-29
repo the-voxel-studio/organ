@@ -4,9 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.Column
@@ -26,7 +24,7 @@ import fr.studio.voxel.organ.network.ApiClient
 import fr.studio.voxel.organ.network.services.AuthApiService
 import fr.studio.voxel.organ.network.services.LoginRequest
 import fr.studio.voxel.organ.network.services.ProjectApiService
-import fr.studio.voxel.organ.ui.SideBar
+import fr.studio.voxel.organ.ui.OrganApp
 import fr.studio.voxel.organ.ui.theme.OrganTheme
 import kotlinx.coroutines.launch
 
