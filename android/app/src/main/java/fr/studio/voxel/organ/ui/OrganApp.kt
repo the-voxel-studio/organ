@@ -11,11 +11,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.padding
 import androidx.navigation.compose.composable
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
-import fr.studio.voxel.organ.MainActivity
-import fr.studio.voxel.organ.viewmodel.MainViewModel
-import fr.studio.voxel.organ.network.ApiClient
 import fr.studio.voxel.organ.ui.authentication.AuthMode
 import fr.studio.voxel.organ.ui.authentication.AuthScreen
 import fr.studio.voxel.organ.ui.create.Create
@@ -23,7 +18,6 @@ import fr.studio.voxel.organ.ui.create.CreateMode
 import fr.studio.voxel.organ.ui.dashboard.Dashboard
 import fr.studio.voxel.organ.ui.parameter.Parameter
 import fr.studio.voxel.organ.ui.sidebar.SideBar
-
 
 enum class OrganScreen {
     SignIn,
@@ -42,23 +36,18 @@ enum class OrganScreen {
 @Composable
 fun OrganApp(
     navController: NavHostController = rememberNavController()
-){
-    val context = LocalContext.current
-    val mainVM: MainViewModel = viewModel(
-        viewModelStoreOwner = context as MainActivity
-    )
-
+) {
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         NavHost(
             navController = navController,
             modifier = Modifier.padding(innerPadding),
-            startDestination = OrganScreen.CreateProject.name
+            startDestination = OrganScreen.SignIn.name
         ) {
             composable(
                 route = OrganScreen.SignIn.name
-            ){
+            ) {
                 AuthScreen(
                     mode = AuthMode.SIGN_IN,
                     navController = navController,
@@ -66,24 +55,21 @@ fun OrganApp(
                         if (targetMode == AuthMode.SIGN_UP) {
                             navController.navigate(OrganScreen.SignUp.name)
                         }
-                    },
-                    mainVM = mainVM
+                    }
                 )
             }
 
             composable(
                 route = OrganScreen.SignUp.name
-            ){
+            ) {
                 AuthScreen(
                     mode = AuthMode.SIGN_UP,
                     navController = navController,
                     onModeSwitch = { targetMode ->
                         if (targetMode == AuthMode.SIGN_IN) {
-                            // On revient en arrière ou on force la route de connexion
                             navController.popBackStack()
                         }
-                    },
-                    mainVM = mainVM
+                    }
                 )
             }
 
@@ -91,26 +77,23 @@ fun OrganApp(
                 route = OrganScreen.Sidebar.name,
                 enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
                 exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) }
-            ){
+            ) {
                 SideBar(
                     navController = navController,
-                    mainVM = mainVM,
                     onModifButtonClicked = {
                         navController.navigate(OrganScreen.Parameter.name)
                     }
                 )
-
             }
 
-            composable(route = OrganScreen.Dashboard.name){
-                Dashboard(navController = navController, mainVM = mainVM)
+            composable(route = OrganScreen.Dashboard.name) {
+                Dashboard(navController = navController)
             }
 
-            composable (route = OrganScreen.Parameter.name){
+            composable(route = OrganScreen.Parameter.name) {
                 Parameter(
-                    onDeleteButtonClicked = {
-                        ApiClient.getTokenStorage().clear()
-                        mainVM.clearData()
+                    navController = navController,
+                    onLoggedOut = {
                         navController.navigate(OrganScreen.SignIn.name) {
                             popUpTo(0)
                         }
@@ -118,14 +101,13 @@ fun OrganApp(
                 )
             }
 
-            composable (route = OrganScreen.CreateProject.name){
-                Create(mode = CreateMode.PROJECT, mainVM = mainVM)
+            composable(route = OrganScreen.CreateProject.name) {
+                Create(mode = CreateMode.PROJECT)
             }
 
-            composable (route = OrganScreen.CreateOrgan.name){
-                Create(mode = CreateMode.ORGAN, mainVM = mainVM)
+            composable(route = OrganScreen.CreateOrgan.name) {
+                Create(mode = CreateMode.ORGAN)
             }
         }
-
     }
 }

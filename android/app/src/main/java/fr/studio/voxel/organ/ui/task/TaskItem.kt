@@ -2,6 +2,8 @@ package fr.studio.voxel.organ.ui.task
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,8 +30,9 @@ fun TaskItem(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .border(2.dp, AppColorScheme.onSurface)
+            .clip(RoundedCornerShape(12.dp))
             .background(AppColorScheme.surface)
+            .border(1.dp, AppColorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
             .padding(12.dp)
     ) {
 

@@ -3,6 +3,8 @@ package fr.studio.voxel.organ.ui.task
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,9 +36,10 @@ fun TaskColumn(
 ) {
     Column(
         modifier = modifier
-            .border(2.dp, MaterialColorScheme.onSurface)
-            .background(Color.Transparent)
-            .padding(horizontal = 16.dp, vertical = 32.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialColorScheme.onSurface.copy(alpha = 0.03f))
+            .border(1.dp, MaterialColorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -66,7 +69,9 @@ fun TaskColumn(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(2.dp, MaterialColorScheme.onSurface.copy(alpha = 0.4f))
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialColorScheme.onSurface.copy(alpha = 0.02f))
+                .border(1.dp, MaterialColorScheme.onSurface.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
                 .clickable {
                     // TODO: action ajouter tâche
                 }

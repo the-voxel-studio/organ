@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,8 +35,9 @@ fun SecondaryButton(
     text: String,
     onClick: () -> Unit,
     isSelected : Boolean = false,
-    iconRes: Int? = null
-
+    iconRes: Int? = null,
+    icon: @Composable (() -> Unit)? = null,
+    projectColor: Color? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -46,8 +48,8 @@ fun SecondaryButton(
     )
 
     val backgroundColor = when {
-        isSelected -> MaterialTheme.colorScheme.primary
-        isPressed -> MaterialTheme.colorScheme.primary
+        isSelected -> projectColor ?: MaterialTheme.colorScheme.primary
+        isPressed -> projectColor ?: MaterialTheme.colorScheme.primary
         else -> Color.White
     }
 
@@ -68,7 +70,14 @@ fun SecondaryButton(
             .fillMaxWidth()
             .height(80.dp),
         shape = RoundedCornerShape(12.dp),
-        border = BorderStroke(1.dp, Color.Gray),
+        border = BorderStroke(
+            1.dp,
+            when {
+                projectColor == null -> MaterialTheme.colorScheme.primary
+                isSelected -> projectColor
+                else -> MaterialTheme.colorScheme.primary
+            }
+        ),
         colors = ButtonDefaults.buttonColors(
             containerColor = backgroundColor,
             contentColor = contentColor
@@ -81,12 +90,25 @@ fun SecondaryButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-            if (iconRes != null) {
-                Icon(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = "logo_dashboard",
-                    modifier = Modifier.size(20.dp)
-                )
+            if (icon != null) {
+                Box(
+                    modifier = Modifier.size(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    icon()
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+            } else if (iconRes != null) {
+                Box(
+                    modifier = Modifier.size(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = "logo_dashboard",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.width(12.dp))
             }
 
@@ -101,7 +123,7 @@ fun SecondaryButton(
                 painter = painterResource(id = R.drawable.flechedroite_logo),
                 contentDescription = "Fleche poitant vers la droite",
                 modifier = Modifier.size(20.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = if (isSelected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.primary
             )
         }
     }

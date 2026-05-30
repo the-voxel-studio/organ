@@ -84,7 +84,7 @@ DEFAULT_URI=http://localhost
 ###> INFRASTRUCTURE ###
 TRUSTED_PROXIES=127.0.0.1,REMOTE_ADDR
 TRUSTED_HEADERS=x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port
-CORS_ALLOW_ORIGIN='^https?://localhost:(8000|8001)$'
+CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1):(8000|8001|4200)$'
 ###< INFRASTRUCTURE ###
 
 ###> DATABASE & CACHE ###

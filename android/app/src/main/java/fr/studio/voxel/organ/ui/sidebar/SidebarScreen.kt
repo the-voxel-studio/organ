@@ -29,8 +29,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavHostController
 import fr.studio.voxel.organ.R
-import fr.studio.voxel.organ.viewmodel.MainViewModel
-import fr.studio.voxel.organ.viewmodel.sharedMainViewModel
 import fr.studio.voxel.organ.domain.model.SidebarViewModel
 import fr.studio.voxel.organ.ui.OrganScreen
 import fr.studio.voxel.organ.ui.footer.Footer
@@ -40,7 +38,6 @@ import fr.studio.voxel.organ.ui.components.IconButtonPressable
 @Composable
 fun SideBar(
     navController: NavHostController,
-    mainVM: MainViewModel = sharedMainViewModel(),
     sidebarVM: SidebarViewModel = viewModel(),
     onModifButtonClicked : () -> Unit = {}
 ){
@@ -113,7 +110,7 @@ fun SideBar(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val projects = mainVM.projects ?: emptyList()
+            val projects = sidebarVM.projects ?: emptyList()
 
             if (projects.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(24.dp))
@@ -163,8 +160,8 @@ fun SideBar(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            val userName = mainVM.currentUser?.firstName ?: "Prénom"
-            val userLastName = mainVM.currentUser?.lastName ?: "Nom"
+            val userName = sidebarVM.currentUser?.firstName ?: "Prénom"
+            val userLastName = sidebarVM.currentUser?.lastName ?: "Nom"
 
             Footer(utilisateur = "$userName $userLastName", onModifButtonClicked = onModifButtonClicked)
         }

@@ -24,8 +24,7 @@ import androidx.navigation.NavController
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ui.OrganScreen
 import fr.studio.voxel.organ.viewmodel.AuthViewModel
-import fr.studio.voxel.organ.viewmodel.MainViewModel
-import fr.studio.voxel.organ.viewmodel.sharedMainViewModel
+// MainViewModel removed
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.ui.components.PrimaryButton
 
@@ -38,16 +37,20 @@ fun AuthScreen(
     mode : AuthMode,
     navController: NavController,
     onModeSwitch : (AuthMode) -> Unit,
-    viewModel: AuthViewModel = viewModel(),
-    mainVM : MainViewModel = sharedMainViewModel()
+    viewModel: AuthViewModel = viewModel()
 ){
+    val context = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(viewModel.navigateToDashboard) {
-        if(viewModel.navigateToDashboard){
-            mainVM.loadDashboard()
-            navController.navigate(OrganScreen.Dashboard.name){
-                popUpTo(OrganScreen.SignIn.name){inclusive = true}
-            }
+        if (viewModel.navigateToDashboard) {
             viewModel.onNavigated()
+        }
+    }
+
+    LaunchedEffect(viewModel.currentUser) {
+        if (viewModel.currentUser != null) {
+            navController.navigate(OrganScreen.Dashboard.name) {
+                popUpTo(OrganScreen.SignIn.name) { inclusive = true }
+            }
         }
     }
 
@@ -62,12 +65,22 @@ fun AuthScreen(
     val showPasswordError = mode == AuthMode.SIGN_UP && viewModel.password.isNotEmpty() && !viewModel.isPasswordValid
     val showConfirmError = mode == AuthMode.SIGN_UP && viewModel.confirmPassword.isNotEmpty() && !viewModel.passwordsMatch
 
-    Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        color = MaterialTheme.colorScheme.background
-    ) {
+    val isAutoLoggingIn = viewModel.isCheckingSession
+
+    if (isAutoLoggingIn) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+    } else {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            color = MaterialTheme.colorScheme.background
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -114,18 +127,14 @@ fun AuthScreen(
                         onValueChange = { viewModel.updateName(it) },
                         placeholder = { Text("Jean") },
                         singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 64.dp)
-                            .border(
-                                3.dp,
-                                MaterialTheme.colorScheme.outline,
-                                RoundedCornerShape(8.dp)
-                            ),
+                            .heightIn(min = 56.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                            errorBorderColor = MaterialTheme.colorScheme.error
                         )
                     )
 
@@ -142,18 +151,14 @@ fun AuthScreen(
                         onValueChange = { viewModel.updateSurname(it) },
                         placeholder = { Text("Dupont") },
                         singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 64.dp)
-                            .border(
-                                3.dp,
-                                MaterialTheme.colorScheme.outline,
-                                RoundedCornerShape(8.dp)
-                            ),
+                            .heightIn(min = 56.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                            errorBorderColor = MaterialTheme.colorScheme.error
                         )
                     )
 
@@ -172,18 +177,14 @@ fun AuthScreen(
                     placeholder = { Text("nom@exemple.com") },
                     singleLine = true,
                     isError = hasError,
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 64.dp)
-                        .border(
-                            3.dp,
-                            if (hasError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
-                            RoundedCornerShape(8.dp)
-                        ),
+                        .heightIn(min = 56.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                        errorBorderColor = MaterialTheme.colorScheme.error
                     )
                 )
 
@@ -203,18 +204,14 @@ fun AuthScreen(
                         isError = showPasswordError || hasError,
                         placeholder = { Text("•••••••••") },
                         singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 64.dp)
-                            .border(
-                                3.dp,
-                                if (showPasswordError || hasError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
-                                RoundedCornerShape(8.dp)
-                            ),
+                            .heightIn(min = 56.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.Transparent,
-                            unfocusedBorderColor = Color.Transparent
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                            errorBorderColor = MaterialTheme.colorScheme.error
                         )
                     )
                     if (showPasswordError) {
@@ -243,18 +240,14 @@ fun AuthScreen(
                             isError = showConfirmError,
                             placeholder = { Text("•••••••••") },
                             singleLine = true,
-                            shape = RoundedCornerShape(8.dp),
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .heightIn(min = 64.dp)
-                                .border(
-                                    3.dp,
-                                    if (showConfirmError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
-                                    RoundedCornerShape(8.dp)
-                                ),
+                               .heightIn(min = 56.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.Transparent,
-                                unfocusedBorderColor = Color.Transparent
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                errorBorderColor = MaterialTheme.colorScheme.error
                             )
                         )
                         if (showConfirmError) {
@@ -355,7 +348,7 @@ fun AuthScreen(
 
             PrimaryButton(
                 text = "Se connecter avec Google",
-                onClick = {/*TODO*/},
+                onClick = { viewModel.loginWithGoogle(context) },
                 color = MaterialTheme.colorScheme.background,
                 pressedColor = MaterialTheme.colorScheme.surface,
                 colorText = MaterialTheme.colorScheme.onSurface,
@@ -378,5 +371,6 @@ fun AuthScreen(
             )
         }
     }
+}
 }
 

@@ -30,18 +30,22 @@ import androidx.navigation.NavHostController
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ui.OrganScreen
-import fr.studio.voxel.organ.viewmodel.MainViewModel
-import fr.studio.voxel.organ.viewmodel.sharedMainViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import fr.studio.voxel.organ.viewmodel.DashboardViewModel
 import fr.studio.voxel.organ.ui.components.AddButton
+import fr.studio.voxel.organ.ui.components.LoadingOverlay
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 
 @Composable
 fun Dashboard(
     navController: NavHostController,
-    mainVM : MainViewModel = sharedMainViewModel()
+    dashboardVM : DashboardViewModel = viewModel()
 ){
-
-    Box(modifier = Modifier.fillMaxSize()) {
+    LoadingOverlay(
+        isLoading = dashboardVM.isLoading,
+        text = "Chargement de votre espace de travail..."
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxHeight()
@@ -129,7 +133,7 @@ fun Dashboard(
             }
 
             item {
-                PriorityTask(mainVM = mainVM)
+                PriorityTask(dashboardVM = dashboardVM)
             }
 
             item {
@@ -181,21 +185,15 @@ fun Dashboard(
 
                 }
                 when{
-                    mainVM.isLoading && mainVM.projects.isNullOrEmpty() -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.padding(vertical = 32.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    mainVM.error != null -> {
+                    dashboardVM.error != null -> {
                         Text(
-                            text = mainVM.error ?: "Erreur inconnue",
+                            text = dashboardVM.error ?: "Erreur inconnue",
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(vertical = 16.dp)
                         )
                     }
                     else -> {
-                        ProjectSticker(projectsList = mainVM.projects ?: emptyList())
+                        ProjectSticker(projectsList = dashboardVM.projects ?: emptyList())
                     }
                 }
             }
@@ -209,4 +207,5 @@ fun Dashboard(
                 .padding(24.dp)
         ){/*Ajouter un projet*/ }
     }
+}
 }

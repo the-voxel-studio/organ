@@ -50,7 +50,7 @@ fun ProjectIconBadge(
             .size(badgeSize)
             .clip(RoundedCornerShape(16.dp))
             .background(if (visual!=null) MaterialTheme.colorScheme.background else projectColor)
-            .border(1.dp, MaterialTheme.colorScheme.onSurface,RoundedCornerShape(16.dp)),
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
         when (visual) {

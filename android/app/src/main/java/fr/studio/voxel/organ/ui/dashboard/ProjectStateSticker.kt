@@ -25,7 +25,7 @@ fun ProjectStateSticker(
         modifier = modifier
             .clip(RoundedCornerShape(8.dp))
             .background(color.copy(0.1f))
-            .border(1.dp, color,RoundedCornerShape(8.dp))
+            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
             .padding(8.dp),
     ) {
         if (state != null) {

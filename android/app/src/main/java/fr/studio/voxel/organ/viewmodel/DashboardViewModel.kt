@@ -5,16 +5,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import fr.studio.voxel.organ.network.ApiClient
+import fr.studio.voxel.organ.data.ProjectRepository
 import fr.studio.voxel.organ.network.services.Project
-import fr.studio.voxel.organ.network.services.ProjectApiService
+import fr.studio.voxel.organ.network.services.Task
 import kotlinx.coroutines.launch
 
 class DashboardViewModel : ViewModel() {
-    private val projectService = ApiClient.createService(ProjectApiService::class.java)
 
-    var projects by mutableStateOf<List<Project>?>(null)
-        private set
+    val projects: List<Project>?
+        get() = ProjectRepository.projects
+
+    val priorityTask: List<Task>
+        get() = ProjectRepository.priorityTasks
 
     var isLoading by mutableStateOf(false)
         private set
@@ -22,26 +24,23 @@ class DashboardViewModel : ViewModel() {
     var error by mutableStateOf<String?>(null)
         private set
 
-    init{
-        fetchProjects()
+    init {
+        loadDashboard()
     }
 
-    fun fetchProjects(){
+    fun loadDashboard() {
         viewModelScope.launch {
             isLoading = true
             error = null
-            try{
-                val response = projectService.getProjects()
-                if (response.isSuccessful){
-                    projects = response.body()
-                }else{
-                    error = "Erreur lors de la récupération : ${response.code()}"
-                }
-            }catch (e: Exception){
-                error = "Problème réseau : ${e.localizedMessage}"
-            }finally {
-                isLoading = false
+            val result = ProjectRepository.fetchDashboard()
+            result.onFailure { e ->
+                error = "Problème de chargement : ${e.localizedMessage}"
             }
+            isLoading = false
         }
+    }
+
+    fun refresh() {
+        loadDashboard()
     }
 }

@@ -5,8 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import fr.studio.voxel.organ.viewmodel.MainViewModel
-import fr.studio.voxel.organ.viewmodel.sharedMainViewModel
+// MainViewModel removed
 import fr.studio.voxel.organ.viewmodel.CreateViewModel
 
 enum class CreateMode{
@@ -23,7 +22,6 @@ enum class IconType(val title: String) {
 @Composable
 fun Create(
     mode : CreateMode,
-    mainVM : MainViewModel = sharedMainViewModel(),
     createVM : CreateViewModel = viewModel()
 ){
     LaunchedEffect(mode) {createVM.initMode(mode) }

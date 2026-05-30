@@ -24,18 +24,19 @@ fun AddButton(
 ){
     Button(
         onClick = onClick,
-        modifier = modifier
-            .border(1.5.dp, MaterialTheme.colorScheme.onPrimary,RoundedCornerShape(8.dp)),
-        shape = RoundedCornerShape(8.dp),
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.elevatedButtonColors(
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
+            contentColor = androidx.compose.ui.graphics.Color.White
         ),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
     ) {
         Icon(
             painter = painterResource(R.drawable.add_logo),
             contentDescription = "Ajouter un nouveau projet",
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier.size(32.dp),
+            tint = androidx.compose.ui.graphics.Color.White
         )
     }
 }

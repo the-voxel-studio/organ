@@ -99,5 +99,7 @@ data class Task(
     val validedAt: String?,
     val deletedAt: String?,
     val projectName: String? = null,
-    val organName: String? = null
+    val organName: String? = null,
+    val projectUuid: String? = null,
+    val organUuid: String? = null
 )
