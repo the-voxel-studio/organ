@@ -80,6 +80,7 @@ data class ProjectRoleResponse(
 )
 
 data class ProjectMemberUser(
+    val uuid: String,
     val email: String,
     val firstName: String,
     val lastName: String

@@ -67,18 +67,32 @@ class NotificationController extends AbstractController
 
         $topic = sprintf('%s/users/%s/notifications', rtrim($this->baseUrl, '/'), $user->getUuid());
         
-        // Generate the JWT for Mercure subscription
-        // We pass the current request and the topic we want to subscribe to.
-        // If createCookie still fails because of localhost, we'll try another way.
-        $cookie = $authorization->createCookie($request, [$topic]);
+        try {
+            $cookie = $authorization->createCookie($request, [$topic]);
+            $token = $cookie->getValue();
+            $setCookie = true;
+        } catch (\Throwable $e) {
+            $tokenFactory = $this->hub->getFactory();
+            if (null === $tokenFactory) {
+                return $this->json(['message' => 'The hub does not contain a token factory.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+            $cookieLifetime = (int) \ini_get('session.cookie_lifetime');
+            $additionalClaims = [
+                'exp' => new \DateTimeImmutable(0 === $cookieLifetime ? '+1 hour' : "+{$cookieLifetime} seconds")
+            ];
+            $token = $tokenFactory->create([$topic], [], $additionalClaims);
+            $setCookie = false;
+        }
 
         $response = $this->json([
             'hubUrl' => $this->hub->getPublicUrl(),
             'topic' => $topic,
-            'token' => $cookie->getValue()
+            'token' => $token
         ]);
 
-        $response->headers->setCookie($cookie);
+        if ($setCookie && isset($cookie)) {
+            $response->headers->setCookie($cookie);
+        }
 
         return $response;
     }

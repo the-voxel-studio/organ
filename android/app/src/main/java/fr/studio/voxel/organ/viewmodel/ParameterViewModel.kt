@@ -187,5 +187,6 @@ class ParameterViewModel : ViewModel() {
     fun logout() {
         UserRepository.clear()
         ProjectRepository.clear()
+        fr.studio.voxel.organ.data.NotificationRepository.clear()
     }
 }

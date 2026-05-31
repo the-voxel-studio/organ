@@ -1,30 +1,33 @@
 package fr.studio.voxel.organ.ui
 
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.rememberNavController
-import androidx.compose.foundation.layout.padding
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import androidx.navigation.NavType
-import androidx.compose.animation.slideOutHorizontally
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import fr.studio.voxel.organ.data.NotificationRepository
+import fr.studio.voxel.organ.data.UserRepository
 import fr.studio.voxel.organ.ui.authentication.AuthMode
 import fr.studio.voxel.organ.ui.authentication.AuthScreen
 import fr.studio.voxel.organ.ui.dashboard.Dashboard
-import fr.studio.voxel.organ.ui.parameter.Parameter
-import fr.studio.voxel.organ.ui.sidebar.SideBar
-import fr.studio.voxel.organ.ui.project.ProjectFormScreen
-import fr.studio.voxel.organ.ui.project.ProjectDetailsScreen
+import fr.studio.voxel.organ.ui.notification.NotificationScreen
 import fr.studio.voxel.organ.ui.organ.OrganFormScreen
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
+import fr.studio.voxel.organ.ui.parameter.Parameter
+import fr.studio.voxel.organ.ui.project.ProjectDetailsScreen
+import fr.studio.voxel.organ.ui.project.ProjectFormScreen
+import fr.studio.voxel.organ.ui.sidebar.SideBar
 import fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel
 
 enum class OrganScreen {
@@ -47,6 +50,16 @@ enum class OrganScreen {
 fun OrganApp(
     navController: NavHostController = rememberNavController()
 ) {
+    val currentUser = UserRepository.currentUser
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            NotificationRepository.loadNotifications()
+            NotificationRepository.setupMercure()
+        } else {
+            NotificationRepository.clear()
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -109,6 +122,10 @@ fun OrganApp(
                         }
                     }
                 )
+            }
+
+            composable(route = OrganScreen.Notification.name) {
+                NotificationScreen(navController = navController)
             }
 
             composable(

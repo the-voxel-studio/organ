@@ -25,7 +25,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.NavHostController
@@ -99,15 +102,39 @@ fun SideBar(
                     tint = if (isPressedPoubelle) Color.Red else MaterialTheme.colorScheme.onSurface
                 )
 
-                IconButtonPressable(
-                    icon = R.drawable.notification_logo,
-                    contentDescription = "notification",
-                    modifier = Modifier
-                        .size(32.dp),
-                    onClick = { /* TODO */ },
-                    interactionSource = interactionNotif,
-                    tint = if (isPressedNotif) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                )
+                Box(contentAlignment = Alignment.TopEnd) {
+                    IconButtonPressable(
+                        icon = R.drawable.notification_logo,
+                        contentDescription = "notification",
+                        modifier = Modifier.size(32.dp),
+                        onClick = { navController.navigate(OrganScreen.Notification.name) },
+                        interactionSource = interactionNotif,
+                        tint = if (isPressedNotif) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    )
+
+                    val unreadCount = sidebarVM.unreadNotificationsCount
+                    if (unreadCount > 0) {
+                        Surface(
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            color = Color(0xFFF27B9B), // bubblegum/pink color to match Angular's bg-bubblegum
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
+                            modifier = Modifier
+                                .offset(x = 2.dp, y = (-2).dp)
+                                .size(16.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = unreadCount.toString(),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 8.sp,
+                                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))

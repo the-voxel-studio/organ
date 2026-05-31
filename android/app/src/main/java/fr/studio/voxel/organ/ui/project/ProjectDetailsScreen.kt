@@ -40,6 +40,8 @@ import fr.studio.voxel.organ.ui.components.PrimaryButton
 import fr.studio.voxel.organ.ui.components.ColorSelector
 import fr.studio.voxel.organ.ui.components.LoadingOverlay
 import fr.studio.voxel.organ.ui.header.Header
+import fr.studio.voxel.organ.ui.dashboard.ProjectIconBadge
+import fr.studio.voxel.organ.ui.dashboard.ProjectVisual
 import fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -129,7 +131,7 @@ fun ProjectDetailsScreen(
                                 canManage = canManage,
                                 showTagsPanel = viewModel.showTagsPanel,
                                 onToggleTagsClick = { viewModel.toggleTagsPanel() },
-                                onOrganClick = { organUuid -> showNotImplementedFeature = "Tâches de l'organe" },
+                                onOrganClick = { organUuid -> showNotImplementedFeature = "Tâches de l'Organ" },
                                 tagsPanel = {
                                     ProjectTagsPanel(
                                         projectUuid = projectUuid,
@@ -182,7 +184,7 @@ fun ProjectDetailsScreen(
                         ) {
                             Icon(
                                 painter = painterResource(R.drawable.add_logo),
-                                contentDescription = "Ajouter un nouvel organe",
+                                contentDescription = "Ajouter un nouvel Organ",
                                 modifier = Modifier.size(32.dp),
                                 tint = Color.White
                             )
@@ -227,43 +229,21 @@ fun ProjectDetailIconBadge(
     modifier: Modifier = Modifier,
     size: Dp = 56.dp
 ) {
-    Box(
-        modifier = modifier
-            .size(size)
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (iconType != null && iconData != null) MaterialTheme.colorScheme.surface else projectColor)
-            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(16.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        if (iconType != null && iconData != null) {
-            when (iconType) {
-                "EMOJI" -> {
-                    Text(
-                        text = iconData,
-                        fontSize = (size.value * 0.55).sp
-                    )
-                }
-                "SVG" -> {
-                    AsyncImage(
-                        model = iconData.toByteArray(),
-                        contentDescription = "SVG Icon",
-                        modifier = Modifier.size(size * 0.6f)
-                    )
-                }
-                "IMAGE", "BLOB" -> {
-                    AsyncImage(
-                        model = iconData,
-                        contentDescription = "Image Icon",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                }
-                else -> {
-                    // Empty colored square fallback
-                }
-            }
+    val visual = remember(iconType, iconData) {
+        when (iconType) {
+            "EMOJI" -> iconData?.let { ProjectVisual.Emoji(it) }
+            "SVG" -> iconData?.let { ProjectVisual.SvgXml(it) }
+            "IMAGE", "BLOB" -> iconData?.let { ProjectVisual.Image(it) }
+            else -> null
         }
     }
+    ProjectIconBadge(
+        visual = visual,
+        projectColor = projectColor,
+        modifier = modifier,
+        badgeSize = size,
+        iconSize = size * 0.6f
+    )
 }
 
 @Composable
@@ -473,7 +453,7 @@ fun OrgansSection(
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "Organes du projet",
+                    text = "Organs du projet",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -521,7 +501,7 @@ fun OrgansSection(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Aucun organe n'a encore été créé pour ce projet.",
+                    text = "Aucun Organ n'a encore été créé pour ce projet.",
                     style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)),
                     textAlign = TextAlign.Center
                 )

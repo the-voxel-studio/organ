@@ -11,6 +11,8 @@ import fr.studio.voxel.organ.network.services.Project
 import fr.studio.voxel.organ.network.services.User
 import kotlinx.coroutines.launch
 
+import fr.studio.voxel.organ.data.NotificationRepository
+
 class SidebarViewModel : ViewModel() {
 
     val projects: List<Project>?
@@ -18,6 +20,10 @@ class SidebarViewModel : ViewModel() {
 
     val currentUser: User?
         get() = UserRepository.currentUser
+
+    val unreadNotificationsCount: Int
+        get() = NotificationRepository.unreadNotificationsCount
+
 
     var isLoading by mutableStateOf(false)
         private set

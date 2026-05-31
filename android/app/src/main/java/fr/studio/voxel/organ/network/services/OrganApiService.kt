@@ -37,13 +37,7 @@ interface OrganApiService {
     suspend fun getOrganPermissions(
         @Path("projectUuid") projectUuid: String,
         @Path("organUuid") organUuid: String
-    ): Response<List<String>>
-
-    @GET("/api/projects/{projectUuid}/organs/{organUuid}/members")
-    suspend fun getOrganMembers(
-        @Path("projectUuid") projectUuid: String,
-        @Path("organUuid") organUuid: String
-    ): Response<List<Any>>
+    ): Response<OrganPermissionsResponse>
 
     @DELETE("/api/projects/{projectUuid}/organs/{organUuid}")
     suspend fun deleteOrgan(
@@ -56,7 +50,29 @@ interface OrganApiService {
     suspend fun getOrganRoles(
         @Path("projectUuid") projectUuid: String,
         @Path("organUuid") organUuid: String
-    ): Response<List<Any>>
+    ): Response<List<OrganRoleResponse>>
+
+    @POST("/api/projects/{projectUuid}/organs/{organUuid}/roles")
+    suspend fun createOrganRole(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String,
+        @Body role: CreateRoleRequest
+    ): Response<OrganRoleResponse>
+
+    @PUT("/api/projects/{projectUuid}/organs/{organUuid}/roles/{roleUuid}")
+    suspend fun updateOrganRole(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String,
+        @Path("roleUuid") roleUuid: String,
+        @Body role: CreateRoleRequest
+    ): Response<OrganRoleResponse>
+
+    @DELETE("/api/projects/{projectUuid}/organs/{organUuid}/roles/{roleUuid}")
+    suspend fun deleteOrganRole(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String,
+        @Path("roleUuid") roleUuid: String
+    ): Response<Unit>
 
     @POST("/api/projects/{projectUuid}/organs/{organUuid}/roles/{roleUuid}/assign")
     suspend fun assignRole(
@@ -65,10 +81,52 @@ interface OrganApiService {
         @Path("roleUuid") roleUuid: String,
         @Body request: AssignRoleRequest
     ): Response<Any>
+
+    @DELETE("/api/projects/{projectUuid}/organs/{organUuid}/roles/{roleUuid}/unassign/{userUuid}")
+    suspend fun unassignRole(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String,
+        @Path("roleUuid") roleUuid: String,
+        @Path("userUuid") userUuid: String
+    ): Response<Unit>
+
+    @GET("/api/permissions/available")
+    suspend fun getAvailablePermissions(): Response<List<AvailablePermission>>
 }
 
 data class AssignRoleRequest(
     val userUuid: String
+)
+
+data class OrganPermissionsResponse(
+    val permissions: List<String>
+)
+
+data class AvailablePermission(
+    val name: String
+)
+
+data class OrganRoleResponse(
+    val uuid: String,
+    val name: String,
+    val iconType: String,
+    val iconData: String?,
+    val permissions: List<String>,
+    val members: List<OrganRoleMember>
+)
+
+data class OrganRoleMember(
+    val uuid: String,
+    val firstName: String,
+    val lastName: String,
+    val email: String
+)
+
+data class CreateRoleRequest(
+    val name: String,
+    val iconType: String,
+    val iconData: String?,
+    val permissions: List<String>
 )
 
 data class Organ(

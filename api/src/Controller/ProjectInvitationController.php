@@ -91,7 +91,10 @@ class ProjectInvitationController extends AbstractController
         // Invalidate cache for this project/user
         $membershipService->invalidate($user->getUuid(), $invitation->getProject()->getUuid());
 
-        return $this->json(['message' => 'Joined project successfully']);
+        return $this->json([
+            'message' => 'Joined project successfully',
+            'projectUuid' => $invitation->getProject()->getUuid()
+        ]);
     }
 
     #[Route('/{uuid}/refuse', name: 'refuse', methods: ['POST'])]
