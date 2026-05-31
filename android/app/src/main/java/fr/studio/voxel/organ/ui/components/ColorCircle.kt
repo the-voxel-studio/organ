@@ -1,4 +1,4 @@
-package fr.studio.voxel.organ.ui.create
+package fr.studio.voxel.organ.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,7 +18,7 @@ fun ColorCircle(
     color : Color,
     isSelected : Boolean = false,
     onClick: () -> Unit = {}
-){
+) {
     Box(
         modifier = Modifier
             .size(40.dp)

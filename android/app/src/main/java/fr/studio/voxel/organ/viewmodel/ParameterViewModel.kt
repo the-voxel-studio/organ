@@ -152,7 +152,7 @@ class ParameterViewModel : ViewModel() {
                 val credentialManager = androidx.credentials.CredentialManager.create(context)
                 val googleIdOption = com.google.android.libraries.identity.googleid.GetGoogleIdOption.Builder()
                     .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId("apps.googleusercontent.com")
+                    .setServerClientId("apps.googleusercontent.com") // Placeholder pour un google Id
                     .setAutoSelectEnabled(false)
                     .build()
 

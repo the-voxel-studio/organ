@@ -65,7 +65,7 @@ class AuthViewModel : ViewModel() {
         get() = password == confirmPassword && confirmPassword.isNotEmpty()
 
     val isPasswordValid: Boolean
-        get() = password.length >= 9
+        get() = password.length >= 8
 
     //Autres actions
     fun handleAuth(mode: AuthMode){
@@ -130,7 +130,13 @@ class AuthViewModel : ViewModel() {
                     RegisterRequest(email = mail , firstName =  name, lastName = surname, password = password)
                 )
                 if(response.isSuccessful){
-                    registrationSuccess = true
+                    val loginResponse = authService.login(LoginRequest(mail, password))
+                    if(loginResponse.isSuccessful){
+                        UserRepository.fetchCurrentUser()
+                        navigateToDashboard = true
+                    } else {
+                        registrationSuccess = true
+                    }
                 }else{
                     authError = "Erreur lors de l'inscription."
                 }

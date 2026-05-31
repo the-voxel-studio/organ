@@ -29,12 +29,13 @@ import fr.studio.voxel.organ.network.services.Project
 @Composable
 fun ProjectSticker(
     modifier : Modifier = Modifier,
-    projectsList: List<Project>
+    projectsList: List<Project>,
+    onProjectClick: (String) -> Unit = {}
 ) {
     Column {
         projectsList.forEach { project ->
             val projectColor = try {
-                val colorStr = project.color.removePrefix("0x").removePrefix("#")
+                val colorStr = project.color?.removePrefix("0x")?.removePrefix("#") ?: ""
                 val parseStr = if (colorStr.length == 6) "FF$colorStr" else colorStr
                 Color(parseStr.toLong(16))
             } catch (e: Exception) {
@@ -49,7 +50,7 @@ fun ProjectSticker(
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surface)
                     .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
-                    .clickable(onClick = {/*TODO*/})
+                    .clickable(onClick = { onProjectClick(project.uuid) })
             ) {
                 // Colored left bar representing the side border effect in Angular
                 Box(
@@ -111,7 +112,7 @@ fun ProjectSticker(
                             color = MaterialTheme.colorScheme.outline
                         )
 
-                        val dateCreation = project.dateCreation.take(10)
+                        val dateCreation = project.dateCreation?.take(10) ?: ""
                         Text(
                             text = dateCreation,
                             style = MaterialTheme.typography.labelSmall,

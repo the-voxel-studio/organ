@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,7 +43,23 @@ fun SideBar(
     onModifButtonClicked : () -> Unit = {}
 ){
     // Récupère la route de la page juste avant la Sidebar
-    val previousRoute = navController.previousBackStackEntry?.destination?.route
+    val previousBackStackEntry = navController.previousBackStackEntry
+    val previousRoute = previousBackStackEntry?.destination?.route
+    val previousProjectUuid = remember(previousRoute, previousBackStackEntry) {
+        if (previousRoute?.startsWith(OrganScreen.Project.name) == true) {
+            previousBackStackEntry?.arguments?.getString("projectUuid")
+        } else {
+            null
+        }
+    }
+
+    LaunchedEffect(previousProjectUuid) {
+        if (previousProjectUuid != null) {
+            sidebarVM.selectProject(previousProjectUuid)
+        } else {
+            sidebarVM.clearSelection()
+        }
+    }
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route

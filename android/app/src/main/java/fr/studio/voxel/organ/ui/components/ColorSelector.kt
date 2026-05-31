@@ -1,4 +1,4 @@
-package fr.studio.voxel.organ.ui.create
+package fr.studio.voxel.organ.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,8 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -42,9 +40,9 @@ import fr.studio.voxel.organ.R
 fun ColorSelector(
     selectedColor : Color,
     onColorSelected: (Color) -> Unit = {},
-){
+) {
     val themePrimary = MaterialTheme.colorScheme.primary
-    val defaultColors = remember{
+    val defaultColors = remember {
         listOf(
             themePrimary,
             Color(0xFF4ADE80), // Vert
@@ -63,7 +61,7 @@ fun ColorSelector(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
-    ){
+    ) {
         defaultColors.forEach { color ->
             ColorCircle(
                 color = color,
@@ -75,10 +73,10 @@ fun ColorSelector(
         Box(
             modifier = Modifier
                 .size(42.dp)
-                .clickable {showColorPicker = true},
+                .clickable { showColorPicker = true },
             contentAlignment = Alignment.Center
-        ){
-            if (isCustomColor){
+        ) {
+            if (isCustomColor) {
                 Box(modifier = Modifier
                     .size(32.dp)
                     .background(selectedColor, CircleShape)
@@ -93,22 +91,22 @@ fun ColorSelector(
         }
 
     }
-    if(showColorPicker){
-        Dialog(onDismissRequest = {showColorPicker = false}){
+    if (showColorPicker) {
+        Dialog(onDismissRequest = { showColorPicker = false }) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(400.dp)
                     .padding(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ){
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
-                ){
+                ) {
                     Text(
                         text = "Aperçu de la couleur",
                         style = MaterialTheme.typography.labelSmall,
@@ -128,7 +126,7 @@ fun ColorSelector(
                             .weight(1f)
                             .fillMaxWidth(),
                         controller = controller,
-                        onColorChanged = {colorEnvelope ->
+                        onColorChanged = { colorEnvelope ->
                             val newColor = colorEnvelope.color
                             onColorSelected(newColor)
                         }
@@ -136,7 +134,7 @@ fun ColorSelector(
                     Button(
                         onClick = { showColorPicker = false },
                         modifier = Modifier.padding(top = 8.dp)
-                    ){
+                    ) {
                         Text("Valider")
                     }
                 }

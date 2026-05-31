@@ -86,7 +86,8 @@ data class Organ(
     val visual: ProjectVisual?
         get() = when (iconType) {
             "EMOJI" -> iconData?.let { ProjectVisual.Emoji(it) }
-            "SVG" -> iconData.let { ProjectVisual.SvgXml(it) }
+            "SVG" -> iconData?.let { ProjectVisual.SvgXml(it) }
+            "IMAGE", "BLOB" -> iconData?.let { ProjectVisual.Image(it) }
             else -> null
         }
 }

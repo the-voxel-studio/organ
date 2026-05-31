@@ -216,7 +216,7 @@ fun AuthScreen(
                     )
                     if (showPasswordError) {
                         Text(
-                            text = "Taille minimale de 9 caractères",
+                            text = "Taille minimale de 8 caractères",
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.labelLarge
                         )

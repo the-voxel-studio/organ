@@ -72,7 +72,7 @@ fun PrimaryButton(
             defaultElevation = 6.dp,
             pressedElevation = 2.dp
         ),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 24.dp)
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
     ) {
         if (icon != null) {
             Icon(

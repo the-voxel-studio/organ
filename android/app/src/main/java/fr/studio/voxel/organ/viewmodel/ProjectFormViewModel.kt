@@ -1,0 +1,390 @@
+package fr.studio.voxel.organ.viewmodel
+
+import android.net.Uri
+import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import fr.studio.voxel.organ.data.ProjectRepository
+import fr.studio.voxel.organ.data.UserRepository
+import fr.studio.voxel.organ.network.ApiClient
+import fr.studio.voxel.organ.network.services.InvitationRequest
+import fr.studio.voxel.organ.network.services.Project
+import fr.studio.voxel.organ.network.services.ProjectApiService
+import fr.studio.voxel.organ.network.services.UpdateRoleRequest
+import fr.studio.voxel.organ.ui.components.IconType
+import kotlinx.coroutines.launch
+
+data class ProjectFormInvite(
+    val uuid: String?,
+    val email: String,
+    val name: String,
+    var role: String, // ADMIN, MANAGER, MEMBER
+    val isCreator: Boolean,
+    val isExisting: Boolean,
+    val isPending: Boolean,
+    var roleChanged: Boolean = false
+)
+
+class ProjectFormViewModel : ViewModel() {
+
+    private val projectService = ApiClient.createService(ProjectApiService::class.java)
+
+    var projectUuid by mutableStateOf<String?>(null)
+        private set
+
+    var isEdit by mutableStateOf(false)
+        private set
+
+    var title by mutableStateOf("")
+    var description by mutableStateOf("")
+    var status by mutableStateOf("ACTIVE")
+    var selectedColor by mutableStateOf(Color(0xFFFF7DD4))
+    var selectedIconTab by mutableStateOf(IconType.EMOJI)
+    var selectedEmoji by mutableStateOf("🚀")
+    var selectedSvgCode by mutableStateOf("")
+    var selectedImageUri by mutableStateOf<Uri?>(null)
+        private set
+    var selectedImageUriString by mutableStateOf("")
+        private set
+
+    // Members management
+    var invites by mutableStateOf<List<ProjectFormInvite>>(emptyList())
+    val removedMemberUuids = mutableListOf<String>()
+
+    var isLoading by mutableStateOf(false)
+        private set
+
+    var accessDenied by mutableStateOf(false)
+        private set
+
+    var errorMessage by mutableStateOf<String?>(null)
+    var isSuccess by mutableStateOf(false)
+
+    fun initProject(uuid: String?) {
+        this.projectUuid = uuid
+        this.isEdit = uuid != null
+        this.isSuccess = false
+        this.errorMessage = null
+        this.accessDenied = false
+        this.invites = emptyList()
+        this.removedMemberUuids.clear()
+
+        if (uuid != null) {
+            loadProject(uuid)
+        } else {
+            // Default creation values
+            title = ""
+            description = ""
+            status = "ACTIVE"
+            selectedColor = Color(0xFFFF7DD4)
+            selectedIconTab = IconType.EMOJI
+            selectedEmoji = "🚀"
+            selectedSvgCode = ""
+            selectedImageUri = null
+            selectedImageUriString = ""
+
+            // Add the creator
+            val user = UserRepository.currentUser
+            if (user != null) {
+                invites = listOf(
+                    ProjectFormInvite(
+                        uuid = null,
+                        email = user.email,
+                        name = user.firstName ?: "Créateur",
+                        role = "ADMIN",
+                        isCreator = true,
+                        isExisting = false,
+                        isPending = false
+                    )
+                )
+            }
+        }
+    }
+
+    fun updateImageUri(uri: Uri?) {
+        selectedImageUri = uri
+        selectedImageUriString = uri?.toString() ?: ""
+    }
+
+    // Members list operations
+    fun addInvite(email: String) {
+        val trimmed = email.trim()
+        if (trimmed.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(trimmed).matches()) {
+            errorMessage = "Adresse e-mail invalide"
+            return
+        }
+        if (invites.any { it.email.equals(trimmed, ignoreCase = true) }) {
+            errorMessage = "Cette personne est déjà dans la liste"
+            return
+        }
+
+        errorMessage = null
+        invites = invites + ProjectFormInvite(
+            uuid = null,
+            email = trimmed,
+            name = "Invité",
+            role = "MEMBER",
+            isCreator = false,
+            isExisting = false,
+            isPending = true
+        )
+    }
+
+    fun updateRole(index: Int, newRole: String) {
+        val list = invites.toMutableList()
+        val item = list[index]
+        if (item.isCreator) return
+
+        list[index] = item.copy(
+            role = newRole,
+            roleChanged = true
+        )
+        invites = list
+    }
+
+    fun removeInvite(index: Int) {
+        val list = invites.toMutableList()
+        val item = list[index]
+        if (item.isCreator) return
+
+        if (item.isExisting && item.uuid != null) {
+            removedMemberUuids.add(item.uuid)
+        }
+        list.removeAt(index)
+        invites = list
+    }
+
+    private fun loadProject(uuid: String) {
+        viewModelScope.launch {
+            isLoading = true
+            try {
+                // First check permission
+                val permRes = projectService.getProjectPermissions(uuid)
+                if (permRes.isSuccessful) {
+                    val role = permRes.body()?.role
+                    if (role != "ADMIN") {
+                        accessDenied = true
+                        isLoading = false
+                        return@launch
+                    }
+                } else {
+                    errorMessage = "Erreur lors de la vérification des permissions: ${permRes.code()}"
+                    isLoading = false
+                    return@launch
+                }
+
+                // Load project data
+                val response = projectService.getProject(uuid)
+                if (response.isSuccessful) {
+                    val project = response.body()
+                    if (project != null) {
+                        title = project.title
+                        description = project.description ?: ""
+                        status = project.state ?: "ACTIVE"
+                        selectedColor = parseHexColor(project.color ?: "#FF7EB6")
+                        
+                        val type = when (project.iconType) {
+                            "EMOJI" -> IconType.EMOJI
+                            "SVG" -> IconType.SVG
+                            "IMAGE" -> IconType.IMAGE
+                            else -> IconType.EMOJI
+                        }
+                        selectedIconTab = type
+                        when (type) {
+                            IconType.EMOJI -> selectedEmoji = project.iconData ?: "🚀"
+                            IconType.SVG -> selectedSvgCode = project.iconData ?: ""
+                            IconType.IMAGE -> {
+                                selectedImageUriString = project.iconData ?: ""
+                                selectedImageUri = if (selectedImageUriString.isNotBlank()) Uri.parse(selectedImageUriString) else null
+                            }
+                            else -> {}
+                        }
+                    }
+                } else {
+                    errorMessage = "Impossible de charger le projet: ${response.code()}"
+                    isLoading = false
+                    return@launch
+                }
+
+                // Load project members
+                val membersRes = projectService.getProjectMembers(uuid)
+                val mappedMembers = mutableListOf<ProjectFormInvite>()
+                val currentUserEmail = UserRepository.currentUser?.email ?: ""
+                
+                if (membersRes.isSuccessful) {
+                    membersRes.body()?.forEach { member ->
+                        val isCreator = member.user.email == currentUserEmail || member.role == "ADMIN"
+                        mappedMembers.add(
+                            ProjectFormInvite(
+                                uuid = member.uuid,
+                                email = member.user.email,
+                                name = member.user.firstName,
+                                role = member.role,
+                                isCreator = isCreator,
+                                isExisting = true,
+                                isPending = false
+                            )
+                        )
+                    }
+                }
+
+                // Load project invitations
+                val invitesRes = projectService.getProjectInvitations(uuid)
+                if (invitesRes.isSuccessful) {
+                    invitesRes.body()?.forEach { invite ->
+                        mappedMembers.add(
+                            ProjectFormInvite(
+                                uuid = invite.uuid,
+                                email = invite.email,
+                                name = "Invité",
+                                role = invite.role,
+                                isCreator = false,
+                                isExisting = true,
+                                isPending = true
+                            )
+                        )
+                    }
+                }
+
+                // Sort creator first
+                mappedMembers.sortWith(compareByDescending { it.isCreator })
+                invites = mappedMembers
+
+            } catch (e: Exception) {
+                errorMessage = "Erreur réseau: ${e.localizedMessage}"
+                Log.e("PROJECT_VM", "loadProject error", e)
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun submit() {
+        if (title.isBlank()) {
+            errorMessage = "Le titre est obligatoire."
+            return
+        }
+
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                val hexColor = String.format("#%06X", 0xFFFFFF and selectedColor.toArgb())
+                val iconTypeStr = selectedIconTab.name
+                val iconDataStr = when (selectedIconTab) {
+                    IconType.EMOJI -> selectedEmoji
+                    IconType.SVG -> selectedSvgCode
+                    IconType.IMAGE -> selectedImageUriString
+                    IconType.CAMERA -> ""
+                }
+
+                var successUuid: String? = null
+
+                if (isEdit && projectUuid != null) {
+                    // Update project details
+                    val projectData = Project(
+                        id = null,
+                        uuid = projectUuid!!,
+                        title = title,
+                        description = description.ifBlank { null },
+                        color = hexColor,
+                        state = status,
+                        iconType = iconTypeStr,
+                        iconData = iconDataStr.ifBlank { null },
+                        dateCreation = "",
+                        dateSuppression = null
+                    )
+                    val response = projectService.updateProject(projectUuid!!, projectData)
+                    if (response.isSuccessful) {
+                        successUuid = projectUuid
+                    } else {
+                        errorMessage = "Erreur lors de la mise à jour : ${response.code()}"
+                    }
+                } else {
+                    // Create project
+                    val projectData = Project(
+                        id = null,
+                        uuid = "",
+                        title = title,
+                        description = description.ifBlank { null },
+                        color = hexColor,
+                        state = status,
+                        iconType = iconTypeStr,
+                        iconData = iconDataStr.ifBlank { null },
+                        dateCreation = "",
+                        dateSuppression = null
+                    )
+                    val response = projectService.createProject(projectData)
+                    if (response.isSuccessful) {
+                        successUuid = response.body()?.uuid
+                    } else {
+                        errorMessage = "Erreur lors de la création : ${response.code()}"
+                    }
+                }
+
+                if (successUuid != null) {
+                    // Process deletions (removeMember)
+                    for (memberUuid in removedMemberUuids) {
+                        try {
+                            projectService.removeMember(successUuid, memberUuid)
+                        } catch (e: Exception) {
+                            Log.e("PROJECT_VM", "removeMember failed for $memberUuid", e)
+                        }
+                    }
+
+                    // Process role updates (updateMemberRole)
+                    // If an admin promotion is happening, we update the ADMIN first
+                    val roleUpdates = invites.filter { it.isExisting && it.roleChanged && !it.isPending }
+                    val sortedUpdates = roleUpdates.sortedByDescending { it.role == "ADMIN" }
+                    
+                    for (update in sortedUpdates) {
+                        try {
+                            if (update.uuid != null) {
+                                projectService.updateMemberRole(successUuid, update.uuid, UpdateRoleRequest(update.role))
+                            }
+                        } catch (e: Exception) {
+                            Log.e("PROJECT_VM", "updateMemberRole failed for ${update.email}", e)
+                        }
+                    }
+
+                    // Process new invitations (inviteMember)
+                    val newInvites = invites.filter { !it.isExisting && !it.isCreator }
+                    for (invite in newInvites) {
+                        try {
+                            projectService.inviteMember(successUuid, InvitationRequest(invite.email, invite.role))
+                        } catch (e: Exception) {
+                            Log.e("PROJECT_VM", "inviteMember failed for ${invite.email}", e)
+                        }
+                    }
+
+                    // Refresh global repository dashboard data
+                    ProjectRepository.fetchDashboard()
+                    isSuccess = true
+                }
+            } catch (e: Exception) {
+                errorMessage = "Erreur réseau : ${e.localizedMessage}"
+                Log.e("PROJECT_VM", "submit error", e)
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    private fun parseHexColor(hex: String): Color {
+        return try {
+            val cleanHex = hex.replace("#", "")
+            if (cleanHex.length == 6) {
+                Color(android.graphics.Color.parseColor("#$cleanHex"))
+            } else {
+                Color(0xFFFF7DD4)
+            }
+        } catch (e: Exception) {
+            Color(0xFFFF7DD4)
+        }
+    }
+}

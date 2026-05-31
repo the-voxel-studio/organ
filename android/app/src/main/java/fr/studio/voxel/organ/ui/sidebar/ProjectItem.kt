@@ -15,7 +15,7 @@ fun ProjectItem(
     onClick: () -> Unit
 ) {
     val projectColor = try {
-        val colorStr = project.color.removePrefix("0x").removePrefix("#")
+        val colorStr = project.color?.removePrefix("0x")?.removePrefix("#") ?: ""
         val parseStr = if (colorStr.length == 6) "FF$colorStr" else colorStr
         Color(parseStr.toLong(16))
     } catch (e: Exception) {

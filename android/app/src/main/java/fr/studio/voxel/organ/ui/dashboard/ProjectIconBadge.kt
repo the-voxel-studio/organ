@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 /**
  * Structure permettant de définir le visuel d'un projet :
@@ -27,6 +29,7 @@ sealed class ProjectVisual {
     data class Emoji(val text: String) : ProjectVisual()
     data class SvgIcon(val resId: Int) : ProjectVisual()
     data class SvgXml(val xmlContent: String?) : ProjectVisual() // Nouveau cas
+    data class Image(val urlOrData: String?) : ProjectVisual()
 }
 
 /**
@@ -74,6 +77,14 @@ fun ProjectIconBadge(
                     model = visual.xmlContent?.toByteArray(),
                     contentDescription = "SVG du projet",
                     modifier = Modifier.size(iconSize)
+                )
+            }
+            is ProjectVisual.Image -> {
+                AsyncImage(
+                    model = visual.urlOrData,
+                    contentDescription = "Image du projet",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
             }
 

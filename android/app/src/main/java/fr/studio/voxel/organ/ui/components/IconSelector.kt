@@ -1,4 +1,4 @@
-package fr.studio.voxel.organ.ui.create
+package fr.studio.voxel.organ.ui.components
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -30,11 +30,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import java.lang.Character.isEmoji
+
+enum class IconType(val title: String) {
+    IMAGE("Image"),
+    EMOJI("Emoji"),
+    SVG("SVG"),
+    CAMERA("Camera")
+}
 
 @Composable
 fun IconSelector(
@@ -46,26 +51,26 @@ fun IconSelector(
     onEmojiChanged: (String) -> Unit = {},
     svgCode: String,
     onSvgChanged: (String) -> Unit = {}
-){
-    //Ouvre la galerie photo
+) {
+    // Ouvre la galerie photo
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) {uri: Uri? ->
+    ) { uri: Uri? ->
         onImageSelected(uri)
     }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
-    ){
+    ) {
         TabRow(
             selectedTabIndex = selectedTab.ordinal,
             containerColor = MaterialTheme.colorScheme.outline.copy(0.2f),
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp)),
-            indicator = {Box(Modifier)},
-            divider = {Box(Modifier)}
+            indicator = { Box(Modifier) },
+            divider = { Box(Modifier) }
         ) {
             IconType.entries.forEach { type ->
                 val isSelected = selectedTab == type
@@ -90,8 +95,8 @@ fun IconSelector(
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 120.dp)
-        ){
-            when(selectedTab){
+        ) {
+            when (selectedTab) {
                 IconType.IMAGE -> {
                     Box(
                         contentAlignment = Alignment.Center,
@@ -103,16 +108,16 @@ fun IconSelector(
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .clickable { galleryLauncher.launch("image/*") }
-                    ){
-                        if (imageUri != null){
+                    ) {
+                        if (imageUri != null) {
                             AsyncImage(
                                 model = imageUri,
-                                contentDescription = "Image importée depuis la gallerie",
+                                contentDescription = "Image importée depuis la galerie",
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .clip(RoundedCornerShape(12.dp))
                             )
-                        } else{
+                        } else {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
                                     Icons.Default.Add, contentDescription = "Upload an image"
@@ -126,18 +131,18 @@ fun IconSelector(
                         }
                     }
                 }
-                IconType.CAMERA ->{
+                IconType.CAMERA -> {
 
                 }
                 IconType.EMOJI -> {
                     OutlinedTextField(
                         value = emojiText,
                         onValueChange = { input ->
-                            if (input.isEmpty() || isEmoji(input )){
+                            if (input.isEmpty() || isEmoji(input)) {
                                 onEmojiChanged(input)
                             }
                         },
-                        placeholder = { Text ("\uD83D\uDE80") },
+                        placeholder = { Text("\uD83D\uDE80") },
                         textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
                         modifier = Modifier
                             .width(100.dp)

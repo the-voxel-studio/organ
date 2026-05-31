@@ -10,14 +10,22 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.layout.padding
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import androidx.navigation.NavType
 import androidx.compose.animation.slideOutHorizontally
 import fr.studio.voxel.organ.ui.authentication.AuthMode
 import fr.studio.voxel.organ.ui.authentication.AuthScreen
-import fr.studio.voxel.organ.ui.create.Create
-import fr.studio.voxel.organ.ui.create.CreateMode
 import fr.studio.voxel.organ.ui.dashboard.Dashboard
 import fr.studio.voxel.organ.ui.parameter.Parameter
 import fr.studio.voxel.organ.ui.sidebar.SideBar
+import fr.studio.voxel.organ.ui.project.ProjectFormScreen
+import fr.studio.voxel.organ.ui.project.ProjectDetailsScreen
+import fr.studio.voxel.organ.ui.organ.OrganFormScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel
 
 enum class OrganScreen {
     SignIn,
@@ -26,8 +34,10 @@ enum class OrganScreen {
     Sidebar,
     Project,
     CreateProject,
+    EditProject,
     Organ,
     CreateOrgan,
+    EditOrgan,
     Task,
     Parameter,
     Notification
@@ -101,12 +111,88 @@ fun OrganApp(
                 )
             }
 
-            composable(route = OrganScreen.CreateProject.name) {
-                Create(mode = CreateMode.PROJECT)
+            composable(
+                route = "${OrganScreen.Project.name}/{projectUuid}",
+                arguments = listOf(navArgument("projectUuid") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val projectUuid = backStackEntry.arguments?.getString("projectUuid") ?: ""
+                val viewModel: ProjectDetailsViewModel = viewModel()
+                val shouldRefresh by backStackEntry.savedStateHandle.getStateFlow("refresh_project", false).collectAsState()
+
+                LaunchedEffect(shouldRefresh) {
+                    if (shouldRefresh) {
+                        viewModel.loadProjectDetails(projectUuid)
+                        backStackEntry.savedStateHandle["refresh_project"] = false
+                    }
+                }
+
+                ProjectDetailsScreen(
+                    projectUuid = projectUuid,
+                    onSidebarClick = { navController.navigate(OrganScreen.Sidebar.name) },
+                    onBack = { navController.popBackStack() },
+                    onEditProject = { uuid -> navController.navigate("${OrganScreen.EditProject.name}/$uuid") },
+                    onCreateOrgan = { uuid -> navController.navigate("${OrganScreen.CreateOrgan.name}/$uuid") },
+                    viewModel = viewModel
+                )
             }
 
-            composable(route = OrganScreen.CreateOrgan.name) {
-                Create(mode = CreateMode.ORGAN)
+            composable(route = OrganScreen.CreateProject.name) {
+                ProjectFormScreen(
+                    projectUuid = null,
+                    onBack = { navController.popBackStack() },
+                    onSuccess = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = "${OrganScreen.EditProject.name}/{projectUuid}",
+                arguments = listOf(navArgument("projectUuid") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val projectUuid = backStackEntry.arguments?.getString("projectUuid")
+                ProjectFormScreen(
+                    projectUuid = projectUuid,
+                    onBack = { navController.popBackStack() },
+                    onSuccess = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = "${OrganScreen.CreateOrgan.name}/{projectUuid}",
+                arguments = listOf(navArgument("projectUuid") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val projectUuid = backStackEntry.arguments?.getString("projectUuid") ?: ""
+                OrganFormScreen(
+                    projectUuid = projectUuid,
+                    organUuid = null,
+                    onBack = { navController.popBackStack() },
+                    onSuccess = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = "${OrganScreen.EditOrgan.name}/{projectUuid}/{organUuid}",
+                arguments = listOf(
+                    navArgument("projectUuid") { type = NavType.StringType },
+                    navArgument("organUuid") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val projectUuid = backStackEntry.arguments?.getString("projectUuid") ?: ""
+                val organUuid = backStackEntry.arguments?.getString("organUuid")
+                OrganFormScreen(
+                    projectUuid = projectUuid,
+                    organUuid = organUuid,
+                    onBack = { navController.popBackStack() },
+                    onSuccess = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }

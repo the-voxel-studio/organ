@@ -193,7 +193,10 @@ fun Dashboard(
                         )
                     }
                     else -> {
-                        ProjectSticker(projectsList = dashboardVM.projects ?: emptyList())
+                        ProjectSticker(
+                            projectsList = dashboardVM.projects ?: emptyList(),
+                            onProjectClick = { uuid -> navController.navigate("${OrganScreen.Project.name}/$uuid") }
+                        )
                     }
                 }
             }
@@ -205,7 +208,9 @@ fun Dashboard(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(24.dp)
-        ){/*Ajouter un projet*/ }
+        ) {
+            navController.navigate(OrganScreen.CreateProject.name)
+        }
     }
 }
 }
