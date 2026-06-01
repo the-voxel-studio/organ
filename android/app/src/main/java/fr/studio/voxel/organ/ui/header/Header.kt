@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +27,7 @@ import fr.studio.voxel.organ.ui.theme.AppColorScheme
 fun Header(
     modifier: Modifier = Modifier,
     canOpenSidebar: Boolean = false,
+    showCloseButton: Boolean = false,
     isSideBarClosed: Boolean = false,
     navigateUp: () -> Unit
 ) {
@@ -42,6 +44,18 @@ fun Header(
                 Icon(
                     imageVector = Icons.Default.Menu,
                     contentDescription = "Menu",
+                    tint = AppColorScheme.onSurface,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+        } else if (showCloseButton) {
+            IconButton(
+                modifier = Modifier.align(Alignment.CenterStart),
+                onClick = navigateUp
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Fermer",
                     tint = AppColorScheme.onSurface,
                     modifier = Modifier.size(40.dp)
                 )

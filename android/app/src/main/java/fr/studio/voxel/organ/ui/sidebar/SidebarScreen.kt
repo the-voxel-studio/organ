@@ -49,7 +49,8 @@ fun SideBar(
     val previousBackStackEntry = navController.previousBackStackEntry
     val previousRoute = previousBackStackEntry?.destination?.route
     val previousProjectUuid = remember(previousRoute, previousBackStackEntry) {
-        if (previousRoute?.startsWith(OrganScreen.Project.name) == true) {
+        if (previousRoute?.startsWith(OrganScreen.Project.name) == true ||
+            previousRoute?.startsWith(OrganScreen.Organ.name) == true) {
             previousBackStackEntry?.arguments?.getString("projectUuid")
         } else {
             null
@@ -83,7 +84,10 @@ fun SideBar(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Header(navigateUp = {})
+            Header(
+                showCloseButton = true,
+                navigateUp = { navController.popBackStack() }
+            )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,

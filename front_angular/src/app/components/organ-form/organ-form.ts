@@ -132,7 +132,24 @@ export class OrganFormComponent implements OnInit {
   onEmojiInput(event: Event) {
     if (!this.canEditInfo) return;
     const input = event.target as HTMLInputElement;
-    this.iconData = input.value;
+    const val = input.value.trim();
+    if (!val) {
+      this.iconData = '';
+      this.organForm.patchValue({ iconData: '' });
+      return;
+    }
+    const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+    const segments = Array.from(segmenter.segment(val));
+    const firstGrapheme = segments[0]?.segment;
+
+    const emojiRegex = /\p{Extended_Pictographic}/u;
+    if (firstGrapheme && emojiRegex.test(firstGrapheme)) {
+      this.iconData = firstGrapheme;
+      input.value = firstGrapheme;
+    } else {
+      input.value = '';
+      this.iconData = '';
+    }
     this.organForm.patchValue({ iconData: this.iconData });
   }
 

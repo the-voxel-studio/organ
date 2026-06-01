@@ -172,9 +172,13 @@ export class ProjectVisualIdentityComponent implements OnInit {
       this.emitIconChange();
       return;
     }
+    const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+    const segments = Array.from(segmenter.segment(val));
+    const firstGrapheme = segments[0]?.segment;
+
     const emojiRegex = /\p{Extended_Pictographic}/u;
-    if (emojiRegex.test(val)) {
-      this.emojiValue = Array.from(val)[0];
+    if (firstGrapheme && emojiRegex.test(firstGrapheme)) {
+      this.emojiValue = firstGrapheme;
     } else {
       this.emojiValue = '';
     }

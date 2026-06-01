@@ -46,18 +46,23 @@ fun Dashboard(
         text = "Chargement de votre espace de travail..."
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            item {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Header(
                     navigateUp = { navController.navigate(OrganScreen.Sidebar.name) },
                     canOpenSidebar = true
                 )
-            }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
             item {
                 Column(
                     modifier = Modifier
@@ -202,6 +207,7 @@ fun Dashboard(
             }
             item{
                 Spacer(modifier = Modifier.height(50.dp))
+            }
             }
         }
         AddButton(

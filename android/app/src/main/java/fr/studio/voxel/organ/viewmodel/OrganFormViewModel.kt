@@ -130,9 +130,60 @@ class OrganFormViewModel : ViewModel() {
         checkPermissionsAndLoad(projectUuid, organUuid)
     }
 
-    fun updateImageUri(uri: Uri?) {
+    fun updateImageUri(context: android.content.Context, uri: Uri?) {
         selectedImageUri = uri
-        selectedImageUriString = uri?.toString() ?: ""
+        if (uri != null) {
+            isLoading = true
+            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val base64 = uriToBase64(context, uri)
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    selectedImageUriString = base64 ?: ""
+                    isLoading = false
+                }
+            }
+        } else {
+            selectedImageUriString = ""
+        }
+    }
+
+    private fun uriToBase64(context: android.content.Context, uri: Uri): String? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+            
+            if (bitmap != null) {
+                val maxDimension = 1024
+                val width = bitmap.width
+                val height = bitmap.height
+                val newBitmap = if (width > maxDimension || height > maxDimension) {
+                    val ratio = width.toFloat() / height.toFloat()
+                    val newWidth = if (ratio > 1) maxDimension else (maxDimension * ratio).toInt()
+                    val newHeight = if (ratio > 1) (maxDimension / ratio).toInt() else maxDimension
+                    android.graphics.Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+                } else {
+                    bitmap
+                }
+
+                val outputStream = java.io.ByteArrayOutputStream()
+                newBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, outputStream)
+                val bytes = outputStream.toByteArray()
+                
+                if (newBitmap != bitmap) {
+                    newBitmap.recycle()
+                }
+                bitmap.recycle()
+
+                val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                val mimeType = "image/jpeg"
+                "data:$mimeType;base64,$base64"
+            } else {
+                null
+            }
+        } catch (e: java.lang.Exception) {
+            Log.e("ORGAN_VM", "Error converting and compressing Uri to Base64", e)
+            null
+        }
     }
 
     private fun checkPermissionsAndLoad(projectUuid: String, organUuid: String?) {
@@ -213,7 +264,7 @@ class OrganFormViewModel : ViewModel() {
                             val type = when (organ.iconType) {
                                 "EMOJI" -> IconType.EMOJI
                                 "SVG" -> IconType.SVG
-                                "IMAGE" -> IconType.IMAGE
+                                "IMAGE", "BLOB" -> IconType.IMAGE
                                 else -> IconType.EMOJI
                             }
                             selectedIconTab = type
@@ -320,12 +371,15 @@ class OrganFormViewModel : ViewModel() {
             errorMessage = null
             try {
                 val hexColor = String.format("#%06X", 0xFFFFFF and selectedColor.toArgb())
-                val iconTypeStr = selectedIconTab.name
+                val iconTypeStr = when (selectedIconTab) {
+                    IconType.EMOJI -> "EMOJI"
+                    IconType.SVG -> "SVG"
+                    IconType.IMAGE, IconType.CAMERA -> "BLOB"
+                }
                 val iconDataStr = when (selectedIconTab) {
                     IconType.EMOJI -> selectedEmoji
                     IconType.SVG -> selectedSvgCode
-                    IconType.IMAGE -> selectedImageUriString
-                    IconType.CAMERA -> ""
+                    IconType.IMAGE, IconType.CAMERA -> selectedImageUriString
                 }
 
                 val finalOrganUuid: String

@@ -23,12 +23,14 @@ import fr.studio.voxel.organ.ui.authentication.AuthMode
 import fr.studio.voxel.organ.ui.authentication.AuthScreen
 import fr.studio.voxel.organ.ui.dashboard.Dashboard
 import fr.studio.voxel.organ.ui.notification.NotificationScreen
-import fr.studio.voxel.organ.ui.organ.OrganFormScreen
-import fr.studio.voxel.organ.ui.parameter.Parameter
-import fr.studio.voxel.organ.ui.project.ProjectDetailsScreen
-import fr.studio.voxel.organ.ui.project.ProjectFormScreen
+import fr.studio.voxel.organ.ui.organ.form.OrganFormScreen
+import fr.studio.voxel.organ.ui.organ.details.OrganDetailsScreen
+import fr.studio.voxel.organ.ui.parameter.details.Parameter
+import fr.studio.voxel.organ.ui.project.details.ProjectDetailsScreen
+import fr.studio.voxel.organ.ui.project.form.ProjectFormScreen
 import fr.studio.voxel.organ.ui.sidebar.SideBar
 import fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel
+import fr.studio.voxel.organ.viewmodel.OrganDetailsViewModel
 
 enum class OrganScreen {
     SignIn,
@@ -149,6 +151,7 @@ fun OrganApp(
                     onBack = { navController.popBackStack() },
                     onEditProject = { uuid -> navController.navigate("${OrganScreen.EditProject.name}/$uuid") },
                     onCreateOrgan = { uuid -> navController.navigate("${OrganScreen.CreateOrgan.name}/$uuid") },
+                    onOrganClick = { organUuid -> navController.navigate("${OrganScreen.Organ.name}/$projectUuid/$organUuid") },
                     viewModel = viewModel
                 )
             }
@@ -207,8 +210,40 @@ fun OrganApp(
                     onBack = { navController.popBackStack() },
                     onSuccess = {
                         navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_organ", true)
                         navController.popBackStack()
                     }
+                )
+            }
+
+            composable(
+                route = "${OrganScreen.Organ.name}/{projectUuid}/{organUuid}",
+                arguments = listOf(
+                    navArgument("projectUuid") { type = NavType.StringType },
+                    navArgument("organUuid") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val projectUuid = backStackEntry.arguments?.getString("projectUuid") ?: ""
+                val organUuid = backStackEntry.arguments?.getString("organUuid") ?: ""
+                val viewModel: OrganDetailsViewModel = viewModel()
+                val shouldRefresh by backStackEntry.savedStateHandle.getStateFlow("refresh_organ", false).collectAsState()
+
+                LaunchedEffect(shouldRefresh) {
+                    if (shouldRefresh) {
+                        viewModel.loadOrganDetails()
+                        backStackEntry.savedStateHandle["refresh_organ"] = false
+                    }
+                }
+
+                OrganDetailsScreen(
+                    projectUuid = projectUuid,
+                    organUuid = organUuid,
+                    onBack = { navController.popBackStack() },
+                    onEditOrgan = { projUuid, orgUuid ->
+                        navController.navigate("${OrganScreen.EditOrgan.name}/$projUuid/$orgUuid")
+                    },
+                    onSidebarClick = { navController.navigate(OrganScreen.Sidebar.name) },
+                    viewModel = viewModel
                 )
             }
         }
