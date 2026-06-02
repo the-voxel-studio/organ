@@ -69,6 +69,10 @@ MERCURE_JWT_SECRET=!ChangeThisMercureHubJWTSecretKey!
 MONGODB_ROOT_USER=root
 MONGODB_ROOT_PASSWORD=mongodb_root_password
 MONGODB_DATABASE=organ
+
+# Identifiants Google
+GOOGLE_CLIENT_ID=<VOTRE_ID_CLIENT>.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=<VOTRE_SECRET_CLIENT>
 ```
 
 ### 2. API Backend (`api/.env`)
