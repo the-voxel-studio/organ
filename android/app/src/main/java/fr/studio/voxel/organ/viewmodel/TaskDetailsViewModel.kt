@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import fr.studio.voxel.organ.viewmodel.handler.*
 import fr.studio.voxel.organ.network.ApiClient
 import fr.studio.voxel.organ.network.services.*
 import kotlinx.coroutines.launch
@@ -51,29 +52,30 @@ class TaskDetailsViewModel : ViewModel() {
     // Sub-resources
     var projectMembers by mutableStateOf<List<ProjectMember>>(emptyList())
         private set
-    var assignees by mutableStateOf<List<User>>(emptyList())
-        private set
-    var comments by mutableStateOf<List<TaskCommentResponse>>(emptyList())
-        private set
-    var attachments by mutableStateOf<List<TaskAttachmentResponse>>(emptyList())
-        private set
-    var links by mutableStateOf<List<TaskLinkSummary>>(emptyList())
-        private set
-    var dependencies by mutableStateOf<List<TaskDependencyResponse>>(emptyList())
-        private set
+    val commentHandler = TaskCommentHandler(taskService, viewModelScope)
+    val attachmentHandler = TaskAttachmentHandler(taskService, viewModelScope)
+    val dependencyHandler = TaskDependencyHandler(taskService, viewModelScope)
+    val assigneeHandler = TaskAssigneeHandler(taskService, viewModelScope)
+    val tagHandler = TaskTagHandler(taskService, tagService, viewModelScope)
+    val linkHandler = TaskLinkHandler(taskService, viewModelScope)
+
+    val comments: List<TaskCommentResponse> get() = commentHandler.comments
+    val trashedComments: List<TaskCommentResponse> get() = commentHandler.trashedComments
+
+    val attachments: List<TaskAttachmentResponse> get() = attachmentHandler.attachments
+    val trashedAttachments: List<TaskAttachmentResponse> get() = attachmentHandler.trashedAttachments
+
+    val dependencies: List<TaskDependencyResponse> get() = dependencyHandler.dependencies
+    val assignees: List<User> get() = assigneeHandler.assignees
+    val links: List<TaskLinkSummary> get() = linkHandler.links
+    val allProjectTags: List<TagResponse> get() = tagHandler.allProjectTags
+
     var timeline by mutableStateOf<List<TaskTimelineItem>>(emptyList())
         private set
 
-    // Trashed Sub-resources (for the corbeille/trash tab)
-    var trashedComments by mutableStateOf<List<TaskCommentResponse>>(emptyList())
-        private set
-    var trashedAttachments by mutableStateOf<List<TaskAttachmentResponse>>(emptyList())
-        private set
     var isTrashOpen by mutableStateOf(false)
 
     // Selection lists
-    var allProjectTags by mutableStateOf<List<TagResponse>>(emptyList())
-        private set
     var organTasks by mutableStateOf<List<Task>>(emptyList())
         private set
 
@@ -105,9 +107,30 @@ class TaskDetailsViewModel : ViewModel() {
                     projectMembers = membersRes.body() ?: emptyList()
                 }
 
-                val tagsRes = tagService.getTags(pUuid)
-                if (tagsRes.isSuccessful) {
-                    allProjectTags = tagsRes.body() ?: emptyList()
+                tagHandler.loadTags(pUuid)
+
+                if (tUuid == "new") {
+                    // Reset form fields to defaults for new task
+                    taskData = null
+                    title = ""
+                    description = ""
+                    status = "TODO"
+                    priority = 1
+                    statusMessage = ""
+                    estimatedHours = ""
+                    startDate = ""
+                    expiresAt = ""
+                    managerUuid = ""
+                    assigneeHandler.assignees = emptyList()
+                    linkHandler.links = emptyList()
+                    commentHandler.comments = emptyList()
+                    attachmentHandler.attachments = emptyList()
+                    dependencyHandler.dependencies = emptyList()
+                    timeline = emptyList()
+                    commentHandler.trashedComments = emptyList()
+                    attachmentHandler.trashedAttachments = emptyList()
+                    currentPermissions = null
+                    return@launch
                 }
 
                 // Fetch other organ tasks for dependencies
@@ -131,8 +154,8 @@ class TaskDetailsViewModel : ViewModel() {
                         startDate = task.startDate?.take(16)?.replace("T", " ") ?: ""
                         expiresAt = task.expiresAt?.take(16)?.replace("T", " ") ?: ""
                         managerUuid = task.manager?.uuid ?: ""
-                        assignees = task.assignees ?: emptyList()
-                        links = task.links ?: emptyList()
+                        assigneeHandler.assignees = task.assignees ?: emptyList()
+                        linkHandler.links = task.links ?: emptyList()
                     }
                 }
 
@@ -164,48 +187,21 @@ class TaskDetailsViewModel : ViewModel() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val res = taskService.getComments(pUuid, oUuid, tUuid)
-                if (res.isSuccessful) {
-                    comments = res.body() ?: emptyList()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "loadComments error", e)
-            }
-        }
+        commentHandler.loadComments(pUuid, oUuid, tUuid)
     }
 
     fun loadAttachments() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val res = taskService.getAttachments(pUuid, oUuid, tUuid)
-                if (res.isSuccessful) {
-                    attachments = res.body() ?: emptyList()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "loadAttachments error", e)
-            }
-        }
+        attachmentHandler.loadAttachments(pUuid, oUuid, tUuid)
     }
 
     fun loadDependencies() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val res = taskService.getDependencies(pUuid, oUuid, tUuid)
-                if (res.isSuccessful) {
-                    dependencies = res.body() ?: emptyList()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "loadDependencies error", e)
-            }
-        }
+        dependencyHandler.loadDependencies(pUuid, oUuid, tUuid)
     }
 
     fun loadTimeline() {
@@ -228,20 +224,8 @@ class TaskDetailsViewModel : ViewModel() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val cRes = taskService.getTrashedComments(pUuid, oUuid, tUuid)
-                if (cRes.isSuccessful) {
-                    trashedComments = cRes.body() ?: emptyList()
-                }
-                val aRes = taskService.getTrashedAttachments(pUuid, oUuid, tUuid)
-                if (aRes.isSuccessful) {
-                    trashedAttachments = aRes.body() ?: emptyList()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "loadTrashData error", e)
-            }
-        }
+        commentHandler.loadTrashData(pUuid, oUuid, tUuid)
+        attachmentHandler.loadTrashData(pUuid, oUuid, tUuid)
     }
 
     fun toggleTrash() {
@@ -253,6 +237,9 @@ class TaskDetailsViewModel : ViewModel() {
 
     // Permissions check
     fun hasPerm(permBaseName: String, isOwner: Boolean = false): Boolean {
+        if (taskUuid == "new") {
+            return permBaseName == "TASK_CREATE" || permBaseName == "TASK_EDIT"
+        }
         val perms = currentPermissions?.permissions ?: return false
         if (currentPermissions?.isProjectAdmin == true || perms.contains("ALL")) return true
         if (perms.contains(permBaseName)) return true
@@ -262,11 +249,13 @@ class TaskDetailsViewModel : ViewModel() {
     }
 
     fun isTaskOwner(): Boolean {
+        if (taskUuid == "new") return true
         val ownership = currentPermissions?.taskOwnership ?: return false
         return ownership.isManager || ownership.isCreator
     }
 
     fun canEditField(fieldName: String): Boolean {
+        if (taskUuid == "new") return true
         if (taskData?.deletedAt != null) return false
         var check = fieldName
         if (fieldName == "startDate" || fieldName == "expiresAt") check = "expiresAt"
@@ -294,7 +283,7 @@ class TaskDetailsViewModel : ViewModel() {
 
                 val updatedTask = Task(
                     id = taskData?.id,
-                    uuid = tUuid,
+                    uuid = if (tUuid == "new") "" else tUuid,
                     organId = taskData?.organId,
                     createdBy = taskData?.createdBy,
                     manager = if (managerUuid.isNotBlank()) projectMembers.find { it.user.uuid == managerUuid }?.user?.let {
@@ -318,9 +307,20 @@ class TaskDetailsViewModel : ViewModel() {
                     statusMessage = if (statusMessage.isNotBlank() && status != taskData?.status) statusMessage else null
                 )
 
-                val response = taskService.updateTask(pUuid, oUuid, tUuid, updatedTask)
+                val response = if (tUuid == "new") {
+                    taskService.createTask(pUuid, oUuid, updatedTask)
+                } else {
+                    taskService.updateTask(pUuid, oUuid, tUuid, updatedTask)
+                }
+
                 if (response.isSuccessful) {
-                    isSuccess = true
+                    val savedTask = response.body()
+                    if (tUuid == "new" && savedTask != null) {
+                        taskUuid = savedTask.uuid
+                        loadTaskDetails()
+                    } else {
+                        isSuccess = true
+                    }
                 } else {
                     errorMessage = "Erreur lors de la sauvegarde : ${response.code()}"
                 }
@@ -381,20 +381,12 @@ class TaskDetailsViewModel : ViewModel() {
         }
     }
 
-    // Sub-resources Actions
     fun addAssignee(userUuid: String) {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.addAssignee(pUuid, oUuid, tUuid, AssigneeRequest(userUuid))
-                if (response.isSuccessful) {
-                    loadTaskDetails()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "addAssignee error", e)
-            }
+        assigneeHandler.addAssignee(pUuid, oUuid, tUuid, userUuid) {
+            loadTaskDetails()
         }
     }
 
@@ -402,15 +394,8 @@ class TaskDetailsViewModel : ViewModel() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.removeAssignee(pUuid, oUuid, tUuid, userUuid)
-                if (response.isSuccessful) {
-                    loadTaskDetails()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "removeAssignee error", e)
-            }
+        assigneeHandler.removeAssignee(pUuid, oUuid, tUuid, userUuid) {
+            loadTaskDetails()
         }
     }
 
@@ -418,130 +403,51 @@ class TaskDetailsViewModel : ViewModel() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        if (content.isBlank()) return
-        viewModelScope.launch {
-            try {
-                val response = taskService.createComment(pUuid, oUuid, tUuid, CreateCommentRequest(content))
-                if (response.isSuccessful) {
-                    loadComments()
-                    loadTimeline()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "addComment error", e)
-            }
-        }
+        commentHandler.addComment(pUuid, oUuid, tUuid, content) { loadTimeline() }
     }
 
     fun deleteComment(commentUuid: String, permanent: Boolean = false) {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.deleteComment(pUuid, oUuid, tUuid, commentUuid, permanent)
-                if (response.isSuccessful) {
-                    loadComments()
-                    loadTimeline()
-                    if (isTrashOpen) {
-                        loadTrashData()
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "deleteComment error", e)
-            }
-        }
+        commentHandler.deleteComment(pUuid, oUuid, tUuid, commentUuid, permanent, isTrashOpen) { loadTimeline() }
     }
 
     fun restoreComment(commentUuid: String) {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.restoreComment(pUuid, oUuid, tUuid, commentUuid)
-                if (response.isSuccessful) {
-                    loadComments()
-                    loadTimeline()
-                    loadTrashData()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "restoreComment error", e)
-            }
-        }
+        commentHandler.restoreComment(pUuid, oUuid, tUuid, commentUuid) { loadTimeline() }
     }
 
     fun uploadAttachment(fileName: String, mimeType: String, fileBytes: ByteArray) {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val requestBody = fileBytes.toRequestBody(mimeType.toMediaTypeOrNull())
-                val body = MultipartBody.Part.createFormData("file", fileName, requestBody)
-                val response = taskService.uploadAttachment(pUuid, oUuid, tUuid, body)
-                if (response.isSuccessful) {
-                    loadAttachments()
-                    loadTimeline()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "uploadAttachment error", e)
-            }
-        }
+        attachmentHandler.uploadAttachment(pUuid, oUuid, tUuid, fileName, mimeType, fileBytes) { loadTimeline() }
     }
 
     fun deleteAttachment(attachmentUuid: String, permanent: Boolean = false) {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.deleteAttachment(pUuid, oUuid, tUuid, attachmentUuid, permanent)
-                if (response.isSuccessful) {
-                    loadAttachments()
-                    loadTimeline()
-                    if (isTrashOpen) {
-                        loadTrashData()
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "deleteAttachment error", e)
-            }
-        }
+        attachmentHandler.deleteAttachment(pUuid, oUuid, tUuid, attachmentUuid, permanent, isTrashOpen) { loadTimeline() }
     }
 
     fun restoreAttachment(attachmentUuid: String) {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.restoreAttachment(pUuid, oUuid, tUuid, attachmentUuid)
-                if (response.isSuccessful) {
-                    loadAttachments()
-                    loadTimeline()
-                    loadTrashData()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "restoreAttachment error", e)
-            }
-        }
+        attachmentHandler.restoreAttachment(pUuid, oUuid, tUuid, attachmentUuid) { loadTimeline() }
     }
 
     fun addLink(url: String, description: String?) {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        if (url.isBlank()) return
-        viewModelScope.launch {
-            try {
-                val response = taskService.createLink(pUuid, oUuid, tUuid, AddLinkRequest(url, description))
-                if (response.isSuccessful) {
-                    loadTaskDetails()
-                    loadTimeline()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "addLink error", e)
-            }
+        linkHandler.addLink(pUuid, oUuid, tUuid, url, description) {
+            loadTaskDetails()
+            loadTimeline()
         }
     }
 
@@ -549,16 +455,9 @@ class TaskDetailsViewModel : ViewModel() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.deleteLink(pUuid, oUuid, tUuid, linkUuid)
-                if (response.isSuccessful) {
-                    loadTaskDetails()
-                    loadTimeline()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "deleteLink error", e)
-            }
+        linkHandler.deleteLink(pUuid, oUuid, tUuid, linkUuid) {
+            loadTaskDetails()
+            loadTimeline()
         }
     }
 
@@ -566,16 +465,9 @@ class TaskDetailsViewModel : ViewModel() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.addTaskTag(pUuid, oUuid, tUuid, AddTagRequest(tagUuid))
-                if (response.isSuccessful) {
-                    loadTaskDetails()
-                    loadTimeline()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "addTag error", e)
-            }
+        tagHandler.addTag(pUuid, oUuid, tUuid, tagUuid) {
+            loadTaskDetails()
+            loadTimeline()
         }
     }
 
@@ -583,16 +475,9 @@ class TaskDetailsViewModel : ViewModel() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.removeTaskTag(pUuid, oUuid, tUuid, tagUuid)
-                if (response.isSuccessful) {
-                    loadTaskDetails()
-                    loadTimeline()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "removeTag error", e)
-            }
+        tagHandler.removeTag(pUuid, oUuid, tUuid, tagUuid) {
+            loadTaskDetails()
+            loadTimeline()
         }
     }
 
@@ -600,33 +485,13 @@ class TaskDetailsViewModel : ViewModel() {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.addDependency(pUuid, oUuid, tUuid, AddDependencyRequest(dependsOnUuid))
-                if (response.isSuccessful) {
-                    loadDependencies()
-                    loadTimeline()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "addDependency error", e)
-            }
-        }
+        dependencyHandler.addDependency(pUuid, oUuid, tUuid, dependsOnUuid) { loadTimeline() }
     }
 
     fun removeDependency(dependsOnUuid: String, permanent: Boolean = false) {
         val pUuid = projectUuid ?: return
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
-        viewModelScope.launch {
-            try {
-                val response = taskService.removeDependency(pUuid, oUuid, tUuid, dependsOnUuid, permanent)
-                if (response.isSuccessful) {
-                    loadDependencies()
-                    loadTimeline()
-                }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "removeDependency error", e)
-            }
-        }
+        dependencyHandler.removeDependency(pUuid, oUuid, tUuid, dependsOnUuid, permanent) { loadTimeline() }
     }
 }

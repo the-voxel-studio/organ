@@ -516,7 +516,7 @@ fun OrganDetailsScreen(
                         // Bottom Floating Add Button
                         if (viewModel.hasPermission("TASK_CREATE")) {
                             Button(
-                                onClick = { showNotImplementedFeature = "Création de tâche" },
+                                onClick = { onTaskClick("new") },
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
                                     .padding(24.dp),

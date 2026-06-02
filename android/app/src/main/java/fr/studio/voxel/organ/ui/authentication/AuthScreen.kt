@@ -25,6 +25,7 @@ import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ui.OrganScreen
 import fr.studio.voxel.organ.viewmodel.AuthViewModel
 // MainViewModel removed
+import fr.studio.voxel.organ.ui.authentication.components.*
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.ui.components.PrimaryButton
 
@@ -115,149 +116,17 @@ fun AuthScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 if (mode == AuthMode.SIGN_UP) {
-                    val name = "Prénom"
-                    Text(
-                        text = name.uppercase(),
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
+                    SignUpForm(
+                        viewModel = viewModel,
+                        hasError = hasError,
+                        showPasswordError = showPasswordError,
+                        showConfirmError = showConfirmError
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = viewModel.name,
-                        onValueChange = { viewModel.updateName(it) },
-                        placeholder = { Text("Jean") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 56.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                            errorBorderColor = MaterialTheme.colorScheme.error
-                        )
+                } else {
+                    SignInForm(
+                        viewModel = viewModel,
+                        hasError = hasError
                     )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "NOM",
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = viewModel.surname,
-                        onValueChange = { viewModel.updateSurname(it) },
-                        placeholder = { Text("Dupont") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 56.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                            errorBorderColor = MaterialTheme.colorScheme.error
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                Text(
-                    text = "ADRESSE E-MAIL",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = viewModel.mail,
-                    onValueChange = { viewModel.updateMail(it) },
-                    placeholder = { Text("nom@exemple.com") },
-                    singleLine = true,
-                    isError = hasError,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                        errorBorderColor = MaterialTheme.colorScheme.error
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "MOT DE PASSE",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = viewModel.password,
-                        visualTransformation = PasswordVisualTransformation(),
-                        onValueChange = { viewModel.updatePassword(it) },
-                        isError = showPasswordError || hasError,
-                        placeholder = { Text("•••••••••") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 56.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                            errorBorderColor = MaterialTheme.colorScheme.error
-                        )
-                    )
-                    if (showPasswordError) {
-                        Text(
-                            text = "Taille minimale de 8 caractères",
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.labelLarge
-                        )
-                    }
-                }
-
-                if (mode == AuthMode.SIGN_UP) {
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = "CONFIRMER LE MOT DE PASSE",
-                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
-                            value = viewModel.confirmPassword,
-                            visualTransformation = PasswordVisualTransformation(),
-                            onValueChange = { viewModel.updateConfirmPassword(it) },
-                            isError = showConfirmError,
-                            placeholder = { Text("•••••••••") },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                               .heightIn(min = 56.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                                errorBorderColor = MaterialTheme.colorScheme.error
-                            )
-                        )
-                        if (showConfirmError) {
-                            Text(
-                                text = "Les mots de passe ne correspondent pas",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
-                    }
                 }
 
                 // Message d'erreur global (ex: erreur de login)
