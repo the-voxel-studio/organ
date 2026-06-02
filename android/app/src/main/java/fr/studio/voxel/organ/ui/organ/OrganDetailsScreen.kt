@@ -10,6 +10,7 @@ fun OrganDetailsScreen(
     onBack: () -> Unit,
     onEditOrgan: (String, String) -> Unit,
     onSidebarClick: () -> Unit,
+    onTaskClick: (String) -> Unit = {},
     viewModel: fr.studio.voxel.organ.viewmodel.OrganDetailsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     fr.studio.voxel.organ.ui.organ.details.OrganDetailsScreen(
@@ -18,6 +19,7 @@ fun OrganDetailsScreen(
         onBack = onBack,
         onEditOrgan = onEditOrgan,
         onSidebarClick = onSidebarClick,
+        onTaskClick = onTaskClick,
         viewModel = viewModel
     )
 }

@@ -2,6 +2,7 @@ package fr.studio.voxel.organ.ui.organ.details.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -10,12 +11,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,11 +32,42 @@ fun TaskCard(
     task: Task,
     highlightColor: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isDraggable: Boolean = false,
+    onDragStart: ((Offset, Offset) -> Unit)? = null,
+    onDrag: ((Offset) -> Unit)? = null,
+    onDragEnd: (() -> Unit)? = null
 ) {
+    var cardPositionInRoot by remember { mutableStateOf(Offset.Zero) }
+
+    val dragModifier = if (isDraggable && onDragStart != null && onDrag != null && onDragEnd != null) {
+        Modifier
+            .onGloballyPositioned { coordinates ->
+                cardPositionInRoot = coordinates.positionInRoot()
+            }
+            .pointerInput(task.uuid) {
+                detectDragGesturesAfterLongPress(
+                    onDragStart = { offset ->
+                        onDragStart(offset, cardPositionInRoot)
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        onDrag(dragAmount)
+                    },
+                    onDragEnd = {
+                        onDragEnd()
+                    },
+                    onDragCancel = {
+                        onDragEnd()
+                    }
+                )
+            }
+    } else Modifier
+
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .then(dragModifier)
             .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),

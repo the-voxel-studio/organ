@@ -31,6 +31,8 @@ import fr.studio.voxel.organ.ui.project.form.ProjectFormScreen
 import fr.studio.voxel.organ.ui.sidebar.SideBar
 import fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel
 import fr.studio.voxel.organ.viewmodel.OrganDetailsViewModel
+import fr.studio.voxel.organ.viewmodel.DashboardViewModel
+import fr.studio.voxel.organ.ui.task.TaskDetailsScreen
 
 enum class OrganScreen {
     SignIn,
@@ -111,8 +113,16 @@ fun OrganApp(
                 )
             }
 
-            composable(route = OrganScreen.Dashboard.name) {
-                Dashboard(navController = navController)
+            composable(route = OrganScreen.Dashboard.name) { backStackEntry ->
+                val viewModel: DashboardViewModel = viewModel()
+                val shouldRefresh by backStackEntry.savedStateHandle.getStateFlow("refresh_dashboard", false).collectAsState()
+                LaunchedEffect(shouldRefresh) {
+                    if (shouldRefresh) {
+                        viewModel.loadDashboard()
+                        backStackEntry.savedStateHandle["refresh_dashboard"] = false
+                    }
+                }
+                Dashboard(navController = navController, dashboardVM = viewModel)
             }
 
             composable(route = OrganScreen.Parameter.name) {
@@ -243,7 +253,45 @@ fun OrganApp(
                         navController.navigate("${OrganScreen.EditOrgan.name}/$projUuid/$orgUuid")
                     },
                     onSidebarClick = { navController.navigate(OrganScreen.Sidebar.name) },
+                    onTaskClick = { taskUuid ->
+                        navController.navigate("${OrganScreen.Task.name}/$projectUuid/$organUuid/$taskUuid")
+                    },
                     viewModel = viewModel
+                )
+            }
+
+            composable(
+                route = "${OrganScreen.Task.name}/{projectUuid}/{organUuid}/{taskUuid}",
+                arguments = listOf(
+                    navArgument("projectUuid") { type = NavType.StringType },
+                    navArgument("organUuid") { type = NavType.StringType },
+                    navArgument("taskUuid") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val projectUuid = backStackEntry.arguments?.getString("projectUuid") ?: ""
+                val organUuid = backStackEntry.arguments?.getString("organUuid") ?: ""
+                val taskUuid = backStackEntry.arguments?.getString("taskUuid") ?: ""
+                
+                TaskDetailsScreen(
+                    projectUuid = projectUuid,
+                    organUuid = organUuid,
+                    taskUuid = taskUuid,
+                    onBack = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_organ", true)
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_dashboard", true)
+                        try {
+                            navController.getBackStackEntry(OrganScreen.Dashboard.name).savedStateHandle.set("refresh_dashboard", true)
+                        } catch (e: Exception) {}
+                        navController.popBackStack()
+                    },
+                    onSuccess = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_organ", true)
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_dashboard", true)
+                        try {
+                            navController.getBackStackEntry(OrganScreen.Dashboard.name).savedStateHandle.set("refresh_dashboard", true)
+                        } catch (e: Exception) {}
+                        navController.popBackStack()
+                    }
                 )
             }
         }

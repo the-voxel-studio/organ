@@ -393,4 +393,39 @@ class OrganDetailsViewModel : ViewModel() {
         _selectedStatuses.value = emptyList()
         updateFilteredTasks()
     }
+
+    fun canDragTask(task: Task): Boolean {
+        if (isProjectAdmin) return true
+        val hasAll = hasPermission("TASK_STATUS_CHANGE_ALL")
+        val hasOwn = hasPermission("TASK_STATUS_CHANGE_OWN")
+        if (hasAll) return true
+        if (hasOwn) {
+            val currentUserId = UserRepository.currentUser?.uuid
+            val isManager = task.manager?.uuid == currentUserId
+            val isAssignee = task.assignees?.any { it.uuid == currentUserId } ?: false
+            return isManager || isAssignee
+        }
+        return false
+    }
+
+    fun canChangeStatus(task: Task, newStatus: String): Boolean {
+        if (isProjectAdmin) return true
+
+        val hasAll = hasPermission("TASK_STATUS_CHANGE_ALL")
+        val hasOwn = hasPermission("TASK_STATUS_CHANGE_OWN")
+
+        if (!hasAll && !hasOwn) return false
+
+        val currentUserId = UserRepository.currentUser?.uuid
+        val isManager = task.manager?.uuid == currentUserId
+        val isAssignee = task.assignees?.any { it.uuid == currentUserId } ?: false
+
+        if (!hasAll && hasOwn && !isManager && !isAssignee) return false
+
+        if (newStatus == "DONE" || newStatus == "CANCELED") {
+            return isManager
+        }
+
+        return true
+    }
 }

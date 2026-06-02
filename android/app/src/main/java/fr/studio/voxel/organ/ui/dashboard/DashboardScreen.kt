@@ -138,7 +138,14 @@ fun Dashboard(
             }
 
             item {
-                PriorityTask(dashboardVM = dashboardVM)
+                PriorityTask(
+                    onTaskClick = { task ->
+                        val projectUuid = task.projectUuid ?: ""
+                        val organUuid = task.organUuid ?: ""
+                        navController.navigate("${OrganScreen.Task.name}/$projectUuid/$organUuid/${task.uuid}")
+                    },
+                    dashboardVM = dashboardVM
+                )
             }
 
             item {

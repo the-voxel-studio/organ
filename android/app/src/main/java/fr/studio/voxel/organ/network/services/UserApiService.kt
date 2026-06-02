@@ -31,9 +31,9 @@ data class User(
     val email : String,
     val firstName : String,
     val lastName : String,
-    val isVerified : Boolean,
-    val createdAt : String,
-    val authWithGoogle : Boolean
+    val isVerified : Boolean = false,
+    val createdAt : String = "",
+    val authWithGoogle : Boolean = false
 )
 
 data class UpdateUserRequest(

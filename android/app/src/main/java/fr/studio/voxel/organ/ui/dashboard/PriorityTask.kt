@@ -18,9 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.studio.voxel.organ.viewmodel.DashboardViewModel
+import fr.studio.voxel.organ.network.services.Task
 
 @Composable
 fun PriorityTask(
+    onTaskClick: (Task) -> Unit,
     dashboardVM: DashboardViewModel = viewModel()
 ) {
     Column(
@@ -41,7 +43,7 @@ fun PriorityTask(
             }
         } else if (tasks.isNotEmpty()) {
             tasks.forEachIndexed { index, task ->
-                LineTask(task = task)
+                LineTask(task = task, onClick = { onTaskClick(task) })
                 if (index < tasks.size - 1) {
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f),

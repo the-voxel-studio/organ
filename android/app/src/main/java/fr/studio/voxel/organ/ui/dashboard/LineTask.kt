@@ -2,6 +2,7 @@ package fr.studio.voxel.organ.ui.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +31,7 @@ import fr.studio.voxel.organ.network.services.Task
 @Composable
 fun LineTask(
     task: Task,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Resolve project color from local store
@@ -65,8 +67,9 @@ fun LineTask(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .clickable { onClick() }
             .padding(vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {

@@ -37,6 +37,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 
 // Sub-components imports
 import fr.studio.voxel.organ.ui.organ.details.components.OrganHeaderSection
@@ -54,11 +63,20 @@ fun OrganDetailsScreen(
     onBack: () -> Unit,
     onEditOrgan: (String, String) -> Unit,
     onSidebarClick: () -> Unit,
+    onTaskClick: (String) -> Unit,
     viewModel: OrganDetailsViewModel = viewModel()
 ) {
     LaunchedEffect(projectUuid, organUuid) {
         viewModel.initOrgan(projectUuid, organUuid)
     }
+
+    val context = LocalContext.current
+    var isDragging by remember { mutableStateOf(false) }
+    var draggedTask by remember { mutableStateOf<fr.studio.voxel.organ.network.services.Task?>(null) }
+    var dragOffset by remember { mutableStateOf(Offset.Zero) }
+    var dragInitialPosition by remember { mutableStateOf(Offset.Zero) }
+    val dragPosition by remember { derivedStateOf { dragInitialPosition + dragOffset } }
+    val tabBounds = remember { mutableMapOf<String, Rect>() }
 
     var showNotImplementedFeature by remember { mutableStateOf<String?>(null) }
     val coroutineScope = rememberCoroutineScope()
@@ -79,6 +97,67 @@ fun OrganDetailsScreen(
             else projectColor
         } catch (e: Exception) {
             projectColor
+        }
+    }
+
+    val activeColumns = remember(viewModel.selectedStatuses, highlightColor) {
+        val allCols = listOf(
+            Triple("TODO", "À Faire", Color(0xFF94A3B8)),
+            Triple("IN_PROGRESS", "En Cours", highlightColor),
+            Triple("WAITING", "En Attente", Color(0xFFFBBF24)),
+            Triple("DONE", "Terminé", Color(0xFF4ADE80)),
+            Triple("CANCELED", "Annulé", Color(0xFFFB7185))
+        )
+        if (viewModel.selectedStatuses.isEmpty()) allCols
+        else allCols.filter { viewModel.selectedStatuses.contains(it.first) }
+    }
+
+    val pagerState = rememberPagerState { activeColumns.size }
+    var pagerBounds by remember { mutableStateOf<Rect?>(null) }
+
+    val density = LocalDensity.current
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp.dp
+    val screenWidthPx = with(density) { screenWidthDp.toPx() }
+    val edgeThresholdPx = with(density) { 45.dp.toPx() }
+
+    LaunchedEffect(isDragging) {
+        if (!isDragging) return@LaunchedEffect
+        var leftHoverStart = 0L
+        var rightHoverStart = 0L
+        val hoverDelayMs = 1000L
+
+        while (isDragging) {
+            val currentX = dragPosition.x
+            val now = System.currentTimeMillis()
+
+            if (currentX < edgeThresholdPx) {
+                rightHoverStart = 0L
+                if (leftHoverStart == 0L) {
+                    leftHoverStart = now
+                } else if (now - leftHoverStart >= hoverDelayMs) {
+                    if (pagerState.currentPage > 0) {
+                        val targetPage = pagerState.currentPage - 1
+                        pagerState.animateScrollToPage(targetPage)
+                        leftHoverStart = System.currentTimeMillis()
+                    }
+                }
+            } else if (currentX > screenWidthPx - edgeThresholdPx) {
+                leftHoverStart = 0L
+                if (rightHoverStart == 0L) {
+                    rightHoverStart = now
+                } else if (now - rightHoverStart >= hoverDelayMs) {
+                    if (pagerState.currentPage < pagerState.pageCount - 1) {
+                        val targetPage = pagerState.currentPage + 1
+                        pagerState.animateScrollToPage(targetPage)
+                        rightHoverStart = System.currentTimeMillis()
+                    }
+                }
+            } else {
+                leftHoverStart = 0L
+                rightHoverStart = 0L
+            }
+
+            kotlinx.coroutines.delay(100)
         }
     }
 
@@ -201,18 +280,6 @@ fun OrganDetailsScreen(
                                         .height(tasksHeight)
                                 ) {
                                     if (viewModel.activeView == "kanban") {
-                                        val activeColumns = remember(viewModel.selectedStatuses, highlightColor) {
-                                            val allCols = listOf(
-                                                Triple("TODO", "À Faire", Color(0xFF94A3B8)),
-                                                Triple("IN_PROGRESS", "En Cours", highlightColor),
-                                                Triple("WAITING", "En Attente", Color(0xFFFBBF24)),
-                                                Triple("DONE", "Terminé", Color(0xFF4ADE80)),
-                                                Triple("CANCELED", "Annulé", Color(0xFFFB7185))
-                                            )
-                                            if (viewModel.selectedStatuses.isEmpty()) allCols
-                                            else allCols.filter { viewModel.selectedStatuses.contains(it.first) }
-                                        }
-
                                         if (activeColumns.isEmpty()) {
                                             Box(
                                                 modifier = Modifier.fillMaxSize(),
@@ -225,7 +292,6 @@ fun OrganDetailsScreen(
                                                 )
                                             }
                                         } else {
-                                            val pagerState = rememberPagerState { activeColumns.size }
                                             Column(modifier = Modifier.fillMaxSize()) {
                                                 ScrollableTabRow(
                                                     selectedTabIndex = pagerState.currentPage,
@@ -235,13 +301,16 @@ fun OrganDetailsScreen(
                                                     divider = {},
                                                     modifier = Modifier.fillMaxWidth()
                                                 ) {
-                                                    activeColumns.forEachIndexed { index, (_, label, color) ->
+                                                    activeColumns.forEachIndexed { index, (status, label, color) ->
                                                         Tab(
                                                             selected = pagerState.currentPage == index,
                                                             onClick = {
                                                                 coroutineScope.launch {
                                                                     pagerState.animateScrollToPage(index)
                                                                 }
+                                                            },
+                                                            modifier = Modifier.onGloballyPositioned { coordinates ->
+                                                                tabBounds[status] = coordinates.boundsInRoot()
                                                             },
                                                             text = {
                                                                 Row(
@@ -271,9 +340,13 @@ fun OrganDetailsScreen(
 
                                                 HorizontalPager(
                                                     state = pagerState,
+                                                    beyondViewportPageCount = activeColumns.size,
                                                     modifier = Modifier
                                                         .fillMaxWidth()
                                                         .weight(1f)
+                                                        .onGloballyPositioned { coordinates ->
+                                                            pagerBounds = coordinates.boundsInRoot()
+                                                        }
                                                 ) { page ->
                                                     val (status, _, color) = activeColumns[page]
                                                     val tasksForStatus = viewModel.filteredTasks.filter { it.status == status }
@@ -330,13 +403,55 @@ fun OrganDetailsScreen(
                                                                 contentPadding = PaddingValues(bottom = 88.dp),
                                                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                                                             ) {
-                                                                items(tasksForStatus, key = { it.uuid }) { task ->
-                                                                    TaskCard(
-                                                                        task = task,
-                                                                        highlightColor = highlightColor,
-                                                                        onClick = { showNotImplementedFeature = "Détails et modification de la tâche" }
-                                                                    )
-                                                                }
+                                                                 items(tasksForStatus, key = { it.uuid }) { task ->
+                                                                     TaskCard(
+                                                                         task = task,
+                                                                         highlightColor = highlightColor,
+                                                                         onClick = { onTaskClick(task.uuid) },
+                                                                         isDraggable = viewModel.canDragTask(task),
+                                                                         onDragStart = { offset, cardPos ->
+                                                                             dragInitialPosition = cardPos + offset
+                                                                             dragOffset = Offset.Zero
+                                                                             draggedTask = task
+                                                                             isDragging = true
+                                                                         },
+                                                                         onDrag = { amount ->
+                                                                             dragOffset += amount
+                                                                         },
+                                                                         onDragEnd = {
+                                                                             if (isDragging && draggedTask != null) {
+                                                                                 var targetColumn = activeColumns.find { col ->
+                                                                                     val bounds = tabBounds[col.first]
+                                                                                     bounds?.contains(dragPosition) == true
+                                                                                 }
+                                                                                 if (targetColumn == null && pagerBounds?.contains(dragPosition) == true) {
+                                                                                     if (pagerState.currentPage in activeColumns.indices) {
+                                                                                         targetColumn = activeColumns[pagerState.currentPage]
+                                                                                     }
+                                                                                 }
+                                                                                 if (targetColumn != null && targetColumn.first != draggedTask!!.status) {
+                                                                                     val targetStatus = targetColumn.first
+                                                                                     if (viewModel.canChangeStatus(draggedTask!!, targetStatus)) {
+                                                                                         viewModel.updateTaskStatus(draggedTask!!, targetStatus)
+                                                                                         android.widget.Toast.makeText(
+                                                                                             context,
+                                                                                             "Statut mis à jour : ${targetColumn.second}",
+                                                                                             android.widget.Toast.LENGTH_SHORT
+                                                                                         ).show()
+                                                                                     } else {
+                                                                                         android.widget.Toast.makeText(
+                                                                                             context,
+                                                                                             "Action non autorisée : permissions insuffisantes",
+                                                                                             android.widget.Toast.LENGTH_SHORT
+                                                                                         ).show()
+                                                                                     }
+                                                                                 }
+                                                                             }
+                                                                             isDragging = false
+                                                                             draggedTask = null
+                                                                         }
+                                                                     )
+                                                                 }
                                                             }
                                                         }
                                                     }
@@ -383,13 +498,13 @@ fun OrganDetailsScreen(
                                                     contentPadding = PaddingValues(bottom = 88.dp),
                                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                                 ) {
-                                                    items(tasks, key = { it.uuid }) { task ->
-                                                        TaskCard(
-                                                            task = task,
-                                                            highlightColor = highlightColor,
-                                                            onClick = { showNotImplementedFeature = "Détails et modification de la tâche" }
-                                                        )
-                                                    }
+                                                     items(tasks, key = { it.uuid }) { task ->
+                                                         TaskCard(
+                                                             task = task,
+                                                             highlightColor = highlightColor,
+                                                             onClick = { onTaskClick(task.uuid) }
+                                                         )
+                                                     }
                                                 }
                                             }
                                         }
@@ -418,6 +533,38 @@ fun OrganDetailsScreen(
                                     modifier = Modifier.size(32.dp),
                                     tint = Color.White
                                 )
+                            }
+                        }
+
+                        // Dragged Floating Task Card overlay
+                        if (isDragging && draggedTask != null) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.2f))
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .offset {
+                                            IntOffset(
+                                                x = (dragPosition.x - 150.dp.toPx()).toInt(),
+                                                y = (dragPosition.y - 50.dp.toPx()).toInt()
+                                            )
+                                        }
+                                        .width(300.dp)
+                                        .graphicsLayer {
+                                            scaleX = 1.05f
+                                            scaleY = 1.05f
+                                            rotationZ = 3f
+                                            alpha = 0.9f
+                                        }
+                                ) {
+                                    TaskCard(
+                                        task = draggedTask!!,
+                                        highlightColor = highlightColor,
+                                        onClick = {}
+                                    )
+                                }
                             }
                         }
                     }
