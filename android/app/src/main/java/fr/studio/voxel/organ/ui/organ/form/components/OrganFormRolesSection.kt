@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -114,8 +115,8 @@ fun OrganFormRolesSection(
         ) {
             roles.forEach { role ->
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
                     color = Color(0xFFFAFAFA),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -189,12 +190,12 @@ fun OrganFormRolesSection(
                     onRolesChanged(updated)
                     openRoleDialog(newRole.id)
                 },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Ajouter un rôle personnalisé", fontWeight = FontWeight.Bold)
+                Text("Ajouter un rôle", fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -230,11 +231,15 @@ fun OrganFormRolesSection(
             "TASK_TAG_MANAGE_ALL" to Pair("Gérer les tags de toutes les tâches", "Ajouter/retirer des étiquettes sur tous les tickets."),
             "TASK_LINK_MANAGE_OWN" to Pair("Gérer les liens de ses tâches", "Associer des liens de documentation à ses tickets."),
             "TASK_LINK_MANAGE_ALL" to Pair("Gérer les liens de toutes les tâches", "Associer des liens de documentation à tous les tickets."),
+            "TASK_LINK_HARD_DELETE_OWN" to Pair("Supprimer définitivement les liens de ses tâches", "Effacer de manière irréversible les liens de ses tickets."),
+            "TASK_LINK_HARD_DELETE_ALL" to Pair("Supprimer définitivement les liens de toutes les tâches", "Effacer de manière irréversible les liens de tous les tickets."),
+            "TASK_TAG_HARD_DELETE" to Pair("Supprimer définitivement les tags", "Effacer de manière irréversible les étiquettes de l'Organ."),
             "TASK_DEPENDENCY_MANAGE_OWN" to Pair("Gérer les dépendances de ses tâches", "Lier ses tâches à des tâches parentes."),
             "TASK_DEPENDENCY_MANAGE_ALL" to Pair("Gérer les dépendances de toutes les tâches", "Lier tous les tickets."),
             "TASK_VALIDATE" to Pair("Valider les tâches", "Valider ou vérifier l'avancement des tâches."),
             "COMMENT_CREATE" to Pair("Ajouter des commentaires", "Participer aux discussions sous les tickets."),
             "COMMENT_EDIT_OWN" to Pair("Modifier ses commentaires", "Editer ses propres messages de discussion."),
+            "COMMENT_EDIT_ALL" to Pair("Modifier tous les commentaires", "Editer les messages de n'importe quel membre."),
             "COMMENT_DELETE_OWN" to Pair("Supprimer ses commentaires", "Envoyer ses propres messages à la corbeille."),
             "COMMENT_DELETE_ALL" to Pair("Supprimer tous les commentaires", "Masquer les messages inappropriés."),
             "COMMENT_HARD_DELETE_OWN" to Pair("Effacer définitivement ses commentaires", "Supprimer irréversiblement ses messages."),
@@ -246,29 +251,49 @@ fun OrganFormRolesSection(
             "ATTACHMENT_HARD_DELETE_ALL" to Pair("Supprimer définitivement tous les fichiers", "Nettoyage définitif du stockage.")
         )
 
-        Dialog(onDismissRequest = {
-            val role = roles.find { it.id == editingRoleId }
-            if (role != null && role.isNew) {
-                onRolesChanged(roles.filter { it.id != editingRoleId })
-            }
-            showModal = false
-        }) {
+        Dialog(
+            onDismissRequest = {
+                val role = roles.find { it.id == editingRoleId }
+                if (role != null && role.isNew) {
+                    onRolesChanged(roles.filter { it.id != editingRoleId })
+                }
+                showModal = false
+            },
+            properties = androidx.compose.ui.window.DialogProperties(
+                usePlatformDefaultWidth = false
+            )
+        ) {
             Surface(
-                shape = RoundedCornerShape(24.dp),
                 color = Color.White,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.9f)
+                modifier = Modifier.fillMaxSize()
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(20.dp)
+                        .padding(24.dp)
                 ) {
-                    Text(
-                        text = "Configurer le rôle",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Configurer le rôle",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                        )
+                        IconButton(onClick = {
+                            val role = roles.find { it.id == editingRoleId }
+                            if (role != null && role.isNew) {
+                                onRolesChanged(roles.filter { it.id != editingRoleId })
+                            }
+                            showModal = false
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Fermer"
+                            )
+                        }
+                    }
 
                     if (modalRoleError.isNotBlank()) {
                         Text(
@@ -293,8 +318,15 @@ fun OrganFormRolesSection(
                                 modalRoleEmoji = getFirstEmojiGrapheme(it)
                             },
                             label = { Text("Emoji") },
-                            modifier = Modifier.width(72.dp),
-                            singleLine = true
+                            modifier = Modifier.width(96.dp),
+                            singleLine = true,
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = highlightColor,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color(0xFFF9F9F9)
+                            )
                         )
 
                         OutlinedTextField(
@@ -306,7 +338,14 @@ fun OrganFormRolesSection(
                             label = { Text("Nom du rôle") },
                             placeholder = { Text("Ex: Développeur") },
                             modifier = Modifier.weight(1f),
-                            singleLine = true
+                            singleLine = true,
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = highlightColor,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color(0xFFF9F9F9)
+                            )
                         )
                     }
 
@@ -397,7 +436,8 @@ fun OrganFormRolesSection(
                                 }
                                 showModal = false
                             },
-                            modifier = Modifier.weight(1f)
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f).height(48.dp)
                         ) {
                             Text("Annuler")
                         }
@@ -435,10 +475,14 @@ fun OrganFormRolesSection(
                                 onRolesChanged(updated)
                                 showModal = false
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = highlightColor),
-                            modifier = Modifier.weight(1.5f)
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = highlightColor,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1.5f).height(48.dp)
                         ) {
-                            Text("Enregistrer")
+                            Text("Enregistrer", fontWeight = FontWeight.Bold)
                         }
                     }
                 }

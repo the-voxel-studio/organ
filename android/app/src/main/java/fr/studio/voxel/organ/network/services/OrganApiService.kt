@@ -42,7 +42,8 @@ interface OrganApiService {
     @DELETE("/api/projects/{projectUuid}/organs/{organUuid}")
     suspend fun deleteOrgan(
         @Path("projectUuid") projectUuid: String,
-        @Path("organUuid") organUuid: String
+        @Path("organUuid") organUuid: String,
+        @Query("permanent") permanent: Boolean = false
     ): Response<Unit>
 
     // Organ Roles
@@ -71,7 +72,8 @@ interface OrganApiService {
     suspend fun deleteOrganRole(
         @Path("projectUuid") projectUuid: String,
         @Path("organUuid") organUuid: String,
-        @Path("roleUuid") roleUuid: String
+        @Path("roleUuid") roleUuid: String,
+        @Query("permanent") permanent: Boolean = false
     ): Response<Unit>
 
     @POST("/api/projects/{projectUuid}/organs/{organUuid}/roles/{roleUuid}/assign")
@@ -87,7 +89,34 @@ interface OrganApiService {
         @Path("projectUuid") projectUuid: String,
         @Path("organUuid") organUuid: String,
         @Path("roleUuid") roleUuid: String,
-        @Path("userUuid") userUuid: String
+        @Path("userUuid") userUuid: String,
+        @Query("permanent") permanent: Boolean = false
+    ): Response<Unit>
+
+    @GET("/api/projects/{projectUuid}/organs/{organUuid}/roles/trash")
+    suspend fun getTrashedRoles(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String
+    ): Response<List<OrganRoleResponse>>
+
+    @GET("/api/projects/{projectUuid}/organs/{organUuid}/roles/members/trash")
+    suspend fun getTrashedMembers(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String
+    ): Response<List<TrashedRoleMemberResponse>>
+
+    @POST("/api/projects/{projectUuid}/organs/{organUuid}/roles/{roleUuid}/restore")
+    suspend fun restoreRole(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String,
+        @Path("roleUuid") roleUuid: String
+    ): Response<Unit>
+
+    @POST("/api/projects/{projectUuid}/organs/{organUuid}/roles/members/{uorId}/restore")
+    suspend fun restoreMember(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String,
+        @Path("uorId") uorId: Int
     ): Response<Unit>
 
     @GET("/api/permissions/available")
@@ -111,8 +140,9 @@ data class OrganRoleResponse(
     val name: String,
     val iconType: String,
     val iconData: String?,
-    val permissions: List<String>,
-    val members: List<OrganRoleMember>
+    val permissions: List<String>? = null,
+    val members: List<OrganRoleMember>? = null,
+    val deletedAt: String? = null
 )
 
 data class OrganRoleMember(
@@ -149,3 +179,21 @@ data class Organ(
             else -> null
         }
 }
+
+data class TrashedRoleMemberResponse(
+    val uuid: Int,
+    val deletedAt: String,
+    val user: TrashedUserSummary,
+    val role: TrashedRoleSummary
+)
+
+data class TrashedUserSummary(
+    val uuid: String,
+    val firstName: String,
+    val lastName: String
+)
+
+data class TrashedRoleSummary(
+    val uuid: String,
+    val name: String
+)

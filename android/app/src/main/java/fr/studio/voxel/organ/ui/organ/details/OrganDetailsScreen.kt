@@ -106,6 +106,7 @@ fun OrganDetailsScreen(
     onEditOrgan: (String, String) -> Unit,
     onSidebarClick: () -> Unit,
     onTaskClick: (String) -> Unit,
+    onTrashClick: (String, String) -> Unit = { _, _ -> },
     viewModel: OrganDetailsViewModel = viewModel()
 ) {
     LaunchedEffect(projectUuid, organUuid) {
@@ -252,7 +253,7 @@ fun OrganDetailsScreen(
                                     canViewTrash = viewModel.hasPermission("ORGAN_EDIT") ||
                                             viewModel.hasPermission("TASK_DELETE_ALL"),
                                     onEditClick = { onEditOrgan(projectUuid, organ.uuid) },
-                                    onTrashClick = { showNotImplementedFeature = "Corbeille des tâches" }
+                                    onTrashClick = { onTrashClick(projectUuid, organ.uuid) }
                                 )
 
                                 Spacer(modifier = Modifier.height(16.dp))

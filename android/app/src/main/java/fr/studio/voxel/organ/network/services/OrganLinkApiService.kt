@@ -32,12 +32,32 @@ interface OrganLinkApiService {
         @Path("linkUuid") linkUuid: String,
         @Query("permanent") permanent: Boolean
     ): Response<Unit>
+
+    @GET("/api/projects/{projectUuid}/organs/{organUuid}/links/trash")
+    suspend fun getTrashedLinks(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String
+    ): Response<List<TrashedOrganLinkSummary>>
+
+    @POST("/api/projects/{projectUuid}/organs/{organUuid}/links/{linkUuid}/restore")
+    suspend fun restoreLink(
+        @Path("projectUuid") projectUuid: String,
+        @Path("organUuid") organUuid: String,
+        @Path("linkUuid") linkUuid: String
+    ): Response<Unit>
 }
 
 data class OrganLinkSummary(
     val uuid: String,
     val url: String,
     val description: String?
+)
+
+data class TrashedOrganLinkSummary(
+    val uuid: String,
+    val url: String,
+    val description: String?,
+    val deletedAt: String
 )
 
 data class CreateOrganLinkRequest(

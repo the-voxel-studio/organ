@@ -64,6 +64,7 @@ fun ProjectDetailsScreen(
     onEditProject: (String) -> Unit,
     onCreateOrgan: (String) -> Unit,
     onOrganClick: (String) -> Unit,
+    onTrashClick: (String) -> Unit,
     viewModel: ProjectDetailsViewModel = viewModel()
 ) {
     LaunchedEffect(projectUuid) {
@@ -122,6 +123,7 @@ fun ProjectDetailsScreen(
                                     projectColor = projectColor,
                                     canManage = canManage,
                                     onEditClick = { onEditProject(projectUuid) },
+                                    onTrashClick = { onTrashClick(projectUuid) },
                                     onFeaturePlaceholderClick = { showNotImplementedFeature = it }
                                 )
 

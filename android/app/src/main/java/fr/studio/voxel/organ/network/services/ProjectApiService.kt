@@ -47,7 +47,13 @@ interface ProjectApiService {
     suspend fun getProjectInvitations(@Path("projectUuid") projectUuid: String): Response<List<ProjectInvitation>>
 
     @GET("/api/projects/{projectUuid}/members/trash")
-    suspend fun getTrashedProjectMembers(@Path("projectUuid") projectUuid: String): Response<List<Any>>
+    suspend fun getTrashedProjectMembers(@Path("projectUuid") projectUuid: String): Response<List<ProjectMember>>
+
+    @POST("/api/projects/{projectUuid}/members/{memberUuid}/restore")
+    suspend fun restoreMember(
+        @Path("projectUuid") projectUuid: String,
+        @Path("memberUuid") memberUuid: String
+    ): Response<Unit>
 
     @POST("/api/projects/{projectUuid}/members/invite")
     suspend fun inviteMember(@Path("projectUuid") projectUuid: String, @Body request: InvitationRequest): Response<Any>
@@ -62,7 +68,8 @@ interface ProjectApiService {
     @DELETE("/api/projects/{projectUuid}/members/{memberUuid}")
     suspend fun removeMember(
         @Path("projectUuid") projectUuid: String,
-        @Path("memberUuid") memberUuid: String
+        @Path("memberUuid") memberUuid: String,
+        @Query("permanent") permanent: Boolean = false
     ): Response<Unit>
 
     // Project Drive
@@ -89,7 +96,8 @@ data class ProjectMemberUser(
 data class ProjectMember(
     val uuid: String,
     val user: ProjectMemberUser,
-    val role: String
+    val role: String,
+    val deletedAt: String? = null
 )
 
 data class ProjectInvitation(

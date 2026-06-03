@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -21,7 +22,8 @@ fun ProjectFormDetailsSection(
     onDescriptionChange: (String) -> Unit,
     status: String,
     onStatusChange: (String) -> Unit,
-    isEdit: Boolean
+    isEdit: Boolean,
+    highlightColor: Color
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -33,16 +35,22 @@ fun ProjectFormDetailsSection(
         OutlinedTextField(
             value = title,
             onValueChange = onTitleChange,
-            placeholder = { Text("Ex: Refonte du site web") },
+            placeholder = { Text("Ex: Refonte du site web", color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)) },
             singleLine = true,
-            shape = RoundedCornerShape(8.dp),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),
             leadingIcon = {
                 Icon(
                     painter = painterResource(R.drawable.outline_info),
                     contentDescription = "Info obligatoire"
                 )
-            }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = highlightColor,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color(0xFFF9F9F9)
+            )
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -56,11 +64,17 @@ fun ProjectFormDetailsSection(
         OutlinedTextField(
             value = description,
             onValueChange = onDescriptionChange,
-            placeholder = { Text("Décrivez brièvement les objectifs du projet...") },
+            placeholder = { Text("Décrivez brièvement les objectifs du projet...", color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)) },
             minLines = 3,
             maxLines = 5,
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.fillMaxWidth()
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = highlightColor,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color(0xFFF9F9F9)
+            )
         )
 
         if (isEdit) {
@@ -76,9 +90,11 @@ fun ProjectFormDetailsSection(
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(
                     onClick = { expanded = true },
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
                     colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color(0xFFF9F9F9),
                         contentColor = MaterialTheme.colorScheme.onSurface
                     )
                 ) {

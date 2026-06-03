@@ -433,6 +433,30 @@ class ProjectFormViewModel : ViewModel() {
         }
     }
 
+    fun deleteProject(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val pUuid = projectUuid ?: return
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                val res = projectService.deleteProject(pUuid)
+                if (res.isSuccessful) {
+                    ProjectRepository.removeProject(pUuid)
+                    onSuccess()
+                } else {
+                    errorMessage = res.message().ifBlank { "Échec de la suppression du Projet." }
+                    onError(errorMessage ?: "")
+                }
+            } catch (e: Exception) {
+                Log.e("PROJECT_FORM_VM", "Error deleting project", e)
+                errorMessage = "Erreur réseau."
+                onError(errorMessage ?: "")
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
     private fun parseHexColor(hex: String): Color {
         return try {
             val cleanHex = hex.replace("#", "")

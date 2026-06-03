@@ -22,6 +22,7 @@ import fr.studio.voxel.organ.network.services.ProjectMember
 import fr.studio.voxel.organ.viewmodel.FormMember
 import fr.studio.voxel.organ.viewmodel.FormRole
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun OrganFormMembersSection(
     addedMembers: List<FormMember>,
@@ -66,8 +67,13 @@ fun OrganFormMembersSection(
                     val selectedMember = availableMembers.find { it.user.uuid == selectedMemberUuid }
                     OutlinedButton(
                         onClick = { expandedDropdown = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = Color(0xFFF9F9F9),
+                            contentColor = Color.Black
+                        )
                     ) {
                         Text(
                             text = selectedMember?.let { "${it.user.firstName} ${it.user.lastName}" } ?: "Sélectionner un collaborateur...",
@@ -110,7 +116,8 @@ fun OrganFormMembersSection(
                     },
                     enabled = selectedMemberUuid.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(containerColor = highlightColor),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.height(50.dp)
                 ) {
                     Icon(Icons.Default.PersonAdd, contentDescription = null)
                     Spacer(modifier = Modifier.width(4.dp))
@@ -124,8 +131,8 @@ fun OrganFormMembersSection(
         // List of added members
         if (addedMembers.isEmpty()) {
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
                 color = Color.White,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -147,7 +154,7 @@ fun OrganFormMembersSection(
                 addedMembers.forEach { member ->
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
                         color = Color.White,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -179,16 +186,17 @@ fun OrganFormMembersSection(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             // List of checkable roles
-                            Row(
+                            FlowRow(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 roles.forEach { role ->
                                     val isActive = member.roles.contains(role.id)
                                     val border = if (isActive) {
                                         BorderStroke(1.5.dp, highlightColor)
                                     } else {
-                                        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                                        BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
                                     }
                                     val bg = if (isActive) highlightColor.copy(alpha = 0.1f) else Color.White
                                     val textColor = if (isActive) highlightColor else Color.Gray
@@ -212,12 +220,12 @@ fun OrganFormMembersSection(
                                                     if (it.userUuid == member.userUuid) it.copy(roles = currentRoles) else it
                                                 })
                                             }
-                                            .padding(horizontal = 10.dp, vertical = 6.dp)
                                     ) {
                                         Text(
                                             text = "${role.iconData} ${role.name.ifBlank { "(Rôle sans nom)" }}",
                                             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                                            color = textColor
+                                            color = textColor,
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                                         )
                                     }
                                 }

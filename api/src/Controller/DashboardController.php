@@ -69,6 +69,7 @@ class DashboardController extends AbstractController
             LEFT JOIN task_assignees ta ON t.id = ta.task_id
             WHERE (t.manager_id = :userId OR ta.user_id = :userId OR t.created_by = :userId)
             AND t.deleted_at IS NULL
+            AND o.deleted_at IS NULL
             AND t.status NOT IN ('DONE', 'CANCELED')
             AND p.deleted_at IS NULL
             AND pm.user_id = :userId

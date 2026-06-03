@@ -293,14 +293,14 @@ class OrganFormViewModel : ViewModel() {
                                 name = r.name,
                                 iconType = r.iconType,
                                 iconData = r.iconData ?: "👤",
-                                permissions = r.permissions
+                                permissions = r.permissions ?: emptyList()
                             )
                         }
                         originalRoles = roles.toList()
 
                         val membersMap = mutableMapOf<String, FormMember>()
                         rolesList.forEach { role ->
-                            role.members.forEach { m ->
+                            role.members?.forEach { m ->
                                 val existing = membersMap[m.uuid]
                                 val rolesListForMember = (existing?.roles ?: emptyList()) + role.uuid
                                 val name = listOf(m.firstName, m.lastName).filter { it.isNotBlank() }.joinToString(" ").ifBlank { m.email }
@@ -528,6 +528,30 @@ class OrganFormViewModel : ViewModel() {
             } catch (e: Exception) {
                 errorMessage = "Erreur réseau : ${e.localizedMessage}"
                 Log.e("ORGAN_VM", "submit error", e)
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun deleteOrgan(onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val oUuid = organUuid ?: return
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                val res = organService.deleteOrgan(projectUuid, oUuid, permanent = false)
+                if (res.isSuccessful) {
+                    ProjectRepository.removeOrgan(projectUuid, oUuid)
+                    onSuccess()
+                } else {
+                    errorMessage = res.message().ifBlank { "Échec de la suppression de l'Organ." }
+                    onError(errorMessage ?: "")
+                }
+            } catch (e: Exception) {
+                Log.e("ORGAN_FORM_VM", "Error deleting organ", e)
+                errorMessage = "Erreur réseau."
+                onError(errorMessage ?: "")
             } finally {
                 isLoading = false
             }

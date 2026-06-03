@@ -53,6 +53,7 @@ fun ProjectHeaderSection(
     projectColor: Color,
     canManage: Boolean,
     onEditClick: () -> Unit,
+    onTrashClick: () -> Unit,
     onFeaturePlaceholderClick: (String) -> Unit
 ) {
     val project = data.project
@@ -157,7 +158,7 @@ fun ProjectHeaderSection(
             ) {
                 if (canManage) {
                     OutlinedButton(
-                        onClick = { onFeaturePlaceholderClick("Corbeille") },
+                        onClick = onTrashClick,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .weight(1f)

@@ -33,6 +33,8 @@ import fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel
 import fr.studio.voxel.organ.viewmodel.OrganDetailsViewModel
 import fr.studio.voxel.organ.viewmodel.DashboardViewModel
 import fr.studio.voxel.organ.ui.task.TaskDetailsScreen
+import fr.studio.voxel.organ.ui.organ.trash.OrganTrashScreen
+import fr.studio.voxel.organ.ui.project.trash.ProjectTrashScreen
 
 enum class OrganScreen {
     SignIn,
@@ -47,7 +49,9 @@ enum class OrganScreen {
     EditOrgan,
     Task,
     Parameter,
-    Notification
+    Notification,
+    OrganTrash,
+    ProjectTrash
 }
 
 @Composable
@@ -199,6 +203,7 @@ fun OrganApp(
                     onEditProject = { uuid -> navController.navigate("${OrganScreen.EditProject.name}/$uuid") },
                     onCreateOrgan = { uuid -> navController.navigate("${OrganScreen.CreateOrgan.name}/$uuid") },
                     onOrganClick = { organUuid -> navController.navigate("${OrganScreen.Organ.name}/$projectUuid/$organUuid") },
+                    onTrashClick = { uuid -> navController.navigate("${OrganScreen.ProjectTrash.name}/$uuid") },
                     viewModel = viewModel
                 )
             }
@@ -225,7 +230,16 @@ fun OrganApp(
                     onBack = { navController.popBackStack() },
                     onSuccess = { uuid ->
                         navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
+                        try {
+                            navController.getBackStackEntry(OrganScreen.Dashboard.name).savedStateHandle.set("refresh_dashboard", true)
+                        } catch (e: Exception) {}
                         navController.popBackStack()
+                    },
+                    onDeleted = {
+                        try {
+                            navController.getBackStackEntry(OrganScreen.Dashboard.name).savedStateHandle.set("refresh_dashboard", true)
+                        } catch (e: Exception) {}
+                        navController.popBackStack(OrganScreen.Dashboard.name, false)
                     }
                 )
             }
@@ -240,6 +254,9 @@ fun OrganApp(
                     organUuid = null,
                     onBack = { navController.popBackStack() },
                     onSuccess = { projUuid, orgUuid ->
+                        try {
+                            navController.getBackStackEntry("${OrganScreen.Project.name}/{projectUuid}").savedStateHandle.set("refresh_project", true)
+                        } catch (e: Exception) {}
                         navController.navigate("${OrganScreen.Organ.name}/$projUuid/$orgUuid") {
                             popUpTo("${OrganScreen.Project.name}/$projUuid")
                         }
@@ -261,9 +278,17 @@ fun OrganApp(
                     organUuid = organUuid,
                     onBack = { navController.popBackStack() },
                     onSuccess = { projUuid, orgUuid ->
-                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
                         navController.previousBackStackEntry?.savedStateHandle?.set("refresh_organ", true)
+                        try {
+                            navController.getBackStackEntry("${OrganScreen.Project.name}/{projectUuid}").savedStateHandle.set("refresh_project", true)
+                        } catch (e: Exception) {}
                         navController.popBackStack()
+                    },
+                    onDeleted = {
+                        try {
+                            navController.getBackStackEntry("${OrganScreen.Project.name}/{projectUuid}").savedStateHandle.set("refresh_project", true)
+                        } catch (e: Exception) {}
+                        navController.popBackStack("${OrganScreen.Project.name}/$projectUuid", false)
                     }
                 )
             }
@@ -298,7 +323,48 @@ fun OrganApp(
                     onTaskClick = { taskUuid ->
                         navController.navigate("${OrganScreen.Task.name}/$projectUuid/$organUuid/$taskUuid")
                     },
+                    onTrashClick = { projUuid, orgUuid ->
+                        navController.navigate("${OrganScreen.OrganTrash.name}/$projUuid/$orgUuid")
+                    },
                     viewModel = viewModel
+                )
+            }
+
+            composable(
+                route = "${OrganScreen.OrganTrash.name}/{projectUuid}/{organUuid}",
+                arguments = listOf(
+                    navArgument("projectUuid") { type = NavType.StringType },
+                    navArgument("organUuid") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val projectUuid = backStackEntry.arguments?.getString("projectUuid") ?: ""
+                val organUuid = backStackEntry.arguments?.getString("organUuid") ?: ""
+                OrganTrashScreen(
+                    projectUuid = projectUuid,
+                    organUuid = organUuid,
+                    onBack = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_organ", true)
+                        navController.popBackStack()
+                    },
+                    onTaskClick = { taskUuid ->
+                        navController.navigate("${OrganScreen.Task.name}/$projectUuid/$organUuid/$taskUuid")
+                    }
+                )
+            }
+
+            composable(
+                route = "${OrganScreen.ProjectTrash.name}/{projectUuid}",
+                arguments = listOf(
+                    navArgument("projectUuid") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val projectUuid = backStackEntry.arguments?.getString("projectUuid") ?: ""
+                ProjectTrashScreen(
+                    projectUuid = projectUuid,
+                    onBack = {
+                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
+                        navController.popBackStack()
+                    }
                 )
             }
 

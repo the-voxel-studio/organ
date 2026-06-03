@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,10 +42,16 @@ fun ProjectFormMembersSection(
             OutlinedTextField(
                 value = newEmail,
                 onValueChange = { newEmail = it },
-                placeholder = { Text("email@exemple.com") },
+                placeholder = { Text("email@exemple.com", color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)) },
                 singleLine = true,
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier.weight(1f)
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.weight(1f),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color(0xFFF9F9F9)
+                )
             )
             Spacer(modifier = Modifier.width(12.dp))
             Button(
@@ -54,7 +61,7 @@ fun ProjectFormMembersSection(
                         newEmail = ""
                     }
                 },
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.height(56.dp)
             ) {
                 Text("Ajouter")
@@ -79,13 +86,13 @@ fun ProjectFormMembersSection(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            color = if (invite.isCreator) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                            shape = RoundedCornerShape(12.dp)
+                            color = if (invite.isCreator) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f) else Color.White,
+                            shape = RoundedCornerShape(16.dp)
                         )
                         .border(
                             width = 1.dp,
-                            color = if (invite.isCreator) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.outlineVariant,
-                            shape = RoundedCornerShape(12.dp)
+                            color = if (invite.isCreator) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                            shape = RoundedCornerShape(16.dp)
                         )
                         .padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically

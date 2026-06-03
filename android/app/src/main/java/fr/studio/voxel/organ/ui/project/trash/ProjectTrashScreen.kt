@@ -1,0 +1,639 @@
+package fr.studio.voxel.organ.ui.project.trash
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
+import fr.studio.voxel.organ.R
+import fr.studio.voxel.organ.network.services.*
+import fr.studio.voxel.organ.ui.components.LoadingOverlay
+import fr.studio.voxel.organ.ui.components.BackToLink
+import fr.studio.voxel.organ.ui.components.DeleteConfirmDialog
+import fr.studio.voxel.organ.ui.dashboard.ProjectIconBadge
+import fr.studio.voxel.organ.ui.dashboard.ProjectVisual
+import fr.studio.voxel.organ.ui.header.Header
+import fr.studio.voxel.organ.ui.project.AccessDeniedScreen
+import fr.studio.voxel.organ.viewmodel.ProjectTrashViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
+
+@Composable
+fun ProjectTrashScreen(
+    projectUuid: String,
+    onBack: () -> Unit,
+    viewModel: ProjectTrashViewModel = viewModel()
+) {
+    LaunchedEffect(projectUuid) {
+        viewModel.loadTrash(projectUuid)
+    }
+
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Collapsing states
+    var organsCollapsed by remember { mutableStateOf(false) }
+    var membersCollapsed by remember { mutableStateOf(false) }
+    var tagsCollapsed by remember { mutableStateOf(false) }
+
+    // Action dialog states
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var actionType by remember { mutableStateOf<String?>(null) } // "organ", "member", "tag", "bulk_members"
+    var actionUuid by remember { mutableStateOf("") }
+    var actionTitle by remember { mutableStateOf("") }
+    var actionOp by remember { mutableStateOf("") } // "restore", "delete"
+
+    val highlightColor = remember(viewModel.highlightColor) {
+        try {
+            Color(android.graphics.Color.parseColor(viewModel.highlightColor))
+        } catch (e: Exception) {
+            Color(0xFFFF7EB6)
+        }
+    }
+
+    // Filter calculations
+    val filteredOrgans = remember(viewModel.trashedOrgans, searchQuery) {
+        val query = searchQuery.lowercase().trim()
+        if (query.isBlank()) viewModel.trashedOrgans
+        else viewModel.trashedOrgans.filter { it.title.lowercase().contains(query) }
+    }
+
+    val filteredMembers = remember(viewModel.trashedMembers, searchQuery) {
+        val query = searchQuery.lowercase().trim()
+        if (query.isBlank()) viewModel.trashedMembers
+        else viewModel.trashedMembers.filter {
+            val fullName = "${it.user.firstName} ${it.user.lastName}".lowercase()
+            fullName.contains(query) || it.user.email.lowercase().contains(query) || it.role.lowercase().contains(query)
+        }
+    }
+
+    val filteredTags = remember(viewModel.trashedTags, searchQuery) {
+        val query = searchQuery.lowercase().trim()
+        if (query.isBlank()) viewModel.trashedTags
+        else viewModel.trashedTags.filter { it.name.lowercase().contains(query) }
+    }
+
+    val hasTrashedItems = viewModel.trashedOrgans.isNotEmpty() ||
+            viewModel.trashedMembers.isNotEmpty() ||
+            viewModel.trashedTags.isNotEmpty()
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        if (viewModel.isLoading && viewModel.trashedOrgans.isEmpty() && viewModel.trashedMembers.isEmpty() && viewModel.trashedTags.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = highlightColor)
+            }
+        } else if (viewModel.accessDenied) {
+            AccessDeniedScreen(onBack = onBack)
+        } else {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Header(navigateUp = onBack, canOpenSidebar = false)
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Back link & Title
+                        item {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                BackToLink(
+                                    label = "Retour au Projet",
+                                    onClick = onBack,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Start,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.poubelle_logo),
+                                        contentDescription = null,
+                                        tint = Color.Red.copy(alpha = 0.8f),
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = "Corbeille - ${viewModel.projectTitle}",
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black),
+                                        color = Color.Black
+                                    )
+                                }
+
+                                Text(
+                                    text = "Retrouvez ici les éléments supprimés de ce projet.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.outline,
+                                    modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
+                                )
+                            }
+                        }
+
+                        // Search field
+                        item {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                placeholder = { Text("Rechercher dans la corbeille...", color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)) },
+                                singleLine = true,
+                                shape = RoundedCornerShape(16.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = highlightColor,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                                    focusedContainerColor = Color.White,
+                                    unfocusedContainerColor = Color(0xFFF9F9F9)
+                                )
+                            )
+                        }
+
+                        if (!hasTrashedItems) {
+                            item {
+                                EmptyTrashState()
+                            }
+                        } else {
+                            // Section 1: Organs
+                            if (viewModel.trashedOrgans.isNotEmpty()) {
+                                item {
+                                    SectionHeader(
+                                        title = "Organs",
+                                        isCollapsed = organsCollapsed,
+                                        onToggle = { organsCollapsed = !organsCollapsed }
+                                    )
+                                }
+
+                                if (!organsCollapsed) {
+                                    if (filteredOrgans.isEmpty()) {
+                                        item { Text("Aucun Organ ne correspond à la recherche.", style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                                    } else {
+                                        items(filteredOrgans) { organ ->
+                                            TrashedItemCard(
+                                                title = organ.title,
+                                                subtitle = "Supprimé le ${formatDeletedDate(organ.deletedAt)}",
+                                                iconVisual = organ.visual,
+                                                iconRes = R.drawable.ic_organ_cube_placeholder,
+                                                iconTint = highlightColor,
+                                                iconBg = highlightColor.copy(alpha = 0.1f),
+                                                onRestore = {
+                                                    actionType = "organ"
+                                                    actionUuid = organ.uuid
+                                                    actionTitle = organ.title
+                                                    actionOp = "restore"
+                                                    showConfirmDialog = true
+                                                },
+                                                onDeletePermanent = {
+                                                    actionType = "organ"
+                                                    actionUuid = organ.uuid
+                                                    actionTitle = organ.title
+                                                    actionOp = "delete"
+                                                    showConfirmDialog = true
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Section 2: Members
+                            if (viewModel.trashedMembers.isNotEmpty()) {
+                                item {
+                                    SectionHeader(
+                                        title = "Membres",
+                                        isCollapsed = membersCollapsed,
+                                        onToggle = { membersCollapsed = !membersCollapsed }
+                                    )
+                                }
+
+                                if (!membersCollapsed) {
+                                    // Bulk Member Action Panel
+                                    if (viewModel.selectedMembers.isNotEmpty()) {
+                                        item {
+                                            Surface(
+                                                color = highlightColor.copy(alpha = 0.05f),
+                                                shape = RoundedCornerShape(12.dp),
+                                                border = BorderStroke(1.dp, highlightColor.copy(alpha = 0.2f)),
+                                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(12.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                ) {
+                                                    Text(
+                                                        text = "${viewModel.selectedMembers.size} membre(s) sélectionné(s)",
+                                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                                        color = highlightColor
+                                                    )
+                                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                        TextButton(onClick = { viewModel.clearMemberSelection() }) {
+                                                            Text("Annuler", color = Color.Gray)
+                                                        }
+                                                        Button(
+                                                            onClick = {
+                                                                actionType = "bulk_members"
+                                                                actionTitle = "${viewModel.selectedMembers.size} membres"
+                                                                actionOp = "restore"
+                                                                showConfirmDialog = true
+                                                            },
+                                                            colors = ButtonDefaults.buttonColors(containerColor = highlightColor, contentColor = Color.White),
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        ) {
+                                                            Text("Restaurer", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    if (filteredMembers.isEmpty()) {
+                                        item { Text("Aucun membre ne correspond à la recherche.", style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                                    } else {
+                                        items(filteredMembers) { member ->
+                                            val fullName = listOf(member.user.firstName, member.user.lastName).filter { it.isNotBlank() }.joinToString(" ").ifBlank { member.user.email }
+                                            val isSelected = viewModel.selectedMembers.contains(member.uuid)
+                                            TrashedItemCard(
+                                                title = fullName,
+                                                subtitle = "Rôle : ${member.role} • Supprimé le ${formatDeletedDate(member.deletedAt)}",
+                                                iconRes = R.drawable.icon_account,
+                                                iconTint = Color(0xFFFBBF24),
+                                                iconBg = Color(0xFFFBBF24).copy(alpha = 0.1f),
+                                                showCheckbox = true,
+                                                isCheckboxChecked = isSelected,
+                                                onCheckboxClick = { checked ->
+                                                    viewModel.toggleMemberSelection(member.uuid)
+                                                },
+                                                onRestore = {
+                                                    actionType = "member"
+                                                    actionUuid = member.uuid
+                                                    actionTitle = fullName
+                                                    actionOp = "restore"
+                                                    showConfirmDialog = true
+                                                },
+                                                onDeletePermanent = {
+                                                    actionType = "member"
+                                                    actionUuid = member.uuid
+                                                    actionTitle = fullName
+                                                    actionOp = "delete"
+                                                    showConfirmDialog = true
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Section 3: Tags
+                            if (viewModel.trashedTags.isNotEmpty()) {
+                                item {
+                                    SectionHeader(
+                                        title = "Tags",
+                                        isCollapsed = tagsCollapsed,
+                                        onToggle = { tagsCollapsed = !tagsCollapsed }
+                                    )
+                                }
+
+                                if (!tagsCollapsed) {
+                                    if (filteredTags.isEmpty()) {
+                                        item { Text("Aucun tag ne correspond à la recherche.", style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                                    } else {
+                                        items(filteredTags) { tag ->
+                                            val tagColor = remember(tag.color) {
+                                                try {
+                                                    Color(android.graphics.Color.parseColor(tag.color))
+                                                } catch (e: Exception) {
+                                                    Color.Gray
+                                                }
+                                            }
+                                            TrashedItemCard(
+                                                title = tag.name,
+                                                subtitle = "Supprimé le ${formatDeletedDate(tag.deletedAt)}",
+                                                iconRes = R.drawable.outline_tag,
+                                                iconTint = tagColor,
+                                                iconBg = tagColor.copy(alpha = 0.1f),
+                                                onRestore = {
+                                                    actionType = "tag"
+                                                    actionUuid = tag.uuid
+                                                    actionTitle = tag.name
+                                                    actionOp = "restore"
+                                                    showConfirmDialog = true
+                                                },
+                                                onDeletePermanent = {
+                                                    actionType = "tag"
+                                                    actionUuid = tag.uuid
+                                                    actionTitle = tag.name
+                                                    actionOp = "delete"
+                                                    showConfirmDialog = true
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (viewModel.isLoading) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.15f))
+                            .clickable(
+                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                                indication = null
+                            ) {},
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = highlightColor)
+                    }
+                }
+            }
+        }
+    }
+
+    // Confirmation dialog
+    if (showConfirmDialog) {
+        val opIsRestore = actionOp == "restore"
+        DeleteConfirmDialog(
+            title = "Confirmation",
+            message = if (opIsRestore) {
+                "Voulez-vous restaurer \"$actionTitle\" ?"
+            } else {
+                "Voulez-vous supprimer \"$actionTitle\" définitivement ? Cette action est irréversible."
+            },
+            confirmText = if (opIsRestore) "Restaurer" else "Supprimer",
+            iconRes = if (opIsRestore) R.drawable.outline_info else R.drawable.poubelle_logo,
+            iconColor = if (opIsRestore) Color(0xFF0284C7) else Color.Red,
+            iconBgColor = if (opIsRestore) Color(0xFFE0F2FE) else Color(0xFFFFF1F2),
+            onConfirm = {
+                showConfirmDialog = false
+                val type = actionType ?: return@DeleteConfirmDialog
+                val op = actionOp
+                if (op == "restore") {
+                    when (type) {
+                        "organ" -> viewModel.restoreOrgan(projectUuid, actionUuid, {}, {})
+                        "member" -> viewModel.restoreMember(projectUuid, actionUuid, {}, {})
+                        "tag" -> viewModel.restoreTag(projectUuid, actionUuid, {}, {})
+                        "bulk_members" -> viewModel.restoreSelectedMembers(projectUuid, {}, {})
+                    }
+                } else {
+                    when (type) {
+                        "organ" -> viewModel.deleteOrganPermanently(projectUuid, actionUuid, {}, {})
+                        "member" -> viewModel.deleteMemberPermanently(projectUuid, actionUuid, {}, {})
+                        "tag" -> viewModel.deleteTagPermanently(projectUuid, actionUuid, {}, {})
+                    }
+                }
+            },
+            onDismiss = { showConfirmDialog = false }
+        )
+    }
+}
+
+@Composable
+fun SectionHeader(
+    title: String,
+    isCollapsed: Boolean,
+    onToggle: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onToggle() }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Text(
+            text = title.uppercase(),
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.15.sp
+            ),
+            color = MaterialTheme.colorScheme.outline
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Icon(
+            imageVector = Icons.Default.ArrowDropDown,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.outline,
+            modifier = Modifier
+                .size(20.dp)
+                .rotate(if (isCollapsed) 180f else 0f)
+        )
+    }
+}
+
+@Composable
+fun TrashedItemCard(
+    title: String,
+    subtitle: String,
+    iconRes: Int? = null,
+    iconEmoji: String? = null,
+    iconVisual: ProjectVisual? = null,
+    iconTint: Color = Color.Gray,
+    iconBg: Color = Color.LightGray.copy(alpha = 0.2f),
+    showCheckbox: Boolean = false,
+    isCheckboxChecked: Boolean = false,
+    onCheckboxClick: ((Boolean) -> Unit)? = null,
+    onRestore: () -> Unit,
+    onDeletePermanent: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+        color = Color.White,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            if (showCheckbox) {
+                Checkbox(
+                    checked = isCheckboxChecked,
+                    onCheckedChange = onCheckboxClick,
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = Color.Black,
+                        checkmarkColor = Color.White
+                    )
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(iconBg, RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (iconVisual != null) {
+                    ProjectIconBadge(
+                        visual = iconVisual,
+                        projectColor = Color.Transparent,
+                        badgeSize = 48.dp,
+                        iconSize = 28.dp
+                    )
+                } else if (iconEmoji != null) {
+                    Text(iconEmoji, fontSize = 22.sp)
+                } else if (iconRes != null) {
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    color = Color.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray,
+                    lineHeight = 16.sp
+                )
+            }
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = onRestore,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    modifier = Modifier.height(36.dp)
+                ) {
+                    Text(
+                        text = "RESTAURER",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+
+                IconButton(
+                    onClick = onDeletePermanent,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(Color(0xFFFFF1F2), RoundedCornerShape(10.dp))
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.poubelle_logo),
+                        contentDescription = "Supprimer définitivement",
+                        tint = Color.Red,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyTrashState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp)
+            .border(
+                width = 2.dp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(24.dp)
+            )
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .background(Color.White, CircleShape)
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.poubelle_logo),
+                contentDescription = null,
+                tint = Color.LightGray,
+                modifier = Modifier.size(36.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "La corbeille de ce Projet est vide",
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+            color = Color.Black,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Tout est propre ! Aucun Organ, membre ou tag n'attend d'être restauré.",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.Gray,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+    }
+}
+
+fun formatDeletedDate(dateString: String?): String {
+    if (dateString.isNullOrBlank()) return "-"
+    return try {
+        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.FRANCE)
+        parser.timeZone = TimeZone.getTimeZone("UTC")
+        val date = parser.parse(dateString) ?: return "-"
+        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.FRANCE)
+        formatter.format(date)
+    } catch (e: Exception) {
+        dateString.take(10)
+    }
+}

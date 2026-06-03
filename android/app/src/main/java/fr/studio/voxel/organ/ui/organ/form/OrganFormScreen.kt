@@ -6,8 +6,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -20,6 +21,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ui.components.LoadingOverlay
 import fr.studio.voxel.organ.ui.components.PrimaryButton
+import fr.studio.voxel.organ.ui.components.BackToLink
+import fr.studio.voxel.organ.ui.components.DangerZoneSection
+import fr.studio.voxel.organ.ui.components.DeleteConfirmDialog
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.ui.organ.form.components.OrganFormDetailsSection
 import fr.studio.voxel.organ.ui.organ.form.components.OrganFormMembersSection
@@ -63,6 +67,7 @@ fun OrganFormScreen(
     organUuid: String?,
     onBack: () -> Unit,
     onSuccess: (String, String) -> Unit,
+    onDeleted: () -> Unit = {},
     viewModel: OrganFormViewModel = viewModel()
 ) {
     LaunchedEffect(projectUuid, organUuid) {
@@ -74,6 +79,8 @@ fun OrganFormScreen(
             viewModel.createdOrganUuid?.let { onSuccess(projectUuid, it) }
         }
     }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -100,27 +107,11 @@ fun OrganFormScreen(
                         horizontalAlignment = Alignment.Start
                     ) {
                         // Back link
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { onBack() },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.flechedroite_logo),
-                                contentDescription = "Retour",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .rotate(180f)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (viewModel.isEdit) "Retour à l'Organ" else "Retour au Projet",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
+                        BackToLink(
+                            label = if (viewModel.isEdit) "Retour à l'Organ" else "Retour au Projet",
+                            onClick = onBack,
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -145,8 +136,9 @@ fun OrganFormScreen(
                         // Form card
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                             shape = RoundedCornerShape(24.dp)
                         ) {
                             Column(
@@ -160,7 +152,8 @@ fun OrganFormScreen(
                                     title = viewModel.title,
                                     onTitleChange = { if (viewModel.canEditInfo) viewModel.title = it },
                                     description = viewModel.description,
-                                    onDescriptionChange = { if (viewModel.canEditInfo) viewModel.description = it }
+                                    onDescriptionChange = { if (viewModel.canEditInfo) viewModel.description = it },
+                                    highlightColor = viewModel.selectedColor
                                 )
 
                                 // Section 2: Visual identity
@@ -206,7 +199,7 @@ fun OrganFormScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 24.dp),
+                                .padding(top = 24.dp),
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -228,9 +221,39 @@ fun OrganFormScreen(
                                     .height(50.dp)
                             )
                         }
+
+                        if (viewModel.isEdit) {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            DangerZoneSection(
+                                title = "Zone de Danger",
+                                description = "Une fois supprimé, cet Organ et toutes ses données associées seront déplacés dans la corbeille.",
+                                buttonText = "Supprimer l'Organ",
+                                onDeleteClick = { showDeleteDialog = true }
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                        } else {
+                            Spacer(modifier = Modifier.height(24.dp))
+                        }
                     }
                 }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        DeleteConfirmDialog(
+            title = "Supprimer l'Organ",
+            message = "Voulez-vous supprimer l'Organ \"${viewModel.title}\" ? Cette action déplacera l'Organ et ses tâches associées vers la corbeille.",
+            onConfirm = {
+                showDeleteDialog = false
+                viewModel.deleteOrgan(
+                    onSuccess = {
+                        onDeleted()
+                    },
+                    onError = {}
+                )
+            },
+            onDismiss = { showDeleteDialog = false }
+        )
     }
 }

@@ -26,7 +26,18 @@ interface TagApiService {
     suspend fun deleteTag(
         @Path("projectUuid") projectUuid: String,
         @Path("tagUuid") tagUuid: String,
-        @Query("permanent") permanent: Boolean
+        @Query("permanent") permanent: Boolean = false
+    ): Response<Unit>
+
+    @GET("/api/projects/{projectUuid}/tags/trash")
+    suspend fun getTrashedTags(
+        @Path("projectUuid") projectUuid: String
+    ): Response<List<TagResponse>>
+
+    @POST("/api/projects/{projectUuid}/tags/{tagUuid}/restore")
+    suspend fun restoreTag(
+        @Path("projectUuid") projectUuid: String,
+        @Path("tagUuid") tagUuid: String
     ): Response<Unit>
 }
 

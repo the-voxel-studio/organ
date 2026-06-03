@@ -153,7 +153,7 @@ class ProjectDetailsViewModel : ViewModel() {
             isTagsLoading = true
             tagErrorMessage = null
             try {
-                val response = tagService.deleteTag(uuid, tagUuid, permanent = true)
+                val response = tagService.deleteTag(uuid, tagUuid, permanent = false)
                 if (response.isSuccessful) {
                     loadTags()
                 } else {

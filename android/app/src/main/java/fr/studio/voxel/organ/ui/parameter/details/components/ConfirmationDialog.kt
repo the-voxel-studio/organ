@@ -58,7 +58,7 @@ fun ConfirmationDialog(
                                 color = MaterialTheme.colorScheme.outline,
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
+                                    fontSize = 12.sp
                                 )
                             )
                         }
@@ -76,7 +76,7 @@ fun ConfirmationDialog(
                                 color = Color.White,
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp
+                                    fontSize = 12.sp
                                 )
                             )
                         }
