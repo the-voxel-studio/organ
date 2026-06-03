@@ -1,7 +1,7 @@
 package fr.studio.voxel.organ.ui
 
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -70,7 +70,35 @@ fun OrganApp(
         NavHost(
             navController = navController,
             modifier = Modifier.padding(innerPadding),
-            startDestination = OrganScreen.SignIn.name
+            startDestination = OrganScreen.SignIn.name,
+            enterTransition = {
+                if (targetState.destination.route == OrganScreen.Sidebar.name) {
+                    slideInHorizontally(animationSpec = tween(400)) { -it }
+                } else {
+                    slideInHorizontally(animationSpec = tween(400)) { it }
+                }
+            },
+            exitTransition = {
+                if (targetState.destination.route == OrganScreen.Sidebar.name) {
+                    slideOutHorizontally(animationSpec = tween(400)) { it }
+                } else {
+                    slideOutHorizontally(animationSpec = tween(400)) { -it }
+                }
+            },
+            popEnterTransition = {
+                if (initialState.destination.route == OrganScreen.Sidebar.name) {
+                    slideInHorizontally(animationSpec = tween(400)) { it }
+                } else {
+                    slideInHorizontally(animationSpec = tween(400)) { -it }
+                }
+            },
+            popExitTransition = {
+                if (initialState.destination.route == OrganScreen.Sidebar.name) {
+                    slideOutHorizontally(animationSpec = tween(400)) { -it }
+                } else {
+                    slideOutHorizontally(animationSpec = tween(400)) { it }
+                }
+            }
         ) {
             composable(
                 route = OrganScreen.SignIn.name
@@ -101,9 +129,7 @@ fun OrganApp(
             }
 
             composable(
-                route = OrganScreen.Sidebar.name,
-                enterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
-                exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) }
+                route = OrganScreen.Sidebar.name
             ) {
                 SideBar(
                     navController = navController,
@@ -113,7 +139,18 @@ fun OrganApp(
                 )
             }
 
-            composable(route = OrganScreen.Dashboard.name) { backStackEntry ->
+            composable(
+                route = OrganScreen.Dashboard.name,
+                enterTransition = {
+                    val initialRoute = initialState.destination.route
+                    if (initialRoute == OrganScreen.SignIn.name || initialRoute == OrganScreen.SignUp.name) {
+                        fadeIn(animationSpec = tween(600))
+                    } else {
+                        // Use default logic (slide from right if not Sidebar, else handled by NavHost defaults)
+                        null 
+                    }
+                }
+            ) { backStackEntry ->
                 val viewModel: DashboardViewModel = viewModel()
                 val shouldRefresh by backStackEntry.savedStateHandle.getStateFlow("refresh_dashboard", false).collectAsState()
                 LaunchedEffect(shouldRefresh) {
@@ -170,7 +207,11 @@ fun OrganApp(
                 ProjectFormScreen(
                     projectUuid = null,
                     onBack = { navController.popBackStack() },
-                    onSuccess = { navController.popBackStack() }
+                    onSuccess = { uuid ->
+                        navController.navigate("${OrganScreen.Project.name}/$uuid") {
+                            popUpTo(OrganScreen.Dashboard.name) // Replace current screen in stack
+                        }
+                    }
                 )
             }
 
@@ -182,7 +223,7 @@ fun OrganApp(
                 ProjectFormScreen(
                     projectUuid = projectUuid,
                     onBack = { navController.popBackStack() },
-                    onSuccess = {
+                    onSuccess = { uuid ->
                         navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
                         navController.popBackStack()
                     }
@@ -198,9 +239,10 @@ fun OrganApp(
                     projectUuid = projectUuid,
                     organUuid = null,
                     onBack = { navController.popBackStack() },
-                    onSuccess = {
-                        navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
-                        navController.popBackStack()
+                    onSuccess = { projUuid, orgUuid ->
+                        navController.navigate("${OrganScreen.Organ.name}/$projUuid/$orgUuid") {
+                            popUpTo("${OrganScreen.Project.name}/$projUuid")
+                        }
                     }
                 )
             }
@@ -218,7 +260,7 @@ fun OrganApp(
                     projectUuid = projectUuid,
                     organUuid = organUuid,
                     onBack = { navController.popBackStack() },
-                    onSuccess = {
+                    onSuccess = { projUuid, orgUuid ->
                         navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
                         navController.previousBackStackEntry?.savedStateHandle?.set("refresh_organ", true)
                         navController.popBackStack()
@@ -266,7 +308,11 @@ fun OrganApp(
                     navArgument("projectUuid") { type = NavType.StringType },
                     navArgument("organUuid") { type = NavType.StringType },
                     navArgument("taskUuid") { type = NavType.StringType }
-                )
+                ),
+                enterTransition = { slideInVertically(animationSpec = tween(400)) { it } + fadeIn() },
+                exitTransition = { slideOutVertically(animationSpec = tween(400)) { it } + fadeOut() },
+                popEnterTransition = { fadeIn() },
+                popExitTransition = { slideOutVertically(animationSpec = tween(400)) { it } + fadeOut() }
             ) { backStackEntry ->
                 val projectUuid = backStackEntry.arguments?.getString("projectUuid") ?: ""
                 val organUuid = backStackEntry.arguments?.getString("organUuid") ?: ""

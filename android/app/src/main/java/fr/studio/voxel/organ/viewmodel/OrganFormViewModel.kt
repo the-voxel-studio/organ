@@ -77,6 +77,8 @@ class OrganFormViewModel : ViewModel() {
 
     var errorMessage by mutableStateOf<String?>(null)
     var isSuccess by mutableStateOf(false)
+    var createdOrganUuid by mutableStateOf<String?>(null)
+        private set
 
     // Context Metadata
     var projectTitle by mutableStateOf("")
@@ -124,6 +126,7 @@ class OrganFormViewModel : ViewModel() {
         this.organUuid = organUuid
         this.isEdit = organUuid != null
         this.isSuccess = false
+        this.createdOrganUuid = null
         this.errorMessage = null
         this.accessDenied = false
 
@@ -520,6 +523,7 @@ class OrganFormViewModel : ViewModel() {
                 }
 
                 ProjectRepository.fetchDashboard()
+                createdOrganUuid = finalOrganUuid
                 isSuccess = true
             } catch (e: Exception) {
                 errorMessage = "Erreur réseau : ${e.localizedMessage}"

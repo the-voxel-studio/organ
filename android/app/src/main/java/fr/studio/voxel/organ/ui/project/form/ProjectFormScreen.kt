@@ -27,11 +27,40 @@ import fr.studio.voxel.organ.ui.project.form.components.ProjectFormMembersSectio
 import fr.studio.voxel.organ.ui.project.form.components.ProjectFormVisualIdentitySection
 import fr.studio.voxel.organ.viewmodel.ProjectFormViewModel
 
+import fr.studio.voxel.organ.ui.components.ShimmerBox
+
+@Composable
+fun ProjectFormShimmer() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Header(navigateUp = {})
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Back link mock
+        ShimmerBox(modifier = Modifier.width(150.dp).height(20.dp))
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Title mock
+        ShimmerBox(modifier = Modifier.width(200.dp).height(32.dp))
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Form card mock
+        ShimmerBox(modifier = Modifier.fillMaxWidth().height(400.dp), shape = RoundedCornerShape(24.dp))
+    }
+}
+
 @Composable
 fun ProjectFormScreen(
     projectUuid: String?,
     onBack: () -> Unit,
-    onSuccess: () -> Unit,
+    onSuccess: (String) -> Unit,
     viewModel: ProjectFormViewModel = viewModel()
 ) {
     LaunchedEffect(projectUuid) {
@@ -40,7 +69,7 @@ fun ProjectFormScreen(
 
     LaunchedEffect(viewModel.isSuccess) {
         if (viewModel.isSuccess) {
-            onSuccess()
+            viewModel.createdProjectUuid?.let { onSuccess(it) }
         }
     }
 
@@ -48,10 +77,9 @@ fun ProjectFormScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        LoadingOverlay(
-            isLoading = viewModel.isLoading,
-            text = if (viewModel.isEdit) "Mise à jour du projet..." else "Création du projet..."
-        ) {
+        if (viewModel.isLoading) {
+            ProjectFormShimmer()
+        } else {
             if (viewModel.accessDenied) {
                 AccessDeniedScreen(onBack = onBack)
             } else {
@@ -63,6 +91,7 @@ fun ProjectFormScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Header(navigateUp = onBack)
+
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),

@@ -36,16 +36,66 @@ import fr.studio.voxel.organ.ui.components.AddButton
 import fr.studio.voxel.organ.ui.components.LoadingOverlay
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 
+import fr.studio.voxel.organ.ui.components.ShimmerBox
+
+@Composable
+fun DashboardShimmer() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Header Mock
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ShimmerBox(modifier = Modifier.size(48.dp), shape = CircleShape)
+            ShimmerBox(modifier = Modifier.width(100.dp).height(24.dp))
+            ShimmerBox(modifier = Modifier.size(48.dp), shape = CircleShape)
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Title Section Mock
+        Column(modifier = Modifier.fillMaxWidth()) {
+            ShimmerBox(modifier = Modifier.width(200.dp).height(32.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            ShimmerBox(modifier = Modifier.fillMaxWidth(0.7f).height(16.dp))
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Task Section Mock
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ShimmerBox(modifier = Modifier.size(56.dp), shape = CircleShape)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                ShimmerBox(modifier = Modifier.width(150.dp).height(20.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+                ShimmerBox(modifier = Modifier.width(250.dp).height(14.dp))
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        repeat(2) {
+            ShimmerBox(modifier = Modifier.fillMaxWidth().height(80.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
 @Composable
 fun Dashboard(
     navController: NavHostController,
     dashboardVM : DashboardViewModel = viewModel()
 ){
-    LoadingOverlay(
-        isLoading = dashboardVM.isLoading,
-        text = "Chargement de votre espace de travail..."
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (dashboardVM.isLoading) {
+            DashboardShimmer()
+        } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

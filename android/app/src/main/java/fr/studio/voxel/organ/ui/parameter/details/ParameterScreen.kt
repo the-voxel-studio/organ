@@ -24,6 +24,38 @@ import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.ui.parameter.details.components.*
 import fr.studio.voxel.organ.viewmodel.ParameterViewModel
 
+import fr.studio.voxel.organ.ui.components.ShimmerBox
+
+@Composable
+fun ParameterShimmer() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Header(navigateUp = {}, canOpenSidebar = false)
+        
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+        ) {
+            ShimmerBox(modifier = Modifier.width(180.dp).height(40.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            ShimmerBox(modifier = Modifier.fillMaxWidth(0.8f).height(16.dp))
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Setting cards mocks
+            repeat(3) {
+                ShimmerBox(modifier = Modifier.fillMaxWidth().height(150.dp), shape = RoundedCornerShape(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
 @Composable
 fun Parameter(
     navController: NavHostController,
@@ -37,34 +69,37 @@ fun Parameter(
     val user = parameterVM.currentUser
     val isGoogleAuth = user?.authWithGoogle == true
 
-    LoadingOverlay(
-        isLoading = parameterVM.isLoading,
-        text = "Traitement en cours..."
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFFBFBFB))
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Header(
-                navigateUp = { navController.navigate(fr.studio.voxel.organ.ui.OrganScreen.Sidebar.name) },
-                canOpenSidebar = true
-            )
-
+        if (parameterVM.isLoading) {
+            ParameterShimmer()
+        } else {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 8.dp)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "Paramètres",
-                    style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
-                    color = Color.Black
+                Header(
+                    navigateUp = { navController.navigate(fr.studio.voxel.organ.ui.OrganScreen.Sidebar.name) },
+                    canOpenSidebar = true
                 )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Text(
+                        text = "Paramètres",
+                        style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
+                        color = Color.Black
+                    )
+
                 Text(
                     text = "Gérez vos informations personnelles et vos préférences de compte.",
                     style = MaterialTheme.typography.bodyMedium,
@@ -459,6 +494,7 @@ fun Parameter(
             }
         }
     }
+}
 
     // Revocation Confirmation Dialog
     ConfirmationDialog(

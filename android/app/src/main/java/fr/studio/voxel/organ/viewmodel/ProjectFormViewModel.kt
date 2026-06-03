@@ -64,11 +64,14 @@ class ProjectFormViewModel : ViewModel() {
 
     var errorMessage by mutableStateOf<String?>(null)
     var isSuccess by mutableStateOf(false)
+    var createdProjectUuid by mutableStateOf<String?>(null)
+        private set
 
     fun initProject(uuid: String?) {
         this.projectUuid = uuid
         this.isEdit = uuid != null
         this.isSuccess = false
+        this.createdProjectUuid = null
         this.errorMessage = null
         this.accessDenied = false
         this.invites = emptyList()
@@ -418,6 +421,7 @@ class ProjectFormViewModel : ViewModel() {
 
                     // Refresh global repository dashboard data
                     ProjectRepository.fetchDashboard()
+                    createdProjectUuid = successUuid
                     isSuccess = true
                 }
             } catch (e: Exception) {

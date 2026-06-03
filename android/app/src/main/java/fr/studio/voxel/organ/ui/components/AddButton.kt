@@ -17,26 +17,33 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.R
 
+import androidx.compose.foundation.layout.PaddingValues
+
+import androidx.compose.ui.graphics.Color
+
 @Composable
 fun AddButton(
     modifier : Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = Color.White,
     onClick: () -> Unit
 ){
     Button(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.size(56.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.elevatedButtonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = androidx.compose.ui.graphics.Color.White
+            containerColor = containerColor,
+            contentColor = contentColor
         ),
-        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp),
+        contentPadding = PaddingValues(0.dp)
     ) {
         Icon(
             painter = painterResource(R.drawable.add_logo),
-            contentDescription = "Ajouter un nouveau projet",
+            contentDescription = "Ajouter",
             modifier = Modifier.size(32.dp),
-            tint = androidx.compose.ui.graphics.Color.White
+            tint = contentColor
         )
     }
 }

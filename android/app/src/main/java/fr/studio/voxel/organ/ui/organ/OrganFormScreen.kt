@@ -8,7 +8,7 @@ fun OrganFormScreen(
     projectUuid: String,
     organUuid: String?,
     onBack: () -> Unit,
-    onSuccess: () -> Unit,
+    onSuccess: (String, String) -> Unit,
     viewModel: fr.studio.voxel.organ.viewmodel.OrganFormViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     fr.studio.voxel.organ.ui.organ.form.OrganFormScreen(

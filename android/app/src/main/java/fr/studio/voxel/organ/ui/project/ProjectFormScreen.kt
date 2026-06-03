@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 fun ProjectFormScreen(
     projectUuid: String?,
     onBack: () -> Unit,
-    onSuccess: () -> Unit,
+    onSuccess: (String) -> Unit,
     viewModel: fr.studio.voxel.organ.viewmodel.ProjectFormViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     fr.studio.voxel.organ.ui.project.form.ProjectFormScreen(

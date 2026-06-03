@@ -20,10 +20,41 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.studio.voxel.organ.R
-import fr.studio.voxel.organ.ui.components.LoadingOverlay
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.ui.project.details.components.*
 import fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel
+import fr.studio.voxel.organ.ui.components.ShimmerBox
+import fr.studio.voxel.organ.ui.components.AddButton
+
+@Composable
+fun ProjectDetailsShimmer() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Header(navigateUp = {}, canOpenSidebar = false)
+        
+        Spacer(modifier = Modifier.height(20.dp))
+        
+        // Project Header Shimmer
+        ShimmerBox(modifier = Modifier.fillMaxWidth().height(200.dp))
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Organs Section Shimmer
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            ShimmerBox(modifier = Modifier.width(150.dp).height(24.dp))
+            ShimmerBox(modifier = Modifier.width(80.dp).height(24.dp))
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        repeat(2) {
+            ShimmerBox(modifier = Modifier.fillMaxWidth().height(120.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
 
 @Composable
 fun ProjectDetailsScreen(
@@ -45,18 +76,10 @@ fun ProjectDetailsScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        LoadingOverlay(
-            isLoading = viewModel.isLoading || viewModel.isSavingTag || viewModel.isTagsLoading,
-            text = when {
-                viewModel.isLoading -> "Chargement du projet..."
-                viewModel.isSavingTag -> "Enregistrement du tag..."
-                viewModel.isTagsLoading -> "Chargement des tags..."
-                else -> null
-            }
-        ) {
-            if (viewModel.isLoading && viewModel.projectData == null) {
-                Box(modifier = Modifier.fillMaxSize())
-            } else if (viewModel.errorMessage != null) {
+        if (viewModel.isLoading && viewModel.projectData == null) {
+            ProjectDetailsShimmer()
+        } else {
+            if (viewModel.errorMessage != null) {
                 ProjectErrorState(
                     message = viewModel.errorMessage ?: "",
                     onBack = onBack
@@ -157,25 +180,13 @@ fun ProjectDetailsScreen(
                         }
 
                         if (canManage) {
-                            Button(
+                            AddButton(
+                                containerColor = projectColor,
                                 onClick = { onCreateOrgan(projectUuid) },
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
-                                    .padding(24.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = projectColor,
-                                    contentColor = Color.White
-                                ),
-                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.add_logo),
-                                    contentDescription = "Ajouter un nouvel Organ",
-                                    modifier = Modifier.size(32.dp),
-                                    tint = Color.White
-                                )
-                            }
+                                    .padding(24.dp)
+                            )
                         }
                     }
                 }

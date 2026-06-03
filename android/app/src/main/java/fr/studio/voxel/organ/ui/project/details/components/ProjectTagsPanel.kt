@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.network.services.TagResponse
 import fr.studio.voxel.organ.ui.components.ColorSelector
 import androidx.compose.ui.text.font.FontWeight
+import fr.studio.voxel.organ.ui.components.ShimmerBox
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -86,13 +87,14 @@ fun ProjectTagsPanel(
             Spacer(modifier = Modifier.height(16.dp))
 
             if (isTagsLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    CircularProgressIndicator(color = projectColor, modifier = Modifier.size(24.dp))
+                    repeat(4) {
+                        ShimmerBox(modifier = Modifier.width(80.dp).height(32.dp), shape = RoundedCornerShape(10.dp))
+                    }
                 }
             } else {
                 tagErrorMessage?.let { err ->

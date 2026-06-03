@@ -28,6 +28,14 @@ import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.ui.theme.AppColorScheme
 import fr.studio.voxel.organ.ui.theme.AppTypography
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+
 @Composable
 fun PrimaryButton(
     text: String,
@@ -38,7 +46,8 @@ fun PrimaryButton(
     pressedColor : Color = MaterialTheme.colorScheme.secondary,
     @DrawableRes icon : Int? = null,
     iconTint : Color = colorText,
-    enabled : Boolean = true
+    enabled : Boolean = true,
+    isLoading: Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -54,18 +63,20 @@ fun PrimaryButton(
         color
     }
 
+    val actualEnabled = enabled && !isLoading
+
     ElevatedButton(
-        onClick = onClick,
-        enabled = enabled,
+        onClick = if (!isLoading) onClick else { {} },
+        enabled = actualEnabled,
         modifier = modifier
             .graphicsLayer(
-                scaleX = if (enabled) scale else 1f,
-                scaleY = if (enabled) scale else 1f
+                scaleX = if (actualEnabled) scale else 1f,
+                scaleY = if (actualEnabled) scale else 1f
             ),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.elevatedButtonColors(
-            containerColor = if (enabled) backgroundColor else color.copy(alpha = 0.5f),
-            contentColor = if (enabled) colorText else colorText.copy(alpha = 0.5f)
+            containerColor = if (actualEnabled) backgroundColor else color.copy(alpha = 0.5f),
+            contentColor = if (actualEnabled) colorText else colorText.copy(alpha = 0.5f)
         ),
         interactionSource = interactionSource,
         elevation = ButtonDefaults.elevatedButtonElevation(
@@ -74,23 +85,43 @@ fun PrimaryButton(
         ),
         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
     ) {
-        if (icon != null) {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                modifier = Modifier.size(32.dp),
-                tint = iconTint
-            )
+        AnimatedContent(
+            targetState = isLoading,
+            transitionSpec = {
+                fadeIn().togetherWith(fadeOut())
+            },
+            label = "buttonContent"
+        ) { loading ->
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = colorText,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (icon != null) {
+                        Icon(
+                            painter = painterResource(id = icon),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = iconTint
+                        )
 
-            Spacer(modifier = Modifier.width(16.dp))
+                        Spacer(modifier = Modifier.width(16.dp))
+                    }
+
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = colorText
+                    )
+                }
+            }
         }
-
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleSmall.copy(
-                fontWeight = FontWeight.Bold
-            ),
-            color = colorText
-        )
     }
 }

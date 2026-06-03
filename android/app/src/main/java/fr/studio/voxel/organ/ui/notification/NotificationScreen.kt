@@ -27,6 +27,37 @@ import fr.studio.voxel.organ.ui.OrganScreen
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.viewmodel.NotificationViewModel
 
+import fr.studio.voxel.organ.ui.components.ShimmerBox
+
+@Composable
+fun NotificationShimmer() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Header(navigateUp = {}, canOpenSidebar = false)
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            ShimmerBox(modifier = Modifier.width(150.dp).height(40.dp))
+            ShimmerBox(modifier = Modifier.width(80.dp).height(24.dp))
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        repeat(4) {
+            ShimmerBox(modifier = Modifier.fillMaxWidth().height(80.dp), shape = RoundedCornerShape(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
+}
+
 @Composable
 fun NotificationScreen(
     navController: NavHostController,
@@ -41,138 +72,133 @@ fun NotificationScreen(
         viewModel.loadNotifications()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFBFBFB))
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Header(
-                navigateUp = { navController.popBackStack() },
-                canOpenSidebar = true
-            )
-
-            Row(
+        if (isLoading && notifications.isEmpty()) {
+            NotificationShimmer()
+        } else {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                Column {
-                    Text(
-                        text = "Notifications",
-                        style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
-                        color = Color.Black
-                    )
-                    if (unreadCount > 0) {
+                Header(
+                    navigateUp = { navController.popBackStack() },
+                    canOpenSidebar = true
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
                         Text(
-                            text = "$unreadCount non lue(s)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFFF27B9B), // Bubblegum/pink
-                            fontWeight = FontWeight.Bold
+                            text = "Notifications",
+                            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Black),
+                            color = Color.Black
                         )
+                        if (unreadCount > 0) {
+                            Text(
+                                text = "$unreadCount non lue(s)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color(0xFFF27B9B), // Bubblegum/pink
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    if (notifications.any { !it.isRead && !it.isRealInvite }) {
+                        TextButton(
+                            onClick = { viewModel.markAllAsRead() }
+                        ) {
+                            Text(
+                                text = "TOUT MARQUER COMME LU",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp
+                                ),
+                                color = Color(0xFFF27B9B)
+                            )
+                        }
                     }
                 }
 
-                if (notifications.any { !it.isRead && !it.isRealInvite }) {
-                    TextButton(
-                        onClick = { viewModel.markAllAsRead() }
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (error != null) {
+                    Surface(
+                        color = MaterialTheme.colorScheme.errorContainer,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 8.dp)
                     ) {
                         Text(
-                            text = "TOUT MARQUER COMME LU",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 1.sp
+                            text = error,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+
+                if (notifications.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(bottom = 64.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = null,
+                            tint = Color.LightGray,
+                            modifier = Modifier.size(80.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "AUCUNE NOTIFICATION",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.5.sp
                             ),
-                            color = Color(0xFFF27B9B)
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
                         )
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (error != null) {
-                Surface(
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-
-            if (notifications.isEmpty() && !isLoading) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(bottom = 64.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = null,
-                        tint = Color.LightGray,
-                        modifier = Modifier.size(80.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "AUCUNE NOTIFICATION",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.5.sp
-                        ),
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    notifications.forEach { notification ->
-                        NotificationCard(
-                            notification = notification,
-                            onMarkAsRead = { viewModel.markAsRead(notification.uuid) },
-                            onDelete = { viewModel.deleteNotification(notification.uuid) },
-                            onAcceptInvite = {
-                                viewModel.acceptInvitation(notification.uuid) { projectUuid ->
-                                    navController.navigate("${OrganScreen.Project.name}/$projectUuid") {
-                                        // Pop the notification screen so back stack is clean
-                                        popUpTo(OrganScreen.Notification.name) { inclusive = true }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        notifications.forEach { notification ->
+                            NotificationCard(
+                                notification = notification,
+                                onMarkAsRead = { viewModel.markAsRead(notification.uuid) },
+                                onDelete = { viewModel.deleteNotification(notification.uuid) },
+                                onAcceptInvite = {
+                                    viewModel.acceptInvitation(notification.uuid) { projectUuid ->
+                                        navController.navigate("${OrganScreen.Project.name}/$projectUuid") {
+                                            popUpTo(OrganScreen.Notification.name) { inclusive = true }
+                                        }
                                     }
-                                }
-                            },
-                            onRefuseInvite = { viewModel.refuseInvitation(notification.uuid) }
-                        )
+                                },
+                                onRefuseInvite = { viewModel.refuseInvitation(notification.uuid) }
+                            )
+                        }
                     }
                 }
             }
-        }
-
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center),
-                color = Color(0xFFF27B9B)
-            )
         }
     }
 }

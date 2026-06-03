@@ -31,6 +31,7 @@ import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ui.components.LoadingOverlay
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.viewmodel.OrganDetailsViewModel
+import fr.studio.voxel.organ.ui.components.AddButton
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -54,6 +55,47 @@ import fr.studio.voxel.organ.ui.organ.details.components.OrganLinksPanel
 import fr.studio.voxel.organ.ui.organ.details.components.OrganFiltersRow
 import fr.studio.voxel.organ.ui.organ.details.components.TaskCard
 import fr.studio.voxel.organ.ui.organ.details.components.OrganErrorState
+
+import fr.studio.voxel.organ.ui.components.ShimmerBox
+
+@Composable
+fun OrganDetailsShimmer() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Header(navigateUp = {}, canOpenSidebar = false)
+        
+        Spacer(modifier = Modifier.height(20.dp))
+        
+        // Organ Header Shimmer
+        ShimmerBox(modifier = Modifier.fillMaxWidth().height(180.dp))
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Actions Row Shimmer
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            repeat(4) {
+                ShimmerBox(modifier = Modifier.weight(1f).height(40.dp))
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Filters Row Shimmer
+        ShimmerBox(modifier = Modifier.fillMaxWidth().height(60.dp))
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Task List Shimmer
+        repeat(3) {
+            ShimmerBox(modifier = Modifier.fillMaxWidth().height(100.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+    }
+}
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -171,18 +213,10 @@ fun OrganDetailsScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        LoadingOverlay(
-            isLoading = viewModel.isLoading || viewModel.isSavingLink || viewModel.isLinksLoading,
-            text = when {
-                viewModel.isLoading -> "Chargement de l'Organ..."
-                viewModel.isSavingLink -> "Enregistrement du lien..."
-                viewModel.isLinksLoading -> "Chargement des liens..."
-                else -> null
-            }
-        ) {
-            if (viewModel.isLoading && viewModel.organData == null) {
-                Box(modifier = Modifier.fillMaxSize())
-            } else if (viewModel.errorMessage != null) {
+        if (viewModel.isLoading && viewModel.organData == null) {
+            OrganDetailsShimmer()
+        } else {
+            if (viewModel.errorMessage != null) {
                 OrganErrorState(
                     message = viewModel.errorMessage ?: "",
                     onBack = onBack
@@ -190,15 +224,6 @@ fun OrganDetailsScreen(
             } else {
                 viewModel.organData?.let { organ ->
                     Box(modifier = Modifier.fillMaxSize()) {
-                        // Background Glow
-                        Canvas(modifier = Modifier.fillMaxSize()) {
-                            drawCircle(
-                                color = highlightColor.copy(alpha = 0.04f),
-                                radius = 260.dp.toPx(),
-                                center = androidx.compose.ui.geometry.Offset(x = size.width, y = 0f)
-                            )
-                        }
-
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -515,25 +540,13 @@ fun OrganDetailsScreen(
 
                         // Bottom Floating Add Button
                         if (viewModel.hasPermission("TASK_CREATE")) {
-                            Button(
+                            AddButton(
+                                containerColor = highlightColor,
                                 onClick = { onTaskClick("new") },
                                 modifier = Modifier
                                     .align(Alignment.BottomEnd)
-                                    .padding(24.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = highlightColor,
-                                    contentColor = Color.White
-                                ),
-                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.add_logo),
-                                    contentDescription = "Ajouter une tâche",
-                                    modifier = Modifier.size(32.dp),
-                                    tint = Color.White
-                                )
-                            }
+                                    .padding(24.dp)
+                            )
                         }
 
                         // Dragged Floating Task Card overlay
@@ -572,7 +585,6 @@ fun OrganDetailsScreen(
             }
         }
     }
-
     // Modal popup matching Angular's "showNotImplementedAlert"
     showNotImplementedFeature?.let { featureName ->
         AlertDialog(

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.network.services.OrganLinkSummary
+import fr.studio.voxel.organ.ui.components.ShimmerBox
 
 @Composable
 fun OrganLinksPanel(
@@ -90,13 +91,10 @@ fun OrganLinksPanel(
             Spacer(modifier = Modifier.height(16.dp))
 
             if (isLinksLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = highlightColor, modifier = Modifier.size(24.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    repeat(2) {
+                        ShimmerBox(modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(12.dp))
+                    }
                 }
             } else {
                 linkErrorMessage?.let { err ->
@@ -300,3 +298,5 @@ fun OrganLinksPanel(
         )
     }
 }
+
+

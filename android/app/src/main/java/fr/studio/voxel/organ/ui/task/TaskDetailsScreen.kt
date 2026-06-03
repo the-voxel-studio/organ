@@ -52,6 +52,36 @@ import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 import fr.studio.voxel.organ.viewmodel.TaskDetailsViewModel
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 
+import fr.studio.voxel.organ.ui.components.ShimmerBox
+
+@Composable
+fun TaskDetailsShimmer() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // Top Bar Mock
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            ShimmerBox(modifier = Modifier.size(40.dp), shape = CircleShape)
+            ShimmerBox(modifier = Modifier.width(120.dp).height(24.dp))
+            ShimmerBox(modifier = Modifier.size(40.dp), shape = CircleShape)
+        }
+
+        // Basic Info Card Mock
+        ShimmerBox(modifier = Modifier.fillMaxWidth().height(150.dp))
+
+        // Other Cards Mocks
+        repeat(3) {
+            ShimmerBox(modifier = Modifier.fillMaxWidth().height(80.dp))
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun TaskDetailsScreen(
@@ -143,10 +173,9 @@ fun TaskDetailsScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        LoadingOverlay(
-            isLoading = viewModel.isLoading || viewModel.isSaving,
-            text = if (viewModel.isSaving) "Enregistrement de la tâche..." else "Chargement..."
-        ) {
+        if (viewModel.isLoading) {
+            TaskDetailsShimmer()
+        } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -208,7 +237,8 @@ fun TaskDetailsScreen(
                         PrimaryButton(
                             text = if (viewModel.taskUuid == "new") "Créer la tâche" else "Enregistrer les modifications",
                             onClick = { viewModel.saveTask() },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            isLoading = viewModel.isSaving
                         )
                     }
                 }
