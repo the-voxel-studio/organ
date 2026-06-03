@@ -49,7 +49,10 @@ interface ProjectApiService {
     ): Response<ProjectAuditResponse>
 
     @DELETE("/api/projects/{uuid}")
-    suspend fun deleteProject(@Path("uuid") uuid: String): Response<Unit>
+    suspend fun deleteProject(
+        @Path("uuid") uuid: String,
+        @Query("permanent") permanent: Boolean = false
+    ): Response<Unit>
 
     // Project Members
     @GET("/api/projects/{projectUuid}/members")

@@ -36,6 +36,7 @@ import fr.studio.voxel.organ.ui.task.TaskDetailsScreen
 import fr.studio.voxel.organ.ui.organ.trash.OrganTrashScreen
 import fr.studio.voxel.organ.ui.project.trash.ProjectTrashScreen
 import fr.studio.voxel.organ.ui.project.stats.ProjectStatsScreen
+import fr.studio.voxel.organ.ui.trash.TrashScreen
 
 enum class OrganScreen {
     SignIn,
@@ -53,7 +54,8 @@ enum class OrganScreen {
     Notification,
     OrganTrash,
     ProjectTrash,
-    ProjectStats
+    ProjectStats,
+    Trash
 }
 
 @Composable
@@ -381,6 +383,17 @@ fun OrganApp(
                 ProjectStatsScreen(
                     projectUuid = projectUuid,
                     onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(route = OrganScreen.Trash.name) {
+                TrashScreen(
+                    onBack = {
+                        try {
+                            navController.getBackStackEntry(OrganScreen.Dashboard.name).savedStateHandle.set("refresh_dashboard", true)
+                        } catch (e: Exception) {}
                         navController.popBackStack()
                     }
                 )

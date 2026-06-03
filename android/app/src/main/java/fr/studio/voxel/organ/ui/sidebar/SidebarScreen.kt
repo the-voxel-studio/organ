@@ -101,7 +101,7 @@ fun SideBar(
                     contentDescription = "poubelle",
                     modifier = Modifier
                         .size(32.dp),
-                    onClick = { /* TODO */ },
+                    onClick = { navController.navigate(OrganScreen.Trash.name) },
                     interactionSource = interactionPoubelle,
                     tint = if (isPressedPoubelle) Color.Red else MaterialTheme.colorScheme.onSurface
                 )
