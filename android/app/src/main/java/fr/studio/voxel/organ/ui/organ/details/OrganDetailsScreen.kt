@@ -49,12 +49,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 
 // Sub-components imports
-import fr.studio.voxel.organ.ui.organ.details.components.OrganHeaderSection
-import fr.studio.voxel.organ.ui.organ.details.components.OrganActionsSection
-import fr.studio.voxel.organ.ui.organ.details.components.OrganLinksPanel
-import fr.studio.voxel.organ.ui.organ.details.components.OrganFiltersRow
-import fr.studio.voxel.organ.ui.organ.details.components.TaskCard
-import fr.studio.voxel.organ.ui.organ.details.components.OrganErrorState
+import fr.studio.voxel.organ.ui.organ.details.components.*
 
 import fr.studio.voxel.organ.ui.components.ShimmerBox
 
@@ -318,171 +313,57 @@ fun OrganDetailsScreen(
                                                 )
                                             }
                                         } else {
-                                            Column(modifier = Modifier.fillMaxSize()) {
-                                                ScrollableTabRow(
-                                                    selectedTabIndex = pagerState.currentPage,
-                                                    edgePadding = 0.dp,
-                                                    containerColor = Color.Transparent,
-                                                    contentColor = highlightColor,
-                                                    divider = {},
-                                                    modifier = Modifier.fillMaxWidth()
-                                                ) {
-                                                    activeColumns.forEachIndexed { index, (status, label, color) ->
-                                                        Tab(
-                                                            selected = pagerState.currentPage == index,
-                                                            onClick = {
-                                                                coroutineScope.launch {
-                                                                    pagerState.animateScrollToPage(index)
-                                                                }
-                                                            },
-                                                            modifier = Modifier.onGloballyPositioned { coordinates ->
-                                                                tabBounds[status] = coordinates.boundsInRoot()
-                                                            },
-                                                            text = {
-                                                                Row(
-                                                                    verticalAlignment = Alignment.CenterVertically,
-                                                                    modifier = Modifier.padding(vertical = 4.dp)
-                                                                ) {
-                                                                    Box(
-                                                                        modifier = Modifier
-                                                                            .size(8.dp)
-                                                                            .clip(CircleShape)
-                                                                            .background(color)
-                                                                    )
-                                                                    Spacer(modifier = Modifier.width(6.dp))
-                                                                    Text(
-                                                                        text = label,
-                                                                        style = MaterialTheme.typography.labelLarge.copy(
-                                                                            fontWeight = FontWeight.Bold
-                                                                        )
-                                                                    )
-                                                                }
-                                                            }
-                                                        )
-                                                    }
-                                                }
-
-                                                Spacer(modifier = Modifier.height(16.dp))
-
-                                                HorizontalPager(
-                                                    state = pagerState,
-                                                    beyondViewportPageCount = activeColumns.size,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .weight(1f)
-                                                        .onGloballyPositioned { coordinates ->
-                                                            pagerBounds = coordinates.boundsInRoot()
+                                            OrganKanbanBoard(
+                                                tasks = viewModel.filteredTasks,
+                                                activeColumns = activeColumns,
+                                                pagerState = pagerState,
+                                                highlightColor = highlightColor,
+                                                onTaskClick = onTaskClick,
+                                                canDragTask = { viewModel.canDragTask(it) },
+                                                onTaskDragStart = { task, offset, cardPos ->
+                                                    dragInitialPosition = cardPos + offset
+                                                    dragOffset = Offset.Zero
+                                                    draggedTask = task
+                                                    isDragging = true
+                                                },
+                                                onTaskDrag = { amount ->
+                                                    dragOffset += amount
+                                                },
+                                                onTaskDragEnd = {
+                                                    if (isDragging && draggedTask != null) {
+                                                        var targetColumn = activeColumns.find { col ->
+                                                            val bounds = tabBounds[col.first]
+                                                            bounds?.contains(dragPosition) == true
                                                         }
-                                                ) { page ->
-                                                    val (status, _, color) = activeColumns[page]
-                                                    val tasksForStatus = viewModel.filteredTasks.filter { it.status == status }
-
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .fillMaxSize()
-                                                            .heightIn(min = 350.dp)
-                                                            .clip(RoundedCornerShape(32.dp))
-                                                            .background(
-                                                                Brush.verticalGradient(
-                                                                    colors = listOf(
-                                                                        highlightColor.copy(alpha = 0.08f),
-                                                                        highlightColor.copy(alpha = 0.02f)
-                                                                    )
-                                                                )
-                                                            )
-                                                            .border(
-                                                                width = 1.dp,
-                                                                color = highlightColor.copy(alpha = 0.1f),
-                                                                shape = RoundedCornerShape(32.dp)
-                                                            )
-                                                            .padding(16.dp)
-                                                    ) {
-                                                        if (tasksForStatus.isEmpty()) {
-                                                            Box(
-                                                                modifier = Modifier.fillMaxSize(),
-                                                                contentAlignment = Alignment.Center
-                                                            ) {
-                                                                Column(
-                                                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                                                    verticalArrangement = Arrangement.Center
-                                                                ) {
-                                                                    Icon(
-                                                                        painter = painterResource(id = R.drawable.outline_add_circle_24),
-                                                                        contentDescription = null,
-                                                                        tint = color.copy(alpha = 0.35f),
-                                                                        modifier = Modifier.size(48.dp)
-                                                                    )
-                                                                    Spacer(modifier = Modifier.height(12.dp))
-                                                                    Text(
-                                                                        "Aucune tâche",
-                                                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                                                            fontWeight = FontWeight.Bold
-                                                                        ),
-                                                                        textAlign = TextAlign.Center
-                                                                    )
-                                                                }
+                                                        if (targetColumn == null && pagerBounds?.contains(dragPosition) == true) {
+                                                            if (pagerState.currentPage in activeColumns.indices) {
+                                                                targetColumn = activeColumns[pagerState.currentPage]
                                                             }
-                                                        } else {
-                                                            LazyColumn(
-                                                                modifier = Modifier.fillMaxSize(),
-                                                                contentPadding = PaddingValues(bottom = 88.dp),
-                                                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                                                            ) {
-                                                                 items(tasksForStatus, key = { it.uuid }) { task ->
-                                                                     TaskCard(
-                                                                         task = task,
-                                                                         highlightColor = highlightColor,
-                                                                         onClick = { onTaskClick(task.uuid) },
-                                                                         isDraggable = viewModel.canDragTask(task),
-                                                                         onDragStart = { offset, cardPos ->
-                                                                             dragInitialPosition = cardPos + offset
-                                                                             dragOffset = Offset.Zero
-                                                                             draggedTask = task
-                                                                             isDragging = true
-                                                                         },
-                                                                         onDrag = { amount ->
-                                                                             dragOffset += amount
-                                                                         },
-                                                                         onDragEnd = {
-                                                                             if (isDragging && draggedTask != null) {
-                                                                                 var targetColumn = activeColumns.find { col ->
-                                                                                     val bounds = tabBounds[col.first]
-                                                                                     bounds?.contains(dragPosition) == true
-                                                                                 }
-                                                                                 if (targetColumn == null && pagerBounds?.contains(dragPosition) == true) {
-                                                                                     if (pagerState.currentPage in activeColumns.indices) {
-                                                                                         targetColumn = activeColumns[pagerState.currentPage]
-                                                                                     }
-                                                                                 }
-                                                                                 if (targetColumn != null && targetColumn.first != draggedTask!!.status) {
-                                                                                     val targetStatus = targetColumn.first
-                                                                                     if (viewModel.canChangeStatus(draggedTask!!, targetStatus)) {
-                                                                                         viewModel.updateTaskStatus(draggedTask!!, targetStatus)
-                                                                                         android.widget.Toast.makeText(
-                                                                                             context,
-                                                                                             "Statut mis à jour : ${targetColumn.second}",
-                                                                                             android.widget.Toast.LENGTH_SHORT
-                                                                                         ).show()
-                                                                                     } else {
-                                                                                         android.widget.Toast.makeText(
-                                                                                             context,
-                                                                                             "Action non autorisée : permissions insuffisantes",
-                                                                                             android.widget.Toast.LENGTH_SHORT
-                                                                                         ).show()
-                                                                                     }
-                                                                                 }
-                                                                             }
-                                                                             isDragging = false
-                                                                             draggedTask = null
-                                                                         }
-                                                                     )
-                                                                 }
+                                                        }
+                                                        if (targetColumn != null && targetColumn.first != draggedTask!!.status) {
+                                                            val targetStatus = targetColumn.first
+                                                            if (viewModel.canChangeStatus(draggedTask!!, targetStatus)) {
+                                                                viewModel.updateTaskStatus(draggedTask!!, targetStatus)
+                                                                android.widget.Toast.makeText(
+                                                                    context,
+                                                                    "Statut mis à jour : ${targetColumn.second}",
+                                                                    android.widget.Toast.LENGTH_SHORT
+                                                                ).show()
+                                                            } else {
+                                                                android.widget.Toast.makeText(
+                                                                    context,
+                                                                    "Action non autorisée : permissions insuffisantes",
+                                                                    android.widget.Toast.LENGTH_SHORT
+                                                                ).show()
                                                             }
                                                         }
                                                     }
-                                                }
-                                            }
+                                                    isDragging = false
+                                                    draggedTask = null
+                                                },
+                                                tabBounds = tabBounds,
+                                                onPagerBoundsChanged = { pagerBounds = it }
+                                            )
                                         }
                                     } else {
                                         val tasks = viewModel.filteredTasks

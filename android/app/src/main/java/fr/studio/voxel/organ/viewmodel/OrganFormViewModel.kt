@@ -18,6 +18,7 @@ import fr.studio.voxel.organ.network.services.CreateRoleRequest
 import fr.studio.voxel.organ.network.services.AssignRoleRequest
 import fr.studio.voxel.organ.ui.components.IconType
 import kotlinx.coroutines.launch
+import fr.studio.voxel.organ.utils.ImageHelper
 
 data class RolePreset(
     val name: String,
@@ -138,7 +139,7 @@ class OrganFormViewModel : ViewModel() {
         if (uri != null) {
             isLoading = true
             viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                val base64 = uriToBase64(context, uri)
+                val base64 = ImageHelper.uriToBase64(context, uri)
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                     selectedImageUriString = base64 ?: ""
                     isLoading = false
@@ -149,45 +150,7 @@ class OrganFormViewModel : ViewModel() {
         }
     }
 
-    private fun uriToBase64(context: android.content.Context, uri: Uri): String? {
-        return try {
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
-            
-            if (bitmap != null) {
-                val maxDimension = 1024
-                val width = bitmap.width
-                val height = bitmap.height
-                val newBitmap = if (width > maxDimension || height > maxDimension) {
-                    val ratio = width.toFloat() / height.toFloat()
-                    val newWidth = if (ratio > 1) maxDimension else (maxDimension * ratio).toInt()
-                    val newHeight = if (ratio > 1) (maxDimension / ratio).toInt() else maxDimension
-                    android.graphics.Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
-                } else {
-                    bitmap
-                }
 
-                val outputStream = java.io.ByteArrayOutputStream()
-                newBitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, outputStream)
-                val bytes = outputStream.toByteArray()
-                
-                if (newBitmap != bitmap) {
-                    newBitmap.recycle()
-                }
-                bitmap.recycle()
-
-                val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
-                val mimeType = "image/jpeg"
-                "data:$mimeType;base64,$base64"
-            } else {
-                null
-            }
-        } catch (e: java.lang.Exception) {
-            Log.e("ORGAN_VM", "Error converting and compressing Uri to Base64", e)
-            null
-        }
-    }
 
     private fun checkPermissionsAndLoad(projectUuid: String, organUuid: String?) {
         viewModelScope.launch {

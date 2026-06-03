@@ -111,6 +111,8 @@ fun IconSelector(
                 } catch (e: Exception) {
                     null
                 }
+            } else if (uriStr.startsWith("content:") || uriStr.startsWith("file:") || uriStr.startsWith("android.resource:")) {
+                imageUri
             } else if (uriStr.startsWith("/") || uriStr.startsWith("uploads/")) {
                 val cleanPath = if (uriStr.startsWith("/")) uriStr else "/$uriStr"
                 "http://10.0.2.2:8001$cleanPath"

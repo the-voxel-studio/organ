@@ -30,9 +30,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.network.services.*
-import fr.studio.voxel.organ.ui.components.LoadingOverlay
-import fr.studio.voxel.organ.ui.components.BackToLink
-import fr.studio.voxel.organ.ui.components.DeleteConfirmDialog
+import fr.studio.voxel.organ.ui.components.*
 import fr.studio.voxel.organ.ui.dashboard.ProjectIconBadge
 import fr.studio.voxel.organ.ui.dashboard.ProjectVisual
 import fr.studio.voxel.organ.ui.header.Header
@@ -188,13 +186,16 @@ fun ProjectTrashScreen(
 
                         if (!hasTrashedItems) {
                             item {
-                                EmptyTrashState()
+                                EmptyTrashState(
+                                    title = "La corbeille de ce Projet est vide",
+                                    description = "Tout est propre ! Aucun Organ, membre ou tag n'attend d'être restauré."
+                                )
                             }
                         } else {
                             // Section 1: Organs
                             if (viewModel.trashedOrgans.isNotEmpty()) {
                                 item {
-                                    SectionHeader(
+                                    TrashSectionHeader(
                                         title = "Organs",
                                         isCollapsed = organsCollapsed,
                                         onToggle = { organsCollapsed = !organsCollapsed }
@@ -236,7 +237,7 @@ fun ProjectTrashScreen(
                             // Section 2: Members
                             if (viewModel.trashedMembers.isNotEmpty()) {
                                 item {
-                                    SectionHeader(
+                                    TrashSectionHeader(
                                         title = "Membres",
                                         isCollapsed = membersCollapsed,
                                         onToggle = { membersCollapsed = !membersCollapsed }
@@ -325,7 +326,7 @@ fun ProjectTrashScreen(
                             // Section 3: Tags
                             if (viewModel.trashedTags.isNotEmpty()) {
                                 item {
-                                    SectionHeader(
+                                    TrashSectionHeader(
                                         title = "Tags",
                                         isCollapsed = tagsCollapsed,
                                         onToggle = { tagsCollapsed = !tagsCollapsed }
@@ -429,39 +430,7 @@ fun ProjectTrashScreen(
     }
 }
 
-@Composable
-fun SectionHeader(
-    title: String,
-    isCollapsed: Boolean,
-    onToggle: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onToggle() }
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
-    ) {
-        Text(
-            text = title.uppercase(),
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.15.sp
-            ),
-            color = MaterialTheme.colorScheme.outline
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.Default.ArrowDropDown,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline,
-            modifier = Modifier
-                .size(20.dp)
-                .rotate(if (isCollapsed) 180f else 0f)
-        )
-    }
-}
+
 
 @Composable
 fun TrashedItemCard(
@@ -574,66 +543,4 @@ fun TrashedItemCard(
     }
 }
 
-@Composable
-fun EmptyTrashState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 40.dp)
-            .border(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(24.dp)
-            )
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .background(Color.White, CircleShape)
-                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.poubelle_logo),
-                contentDescription = null,
-                tint = Color.LightGray,
-                modifier = Modifier.size(36.dp)
-            )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "La corbeille de ce Projet est vide",
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            color = Color.Black,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "Tout est propre ! Aucun Organ, membre ou tag n'attend d'être restauré.",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-    }
-}
-
-fun formatDeletedDate(dateString: String?): String {
-    if (dateString.isNullOrBlank()) return "-"
-    return try {
-        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.FRANCE)
-        parser.timeZone = TimeZone.getTimeZone("UTC")
-        val date = parser.parse(dateString) ?: return "-"
-        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.FRANCE)
-        formatter.format(date)
-    } catch (e: Exception) {
-        dateString.take(10)
-    }
-}

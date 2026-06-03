@@ -29,9 +29,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.network.services.*
-import fr.studio.voxel.organ.ui.components.LoadingOverlay
-import fr.studio.voxel.organ.ui.components.BackToLink
-import fr.studio.voxel.organ.ui.components.DeleteConfirmDialog
+import fr.studio.voxel.organ.ui.components.*
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.ui.project.AccessDeniedScreen
 import fr.studio.voxel.organ.viewmodel.OrganTrashViewModel
@@ -196,13 +194,16 @@ fun OrganTrashScreen(
                     // Empty state fallback
                     if (!hasTrashedItems) {
                         item {
-                            EmptyTrashState()
+                            EmptyTrashState(
+                                title = "La corbeille de cet Organ est vide",
+                                description = "Tout est à sa place ! Aucun élément n'attend d'être restauré."
+                            )
                         }
                     } else {
                         // Section 1: Tasks
                         if (viewModel.canManageTasks() && viewModel.trashedTasks.isNotEmpty()) {
                             item {
-                                SectionHeader(
+                                TrashSectionHeader(
                                     title = "Tâches",
                                     isCollapsed = tasksCollapsed,
                                     onToggle = { tasksCollapsed = !tasksCollapsed }
@@ -244,7 +245,7 @@ fun OrganTrashScreen(
                         // Section 2: Roles
                         if (viewModel.canManageRoles() && viewModel.trashedRoles.isNotEmpty()) {
                             item {
-                                SectionHeader(
+                                TrashSectionHeader(
                                     title = "Rôles",
                                     isCollapsed = rolesCollapsed,
                                     onToggle = { rolesCollapsed = !rolesCollapsed }
@@ -284,7 +285,7 @@ fun OrganTrashScreen(
                         // Section 3: Members
                         if (viewModel.canManageRoles() && viewModel.trashedMembers.isNotEmpty()) {
                             item {
-                                SectionHeader(
+                                TrashSectionHeader(
                                     title = "Membres",
                                     isCollapsed = membersCollapsed,
                                     onToggle = { membersCollapsed = !membersCollapsed }
@@ -326,7 +327,7 @@ fun OrganTrashScreen(
                         // Section 4: Links
                         if (viewModel.canManageLinks() && viewModel.trashedLinks.isNotEmpty()) {
                             item {
-                                SectionHeader(
+                                TrashSectionHeader(
                                     title = "Liens",
                                     isCollapsed = linksCollapsed,
                                     onToggle = { linksCollapsed = !linksCollapsed }
@@ -409,39 +410,7 @@ fun OrganTrashScreen(
     }
 }
 
-@Composable
-fun SectionHeader(
-    title: String,
-    isCollapsed: Boolean,
-    onToggle: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onToggle() }
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
-    ) {
-        Text(
-            text = title.uppercase(),
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.15.sp
-            ),
-            color = MaterialTheme.colorScheme.outline
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Icon(
-            imageVector = Icons.Default.ArrowDropDown,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.outline,
-            modifier = Modifier
-                .size(20.dp)
-                .rotate(if (isCollapsed) 180f else 0f)
-        )
-    }
-}
+
 
 @Composable
 fun TrashedItemCard(
@@ -535,66 +504,4 @@ fun TrashedItemCard(
     }
 }
 
-@Composable
-fun EmptyTrashState() {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 40.dp)
-            .border(
-                width = 2.dp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(24.dp)
-            )
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .background(Color.White, CircleShape)
-                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), CircleShape),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.poubelle_logo),
-                contentDescription = null,
-                tint = Color.LightGray,
-                modifier = Modifier.size(36.dp)
-            )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "La corbeille de cet Organ est vide",
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            color = Color.Black,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "Tout est à sa place ! Aucun élément n'attend d'être restauré.",
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-    }
-}
-
-fun formatDeletedDate(dateString: String?): String {
-    if (dateString.isNullOrBlank()) return "-"
-    return try {
-        val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.FRANCE)
-        parser.timeZone = TimeZone.getTimeZone("UTC")
-        val date = parser.parse(dateString) ?: return "-"
-        val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.FRANCE)
-        formatter.format(date)
-    } catch (e: Exception) {
-        dateString.take(10)
-    }
-}
