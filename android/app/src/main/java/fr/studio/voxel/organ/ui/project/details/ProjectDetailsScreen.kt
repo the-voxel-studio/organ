@@ -65,6 +65,7 @@ fun ProjectDetailsScreen(
     onCreateOrgan: (String) -> Unit,
     onOrganClick: (String) -> Unit,
     onTrashClick: (String) -> Unit,
+    onStatsClick: (String) -> Unit,
     viewModel: ProjectDetailsViewModel = viewModel()
 ) {
     LaunchedEffect(projectUuid) {
@@ -124,7 +125,7 @@ fun ProjectDetailsScreen(
                                     canManage = canManage,
                                     onEditClick = { onEditProject(projectUuid) },
                                     onTrashClick = { onTrashClick(projectUuid) },
-                                    onFeaturePlaceholderClick = { showNotImplementedFeature = it }
+                                    onStatsClick = { onStatsClick(projectUuid) }
                                 )
 
                                 Spacer(modifier = Modifier.height(32.dp))

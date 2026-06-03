@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AreaChart
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
@@ -54,7 +55,7 @@ fun ProjectHeaderSection(
     canManage: Boolean,
     onEditClick: () -> Unit,
     onTrashClick: () -> Unit,
-    onFeaturePlaceholderClick: (String) -> Unit
+    onStatsClick: () -> Unit
 ) {
     val project = data.project
 
@@ -178,7 +179,7 @@ fun ProjectHeaderSection(
 
                 if (canManage) {
                     OutlinedButton(
-                        onClick = { onFeaturePlaceholderClick("Statistiques") },
+                        onClick = onStatsClick,
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .weight(1f)
@@ -189,7 +190,7 @@ fun ProjectHeaderSection(
                         contentPadding = PaddingValues(0.dp)
                     ) {
                         Icon(
-                            painter = painterResource(R.drawable.outline_info),
+                            imageVector = Icons.Default.AreaChart,
                             contentDescription = "Statistiques",
                             modifier = Modifier.size(20.dp)
                         )

@@ -12,6 +12,7 @@ fun ProjectDetailsScreen(
     onCreateOrgan: (String) -> Unit,
     onOrganClick: (String) -> Unit,
     onTrashClick: (String) -> Unit,
+    onStatsClick: (String) -> Unit = {},
     viewModel: fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     fr.studio.voxel.organ.ui.project.details.ProjectDetailsScreen(
@@ -22,6 +23,7 @@ fun ProjectDetailsScreen(
         onCreateOrgan = onCreateOrgan,
         onOrganClick = onOrganClick,
         onTrashClick = onTrashClick,
+        onStatsClick = onStatsClick,
         viewModel = viewModel
     )
 }

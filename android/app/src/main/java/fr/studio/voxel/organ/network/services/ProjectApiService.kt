@@ -34,7 +34,19 @@ interface ProjectApiService {
     suspend fun getProjectPermissions(@Path("uuid") uuid: String): Response<ProjectRoleResponse>
 
     @GET("/api/projects/{uuid}/stats")
-    suspend fun getProjectStats(@Path("uuid") uuid: String): Response<Any>
+    suspend fun getProjectStats(
+        @Path("uuid") uuid: String,
+        @Query("days") days: Int? = null
+    ): Response<ProjectStatsResponse>
+
+    @GET("/api/projects/{uuid}/audit")
+    suspend fun getProjectAuditLogs(
+        @Path("uuid") uuid: String,
+        @Query("limit") limit: Int? = null,
+        @Query("offset") offset: Int? = null,
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null
+    ): Response<ProjectAuditResponse>
 
     @DELETE("/api/projects/{uuid}")
     suspend fun deleteProject(@Path("uuid") uuid: String): Response<Unit>
@@ -239,3 +251,55 @@ data class ProjectDetailedViewResponse(
     val members: List<ProjectDetailedMember>,
     val activities: List<ProjectDetailedActivity>
 )
+
+data class DailyStatsHistory(
+    val date: String,
+    val tasksCreated: Int,
+    val tasksCompleted: Int,
+    val tasksCanceled: Int,
+    val commentsAdded: Int,
+    val attachmentsAdded: Int,
+    val membersActive: Int,
+    val consultations: Int,
+    val statusChanges: com.google.gson.JsonElement?
+)
+
+data class CurrentOrganStatusStat(
+    @SerializedName("organ_name") val organName: String?,
+    val status: String?,
+    @SerializedName("task_count") val taskCount: Int,
+    @SerializedName("total_hours") val totalHours: Double
+)
+
+data class ProjectStatsResponse(
+    val history: List<DailyStatsHistory>,
+    val current: List<CurrentOrganStatusStat>
+)
+
+data class AuditUser(
+    val uuid: String,
+    val firstName: String,
+    val lastName: String,
+    val email: String
+)
+
+data class ProjectAuditLogItem(
+    val id: String,
+    val actionType: String,
+    val fieldName: String?,
+    val oldValues: Map<String, Any?>?,
+    val newValues: Map<String, Any?>?,
+    val context: Map<String, Any?>?,
+    val createdAt: String,
+    val user: AuditUser?,
+    val taskUuid: String?,
+    val taskTitle: String?,
+    val organUuid: String?,
+    val organTitle: String?
+)
+
+data class ProjectAuditResponse(
+    val total: Int,
+    val logs: List<ProjectAuditLogItem>
+)
+

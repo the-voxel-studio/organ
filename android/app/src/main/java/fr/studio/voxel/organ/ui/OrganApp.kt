@@ -35,6 +35,7 @@ import fr.studio.voxel.organ.viewmodel.DashboardViewModel
 import fr.studio.voxel.organ.ui.task.TaskDetailsScreen
 import fr.studio.voxel.organ.ui.organ.trash.OrganTrashScreen
 import fr.studio.voxel.organ.ui.project.trash.ProjectTrashScreen
+import fr.studio.voxel.organ.ui.project.stats.ProjectStatsScreen
 
 enum class OrganScreen {
     SignIn,
@@ -51,7 +52,8 @@ enum class OrganScreen {
     Parameter,
     Notification,
     OrganTrash,
-    ProjectTrash
+    ProjectTrash,
+    ProjectStats
 }
 
 @Composable
@@ -204,6 +206,7 @@ fun OrganApp(
                     onCreateOrgan = { uuid -> navController.navigate("${OrganScreen.CreateOrgan.name}/$uuid") },
                     onOrganClick = { organUuid -> navController.navigate("${OrganScreen.Organ.name}/$projectUuid/$organUuid") },
                     onTrashClick = { uuid -> navController.navigate("${OrganScreen.ProjectTrash.name}/$uuid") },
+                    onStatsClick = { uuid -> navController.navigate("${OrganScreen.ProjectStats.name}/$uuid") },
                     viewModel = viewModel
                 )
             }
@@ -363,6 +366,21 @@ fun OrganApp(
                     projectUuid = projectUuid,
                     onBack = {
                         navController.previousBackStackEntry?.savedStateHandle?.set("refresh_project", true)
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable(
+                route = "${OrganScreen.ProjectStats.name}/{projectUuid}",
+                arguments = listOf(
+                    navArgument("projectUuid") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val projectUuid = backStackEntry.arguments?.getString("projectUuid") ?: ""
+                ProjectStatsScreen(
+                    projectUuid = projectUuid,
+                    onBack = {
                         navController.popBackStack()
                     }
                 )
