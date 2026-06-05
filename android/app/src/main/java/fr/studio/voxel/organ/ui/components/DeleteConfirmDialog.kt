@@ -65,9 +65,12 @@ fun DeleteConfirmDialog(
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                         color = Color.Black
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Text(
                         text = message,
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = Color.Gray,
                         textAlign = TextAlign.Center
                     )
@@ -85,7 +88,7 @@ fun DeleteConfirmDialog(
                     ) {
                         Text(
                             text = "Annuler",
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1
                         )
@@ -100,7 +103,7 @@ fun DeleteConfirmDialog(
                     ) {
                         Text(
                             text = confirmText,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1
                         )

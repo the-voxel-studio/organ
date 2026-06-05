@@ -31,7 +31,7 @@ fun AboutSection(
                     painter = painterResource(R.drawable.outline_info),
                     contentDescription = null,
                     tint = Color(0xFF0284C7),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(28.dp)
                 )
             }
             Spacer(modifier = Modifier.width(10.dp))

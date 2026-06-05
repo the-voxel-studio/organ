@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Tag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -69,17 +72,38 @@ fun ProjectTagsPanel(
                 )
 
                 if (canManage) {
-                    TextButton(onClick = {
-                        showForm = !showForm
-                        editingTagUuid = null
-                        tagName = ""
-                        tagColor = Color(0xFF808080)
-                    }) {
-                        Text(
-                            text = if (showForm) "Fermer le formulaire" else "+ Ajouter un tag",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                            color = projectColor
-                        )
+                    if(showForm){
+                        IconButton(
+                            onClick = {
+                                showForm = !showForm
+                                editingTagUuid = null
+                                tagName = ""
+                                tagColor = Color(0xFF808080)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Fermer le formulaire",
+                                modifier = Modifier.size(28.dp),
+                                tint = projectColor
+                            )
+                        }
+                    }else {
+                        IconButton(
+                            onClick = {
+                                showForm = !showForm
+                                editingTagUuid = null
+                                tagName = ""
+                                tagColor = Color(0xFF808080)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Ajouter un tag",
+                                modifier = Modifier.size(28.dp),
+                                tint = projectColor
+                            )
+                        }
                     }
                 }
             }
@@ -109,7 +133,8 @@ fun ProjectTagsPanel(
                 if (tags.isEmpty()) {
                     Text(
                         text = "Aucun tag disponible.",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 } else {
@@ -210,7 +235,7 @@ fun ProjectTagsPanel(
 
                 Text(
                     text = "Couleur du tag",
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
                 Spacer(modifier = Modifier.height(8.dp))

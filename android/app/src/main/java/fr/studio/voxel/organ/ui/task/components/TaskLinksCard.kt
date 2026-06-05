@@ -83,7 +83,7 @@ fun TaskLinksCard(
                     if (viewModel.links.isEmpty()) {
                         Text(
                             text = "Aucun lien",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {
@@ -96,7 +96,7 @@ fun TaskLinksCard(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = link.description ?: link.url,
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                                         color = MaterialColorScheme.primary,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis

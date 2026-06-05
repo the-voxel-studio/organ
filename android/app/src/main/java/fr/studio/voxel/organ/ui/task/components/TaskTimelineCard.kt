@@ -110,7 +110,7 @@ fun TaskTimelineCard(
                                     }
                                     Text(
                                         text = logText,
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(

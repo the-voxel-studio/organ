@@ -71,12 +71,12 @@ fun TaskTrashCard(
                     Text(
                         text = "Commentaires supprimés :",
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelLarge
                     )
                     if (viewModel.trashedComments.isEmpty()) {
                         Text(
                             text = "Aucun",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {
@@ -88,7 +88,7 @@ fun TaskTrashCard(
                             ) {
                                 Text(
                                     text = comment.content,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodyLarge,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Row {
@@ -123,12 +123,12 @@ fun TaskTrashCard(
                     Text(
                         text = "Fichiers joints supprimés :",
                         fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelLarge
                     )
                     if (viewModel.trashedAttachments.isEmpty()) {
                         Text(
                             text = "Aucun",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {
@@ -140,7 +140,7 @@ fun TaskTrashCard(
                             ) {
                                 Text(
                                     text = att.fileName,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodyLarge,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Row {

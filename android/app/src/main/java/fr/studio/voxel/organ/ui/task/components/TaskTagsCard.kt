@@ -86,7 +86,7 @@ fun TaskTagsCard(
                     if (taskTags.isEmpty()) {
                         Text(
                             text = "Aucun tag associé",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {

@@ -103,7 +103,7 @@ fun TrashScreen(
 
                             Text(
                                 text = "Retrouvez les projets supprimés dont vous êtes le propriétaire administratif.",
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                             )
@@ -141,7 +141,7 @@ fun TrashScreen(
                         item {
                             Text(
                                 text = "Aucun projet ne correspond à la recherche.",
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyLarge,
                                 color = Color.Gray,
                                 modifier = Modifier.padding(vertical = 24.dp)
                             )
@@ -265,12 +265,12 @@ fun ProjectRestoreConfirmDialog(
                 ) {
                     Text(
                         text = "Restaurer le projet ?",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         color = Color.Black
                     )
                     Text(
                         text = "Êtes-vous sûr de vouloir restaurer le projet \"$projectTitle\" ? Il sera de nouveau visible dans votre espace de travail et sa barre latérale.",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = Color.Gray,
                         textAlign = TextAlign.Center
                     )

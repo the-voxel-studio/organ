@@ -36,7 +36,7 @@ fun ActivityFeedSection(
                     painter = painterResource(R.drawable.outline_info),
                     contentDescription = null,
                     tint = Color(0xFF22C55E),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(28.dp)
                 )
             }
             Spacer(modifier = Modifier.width(10.dp))
@@ -64,7 +64,8 @@ fun ActivityFeedSection(
                 ) {
                     Text(
                         text = "Aucune activité récente sur les tâches.",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                         textAlign = TextAlign.Center
                     )
                 }
@@ -116,7 +117,7 @@ fun ActivityItem(
         ) {
             Text(
                 text = initials,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Black),
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Black),
                 color = projectColor
             )
         }

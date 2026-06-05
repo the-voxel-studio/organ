@@ -84,7 +84,7 @@ fun TaskDependenciesCard(
                     if (viewModel.dependencies.isEmpty()) {
                         Text(
                             text = "Aucune dépendance",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {
@@ -96,7 +96,7 @@ fun TaskDependenciesCard(
                             ) {
                                 Text(
                                     text = dep.title,
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                                     color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )

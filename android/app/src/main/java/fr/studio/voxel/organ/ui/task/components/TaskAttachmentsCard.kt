@@ -80,7 +80,7 @@ fun TaskAttachmentsCard(
                     if (viewModel.attachments.isEmpty()) {
                         Text(
                             text = "Aucun fichier joint",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {
@@ -93,7 +93,7 @@ fun TaskAttachmentsCard(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = att.fileName,
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )

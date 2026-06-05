@@ -52,6 +52,14 @@ object AppTypography {
         letterSpacing = 0.sp
     )
 
+    val bodySmall = TextStyle(
+        fontFamily = Roboto,
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        lineHeight = 25.sp,
+        letterSpacing = 0.sp
+    )
+
     val labelLarge = TextStyle(
         fontFamily = SpaceMono,
         fontWeight = FontWeight.Bold,
@@ -74,6 +82,7 @@ val MaterialTypography = Typography(
     titleMedium = AppTypography.titleMedium,
     titleSmall = AppTypography.titleSmall,
     bodyLarge = AppTypography.bodyLarge,
+    bodySmall = AppTypography.bodySmall,
     labelLarge = AppTypography.labelLarge,
     labelSmall = AppTypography.labelSmall
 )
