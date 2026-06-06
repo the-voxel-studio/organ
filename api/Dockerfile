@@ -35,3 +35,9 @@ RUN mkdir -p var/cache/dev/doctrine/odm/mongodb/Hydrators \
     && chmod -R 777 var/cache
 
 WORKDIR /var/www/html
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["php-fpm"]
