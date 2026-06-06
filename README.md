@@ -115,6 +115,11 @@ MERCURE_PUBLIC_URL=http://localhost:8000/hub
 MERCURE_JWT_SECRET=!ChangeThisMercureHubJWTSecretKey!
 NOTIFICATION_BASE_URL=http://localhost:8000
 ###< REALTIME ###
+
+###> NVIDIA AI CHATBOT ###
+NVIDIA_API_KEY=<nvapi-clé_api>
+NVIDIA_MODEL=mistralai/mistral-medium-3.5-128b #Model avec Free Endpoints (Overkill pour l'utilisation)
+###< NVIDIA AI CHATBOT ###
 ```
 
 ### 3. Frontend PHP (`front_php/.env`)
