@@ -33,8 +33,8 @@ export class LandingNavbarComponent implements OnInit, OnDestroy {
   ];
 
   ngOnInit() {
-    // Vérifie si déjà loggué
-    if (!this.authService.isAuthenticated()) {
+    // Vérifie si déjà loggué (uniquement si un indicateur de session est présent)
+    if (!this.authService.isAuthenticated() && localStorage.getItem('organ_has_session') === 'true') {
       this.authService.checkSession().subscribe({
         error: () => {}
       });

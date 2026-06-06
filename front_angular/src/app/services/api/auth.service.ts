@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable, tap, switchMap } from 'rxjs';
 import { UserMeResponse } from '../../models/user.model';
 import { RegisterRequest, RegisterResponse, LoginRequest, LoginResponse, GoogleLoginRequest } from '../../models/auth.model';
 import { SocialAuthService } from '@abacritt/angularx-social-login';
@@ -26,6 +26,7 @@ export class AuthService {
         return this.http.get<UserMeResponse>('/api/users/me').pipe(
             tap({
                 next: (user) => {
+                    localStorage.setItem('organ_has_session', 'true');
                     this.userStore.setUser(user);
                 },
                 error: () => {
@@ -39,19 +40,15 @@ export class AuthService {
         return this.http.post<RegisterResponse>('/api/auth/register', req);
     }
 
-    login(req: LoginRequest): Observable<LoginResponse> {
+    login(req: LoginRequest): Observable<UserMeResponse> {
         return this.http.post<LoginResponse>('/api/auth/login', req).pipe(
-            tap(() => {
-                this.checkSession().subscribe();
-            })
+            switchMap(() => this.checkSession())
         );
     }
 
-    loginWithGoogle(req: GoogleLoginRequest): Observable<LoginResponse> {
+    loginWithGoogle(req: GoogleLoginRequest): Observable<UserMeResponse> {
         return this.http.post<LoginResponse>('/api/auth/login/google', req).pipe(
-            tap(() => {
-                this.checkSession().subscribe();
-            })
+            switchMap(() => this.checkSession())
         );
     }
 
@@ -61,6 +58,7 @@ export class AuthService {
     }
 
     clearSessionState(): void {
+        localStorage.removeItem('organ_has_session');
         this.userStore.clear();
     }
 
