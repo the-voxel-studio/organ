@@ -11,6 +11,9 @@ import { OrganLinkService } from '../../../services/api/organ-link.service';
 import { ProjectService } from '../../../services/api/project.service';
 import { AuthService } from '../../../services/api/auth.service';
 import { ToastService } from '../../../services/common/toast.service';
+import { ChatbotService } from '../../../services/chatbot/chatbot.service';
+import { RefreshService } from '../../../services/common/refresh.service';
+
 
 // Models
 import { OrganDetailResponse } from '../../../models/organ.model';
@@ -49,6 +52,8 @@ export class OrganComponent implements OnInit, OnDestroy {
   private projectService = inject(ProjectService);
   protected authService = inject(AuthService);
   private toastService = inject(ToastService);
+  private chatbotService = inject(ChatbotService);
+  private refreshService = inject(RefreshService);
   
   private destroy$ = new Subject<void>();
 
@@ -166,6 +171,14 @@ export class OrganComponent implements OnInit, OnDestroy {
         }
       });
 
+    this.refreshService.refresh$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.projectUuid && this.organUuid) {
+          this.loadOrganDetailsAndTasks();
+        }
+      });
+
     this.route.queryParamMap
       .pipe(takeUntil(this.destroy$))
       .subscribe(queryParams => {
@@ -190,6 +203,41 @@ export class OrganComponent implements OnInit, OnDestroy {
           }, 600);
         }
       });
+
+    // Écoute les déclencheurs du Chatbot pour le modal de tâche
+    this.chatbotService.taskCreateTrigger$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(payload => {
+        if (this.taskModal) {
+          this.taskModal.openForCreate(payload);
+          this.chatbotService.stagedTaskData = null;
+        }
+      });
+
+    this.chatbotService.taskEditTrigger$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(taskUuid => {
+        if (this.taskModal) {
+          this.taskModal.openForEdit(taskUuid, false);
+          this.chatbotService.stagedTaskEditUuid = null;
+        }
+      });
+
+    // Consomme les données staged au chargement de la page
+    setTimeout(() => {
+      if (this.chatbotService.stagedTaskData) {
+        if (this.taskModal) {
+          this.taskModal.openForCreate(this.chatbotService.stagedTaskData);
+          this.chatbotService.stagedTaskData = null;
+        }
+      }
+      if (this.chatbotService.stagedTaskEditUuid) {
+        if (this.taskModal) {
+          this.taskModal.openForEdit(this.chatbotService.stagedTaskEditUuid, false);
+          this.chatbotService.stagedTaskEditUuid = null;
+        }
+      }
+    }, 600);
   }
 
   ngOnDestroy() {
@@ -219,7 +267,7 @@ export class OrganComponent implements OnInit, OnDestroy {
 
         // Vérifie si l'utilisateur a la permission de lecture
         if (!this.hasPermission('ORGAN_VIEW')) {
-          this.toastService.error('Accès refusé', "Vous n'avez pas la permission de voir cet Organ.");
+          this.toastService.error('Accès proscrit', "Vous n'avez pas la permission de voir cet Organ.");
           this.router.navigate(['/project', this.projectUuid]);
           return;
         }
@@ -229,8 +277,12 @@ export class OrganComponent implements OnInit, OnDestroy {
       },
       error: (err: any) => {
         console.error('Failed to load organ details and tasks', err);
-        this.errorMessage.set(err?.error?.message || 'Projet non trouvé ou accès refusé.');
-        this.isLoading.set(false);
+        this.toastService.error('Accès proscrit', err?.error?.message || 'Vous n\'avez pas accès à cet Organ.');
+        if (this.projectUuid) {
+          this.router.navigate(['/project', this.projectUuid]);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       }
     });
   }

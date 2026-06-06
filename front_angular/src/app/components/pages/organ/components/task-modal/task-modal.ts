@@ -1,7 +1,8 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { AuthService } from '../../../../../services/api/auth.service';
+import { ChatbotService } from '../../../../../services/chatbot/chatbot.service';
 
 import { TaskResponse, TaskStatus, TaskTagSummary, TaskLinkSummary, TaskPermissionsResponse, TaskTimelineItem, UpdateTaskRequest, CreateTaskRequest } from '../../../../../models/task.model';
 import { TaskCommentResponse } from '../../../../../models/task-comment.model';
@@ -46,6 +47,14 @@ export class TaskModalComponent implements OnInit, OnDestroy {
   public store = inject(TaskModalStore);
   public authService = inject(AuthService);
   private fb = inject(FormBuilder);
+  private chatbotService = inject(ChatbotService);
+
+  constructor() {
+    effect(() => {
+      const open = this.store.isOpen();
+      this.chatbotService.isTaskModalOpen.set(open);
+    });
+  }
 
   // Form Group
   taskForm = this.fb.group({
@@ -160,7 +169,7 @@ export class TaskModalComponent implements OnInit, OnDestroy {
     window.removeEventListener('beforeunload', this.beforeUnloadHandler);
   }
 
-  openForCreate() {
+  openForCreate(prefilledData?: any) {
     const stagedPerms = {
       permissions: ['ALL'],
       editableFields: ['title', 'description', 'priority', 'status', 'expiresAt', 'manager'],
@@ -168,7 +177,17 @@ export class TaskModalComponent implements OnInit, OnDestroy {
       taskOwnership: { isManager: true, isAssignee: true, isCreator: true }
     };
     this.resetForm();
-    this.initialStatus = 'TODO';
+    if (prefilledData) {
+      this.taskForm.patchValue({
+        title: prefilledData.title || '',
+        description: prefilledData.description || '',
+        status: prefilledData.status || 'TODO',
+        priority: prefilledData.priority || 1,
+        statusMessage: prefilledData.statusMessage || '',
+        estimatedHours: prefilledData.estimatedHours || ''
+      });
+    }
+    this.initialStatus = prefilledData?.status || 'TODO';
     this.store.openForCreate(stagedPerms);
   }
 

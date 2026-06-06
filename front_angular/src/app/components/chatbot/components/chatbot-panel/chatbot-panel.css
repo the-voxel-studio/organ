@@ -1,0 +1,119 @@
+/* ─── Chatbot Panel Glassmorphism ───────────────────────── */
+.chatbot-panel {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 384px;
+  max-width: calc(100vw - 2rem);
+  background: rgba(13, 6, 48, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 125, 212, 0.2);
+  box-shadow: 0 15px 50px rgba(13, 6, 48, 0.8), 0 0 30px rgba(255, 125, 212, 0.1);
+  transform-origin: bottom right;
+  opacity: 0;
+  transform: scale(0.8) translate3d(0, 30px, 0);
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+
+.chatbot-panel.open {
+  opacity: 1;
+  transform: scale(1) translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+/* ─── Bubbles Custom styling ────────────────────────────── */
+.bubble-user {
+  background: linear-gradient(135deg, #FF7DD4, #f767c2);
+  color: #0D0630;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(255, 125, 212, 0.25);
+  border-radius: 18px 18px 2px 18px;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+.bubble-assistant {
+  background: rgba(53, 94, 228, 0.15);
+  border: 1px solid rgba(53, 94, 228, 0.3);
+  color: #FFF6F6;
+  border-radius: 18px 18px 18px 2px;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* ─── Indicateur d'écriture (Typing indicator) ─────────── */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #FF7DD4;
+  border-radius: 50%;
+  animation: dot-bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes dot-bounce {
+  0%, 80%, 100% { 
+    transform: scale(0);
+  } 40% { 
+    transform: scale(1.0);
+  }
+}
+
+/* ─── Boutons de controle ───────────────────────────────── */
+.control-btn {
+  background: rgba(255, 246, 246, 0.05);
+  color: rgba(255, 246, 246, 0.6);
+  transition: all 0.2s ease;
+}
+
+.control-btn:hover {
+  background: rgba(255, 125, 212, 0.15);
+  color: #FF7DD4;
+}
+
+/* ─── Scrollbar personnalisée dans le panel ──────────────── */
+.chatbot-chat-history {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 125, 212, 0.3) transparent;
+}
+
+.chatbot-chat-history::-webkit-scrollbar {
+  width: 4px;
+}
+
+.chatbot-chat-history::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chatbot-chat-history::-webkit-scrollbar-thumb {
+  background: rgba(255, 125, 212, 0.3);
+  border-radius: 10px;
+}
+
+.chatbot-chat-history::-webkit-scrollbar-thumb:hover {
+  background: #FF7DD4;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}

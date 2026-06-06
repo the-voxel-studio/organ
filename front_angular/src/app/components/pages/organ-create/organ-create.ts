@@ -9,6 +9,7 @@ import { PermissionService } from '../../../services/api/permission.service';
 import { AvailablePermission } from '../../../models/permission.model';
 import { OrganFormComponent } from '../../organ-form/organ-form';
 import { SpinnerComponent } from '../../spinner/spinner';
+import { ChatbotService } from '../../../services/chatbot/chatbot.service';
 
 @Component({
   selector: 'app-organ-create',
@@ -28,6 +29,7 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
   private organService = inject(OrganService);
   private organRoleService = inject(OrganRoleService);
   private permissionService = inject(PermissionService);
+  private chatbotService = inject(ChatbotService);
   private destroy$ = new Subject<void>();
 
   // Métadonnées de page
@@ -36,6 +38,7 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
   isSubmitting = signal(false);
   loadingText = signal('Chargement...');
   errorMessage = signal<string | null>(null);
+  initialOrganData: any = null;
 
   // Détails du projet
   projectColor = '#FF7EB6';
@@ -185,6 +188,11 @@ export class OrganCreateComponent implements OnInit, OnDestroy {
           permissions: [...this.presets.responsible.permissions]
         }
       ];
+
+      if (this.chatbotService.stagedOrganData) {
+        this.initialOrganData = this.chatbotService.stagedOrganData;
+        this.chatbotService.stagedOrganData = null;
+      }
 
       this.isLoading.set(false);
     } catch (err: any) {

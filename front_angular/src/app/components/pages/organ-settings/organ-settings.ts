@@ -7,6 +7,8 @@ import { OrganService } from '../../../services/api/organ.service';
 import { OrganRoleService } from '../../../services/api/organ-role.service';
 import { PermissionService } from '../../../services/api/permission.service';
 import { AvailablePermission } from '../../../models/permission.model';
+import { RefreshService } from '../../../services/common/refresh.service';
+
 import { OrganFormComponent } from '../../organ-form/organ-form';
 import { OrganDangerZoneComponent } from './components/organ-danger-zone/organ-danger-zone';
 import { SpinnerComponent } from '../../spinner/spinner';
@@ -30,6 +32,7 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
   private organService = inject(OrganService);
   private organRoleService = inject(OrganRoleService);
   private permissionService = inject(PermissionService);
+  private refreshService = inject(RefreshService);
   private destroy$ = new Subject<void>();
 
   // Mode & métadonnées de la page
@@ -139,6 +142,14 @@ export class OrganSettingsComponent implements OnInit, OnDestroy {
         } else {
           this.errorMessage.set('UUID du projet ou de l\'organ manquant.');
           this.isLoading.set(false);
+        }
+      });
+
+    this.refreshService.refresh$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.projectUuid && this.organUuid) {
+          this.loadInitialData();
         }
       });
   }

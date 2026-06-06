@@ -18,6 +18,7 @@
       [errorMessage]="errorMessage()"
       [userEmail]="authService.currentUser()?.email || ''"
       [initialInvites]="invites"
+      [initialProjectData]="initialProjectData"
       (submitForm)="onSubmitForm($event)"
       (cancel)="onCancel()">
     </app-project-form>

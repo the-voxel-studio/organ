@@ -6,6 +6,7 @@ import { ProjectService } from '../../../services/api/project.service';
 import { ProjectMemberService } from '../../../services/api/project-member.service';
 import { AuthService } from '../../../services/api/auth.service';
 import { ProjectFormComponent } from '../../project-form/project-form';
+import { ChatbotService } from '../../../services/chatbot/chatbot.service';
 
 @Component({
   selector: 'app-project-create',
@@ -22,6 +23,7 @@ export class ProjectCreateComponent implements OnInit, OnDestroy {
   private projectService = inject(ProjectService);
   private memberService = inject(ProjectMemberService);
   protected authService = inject(AuthService);
+  private chatbotService = inject(ChatbotService);
   private destroy$ = new Subject<void>();
 
   // Mode & métadonnées de la page
@@ -31,9 +33,14 @@ export class ProjectCreateComponent implements OnInit, OnDestroy {
 
   // Liste des membres
   invites: any[] = [];
+  initialProjectData: any = null;
 
   ngOnInit() {
     this.projectNameInit();
+    if (this.chatbotService.stagedProjectData) {
+      this.initialProjectData = this.chatbotService.stagedProjectData;
+      this.chatbotService.stagedProjectData = null;
+    }
   }
 
   ngOnDestroy() {

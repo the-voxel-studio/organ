@@ -1,0 +1,7 @@
+<div class="chatbot-container fixed bottom-6 right-6 z-[9999]" [class.modal-open]="isTaskModalOpen">
+  <!-- ─── BOUTON FLOTTANT D'OUVERTURE ─── -->
+  <app-chatbot-trigger [isOpen]="isOpen" (toggle)="toggleChat()"></app-chatbot-trigger>
+
+  <!-- ─── FENÊTRE DE DISCUSSION CHATBOT ─── -->
+  <app-chatbot-panel [isOpen]="isOpen" (toggle)="toggleChat()"></app-chatbot-panel>
+</div>

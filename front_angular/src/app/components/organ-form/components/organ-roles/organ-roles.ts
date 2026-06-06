@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AvailablePermission } from '../../../../models/permission.model';
+import { ToastService } from '../../../../services/common/toast.service';
 
 @Component({
   selector: 'app-organ-roles',
@@ -10,6 +11,8 @@ import { AvailablePermission } from '../../../../models/permission.model';
   templateUrl: './organ-roles.html'
 })
 export class OrganRolesComponent {
+  private toastService = inject(ToastService);
+
   @Input({ required: true }) roles: any[] = [];
   @Input({ required: true }) presets: any;
   @Input({ required: true }) availablePermissions: AvailablePermission[] = [];
@@ -20,6 +23,43 @@ export class OrganRolesComponent {
   @Input({ required: true }) canManage: boolean = false;
 
   @Output() rolesChanged = new EventEmitter<any[]>();
+
+  copyRole(role: any) {
+    const copied = {
+      name: role.name,
+      iconType: role.iconType,
+      iconData: role.iconData,
+      permissions: [...role.permissions]
+    };
+    localStorage.setItem('organ_copied_role', JSON.stringify(copied));
+    this.toastService.success('Rôle copié', `Le rôle "${role.name || 'Sans titre'}" a été copié dans le presse-papier.`);
+  }
+
+  hasCopiedRole(): boolean {
+    return localStorage.getItem('organ_copied_role') !== null;
+  }
+
+  pasteRole() {
+    if (!this.canManage) return;
+    const str = localStorage.getItem('organ_copied_role');
+    if (!str) return;
+    try {
+      const copied = JSON.parse(str);
+      const newRole = {
+        id: 'role-' + Date.now() + Math.random(),
+        name: copied.name + ' (Copie)',
+        iconType: copied.iconType || 'EMOJI',
+        iconData: copied.iconData || '👤',
+        permissions: [...(copied.permissions || ['ORGAN_VIEW'])]
+      };
+      const updatedRoles = [...this.roles, newRole];
+      this.rolesChanged.emit(updatedRoles);
+      this.toastService.success('Rôle collé', `Le rôle "${copied.name}" a été collé avec succès.`);
+    } catch (e) {
+      console.error('Failed to paste role', e);
+      this.toastService.error('Erreur', 'Impossible de coller le rôle.');
+    }
+  }
 
   // Gestion des modals
   showRoleModal = false;
@@ -53,6 +93,10 @@ export class OrganRolesComponent {
     ORGAN_HARD_DELETE: {
       label: "Supprimer définitivement l'Organ",
       description: "DANGER: Effacer irréversiblement l'Organ et toutes ses données."
+    },
+    PROJECT_HARD_DELETE: {
+      label: "Supprimer définitivement le projet",
+      description: "DANGER: Effacer irréversiblement le projet global et tous ses organes/tâches associés."
     },
     TASK_VIEW_ALL: {
       label: "Voir toutes les tâches",
@@ -126,6 +170,10 @@ export class OrganRolesComponent {
       label: "Assigner des collaborateurs",
       description: "Affecter des tâches à d'autres membres de l'Organ."
     },
+    TASK_VALIDATE: {
+      label: "Valider les tâches",
+      description: "Marquer les tâches comme terminées et validées officiellement."
+    },
     TASK_TAG_MANAGE_OWN: {
       label: "Gérer les étiquettes de ses tâches",
       description: "Associer ou retirer des tags sur ses propres tickets."
@@ -134,6 +182,10 @@ export class OrganRolesComponent {
       label: "Gérer les étiquettes de toutes les tâches",
       description: "Associer ou retirer des tags sur tous les tickets."
     },
+    TASK_TAG_HARD_DELETE: {
+      label: "Supprimer définitivement les étiquettes",
+      description: "Effacer irréversiblement les étiquettes (tags) des tâches de l'Organ."
+    },
     TASK_LINK_MANAGE_OWN: {
       label: "Gérer les liens de ses tâches",
       description: "Associer des liens de documentation à ses propres tickets."
@@ -141,6 +193,14 @@ export class OrganRolesComponent {
     TASK_LINK_MANAGE_ALL: {
       label: "Gérer les liens de toutes les tâches",
       description: "Associer des liens de documentation à tous les tickets."
+    },
+    TASK_LINK_HARD_DELETE_OWN: {
+      label: "Supprimer définitivement ses liens de tâches",
+      description: "Effacer irréversiblement les liens de documentation ajoutés par soi-même sous un ticket."
+    },
+    TASK_LINK_HARD_DELETE_ALL: {
+      label: "Supprimer définitivement tous les liens de tâches",
+      description: "Effacer de manière irréversible tous les liens d'un ticket (rôle de modération)."
     },
     TASK_DEPENDENCY_MANAGE_OWN: {
       label: "Gérer les dépendances de ses tâches",
@@ -157,6 +217,10 @@ export class OrganRolesComponent {
     COMMENT_EDIT_OWN: {
       label: "Modifier ses commentaires",
       description: "Éditer ses propres messages de discussion."
+    },
+    COMMENT_EDIT_ALL: {
+      label: "Modifier tous les commentaires",
+      description: "Éditer et modérer les messages de discussion de n'importe quel collaborateur."
     },
     COMMENT_DELETE_OWN: {
       label: "Supprimer ses commentaires (corbeille)",

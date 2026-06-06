@@ -1,8 +1,11 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { DashboardService } from '../../../services/api/dashboard.service';
 import { DashboardResponse } from '../../../models/dashboard.model';
+import { RefreshService } from '../../../services/common/refresh.service';
+
 
 import { PriorityTasksComponent } from './components/priority-tasks/priority-tasks';
 import { ProjectGridComponent } from './components/project-grid/project-grid';
@@ -20,16 +23,30 @@ import { SpinnerComponent } from '../../spinner/spinner';
   ],
   templateUrl: './dashboard.html'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private dashboardService = inject(DashboardService);
+  private refreshService = inject(RefreshService);
+  private destroy$ = new Subject<void>();
 
   // Signaux d'état
   dashboardData = signal<DashboardResponse | null>(null);
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);
 
+
   ngOnInit() {
     this.loadDashboardData();
+
+    this.refreshService.refresh$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadDashboardData();
+      });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadDashboardData() {

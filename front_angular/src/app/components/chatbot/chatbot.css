@@ -1,0 +1,24 @@
+.chatbot-container {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  --bubblegum-color: #FF7DD4;
+  --highlight-color: #355EE4;
+  --midnight-color: #0D0630;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.chatbot-container.modal-open {
+  transform: translate3d(calc(-100vw + 104px), 0, 0); /* 56px (width) + 48px (margins) */
+}
+
+.chatbot-container.modal-open .chatbot-panel {
+  transform-origin: bottom left;
+}
+
+.chatbot-container.modal-open app-chatbot-panel .chatbot-panel.open {
+  transform: scale(1) translate3d(328px, 0, 0); /* Shift right by 328px to align left edge of panel with left edge of button */
+}
+
+.chatbot-container.modal-open app-chatbot-panel .chatbot-panel:not(.open) {
+  transform: scale(0.8) translate3d(328px, 30px, 0);
+}

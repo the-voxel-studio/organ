@@ -4,6 +4,8 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { ProjectService } from '../../../services/api/project.service';
 import { ProjectDetailedViewResponse } from '../../../models/project.model';
+import { RefreshService } from '../../../services/common/refresh.service';
+
 
 // Sous-composants
 import { ProjectHeaderComponent } from './components/project-header/project-header';
@@ -32,6 +34,7 @@ export class ProjectComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private projectService = inject(ProjectService);
+  private refreshService = inject(RefreshService);
   private destroy$ = new Subject<void>();
 
   // Signaux d'état
@@ -72,6 +75,14 @@ export class ProjectComponent implements OnInit, OnDestroy {
         } else {
           this.errorMessage.set('UUID du projet manquant.');
           this.isLoading.set(false);
+        }
+      });
+
+    this.refreshService.refresh$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (this.projectUuid) {
+          this.loadProjectDetails();
         }
       });
   }

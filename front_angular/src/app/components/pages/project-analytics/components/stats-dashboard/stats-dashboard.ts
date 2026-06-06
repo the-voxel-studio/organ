@@ -234,9 +234,11 @@ export class StatsDashboardComponent implements OnChanges, OnDestroy, AfterViewI
     // --- 3. Status Doughnut Chart ---
     const statusMap = new Map<string, number>();
     current.forEach(item => {
-      const status = item.status || 'UNKNOWN';
       const count = Number(item.task_count || 0);
-      statusMap.set(status, (statusMap.get(status) || 0) + count);
+      if (count > 0) {
+        const status = item.status || 'UNKNOWN';
+        statusMap.set(status, (statusMap.get(status) || 0) + count);
+      }
     });
 
     const statusKeys = Array.from(statusMap.keys());

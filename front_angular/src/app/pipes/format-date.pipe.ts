@@ -8,9 +8,12 @@ import { TranslationService } from '../services/common/translation.service';
 export class FormatDatePipe implements PipeTransform {
   private translationService = inject(TranslationService);
 
-  transform(value: string | null | undefined, type: 'standard' | 'audit' = 'standard'): string {
+  transform(value: string | null | undefined, type: 'standard' | 'audit' | 'time' = 'standard'): string {
     if (type === 'audit') {
       return this.translationService.formatAuditDate(value);
+    }
+    if (type === 'time') {
+      return this.translationService.formatTime(value);
     }
     return this.translationService.formatDate(value);
   }
