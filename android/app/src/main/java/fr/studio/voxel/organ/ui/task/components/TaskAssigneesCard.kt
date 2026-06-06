@@ -84,7 +84,7 @@ fun TaskAssigneesCard(
                     if (viewModel.assignees.isEmpty()) {
                         Text(
                             text = "Aucun collaborateur assigné",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {

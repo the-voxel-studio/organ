@@ -94,7 +94,7 @@ fun TrashedItemCard(
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 18.sp),
                     color = Color.Gray,
                     lineHeight = 16.sp
                 )

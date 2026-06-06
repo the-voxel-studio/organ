@@ -166,7 +166,7 @@ fun OrganTrashScreen(
 
                             Text(
                                 text = "Retrouvez ici les éléments supprimés auxquels vous avez accès.",
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                             )
@@ -212,7 +212,7 @@ fun OrganTrashScreen(
 
                             if (!tasksCollapsed) {
                                 if (filteredTasks.isEmpty()) {
-                                    item { Text("Aucune tâche ne correspond à la recherche.", style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                                    item { Text("Aucune tâche ne correspond à la recherche.", style = MaterialTheme.typography.bodyLarge, color = Color.Gray) }
                                 } else {
                                     items(filteredTasks) { task ->
                                         TrashedItemCard(
@@ -254,7 +254,7 @@ fun OrganTrashScreen(
 
                             if (!rolesCollapsed) {
                                 if (filteredRoles.isEmpty()) {
-                                    item { Text("Aucun rôle ne correspond à la recherche.", style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                                    item { Text("Aucun rôle ne correspond à la recherche.", style = MaterialTheme.typography.bodyLarge, color = Color.Gray) }
                                 } else {
                                     items(filteredRoles) { role ->
                                         TrashedItemCard(
@@ -294,7 +294,7 @@ fun OrganTrashScreen(
 
                             if (!membersCollapsed) {
                                 if (filteredMembers.isEmpty()) {
-                                    item { Text("Aucun membre ne correspond à la recherche.", style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                                    item { Text("Aucun membre ne correspond à la recherche.", style = MaterialTheme.typography.bodyLarge, color = Color.Gray) }
                                 } else {
                                     items(filteredMembers) { assignment ->
                                         val fullName = "${assignment.user.firstName} ${assignment.user.lastName}"
@@ -336,7 +336,7 @@ fun OrganTrashScreen(
 
                             if (!linksCollapsed) {
                                 if (filteredLinks.isEmpty()) {
-                                    item { Text("Aucun lien ne correspond à la recherche.", style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                                    item { Text("Aucun lien ne correspond à la recherche.", style = MaterialTheme.typography.bodyLarge, color = Color.Gray) }
                                 } else {
                                     items(filteredLinks) { link ->
                                         val displayTitle = link.description ?: link.url

@@ -149,7 +149,7 @@ fun LineTask(
                 Text(
                     text = task.projectName ?: "Projet",
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 10.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     ),
                     color = projectColor,
@@ -178,7 +178,7 @@ fun LineTask(
                     Text(
                         text = organName,
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 10.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         ),
                         color = organColor,

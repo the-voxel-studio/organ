@@ -51,7 +51,7 @@ fun OrgansSection(
                         painter = painterResource(R.drawable.outline_info),
                         contentDescription = null,
                         tint = projectColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
@@ -75,6 +75,7 @@ fun OrgansSection(
                             if (showTagsPanel) projectColor.copy(alpha = 0.15f)
                             else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         )
+                        .border(width = 1.dp, color = MaterialTheme.colorScheme.onSurface, shape = RoundedCornerShape(12.dp))
                 ) {
                     Icon(
                         imageVector = Icons.Default.Tag,
@@ -105,7 +106,8 @@ fun OrgansSection(
             ) {
                 Text(
                     text = "Aucun Organ n'a encore été créé pour ce projet.",
-                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     textAlign = TextAlign.Center
                 )
             }
@@ -178,7 +180,7 @@ fun OrganItemCard(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = organ.description ?: "Aucune description fournie.",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis

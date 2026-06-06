@@ -133,7 +133,7 @@ fun TaskCard(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "Priorité ${task.priority}",
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
@@ -149,7 +149,7 @@ fun TaskCard(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = formatDate(task.expiresAt),
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                             color = Color(0xFFEF4444)
                         )
                     }

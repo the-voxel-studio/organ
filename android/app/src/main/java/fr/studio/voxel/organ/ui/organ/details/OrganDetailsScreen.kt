@@ -393,9 +393,8 @@ fun OrganDetailsScreen(
                                                 ) {
                                                     Text(
                                                         "Aucune tâche à afficher",
-                                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                                                        ),
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                                         textAlign = TextAlign.Center
                                                     )
                                                 }

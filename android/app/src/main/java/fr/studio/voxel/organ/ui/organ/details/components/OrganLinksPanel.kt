@@ -109,7 +109,8 @@ fun OrganLinksPanel(
                 if (links.isEmpty()) {
                     Text(
                         text = "Aucun lien disponible.",
-                        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color =MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 } else {

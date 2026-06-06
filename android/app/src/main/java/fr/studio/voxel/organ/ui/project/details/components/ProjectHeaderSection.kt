@@ -172,7 +172,7 @@ fun ProjectHeaderSection(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Corbeille",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 }
@@ -192,7 +192,7 @@ fun ProjectHeaderSection(
                         Icon(
                             imageVector = Icons.Default.AreaChart,
                             contentDescription = "Statistiques",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 }
@@ -213,7 +213,7 @@ fun ProjectHeaderSection(
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Paramètres",
-                            modifier = Modifier.size(20.dp),
+                            modifier = Modifier.size(28.dp),
                             tint = MaterialTheme.colorScheme.surface
                         )
                     }

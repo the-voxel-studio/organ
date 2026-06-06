@@ -77,7 +77,7 @@ fun TaskCommentsCard(
                     if (viewModel.comments.isEmpty()) {
                         Text(
                             text = "Aucun commentaire",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.outline
                         )
                     } else {
@@ -99,7 +99,7 @@ fun TaskCommentsCard(
                                         Text(
                                             text = "${comment.user.firstName} ${comment.user.lastName}",
                                             fontWeight = FontWeight.Bold,
-                                            style = MaterialTheme.typography.bodyMedium
+                                            style = MaterialTheme.typography.bodyLarge
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
@@ -110,7 +110,7 @@ fun TaskCommentsCard(
                                     }
                                     Text(
                                         text = comment.content,
-                                        style = MaterialTheme.typography.bodyMedium,
+                                        style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
