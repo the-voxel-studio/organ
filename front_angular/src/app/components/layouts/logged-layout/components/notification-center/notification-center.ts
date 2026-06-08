@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from '../../../../../services/api/notification.service';
 import { NotificationResponse } from '../../../../../models/notification.model';
@@ -13,6 +13,7 @@ import { Subject, takeUntil } from 'rxjs';
 })
 export class NotificationCenterComponent implements OnInit, OnDestroy {
   private notificationService = inject(NotificationService);
+  private elementRef = inject(ElementRef);
   private destroy$ = new Subject<void>();
 
   isNotificationsOpen = signal(false);
@@ -31,9 +32,15 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     this.clearAllHoverTimeouts();
   }
 
-  toggleNotifications(event: MouseEvent) {
-    event.stopPropagation();
+  toggleNotifications() {
     this.isNotificationsOpen.update(v => !v);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.isNotificationsOpen.set(false);
+    }
   }
 
   markAllNotificationsAsRead() {

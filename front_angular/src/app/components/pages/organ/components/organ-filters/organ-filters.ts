@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -9,6 +9,8 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './organ-filters.html'
 })
 export class OrganFiltersComponent {
+  private elementRef = inject(ElementRef);
+
   @Input({ required: true }) highlightColor = '#FF7DD4';
 
   @Input() sortBy: 'priority' | 'dueDate' | 'date' | null = null;
@@ -31,6 +33,13 @@ export class OrganFiltersComponent {
 
   closeFilterMenu() {
     this.showFilterMenu.set(false);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.closeFilterMenu();
+    }
   }
 
   setSort(field: 'priority' | 'dueDate' | 'date') {

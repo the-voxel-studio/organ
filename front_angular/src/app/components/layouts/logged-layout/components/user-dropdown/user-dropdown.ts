@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../../services/api/auth.service';
@@ -12,6 +12,7 @@ import { AuthService } from '../../../../../services/api/auth.service';
 export class UserDropdownComponent {
   protected authService = inject(AuthService);
   private router = inject(Router);
+  private elementRef = inject(ElementRef);
 
   isProfileOpen = signal(false);
 
@@ -23,9 +24,15 @@ export class UserDropdownComponent {
     return first + last || 'U';
   });
 
-  toggleProfile(event: MouseEvent) {
-    event.stopPropagation();
+  toggleProfile() {
     this.isProfileOpen.update(v => !v);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.elementRef.nativeElement.contains(event.target)) {
+      this.isProfileOpen.set(false);
+    }
   }
 
   onLogout() {
