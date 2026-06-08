@@ -96,6 +96,7 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
     volumes:
       - ./api:/var/www/html
+      - api_var:/var/www/html/var
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./docker/php/zz-docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
     networks:
@@ -132,6 +133,7 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     volumes:
       - ./front_php:/var/www/html
+      - front_var:/var/www/html/var
       - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./docker/php/zz-docker.conf:/usr/local/etc/php-fpm.d/zz-docker.conf
     networks:
@@ -161,6 +163,7 @@ services:
     container_name: organ_front_tailwind
     volumes:
       - ./front_php:/var/www/html
+      - front_var:/var/www/html/var
     working_dir: /var/www/html
     command: php bin/console tailwind:build --watch
     restart: unless-stopped
@@ -195,6 +198,8 @@ services:
 volumes:
   db_data:
   mongo_data:
+  api_var:
+  front_var:
 
 networks:
   app_network:
