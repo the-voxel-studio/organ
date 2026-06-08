@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -186,31 +187,32 @@ fun RoleEditDialog(
                         .verticalScroll(rememberScrollState())
                 ) {
                     // Group 1: Organ
-                    Text("Gestion de l'Organ", fontWeight = FontWeight.Bold, color = highlightColor, fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("Gestion de l'Organ", style = MaterialTheme.typography.bodyLarge , color = highlightColor, modifier = Modifier.padding(vertical = 8.dp))
                     organPermissions.forEach { name ->
                         PermissionItemRow(
                             name = name,
                             label = permissionLabels[name]?.first ?: name,
                             desc = permissionLabels[name]?.second ?: "",
-                            checked = name == "ORGAN_VIEW" || modalRolePermissions.contains(name) || (name == "ORGAN_MANAGE_ROLES" && modalRolePermissions.contains("ORGAN_MANAGE_MEMBERS")),
+                            checked = name == "ORGAN_VIEW" || modalRolePermissions.contains(name),
                             enabled = name != "ORGAN_VIEW",
                             onCheckedChange = { isChecked ->
                                 val current = modalRolePermissions.toMutableList()
                                 if (isChecked) {
                                     current.add(name)
-                                    if (name == "ORGAN_MANAGE_ROLES" && !current.contains("ORGAN_MANAGE_MEMBERS")) {
+                                    if (name == "ORGAN_MANAGE_ROLES") {
                                         current.add("ORGAN_MANAGE_MEMBERS")
                                     }
                                 } else {
                                     current.remove(name)
+                                    if (name == "ORGAN_MANAGE_MEMBERS") current.remove("ORGAN_MANAGE_ROLES")
                                 }
-                                modalRolePermissions = current
+                                modalRolePermissions = current.distinct()
                             }
                         )
                     }
 
                     // Group 2: Tasks
-                    Text("Gestion des Tâches", fontWeight = FontWeight.Bold, color = highlightColor, fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("Gestion des Tâches", style = MaterialTheme.typography.bodyLarge , color = highlightColor, modifier = Modifier.padding(vertical = 8.dp))
                     taskPermissions.forEach { name ->
                         PermissionItemRow(
                             name = name,
@@ -226,7 +228,7 @@ fun RoleEditDialog(
                     }
 
                     // Group 3: Comments & attachments
-                    Text("Commentaires & Fichiers", fontWeight = FontWeight.Bold, color = highlightColor, fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("Commentaires & Fichiers", style = MaterialTheme.typography.bodyLarge , color = highlightColor, modifier = Modifier.padding(vertical = 8.dp))
                     interactionPermissions.forEach { name ->
                         PermissionItemRow(
                             name = name,
@@ -271,8 +273,6 @@ fun RoleEditDialog(
                                 if (!finalPerms.contains("ORGAN_MANAGE_MEMBERS")) {
                                     finalPerms.add("ORGAN_MANAGE_MEMBERS")
                                 }
-                            } else {
-                                finalPerms.remove("ORGAN_MANAGE_MEMBERS")
                             }
                             onSave(name, modalRoleEmoji.ifBlank { "👤" }, finalPerms)
                         },
@@ -307,16 +307,22 @@ fun PermissionItemRow(
             .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = if (enabled) onCheckedChange else null,
-            enabled = enabled
-        )
+        Box(
+            modifier = Modifier.size(48.dp),
+            contentAlignment = Alignment.Center
+        ){
+            Checkbox(
+                checked = checked,
+                onCheckedChange = if (enabled) onCheckedChange else null,
+                enabled = enabled
+            )
+        }
         Spacer(modifier = Modifier.width(8.dp))
         Column {
-            Text(label, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold))
+            Text(label, style = MaterialTheme.typography.bodySmall)
             if (desc.isNotBlank()) {
-                Text(desc, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(desc, style = MaterialTheme.typography.bodySmall.copy(fontSize = 14.sp, fontWeight = FontWeight.Normal), color = Color.Gray)
             }
         }
     }

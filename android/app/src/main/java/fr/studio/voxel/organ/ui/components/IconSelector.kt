@@ -11,9 +11,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -43,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
@@ -50,9 +54,10 @@ import java.text.BreakIterator
 
 enum class IconType(val title: String) {
     IMAGE("Image"),
+    CAMERA("Camera"),
     EMOJI("Emoji"),
-    SVG("SVG"),
-    CAMERA("Camera")
+    SVG("SVG")
+
 }
 
 @Composable
@@ -135,32 +140,35 @@ fun IconSelector(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        TabRow(
-            selectedTabIndex = selectedTab.ordinal,
-            containerColor = MaterialTheme.colorScheme.outline.copy(0.2f),
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)),
-            indicator = { Box(Modifier) },
-            divider = { Box(Modifier) }
+                .height(56.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.outline.copy(0.15f))
+                .padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             IconType.entries.forEach { type ->
                 val isSelected = selectedTab == type
-                Tab(
-                    selected = isSelected,
-                    onClick = { onTabSelected(type) },
+                Box(
                     modifier = Modifier
-                        .padding(4.dp)
+                        .weight(1f)
+                        .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent),
-                    text = {
-                        Text(
-                            text = type.title,
-                            color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
-                            style = MaterialTheme.typography.labelMedium
+                        .background(if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent)
+                        .clickable { onTabSelected(type) },
+                    contentAlignment = Alignment.Center
+                ){
+                    Text(
+                        text = type.title,
+                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                )
+                    )
+                }
             }
         }
         Box(

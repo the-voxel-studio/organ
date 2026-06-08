@@ -110,7 +110,7 @@ fun ProjectFormDetailsSection(
                                 "INACTIVE" -> "Inactif"
                                 else -> status
                             },
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Normal)
                         )
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,

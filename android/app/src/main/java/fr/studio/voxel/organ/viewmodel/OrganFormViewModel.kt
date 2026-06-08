@@ -162,7 +162,7 @@ class OrganFormViewModel : ViewModel() {
                     val perms = permsRes.body()?.map { it.name } ?: emptyList()
                     availablePermissions = perms
 
-                    organPermissions = perms.filter { it.startsWith("ORGAN_") && it != "ORGAN_MANAGE_MEMBERS" && it != "ORGAN_HARD_DELETE" }
+                    organPermissions = perms.filter { it.startsWith("ORGAN_") && it != "ORGAN_HARD_DELETE" }
                     taskPermissions = perms.filter { it.startsWith("TASK_") }
                     interactionPermissions = perms.filter { it.startsWith("COMMENT_") || it.startsWith("ATTACHMENT_") }
 
