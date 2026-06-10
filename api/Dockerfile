@@ -37,8 +37,8 @@ RUN mkdir -p var/cache/dev/doctrine/odm/mongodb/Hydrators \
 WORKDIR /var/www/html
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN sed -i 's/\r$//g' /usr/local/bin/docker-entrypoint.sh \
+RUN php -r '$f="/usr/local/bin/docker-entrypoint.sh"; $c=file_get_contents($f); $c=preg_replace("/^\xEF\xBB\xBF/", "", $c); $c=str_replace("\r", "", $c); file_put_contents($f, $c);' \
     && chmod +x /usr/local/bin/docker-entrypoint.sh
 
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["php-fpm"]
