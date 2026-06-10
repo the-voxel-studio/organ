@@ -50,6 +50,8 @@ class OrganDetailsViewModel : ViewModel() {
         private set
     var errorMessage by mutableStateOf<String?>(null)
         private set
+    var isAccessDenied by mutableStateOf(false)
+        private set
 
     // Links states
     var showLinksPanel by mutableStateOf(false)
@@ -201,13 +203,20 @@ class OrganDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
+            isAccessDenied = false
             try {
                 // Load Project, Organ and Permissions
                 val projectResponse = projectService.getProject(pUuid)
                 val organResponse = organService.getOrgan(pUuid, oUuid)
                 val permissionsResponse = organService.getOrganPermissions(pUuid, oUuid)
 
-                if (projectResponse.isSuccessful && organResponse.isSuccessful && permissionsResponse.isSuccessful) {
+                val isProjDenied = !projectResponse.isSuccessful && (projectResponse.code() == 403 || (projectResponse.errorBody()?.string() ?: "").contains("Access denied", ignoreCase = true))
+                val isOrganDenied = !organResponse.isSuccessful && (organResponse.code() == 403 || (organResponse.errorBody()?.string() ?: "").contains("Access denied", ignoreCase = true))
+                val isPermDenied = !permissionsResponse.isSuccessful && (permissionsResponse.code() == 403 || (permissionsResponse.errorBody()?.string() ?: "").contains("Access denied", ignoreCase = true))
+
+                if (isProjDenied || isOrganDenied || isPermDenied) {
+                    isAccessDenied = true
+                } else if (projectResponse.isSuccessful && organResponse.isSuccessful && permissionsResponse.isSuccessful) {
                     val project = projectResponse.body()
                     val organ = organResponse.body()
                     val perms = permissionsResponse.body()

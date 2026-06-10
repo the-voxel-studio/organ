@@ -150,11 +150,9 @@ class ParameterViewModel : ViewModel() {
             var idToken: String? = null
             try {
                 val credentialManager = androidx.credentials.CredentialManager.create(context)
-                val googleIdOption = com.google.android.libraries.identity.googleid.GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId("apps.googleusercontent.com") // Placeholder pour un google Id
-                    .setAutoSelectEnabled(false)
-                    .build()
+                val googleIdOption = com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption.Builder(
+                    fr.studio.voxel.organ.network.ApiClient.GOOGLE_SERVER_CLIENT_ID
+                ).build()
 
                 val request = androidx.credentials.GetCredentialRequest.Builder()
                     .addCredentialOption(googleIdOption)

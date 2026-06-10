@@ -112,6 +112,9 @@ class TaskNotificationListener
     {
         foreach ($this->pendingNotifications as $notification) {
             $this->notificationService->sendToMercure($notification);
+            if ($notification->getUser()) {
+                $this->notificationService->invalidate($notification->getUser()->getUuid());
+            }
         }
         $this->pendingNotifications = [];
     }

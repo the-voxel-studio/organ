@@ -9,9 +9,11 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
     private const val BASE_URL = "http://10.0.2.2:8001" // Android Emulator's localhost
+    const val GOOGLE_SERVER_CLIENT_ID = "apps.googleusercontent.com"
 
     private lateinit var retrofit: Retrofit
     private lateinit var tokenStorage: TokenStorage
+    private lateinit var okHttpClient: OkHttpClient
 
     fun init(context: Context) {
         tokenStorage = TokenStorage(context)
@@ -23,7 +25,7 @@ object ApiClient {
         val cookieJar = PersistentCookieJar(tokenStorage)
         val authenticator = TokenAuthenticator(tokenStorage, BASE_URL)
 
-        val okHttpClient = OkHttpClient.Builder()
+        okHttpClient = OkHttpClient.Builder()
             .addInterceptor(logging)
             .cookieJar(cookieJar)
             .authenticator(authenticator)
@@ -51,5 +53,16 @@ object ApiClient {
             throw IllegalStateException("ApiClient must be initialized with init(context) before use")
         }
         return tokenStorage
+    }
+
+    fun getBaseUrl(): String {
+        return BASE_URL
+    }
+
+    fun getOkHttpClient(): OkHttpClient {
+        if (!::okHttpClient.isInitialized) {
+            throw IllegalStateException("ApiClient must be initialized with init(context) before use")
+        }
+        return okHttpClient
     }
 }

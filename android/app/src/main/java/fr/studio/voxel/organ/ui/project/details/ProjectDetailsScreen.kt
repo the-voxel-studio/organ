@@ -78,7 +78,18 @@ fun ProjectDetailsScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        if (viewModel.isLoading && viewModel.projectData == null) {
+        if (viewModel.isAccessDenied) {
+            AlertDialog(
+                onDismissRequest = onBack,
+                title = { Text(text = "Accès interdit", fontWeight = FontWeight.Bold) },
+                text = { Text("Vous n'avez pas l'autorisation d'accéder à ce projet.") },
+                confirmButton = {
+                    TextButton(onClick = onBack) {
+                        Text("OK")
+                    }
+                }
+            )
+        } else if (viewModel.isLoading && viewModel.projectData == null) {
             ProjectDetailsShimmer()
         } else {
             if (viewModel.errorMessage != null) {

@@ -120,7 +120,7 @@ fun SideBar(
                     if (unreadCount > 0) {
                         Surface(
                             shape = androidx.compose.foundation.shape.CircleShape,
-                            color = Color(0xFFF27B9B), // bubblegum/pink color to match Angular's bg-bubblegum
+                            color = MaterialTheme.colorScheme.primary, // bubblegum/pink color to match Angular's bg-bubblegum
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
                             modifier = Modifier
                                 .offset(x = 2.dp, y = (-2).dp)

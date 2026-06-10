@@ -106,7 +106,7 @@ fun NotificationScreen(
                             Text(
                                 text = "$unreadCount non lue(s)",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFFF27B9B), // Bubblegum/pink
+                                color = MaterialTheme.colorScheme.primary, // Bubblegum/pink
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -122,7 +122,7 @@ fun NotificationScreen(
                                     fontWeight = FontWeight.Black,
                                     letterSpacing = 1.sp
                                 ),
-                                color = Color(0xFFF27B9B)
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -215,13 +215,13 @@ fun NotificationCard(
     val isInvite = notification.isRealInvite
 
     val cardBg = if (isUnread) {
-        Color(0xFFFFF5F7) // Very light pink to match Angular text-black / bg-gradient from pink-50/20
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) // Very light pink to match Angular text-black / bg-gradient from pink-50/20
     } else {
         Color.White
     }
 
     val borderColor = if (isUnread) {
-        Color(0xFFF27B9B).copy(alpha = 0.2f) // Light bubblegum border
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) // Light bubblegum border
     } else {
         Color(0xFFEEEEEE)
     }
@@ -251,7 +251,7 @@ fun NotificationCard(
                             modifier = Modifier
                                 .padding(end = 8.dp)
                                 .size(8.dp)
-                                .background(Color(0xFFF27B9B), CircleShape)
+                                .background(MaterialTheme.colorScheme.primary, CircleShape)
                         )
                     }
 
@@ -287,7 +287,7 @@ fun NotificationCard(
                 ) {
                     Button(
                         onClick = onAcceptInvite,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF27B9B)),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier.weight(1f),
                         contentPadding = PaddingValues(vertical = 8.dp)

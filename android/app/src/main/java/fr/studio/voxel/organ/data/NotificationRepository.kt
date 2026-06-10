@@ -98,9 +98,14 @@ object NotificationRepository {
                 val data = subscribeRes.body() ?: continue
 
                 try {
+                    val serverHost = try {
+                        java.net.URI(ApiClient.getBaseUrl()).host ?: "10.0.2.2"
+                    } catch (e: Exception) {
+                        "10.0.2.2"
+                    }
                     val httpUrl = okhttp3.HttpUrl.Builder()
                         .scheme("http")
-                        .host("10.0.2.2")
+                        .host(serverHost)
                         .port(9090)
                         .addPathSegment(".well-known")
                         .addPathSegment("mercure")

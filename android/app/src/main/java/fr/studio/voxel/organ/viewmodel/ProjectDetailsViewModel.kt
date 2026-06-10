@@ -32,6 +32,9 @@ class ProjectDetailsViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    var isAccessDenied by mutableStateOf(false)
+        private set
+
     // Tags states
     var showTagsPanel by mutableStateOf(false)
     var tags by mutableStateOf<List<TagResponse>>(emptyList())
@@ -51,6 +54,7 @@ class ProjectDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
+            isAccessDenied = false
             try {
                 val response = projectService.getDetailedProject(uuid)
                 if (response.isSuccessful) {
@@ -59,7 +63,12 @@ class ProjectDetailsViewModel : ViewModel() {
                         loadTags()
                     }
                 } else {
-                    errorMessage = "Erreur lors du chargement: ${response.code()}"
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    if (response.code() == 403 || errorBody.contains("Access denied", ignoreCase = true)) {
+                        isAccessDenied = true
+                    } else {
+                        errorMessage = "Erreur lors du chargement: ${response.code()}"
+                    }
                 }
             } catch (e: Exception) {
                 errorMessage = "Erreur réseau: ${e.localizedMessage}"

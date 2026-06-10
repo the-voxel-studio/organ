@@ -19,6 +19,22 @@ import androidx.compose.ui.unit.dp
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 import fr.studio.voxel.organ.viewmodel.TaskDetailsViewModel
+import android.app.DownloadManager
+import android.content.Context
+import android.net.Uri
+import android.os.Environment
+import android.content.Intent
+import android.widget.Toast
+import android.util.Log
+import androidx.compose.ui.platform.LocalContext
+import fr.studio.voxel.organ.network.ApiClient
+import androidx.core.content.FileProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
 
 @Composable
 fun TaskAttachmentsCard(
@@ -27,6 +43,7 @@ fun TaskAttachmentsCard(
     onAddAttachmentClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var showAttachmentsExpanded by remember { mutableStateOf(false) }
 
     Card(
@@ -90,7 +107,19 @@ fun TaskAttachmentsCard(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            downloadOrOpenAttachment(
+                                                context = context,
+                                                projectUuid = viewModel.projectUuid,
+                                                organUuid = viewModel.organUuid,
+                                                taskUuid = viewModel.taskUuid,
+                                                attachment = att
+                                            )
+                                        }
+                                ) {
                                     Text(
                                         text = att.fileName,
                                         style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
@@ -133,3 +162,97 @@ fun TaskAttachmentsCard(
         }
     }
 }
+
+private fun downloadOrOpenAttachment(
+    context: Context,
+    projectUuid: String?,
+    organUuid: String?,
+    taskUuid: String?,
+    attachment: fr.studio.voxel.organ.network.services.TaskAttachmentResponse
+) {
+    if (projectUuid == null || organUuid == null || taskUuid == null) {
+        Toast.makeText(context, "Erreur de contexte de la tâche", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    if (attachment.filePath.startsWith("drive://")) {
+        val driveId = attachment.filePath.replace("drive://", "")
+        val driveUrl = "https://drive.google.com/open?id=$driveId"
+        Toast.makeText(context, "Ouverture dans le navigateur...", Toast.LENGTH_SHORT).show()
+        try {
+            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(driveUrl)).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                selector = Intent(Intent.ACTION_VIEW, Uri.parse("https://")).apply {
+                    addCategory(Intent.CATEGORY_BROWSABLE)
+                }
+            }
+            context.startActivity(browserIntent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Impossible d'ouvrir le navigateur", Toast.LENGTH_SHORT).show()
+        }
+    } else {
+        Toast.makeText(context, "Téléchargement de ${attachment.fileName}...", Toast.LENGTH_SHORT).show()
+        
+        val baseUrl = ApiClient.getBaseUrl()
+        val downloadUrl = "$baseUrl/api/projects/$projectUuid/organs/$organUuid/tasks/$taskUuid/attachments/${attachment.uuid}/download"
+        
+        val client = ApiClient.getOkHttpClient()
+        val request = okhttp3.Request.Builder()
+            .url(downloadUrl)
+            .build()
+            
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = client.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Échec du téléchargement (code ${response.code})", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+                
+                val body = response.body
+                if (body == null) {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Fichier vide", Toast.LENGTH_SHORT).show()
+                    }
+                    return@launch
+                }
+                
+                // Write file to cache directory to be shared via FileProvider
+                val file = File(context.cacheDir, attachment.fileName)
+                body.byteStream().use { input ->
+                    FileOutputStream(file).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                
+                withContext(Dispatchers.Main) {
+                    try {
+                        val fileUri: Uri = FileProvider.getUriForFile(
+                            context,
+                            "fr.studio.voxel.organ.fileprovider",
+                            file
+                        )
+                        
+                        val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(fileUri, attachment.fileType.ifEmpty { "*/*" })
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(viewIntent)
+                    } catch (e: Exception) {
+                        Log.e("ATTACHMENT_OPEN", "Failed to open file", e)
+                        Toast.makeText(context, "Fichier téléchargé dans le cache, mais aucune application ne peut l'ouvrir.", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("ATTACHMENT_DOWNLOAD", "Download failed", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Erreur lors du téléchargement", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+}
+

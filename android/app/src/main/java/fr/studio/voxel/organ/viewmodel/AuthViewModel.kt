@@ -157,11 +157,9 @@ class AuthViewModel : ViewModel() {
             var idToken: String? = null
             try {
                 val credentialManager = androidx.credentials.CredentialManager.create(context)
-                val googleIdOption = com.google.android.libraries.identity.googleid.GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId("805077826497-lu17a6mrre44jl5t4p20nfo9gqf9sddn.apps.googleusercontent.com")
-                    .setAutoSelectEnabled(false)
-                    .build()
+                val googleIdOption = com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption.Builder(
+                    fr.studio.voxel.organ.network.ApiClient.GOOGLE_SERVER_CLIENT_ID
+                ).build()
 
                 val request = androidx.credentials.GetCredentialRequest.Builder()
                     .addCredentialOption(googleIdOption)
@@ -174,11 +172,13 @@ class AuthViewModel : ViewModel() {
                     idToken = googleIdTokenCredential.idToken
                 }
             } catch (e: androidx.credentials.exceptions.GetCredentialException) {
-                authError = "Authentification Google annulée ou indisponible."
-                Log.e("GOOGLE_AUTH", "GetCredentialException", e)
+                val sha = getAppSignatureSHA1(context)
+                authError = "Erreur Google : ${e.localizedMessage}\nSHA-1 réel de l'app :\n$sha"
+                Log.e("GOOGLE_AUTH", "GetCredentialException: ${e.localizedMessage}, SHA-1: $sha", e)
             } catch (e: Exception) {
-                authError = "Erreur Google : ${e.localizedMessage}"
-                Log.e("GOOGLE_AUTH", "Exception", e)
+                val sha = getAppSignatureSHA1(context)
+                authError = "Erreur Google : ${e.localizedMessage}\nSHA-1 réel de l'app :\n$sha"
+                Log.e("GOOGLE_AUTH", "Exception: ${e.localizedMessage}, SHA-1: $sha", e)
             }
 
             if (idToken != null) {
@@ -197,5 +197,36 @@ class AuthViewModel : ViewModel() {
             }
             isLoading = false
         }
+    }
+
+    private fun getAppSignatureSHA1(context: android.content.Context): String {
+        try {
+            val packageInfo = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(
+                    context.packageName,
+                    android.content.pm.PackageManager.GET_SIGNATURES
+                )
+            }
+            val signatures = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                packageInfo.signingInfo?.apkContentsSigners
+            } else {
+                @Suppress("DEPRECATION")
+                packageInfo.signatures
+            }
+            if (signatures != null && signatures.isNotEmpty()) {
+                val md = java.security.MessageDigest.getInstance("SHA-1")
+                val publicKey = md.digest(signatures[0].toByteArray())
+                return publicKey.joinToString(":") { String.format("%02X", it) }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("SIGNATURE_CHECK", "Error getting signature", e)
+        }
+        return "Signature inconnue"
     }
 }

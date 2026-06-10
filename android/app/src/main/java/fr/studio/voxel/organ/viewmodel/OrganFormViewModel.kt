@@ -83,7 +83,7 @@ class OrganFormViewModel : ViewModel() {
 
     // Context Metadata
     var projectTitle by mutableStateOf("")
-    var projectColor by mutableStateOf(Color(0xFFF27B9B))
+    var projectColor by mutableStateOf(fr.studio.voxel.organ.ui.theme.PastelPink)
 
     // Form inputs for roles & members
     var availablePermissions by mutableStateOf<List<String>>(emptyList())

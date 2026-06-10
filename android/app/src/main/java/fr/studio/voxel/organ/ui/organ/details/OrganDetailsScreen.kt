@@ -209,7 +209,18 @@ fun OrganDetailsScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        if (viewModel.isLoading && viewModel.organData == null) {
+        if (viewModel.isAccessDenied) {
+            AlertDialog(
+                onDismissRequest = onBack,
+                title = { Text(text = "Accès interdit", fontWeight = FontWeight.Bold) },
+                text = { Text("Vous n'avez pas l'autorisation d'accéder à cet organ.") },
+                confirmButton = {
+                    TextButton(onClick = onBack) {
+                        Text("OK")
+                    }
+                }
+            )
+        } else if (viewModel.isLoading && viewModel.organData == null) {
             OrganDetailsShimmer()
         } else {
             if (viewModel.errorMessage != null) {

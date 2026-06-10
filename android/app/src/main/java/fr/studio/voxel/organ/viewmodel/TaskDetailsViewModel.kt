@@ -19,6 +19,7 @@ class TaskDetailsViewModel : ViewModel() {
     private val taskService = ApiClient.createService(TaskApiService::class.java)
     private val projectService = ApiClient.createService(ProjectApiService::class.java)
     private val tagService = ApiClient.createService(TagApiService::class.java)
+    private val organService = ApiClient.createService(OrganApiService::class.java)
 
     var projectUuid by mutableStateOf<String?>(null)
         private set
@@ -102,9 +103,27 @@ class TaskDetailsViewModel : ViewModel() {
             errorMessage = null
             try {
                 // Fetch members & project tags
+                // Fetch project members
                 val membersRes = projectService.getProjectMembers(pUuid)
+                var allMembers = emptyList<ProjectMember>()
                 if (membersRes.isSuccessful) {
-                    projectMembers = membersRes.body() ?: emptyList()
+                    allMembers = membersRes.body() ?: emptyList()
+                }
+
+                // Fetch organ roles to get members belonging to this organ
+                val rolesRes = organService.getOrganRoles(pUuid, oUuid)
+                if (rolesRes.isSuccessful) {
+                    val rolesList = rolesRes.body() ?: emptyList()
+                    val organMemberUuids = rolesList.flatMap { role ->
+                        role.members?.map { it.uuid } ?: emptyList()
+                    }.toSet()
+
+                    // Only keep members who are in the organ
+                    projectMembers = allMembers.filter { pm ->
+                        organMemberUuids.contains(pm.user.uuid)
+                    }
+                } else {
+                    projectMembers = emptyList()
                 }
 
                 tagHandler.loadTags(pUuid)
