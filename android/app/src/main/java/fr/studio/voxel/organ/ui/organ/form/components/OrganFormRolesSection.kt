@@ -183,7 +183,7 @@ fun OrganFormRolesSection(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text("Ajouter un rôle", fontWeight = FontWeight.Bold)
             }
         }

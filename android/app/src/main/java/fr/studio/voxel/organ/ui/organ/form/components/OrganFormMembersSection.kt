@@ -79,7 +79,8 @@ fun OrganFormMembersSection(
                             text = selectedMember?.let { "${it.user.firstName} ${it.user.lastName}" } ?: "Sélectionner un collaborateur...",
                             color = if (selectedMember != null) Color.Black else Color.Gray,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
 
@@ -182,7 +183,7 @@ fun OrganFormMembersSection(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            Text("Rôles attribués (minimum 1) :", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+                            Text("Rôles attribués (minimum 1) :", style = MaterialTheme.typography.labelSmall.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold), color = Color.Gray)
                             Spacer(modifier = Modifier.height(8.dp))
 
                             // List of checkable roles
@@ -223,7 +224,7 @@ fun OrganFormMembersSection(
                                     ) {
                                         Text(
                                             text = "${role.iconData} ${role.name.ifBlank { "(Rôle sans nom)" }}",
-                                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                                            style = MaterialTheme.typography.bodySmall,
                                             color = textColor,
                                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                                         )
@@ -232,8 +233,8 @@ fun OrganFormMembersSection(
                             }
 
                             if (member.roles.isEmpty()) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("Attention : Veuillez attribuer au moins un rôle à ce collaborateur.", color = Color.Red, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Attention : Veuillez attribuer au moins un rôle à ce collaborateur.", color = Color.Red, style = MaterialTheme.typography.bodySmall.copy(fontSize = 15.sp))
                             }
                         }
                     }

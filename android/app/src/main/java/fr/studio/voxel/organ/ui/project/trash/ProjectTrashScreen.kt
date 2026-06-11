@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -134,7 +135,7 @@ fun ProjectTrashScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 )
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -155,9 +156,11 @@ fun ProjectTrashScreen(
                                     )
                                 }
 
+                                Spacer(modifier = Modifier.height(16.dp))
+
                                 Text(
                                     text = "Retrouvez ici les éléments supprimés de ce projet.",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.outline,
                                     modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                                 )
@@ -255,19 +258,35 @@ fun ProjectTrashScreen(
                                                 modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
                                             ) {
                                                 Row(
-                                                    modifier = Modifier.padding(12.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.SpaceBetween
+                                                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
+                                                    verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    Text(
-                                                        text = "${viewModel.selectedMembers.size} membre(s) sélectionné(s)",
-                                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                                                        color = highlightColor
-                                                    )
-                                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                                    Box(
+                                                        modifier = Modifier.weight(0.35f),
+                                                        contentAlignment = Alignment.CenterStart
+                                                    ){
+                                                        Text(
+                                                            text = "${viewModel.selectedMembers.size} membre(s) sélectionné(s)",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = highlightColor
+                                                        )
+                                                    }
+
+                                                    Row(
+                                                        modifier = Modifier.weight(0.65f),
+                                                        horizontalArrangement = Arrangement.End,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
                                                         TextButton(onClick = { viewModel.clearMemberSelection() }) {
-                                                            Text("Annuler", color = Color.Gray)
+                                                            Text(
+                                                                "Annuler",
+                                                                color = Color.Gray,
+                                                                style = MaterialTheme.typography.bodyLarge
+                                                            )
                                                         }
+
+                                                        Spacer(modifier = Modifier.width(2.dp))
+
                                                         Button(
                                                             onClick = {
                                                                 actionType = "bulk_members"
@@ -276,9 +295,13 @@ fun ProjectTrashScreen(
                                                                 showConfirmDialog = true
                                                             },
                                                             colors = ButtonDefaults.buttonColors(containerColor = highlightColor, contentColor = Color.White),
-                                                            shape = RoundedCornerShape(8.dp)
+                                                            shape = RoundedCornerShape(8.dp),
+                                                            modifier = Modifier.weight(1f)
                                                         ) {
-                                                            Text("Restaurer", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                                            Text(
+                                                                "Restaurer",
+                                                                style = MaterialTheme.typography.bodyLarge
+                                                            )
                                                         }
                                                     }
                                                 }

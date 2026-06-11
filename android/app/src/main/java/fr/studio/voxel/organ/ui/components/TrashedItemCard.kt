@@ -4,15 +4,18 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.studio.voxel.organ.R
@@ -42,26 +45,31 @@ fun TrashedItemCard(
         modifier = Modifier
             .fillMaxWidth()
             .then(if (onItemClick != null) Modifier.clickable { onItemClick() } else Modifier)
+
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (showCheckbox) {
-                Checkbox(
-                    checked = isCheckboxChecked,
-                    onCheckedChange = onCheckboxClick,
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = Color.Black,
-                        checkmarkColor = Color.White
+                CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                    Checkbox(
+                        checked = isCheckboxChecked,
+                        onCheckedChange = onCheckboxClick,
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color.Black,
+                            checkmarkColor = Color.White
+                        ),
+                        modifier = Modifier
+                            .size(24.dp)
                     )
-                )
+                }
             }
 
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(32.dp)
                     .background(iconBg, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
@@ -69,8 +77,8 @@ fun TrashedItemCard(
                     ProjectIconBadge(
                         visual = iconVisual,
                         projectColor = Color.Transparent,
-                        badgeSize = 48.dp,
-                        iconSize = 28.dp
+                        badgeSize = 24.dp,
+                        iconSize = 16.dp
                     )
                 } else if (iconEmoji != null) {
                     Text(iconEmoji, fontSize = 22.sp)
@@ -79,7 +87,7 @@ fun TrashedItemCard(
                         painter = painterResource(id = iconRes),
                         contentDescription = null,
                         tint = iconTint,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -87,20 +95,25 @@ fun TrashedItemCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.bodyLarge,
                     color = Color.Black,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 18.sp),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 14.sp
+                    ),
                     color = Color.Gray,
                     lineHeight = 16.sp
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Button(
                     onClick = onRestore,
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Black, contentColor = Color.White),
@@ -110,22 +123,25 @@ fun TrashedItemCard(
                 ) {
                     Text(
                         text = "RESTAURER",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Black
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Black
+                        )
                     )
                 }
 
-                IconButton(
-                    onClick = onDeletePermanent,
+                Box(
                     modifier = Modifier
                         .size(36.dp)
                         .background(Color(0xFFFFF1F2), RoundedCornerShape(10.dp))
+                        .clickable { onDeletePermanent() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.poubelle_logo),
-                        contentDescription = "Supprimer définitivement",
+                        contentDescription = null,
                         tint = Color.Red,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
