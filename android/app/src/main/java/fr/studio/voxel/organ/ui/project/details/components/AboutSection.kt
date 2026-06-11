@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fr.studio.voxel.organ.R
 
 @Composable
@@ -67,12 +68,12 @@ fun AboutSection(
                 ) {
                     Text(
                         text = "Créé le",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black, fontSize = 16.sp),
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                     )
                     Text(
                         text = formatDate(createdAt),
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp),
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }

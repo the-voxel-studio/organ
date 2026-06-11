@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun OrganActionsSection(
@@ -50,7 +51,7 @@ fun OrganActionsSection(
                     text = "Kanban",
                     color = if (activeView == "kanban") Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp)
                 )
             }
             Box(
@@ -65,7 +66,7 @@ fun OrganActionsSection(
                     text = "Liste",
                     color = if (activeView == "list") Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp)
                 )
             }
         }

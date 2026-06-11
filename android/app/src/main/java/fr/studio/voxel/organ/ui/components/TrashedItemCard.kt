@@ -77,8 +77,8 @@ fun TrashedItemCard(
                     ProjectIconBadge(
                         visual = iconVisual,
                         projectColor = Color.Transparent,
-                        badgeSize = 24.dp,
-                        iconSize = 16.dp
+                        badgeSize = 40.dp,
+                        iconSize = 24.dp
                     )
                 } else if (iconEmoji != null) {
                     Text(iconEmoji, fontSize = 22.sp)
@@ -87,7 +87,7 @@ fun TrashedItemCard(
                         painter = painterResource(id = iconRes),
                         contentDescription = null,
                         tint = iconTint,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -103,7 +103,8 @@ fun TrashedItemCard(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal
                     ),
                     color = Color.Gray,
                     lineHeight = 16.sp
@@ -124,7 +125,6 @@ fun TrashedItemCard(
                     Text(
                         text = "RESTAURER",
                         style = MaterialTheme.typography.bodySmall.copy(
-                            fontSize = 14.sp,
                             fontWeight = FontWeight.Black
                         )
                     )

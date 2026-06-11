@@ -70,9 +70,10 @@ fun ClickableDescriptionText(
 
     ClickableText(
         text = annotatedString,
-        style = MaterialTheme.typography.bodyMedium.copy(
+        style = MaterialTheme.typography.bodySmall.copy(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-            lineHeight = 22.sp
+            lineHeight = 22.sp,
+            fontWeight = FontWeight.Normal
         ),
         modifier = modifier,
         onClick = { offset ->

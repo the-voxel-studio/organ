@@ -161,7 +161,8 @@ fun ActivityItem(
                     text = "dans ${activity.organTitle}",
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Black,
-                        letterSpacing = 1.sp
+                        letterSpacing = 1.sp,
+                        fontSize = 16.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     modifier = Modifier.padding(top = 2.dp)
@@ -176,8 +177,8 @@ fun ActivityItem(
             ) {
                 Text(
                     text = formatTime(activity.createdAt),
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 val typeLabel = when (activity.type) {
@@ -194,9 +195,9 @@ fun ActivityItem(
                 ) {
                     Text(
                         text = typeLabel,
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp),
                         color = projectColor,
-                        fontSize = 9.sp
+
                     )
                 }
             }

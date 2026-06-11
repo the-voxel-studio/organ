@@ -343,8 +343,7 @@ fun Parameter(
                         ) {
                             Text(
                                 text = "Mettre à jour le mot de passe",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
@@ -378,7 +377,6 @@ fun Parameter(
                     }
                 }
 
-                // ------------------ DISCONNECT CARD (VERTICAL LAYOUT) ------------------
                 Card(
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -419,8 +417,7 @@ fun Parameter(
                         ) {
                             Text(
                                 text = "Se déconnecter",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
@@ -462,6 +459,9 @@ fun Parameter(
                                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                     color = Color(0xFF991B1B)
                                 )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
                                 Text(
                                     text = "Cette action est irréversible. Toutes vos données seront perdues.",
                                     style = MaterialTheme.typography.bodySmall,

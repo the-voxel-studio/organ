@@ -26,7 +26,6 @@ import fr.studio.voxel.organ.ui.notification.NotificationScreen
 import fr.studio.voxel.organ.ui.organ.form.OrganFormScreen
 import fr.studio.voxel.organ.ui.organ.details.OrganDetailsScreen
 import fr.studio.voxel.organ.ui.parameter.details.Parameter
-import fr.studio.voxel.organ.ui.project.details.ProjectDetailsScreen
 import fr.studio.voxel.organ.ui.project.form.ProjectFormScreen
 import fr.studio.voxel.organ.ui.sidebar.SideBar
 import fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel
@@ -34,6 +33,7 @@ import fr.studio.voxel.organ.viewmodel.OrganDetailsViewModel
 import fr.studio.voxel.organ.viewmodel.DashboardViewModel
 import fr.studio.voxel.organ.ui.task.TaskDetailsScreen
 import fr.studio.voxel.organ.ui.organ.trash.OrganTrashScreen
+import fr.studio.voxel.organ.ui.project.details.ProjectScreen
 import fr.studio.voxel.organ.ui.project.trash.ProjectTrashScreen
 import fr.studio.voxel.organ.ui.project.stats.ProjectStatsScreen
 import fr.studio.voxel.organ.ui.trash.TrashScreen
@@ -200,7 +200,7 @@ fun OrganApp(
                     }
                 }
 
-                ProjectDetailsScreen(
+                ProjectScreen(
                     projectUuid = projectUuid,
                     onSidebarClick = { navController.navigate(OrganScreen.Sidebar.name) },
                     onBack = { navController.popBackStack() },

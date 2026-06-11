@@ -7,19 +7,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.ui.project.details.components.*
 import fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel
@@ -57,7 +54,7 @@ fun ProjectDetailsShimmer() {
 }
 
 @Composable
-fun ProjectDetailsScreen(
+fun ProjectScreen(
     projectUuid: String,
     onSidebarClick: () -> Unit,
     onBack: () -> Unit,

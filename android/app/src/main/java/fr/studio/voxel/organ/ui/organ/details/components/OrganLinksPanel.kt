@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Link
@@ -73,17 +75,38 @@ fun OrganLinksPanel(
                 )
 
                 if (canManage) {
-                    TextButton(onClick = {
-                        showForm = !showForm
-                        editingLinkUuid = null
-                        linkUrl = ""
-                        linkDesc = ""
-                    }) {
-                        Text(
-                            text = if (showForm) "Fermer" else "+ Ajouter",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                            color = highlightColor
-                        )
+                    if(showForm){
+                        IconButton(
+                            onClick = {
+                                showForm = !showForm
+                                editingLinkUuid = null
+                                linkUrl = ""
+                                linkDesc = ""
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Fermer le formulaire",
+                                modifier = Modifier.size(28.dp),
+                                tint = highlightColor
+                            )
+                        }
+                    }else {
+                        IconButton(
+                            onClick = {
+                                showForm = !showForm
+                                editingLinkUuid = null
+                                linkUrl = ""
+                                linkDesc = ""
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Ajouter un tag",
+                                modifier = Modifier.size(28.dp),
+                                tint = highlightColor
+                            )
+                        }
                     }
                 }
             }

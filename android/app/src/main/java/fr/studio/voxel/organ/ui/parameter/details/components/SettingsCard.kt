@@ -58,6 +58,9 @@ fun SettingsCard(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = Color.Black
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     Text(
                         text = description,
                         style = MaterialTheme.typography.bodySmall,
