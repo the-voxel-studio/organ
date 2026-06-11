@@ -15,6 +15,8 @@ import kotlinx.coroutines.isActive
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+import fr.studio.voxel.organ.network.getErrorMessageForCode
+
 class OrganDetailsViewModel : ViewModel() {
 
     private val projectService = ApiClient.createService(ProjectApiService::class.java)
@@ -238,7 +240,13 @@ class OrganDetailsViewModel : ViewModel() {
                         errorMessage = "Une erreur est survenue lors de la récupération des données"
                     }
                 } else {
-                    errorMessage = "Erreur lors du chargement (Organ: ${organResponse.code()}, Projet: ${projectResponse.code()})"
+                    val organCode = organResponse.code()
+                    val projectCode = projectResponse.code()
+                    errorMessage = if (organCode != 200) {
+                        getErrorMessageForCode(organCode, "Erreur de chargement de l'Organ")
+                    } else {
+                        getErrorMessageForCode(projectCode, "Erreur de chargement du Projet")
+                    }
                 }
             } catch (e: Exception) {
                 errorMessage = "Erreur réseau: ${e.localizedMessage}"

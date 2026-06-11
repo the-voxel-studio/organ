@@ -14,8 +14,14 @@ import fr.studio.voxel.organ.viewmodel.AuthViewModel
 fun SignInForm(
     viewModel: AuthViewModel,
     hasError: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
+    val isEmailError = viewModel.authError?.contains("mail", ignoreCase = true) == true ||
+                       viewModel.authError?.contains("champs", ignoreCase = true) == true
+    val isPasswordError = viewModel.authError?.contains("passe", ignoreCase = true) == true ||
+                          viewModel.authError?.contains("champs", ignoreCase = true) == true
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -33,7 +39,8 @@ fun SignInForm(
                 onValueChange = { viewModel.updateMail(it) },
                 placeholder = { Text("nom@exemple.com") },
                 singleLine = true,
-                isError = hasError,
+                isError = isEmailError,
+                enabled = enabled,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -58,7 +65,8 @@ fun SignInForm(
                 value = viewModel.password,
                 visualTransformation = PasswordVisualTransformation(),
                 onValueChange = { viewModel.updatePassword(it) },
-                isError = hasError,
+                isError = isPasswordError,
+                enabled = enabled,
                 placeholder = { Text("•••••••••") },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),

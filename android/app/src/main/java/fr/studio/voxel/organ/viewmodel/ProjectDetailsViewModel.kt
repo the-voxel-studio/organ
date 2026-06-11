@@ -15,6 +15,8 @@ import fr.studio.voxel.organ.network.services.CreateTagRequest
 import fr.studio.voxel.organ.network.services.UpdateTagRequest
 import kotlinx.coroutines.launch
 
+import fr.studio.voxel.organ.network.getErrorMessageForCode
+
 class ProjectDetailsViewModel : ViewModel() {
 
     private val projectService = ApiClient.createService(ProjectApiService::class.java)
@@ -67,7 +69,7 @@ class ProjectDetailsViewModel : ViewModel() {
                     if (response.code() == 403 || errorBody.contains("Access denied", ignoreCase = true)) {
                         isAccessDenied = true
                     } else {
-                        errorMessage = "Erreur lors du chargement: ${response.code()}"
+                        errorMessage = getErrorMessageForCode(response.code())
                     }
                 }
             } catch (e: Exception) {

@@ -11,6 +11,8 @@ import fr.studio.voxel.organ.network.services.Project
 import fr.studio.voxel.organ.network.services.ProjectApiService
 import fr.studio.voxel.organ.network.services.Task
 
+import fr.studio.voxel.organ.network.getErrorMessageForCode
+
 object ProjectRepository {
     private val projectService = ApiClient.createService(ProjectApiService::class.java)
     private val dashboardService = ApiClient.createService(DashboardApiService::class.java)
@@ -30,7 +32,7 @@ object ProjectRepository {
                 priorityTasks = data.tasks
                 Result.success(data)
             } else {
-                Result.failure(Exception("Erreur serveur : ${response.code()}"))
+                Result.failure(Exception(getErrorMessageForCode(response.code(), "Erreur serveur")))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -45,7 +47,7 @@ object ProjectRepository {
                 projects = list
                 Result.success(list)
             } else {
-                Result.failure(Exception("Erreur serveur : ${response.code()}"))
+                Result.failure(Exception(getErrorMessageForCode(response.code(), "Erreur serveur")))
             }
         } catch (e: Exception) {
             Result.failure(e)

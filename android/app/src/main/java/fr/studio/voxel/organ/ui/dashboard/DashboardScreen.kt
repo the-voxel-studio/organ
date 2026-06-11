@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import fr.studio.voxel.organ.ui.header.Header
@@ -34,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.studio.voxel.organ.viewmodel.DashboardViewModel
 import fr.studio.voxel.organ.ui.components.AddButton
 import fr.studio.voxel.organ.ui.components.LoadingOverlay
+import fr.studio.voxel.organ.ui.components.PrimaryButton
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 
 import fr.studio.voxel.organ.ui.components.ShimmerBox
@@ -248,11 +250,34 @@ fun Dashboard(
                 }
                 when{
                     dashboardVM.error != null -> {
-                        Text(
-                            text = dashboardVM.error ?: "Erreur inconnue",
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(vertical = 16.dp)
-                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp, horizontal = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.outline_info),
+                                contentDescription = "Erreur",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = dashboardVM.error ?: "Erreur inconnue",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            PrimaryButton(
+                                text = "Réessayer",
+                                onClick = { dashboardVM.refresh() },
+                                modifier = Modifier.fillMaxWidth(0.6f)
+                            )
+                        }
                     }
                     else -> {
                         ProjectSticker(

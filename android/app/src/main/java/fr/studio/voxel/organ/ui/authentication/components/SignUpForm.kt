@@ -16,8 +16,18 @@ fun SignUpForm(
     hasError: Boolean,
     showPasswordError: Boolean,
     showConfirmError: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
+    val isNameError = viewModel.authError?.contains("prénom", ignoreCase = true) == true
+    val isSurnameError = viewModel.authError?.contains("nom", ignoreCase = true) == true
+    val isEmailError = viewModel.authError?.contains("e-mail", ignoreCase = true) == true ||
+                       viewModel.authError?.contains("existe", ignoreCase = true) == true
+    val isPasswordError = showPasswordError || viewModel.authError?.contains("mot de passe", ignoreCase = true) == true
+    val isConfirmError = showConfirmError ||
+                         viewModel.authError?.contains("confirmer", ignoreCase = true) == true ||
+                         viewModel.authError?.contains("correspondent", ignoreCase = true) == true
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -35,6 +45,8 @@ fun SignUpForm(
                 onValueChange = { viewModel.updateName(it) },
                 placeholder = { Text("Jean") },
                 singleLine = true,
+                isError = isNameError,
+                enabled = enabled,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -60,6 +72,8 @@ fun SignUpForm(
                 onValueChange = { viewModel.updateSurname(it) },
                 placeholder = { Text("Dupont") },
                 singleLine = true,
+                isError = isSurnameError,
+                enabled = enabled,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -85,7 +99,8 @@ fun SignUpForm(
                 onValueChange = { viewModel.updateMail(it) },
                 placeholder = { Text("nom@exemple.com") },
                 singleLine = true,
-                isError = hasError,
+                isError = isEmailError,
+                enabled = enabled,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -110,7 +125,8 @@ fun SignUpForm(
                 value = viewModel.password,
                 visualTransformation = PasswordVisualTransformation(),
                 onValueChange = { viewModel.updatePassword(it) },
-                isError = showPasswordError || hasError,
+                isError = isPasswordError,
+                enabled = enabled,
                 placeholder = { Text("•••••••••") },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
@@ -144,7 +160,8 @@ fun SignUpForm(
                 value = viewModel.confirmPassword,
                 visualTransformation = PasswordVisualTransformation(),
                 onValueChange = { viewModel.updateConfirmPassword(it) },
-                isError = showConfirmError,
+                isError = isConfirmError,
+                enabled = enabled,
                 placeholder = { Text("•••••••••") },
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),

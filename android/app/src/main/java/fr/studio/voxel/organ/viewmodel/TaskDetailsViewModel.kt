@@ -293,6 +293,22 @@ class TaskDetailsViewModel : ViewModel() {
             return
         }
 
+        if (estimatedHours.isNotBlank()) {
+            val hours = estimatedHours.toDoubleOrNull()
+            if (hours == null) {
+                errorMessage = "Le temps estimé doit être un nombre valide."
+                return
+            }
+            if (hours < 0) {
+                errorMessage = "Le temps estimé ne peut pas être négatif."
+                return
+            }
+            if (hours > 99999999.99) {
+                errorMessage = "Le temps estimé ne peut pas dépasser 99 999 999.99 heures."
+                return
+            }
+        }
+
         viewModelScope.launch {
             isSaving = true
             errorMessage = null

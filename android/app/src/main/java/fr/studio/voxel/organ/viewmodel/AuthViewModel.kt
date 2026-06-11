@@ -14,6 +14,7 @@ import fr.studio.voxel.organ.network.services.RegisterRequest
 import fr.studio.voxel.organ.network.services.User
 import fr.studio.voxel.organ.ui.authentication.AuthMode
 import kotlinx.coroutines.launch
+import fr.studio.voxel.organ.network.getErrorMessageForCode
 
 class AuthViewModel : ViewModel() {
 
@@ -56,9 +57,9 @@ class AuthViewModel : ViewModel() {
     //Setters
     fun updateMail(newValue: String) { mail = newValue; authError = null }
     fun updatePassword(newValue: String) { password = newValue; authError = null }
-    fun updateName(newValue: String) { name = newValue }
-    fun updateSurname(newValue: String) { surname = newValue }
-    fun updateConfirmPassword(newValue: String) { confirmPassword = newValue }
+    fun updateName(newValue: String) { name = newValue; authError = null }
+    fun updateSurname(newValue: String) { surname = newValue; authError = null }
+    fun updateConfirmPassword(newValue: String) { confirmPassword = newValue; authError = null }
 
     //Validation de SignUp
     val passwordsMatch: Boolean
@@ -90,14 +91,25 @@ class AuthViewModel : ViewModel() {
            try{
                val response = authService.login(LoginRequest(mail, password))
 
-               if(response.isSuccessful){
-                   UserRepository.fetchCurrentUser()
-                   navigateToDashboard = true
-               } else if (response.code() == 401) {
-                   authError = "Le mail ou le mot de passe sont incorrects"
-               } else {
-                   authError = "Erreur: ${response.code()}"
-               }
+                if(response.isSuccessful){
+                    UserRepository.fetchCurrentUser()
+                    navigateToDashboard = true
+                } else if (response.code() == 401) {
+                    authError = "Le mail ou le mot de passe sont incorrects."
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    val rawError = try {
+                        val json = org.json.JSONObject(errorBody ?: "")
+                        json.optString("error", json.optString("message", ""))
+                    } catch (e: Exception) {
+                        ""
+                    }
+                    authError = if (!rawError.isNullOrBlank()) {
+                        rawError
+                    } else {
+                        getErrorMessageForCode(response.code(), "Une erreur est survenue lors de la connexion")
+                    }
+                }
            }catch (e: Exception){
                authError = "Problème réseau"
            } finally {
@@ -118,19 +130,48 @@ class AuthViewModel : ViewModel() {
     }
 
     private fun register(){
-        if (!isPasswordValid || !passwordsMatch || name.isBlank() || surname.isBlank()){
-            authError = "Veuillez vérifier les champs."
+        if (name.isBlank()) {
+            authError = "Le prénom est requis."
             return
         }
+        if (surname.isBlank()) {
+            authError = "Le nom est requis."
+            return
+        }
+        if (mail.isBlank()) {
+            authError = "L'adresse e-mail est requise."
+            return
+        }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(mail.trim()).matches()) {
+            authError = "L'adresse e-mail n'est pas valide."
+            return
+        }
+        if (password.isEmpty()) {
+            authError = "Le mot de passe est requis."
+            return
+        }
+        if (!isPasswordValid) {
+            authError = "Le mot de passe doit faire au moins 8 caractères."
+            return
+        }
+        if (confirmPassword.isEmpty()) {
+            authError = "Veuillez confirmer votre mot de passe."
+            return
+        }
+        if (!passwordsMatch) {
+            authError = "Les mots de passe ne correspondent pas."
+            return
+        }
+
         viewModelScope.launch {
             isLoading = true
             authError = null
             try{
                 val response = authService.register(
-                    RegisterRequest(email = mail , firstName =  name, lastName = surname, password = password)
+                    RegisterRequest(email = mail.trim(), firstName = name.trim(), lastName = surname.trim(), password = password)
                 )
                 if(response.isSuccessful){
-                    val loginResponse = authService.login(LoginRequest(mail, password))
+                    val loginResponse = authService.login(LoginRequest(mail.trim(), password))
                     if(loginResponse.isSuccessful){
                         UserRepository.fetchCurrentUser()
                         navigateToDashboard = true
@@ -138,7 +179,45 @@ class AuthViewModel : ViewModel() {
                         registrationSuccess = true
                     }
                 }else{
-                    authError = "Erreur lors de l'inscription."
+                    val errorBody = response.errorBody()?.string()
+                    val rawError = try {
+                        val bodyStr = errorBody ?: ""
+                        val json = org.json.JSONObject(bodyStr)
+                        if (json.has("detail")) {
+                            json.optString("detail")
+                        } else if (json.has("violations")) {
+                            val violations = json.getJSONArray("violations")
+                            val messages = mutableListOf<String>()
+                            for (i in 0 until violations.length()) {
+                                val violation = violations.getJSONObject(i)
+                                val field = violation.optString("propertyPath")
+                                val title = violation.optString("title")
+                                messages.add("$field: $title")
+                            }
+                            messages.joinToString("\n")
+                        } else {
+                            json.optString("error", "Erreur lors de l'inscription.")
+                        }
+                    } catch (e: Exception) {
+                        try {
+                            val jsonArray = org.json.JSONArray(errorBody ?: "")
+                            val messages = mutableListOf<String>()
+                            for (i in 0 until jsonArray.length()) {
+                                val obj = jsonArray.getJSONObject(i)
+                                val msg = obj.optString("message") ?: obj.optString("title")
+                                if (msg.isNotEmpty()) messages.add(msg)
+                            }
+                            messages.joinToString("\n")
+                        } catch (e2: Exception) {
+                            "Erreur lors de l'inscription."
+                        }
+                    }
+
+                    authError = when(rawError) {
+                        "User already exists" -> "Cet utilisateur existe déjà."
+                        "Password must be at least 8 characters" -> "Le mot de passe doit faire au moins 8 caractères."
+                        else -> rawError
+                    }
                 }
             } catch (e: Exception){
                 authError = "Erreur : ${e.localizedMessage}"
