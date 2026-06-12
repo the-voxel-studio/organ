@@ -32,6 +32,7 @@ import fr.studio.voxel.organ.ui.components.LoadingOverlay
 import fr.studio.voxel.organ.ui.header.Header
 import fr.studio.voxel.organ.viewmodel.OrganDetailsViewModel
 import fr.studio.voxel.organ.ui.components.AddButton
+import fr.studio.voxel.organ.ui.components.BackToLink
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -246,6 +247,11 @@ fun OrganDetailsScreen(
                                     .weight(1f)
                                     .verticalScroll(rememberScrollState())
                             ) {
+                                BackToLink(
+                                    label = "Retour au Projet",
+                                    onClick = onBack,
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                                )
 
                                 // Organ Header Details Card
                                 OrganHeaderSection(

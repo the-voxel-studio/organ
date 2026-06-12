@@ -45,6 +45,10 @@ fun OrganLinksPanel(
     var linkUrl by remember { mutableStateOf("") }
     var linkDesc by remember { mutableStateOf("") }
 
+    val isUrlValid = remember(linkUrl) {
+        linkUrl.isBlank() || android.util.Patterns.WEB_URL.matcher(linkUrl.trim()).matches()
+    }
+
     var linkToDelete by remember { mutableStateOf<OrganLinkSummary?>(null) }
     val context = LocalContext.current
 
@@ -211,6 +215,12 @@ fun OrganLinksPanel(
                     placeholder = { Text("https://...") },
                     singleLine = true,
                     label = { Text("URL du lien") },
+                    isError = !isUrlValid,
+                    supportingText = {
+                        if (!isUrlValid) {
+                            Text("Veuillez saisir une URL valide")
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -246,7 +256,7 @@ fun OrganLinksPanel(
 
                     Button(
                         onClick = {
-                            if (linkUrl.isNotBlank()) {
+                            if (linkUrl.isNotBlank() && isUrlValid) {
                                 val uuid = editingLinkUuid
                                 val desc = if (linkDesc.isBlank()) null else linkDesc
                                 if (uuid != null) {
@@ -260,7 +270,7 @@ fun OrganLinksPanel(
                                 linkDesc = ""
                             }
                         },
-                        enabled = linkUrl.isNotBlank() && !isSavingLink,
+                        enabled = linkUrl.isNotBlank() && isUrlValid && !isSavingLink,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = highlightColor)
                     ) {

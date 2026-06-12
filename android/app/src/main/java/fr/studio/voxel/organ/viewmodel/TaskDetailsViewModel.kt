@@ -231,7 +231,8 @@ class TaskDetailsViewModel : ViewModel() {
             try {
                 val res = taskService.getTaskTimeline(pUuid, oUuid, tUuid, 0, 30)
                 if (res.isSuccessful) {
-                    timeline = (res.body() ?: emptyList()).filter { it.actionType?.uppercase() != "CONSULTATION" }
+                    val excludedActions = setOf("CONSULTATION", "COMMENT_ADD", "ATTACHMENT_ADD")
+                    timeline = (res.body() ?: emptyList()).filter { it.actionType?.uppercase() !in excludedActions }
                 }
             } catch (e: Exception) {
                 Log.e("TASK_DETAILS_VM", "loadTimeline error", e)
