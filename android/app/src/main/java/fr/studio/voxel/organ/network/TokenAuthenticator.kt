@@ -21,7 +21,8 @@ class TokenAuthenticator(
 
         synchronized(this) {
             val currentBearer = tokenStorage.getBearerToken()
-            val requestCookieHeader = response.request.header("Cookie")
+            val requestCookieHeader = response.networkResponse?.request?.header("Cookie")
+                ?: response.request.header("Cookie")
             val requestBearer = requestCookieHeader?.let { header ->
                 header.split(";")
                     .map { it.trim() }
