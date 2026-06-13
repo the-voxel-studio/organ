@@ -6,20 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import fr.studio.voxel.organ.data.OrganRepository
+import fr.studio.voxel.organ.data.ProjectRepository
+import fr.studio.voxel.organ.data.TaskRepository
 import fr.studio.voxel.organ.viewmodel.handler.*
-import fr.studio.voxel.organ.network.ApiClient
 import fr.studio.voxel.organ.network.services.*
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
 
 class TaskDetailsViewModel : ViewModel() {
-
-    private val taskService = ApiClient.createService(TaskApiService::class.java)
-    private val projectService = ApiClient.createService(ProjectApiService::class.java)
-    private val tagService = ApiClient.createService(TagApiService::class.java)
-    private val organService = ApiClient.createService(OrganApiService::class.java)
 
     var projectUuid by mutableStateOf<String?>(null)
         private set
@@ -53,12 +47,12 @@ class TaskDetailsViewModel : ViewModel() {
     // Sub-resources
     var projectMembers by mutableStateOf<List<ProjectMember>>(emptyList())
         private set
-    val commentHandler = TaskCommentHandler(taskService, viewModelScope)
-    val attachmentHandler = TaskAttachmentHandler(taskService, viewModelScope)
-    val dependencyHandler = TaskDependencyHandler(taskService, viewModelScope)
-    val assigneeHandler = TaskAssigneeHandler(taskService, viewModelScope)
-    val tagHandler = TaskTagHandler(taskService, tagService, viewModelScope)
-    val linkHandler = TaskLinkHandler(taskService, viewModelScope)
+    val commentHandler = TaskCommentHandler(viewModelScope)
+    val attachmentHandler = TaskAttachmentHandler(viewModelScope)
+    val dependencyHandler = TaskDependencyHandler(viewModelScope)
+    val assigneeHandler = TaskAssigneeHandler(viewModelScope)
+    val tagHandler = TaskTagHandler(viewModelScope)
+    val linkHandler = TaskLinkHandler(viewModelScope)
 
     val comments: List<TaskCommentResponse> get() = commentHandler.comments
     val trashedComments: List<TaskCommentResponse> get() = commentHandler.trashedComments
@@ -102,18 +96,16 @@ class TaskDetailsViewModel : ViewModel() {
             isLoading = true
             errorMessage = null
             try {
-                // Fetch members & project tags
                 // Fetch project members
-                val membersRes = projectService.getProjectMembers(pUuid)
+                val membersRes = ProjectRepository.getProjectMembers(pUuid)
                 var allMembers = emptyList<ProjectMember>()
-                if (membersRes.isSuccessful) {
-                    allMembers = membersRes.body() ?: emptyList()
+                membersRes.onSuccess { list ->
+                    allMembers = list
                 }
 
                 // Fetch organ roles to get members belonging to this organ
-                val rolesRes = organService.getOrganRoles(pUuid, oUuid)
-                if (rolesRes.isSuccessful) {
-                    val rolesList = rolesRes.body() ?: emptyList()
+                val rolesRes = OrganRepository.getOrganRoles(pUuid, oUuid)
+                rolesRes.onSuccess { rolesList ->
                     val organMemberUuids = rolesList.flatMap { role ->
                         role.members?.map { it.uuid } ?: emptyList()
                     }.toSet()
@@ -122,7 +114,7 @@ class TaskDetailsViewModel : ViewModel() {
                     projectMembers = allMembers.filter { pm ->
                         organMemberUuids.contains(pm.user.uuid)
                     }
-                } else {
+                }.onFailure {
                     projectMembers = emptyList()
                 }
 
@@ -153,35 +145,32 @@ class TaskDetailsViewModel : ViewModel() {
                 }
 
                 // Fetch other organ tasks for dependencies
-                val tasksRes = taskService.getTasks(pUuid, oUuid)
-                if (tasksRes.isSuccessful) {
-                    organTasks = (tasksRes.body() ?: emptyList()).filter { it.uuid != tUuid }
+                val tasksRes = TaskRepository.getTasks(pUuid, oUuid)
+                tasksRes.onSuccess { list ->
+                    organTasks = list.filter { it.uuid != tUuid }
                 }
 
                 // Fetch task details
-                val taskRes = taskService.getTask(pUuid, oUuid, tUuid)
-                if (taskRes.isSuccessful) {
-                    val task = taskRes.body()
-                    if (task != null) {
-                        taskData = task
-                        title = task.title
-                        description = task.description ?: ""
-                        status = task.status
-                        priority = task.priority
-                        statusMessage = task.statusMessage ?: ""
-                        estimatedHours = task.estimatedHours ?: ""
-                        startDate = task.startDate?.take(16)?.replace("T", " ") ?: ""
-                        expiresAt = task.expiresAt?.take(16)?.replace("T", " ") ?: ""
-                        managerUuid = task.manager?.uuid ?: ""
-                        assigneeHandler.assignees = task.assignees ?: emptyList()
-                        linkHandler.links = task.links ?: emptyList()
-                    }
+                val taskRes = TaskRepository.getTask(pUuid, oUuid, tUuid)
+                taskRes.onSuccess { task ->
+                    taskData = task
+                    title = task.title
+                    description = task.description ?: ""
+                    status = task.status
+                    priority = task.priority
+                    statusMessage = task.statusMessage ?: ""
+                    estimatedHours = task.estimatedHours ?: ""
+                    startDate = task.startDate?.take(16)?.replace("T", " ") ?: ""
+                    expiresAt = task.expiresAt?.take(16)?.replace("T", " ") ?: ""
+                    managerUuid = task.manager?.uuid ?: ""
+                    assigneeHandler.assignees = task.assignees ?: emptyList()
+                    linkHandler.links = task.links ?: emptyList()
                 }
 
                 // Fetch permissions
-                val permsRes = taskService.getTaskPermissions(pUuid, oUuid, tUuid)
-                if (permsRes.isSuccessful) {
-                    currentPermissions = permsRes.body()
+                val permsRes = TaskRepository.getTaskPermissions(pUuid, oUuid, tUuid)
+                permsRes.onSuccess { permissions ->
+                    currentPermissions = permissions
                 }
 
                 // Fetch timeline, comments, attachments, dependencies
@@ -228,15 +217,13 @@ class TaskDetailsViewModel : ViewModel() {
         val oUuid = organUuid ?: return
         val tUuid = taskUuid ?: return
         viewModelScope.launch {
-            try {
-                val res = taskService.getTaskTimeline(pUuid, oUuid, tUuid, 0, 30)
-                if (res.isSuccessful) {
+            TaskRepository.getTaskTimeline(pUuid, oUuid, tUuid, 0, 30)
+                .onSuccess { list ->
                     val excludedActions = setOf("CONSULTATION", "COMMENT_ADD", "ATTACHMENT_ADD")
-                    timeline = (res.body() ?: emptyList()).filter { it.actionType?.uppercase() !in excludedActions }
+                    timeline = list.filter { it.actionType?.uppercase() !in excludedActions }
+                }.onFailure { e ->
+                    Log.e("TASK_DETAILS_VM", "loadTimeline error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_DETAILS_VM", "loadTimeline error", e)
-            }
         }
     }
 
@@ -343,22 +330,21 @@ class TaskDetailsViewModel : ViewModel() {
                     statusMessage = if (statusMessage.isNotBlank() && status != taskData?.status) statusMessage else null
                 )
 
-                val response = if (tUuid == "new") {
-                    taskService.createTask(pUuid, oUuid, updatedTask)
+                val result = if (tUuid == "new") {
+                    TaskRepository.createTask(pUuid, oUuid, updatedTask)
                 } else {
-                    taskService.updateTask(pUuid, oUuid, tUuid, updatedTask)
+                    TaskRepository.updateTask(pUuid, oUuid, tUuid, updatedTask)
                 }
 
-                if (response.isSuccessful) {
-                    val savedTask = response.body()
-                    if (tUuid == "new" && savedTask != null) {
+                result.onSuccess { savedTask ->
+                    if (tUuid == "new") {
                         taskUuid = savedTask.uuid
                         loadTaskDetails()
                     } else {
                         isSuccess = true
                     }
-                } else {
-                    errorMessage = "Erreur lors de la sauvegarde : ${response.code()}"
+                }.onFailure { e ->
+                    errorMessage = "Erreur lors de la sauvegarde : ${e.message}"
                 }
             } catch (e: Exception) {
                 errorMessage = "Erreur réseau : ${e.localizedMessage}"
@@ -377,19 +363,13 @@ class TaskDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isSaving = true
             errorMessage = null
-            try {
-                val response = taskService.deleteTask(pUuid, oUuid, tUuid, permanent)
-                if (response.isSuccessful) {
+            TaskRepository.deleteTask(pUuid, oUuid, tUuid, permanent)
+                .onSuccess {
                     isSuccess = true
-                } else {
-                    errorMessage = "Erreur lors de la suppression : ${response.code()}"
+                }.onFailure { e ->
+                    errorMessage = "Erreur lors de la suppression : ${e.message}"
                 }
-            } catch (e: Exception) {
-                errorMessage = "Erreur réseau : ${e.localizedMessage}"
-                Log.e("TASK_DETAILS_VM", "deleteTask error", e)
-            } finally {
-                isSaving = false
-            }
+            isSaving = false
         }
     }
 
@@ -401,19 +381,13 @@ class TaskDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isSaving = true
             errorMessage = null
-            try {
-                val response = taskService.restoreTask(pUuid, oUuid, tUuid)
-                if (response.isSuccessful) {
+            TaskRepository.restoreTask(pUuid, oUuid, tUuid)
+                .onSuccess {
                     loadTaskDetails()
-                } else {
-                    errorMessage = "Erreur de restauration : ${response.code()}"
+                }.onFailure { e ->
+                    errorMessage = "Erreur de restauration : ${e.message}"
                 }
-            } catch (e: Exception) {
-                errorMessage = "Erreur réseau : ${e.localizedMessage}"
-                Log.e("TASK_DETAILS_VM", "restoreTask error", e)
-            } finally {
-                isSaving = false
-            }
+            isSaving = false
         }
     }
 

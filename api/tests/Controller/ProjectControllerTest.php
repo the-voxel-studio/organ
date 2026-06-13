@@ -213,4 +213,58 @@ class ProjectControllerTest extends ApiTestCase
         $this->assertEquals(2, $todoStats['task_count']);
         $this->assertEquals(5.0, (float)$todoStats['total_hours']);
     }
+
+    public function testGetProjectStatsDynamicAggregationSuccess(): void
+    {
+        $client = static::createClient();
+        $user = UserFactory::createOne();
+        $project = ProjectFactory::createOne();
+        ProjectMemberFactory::createOne([
+            'user' => $user, 
+            'project' => $project,
+            'globalRole' => ProjectGlobalRole::ADMIN
+        ]);
+
+        $dm = static::getContainer()->get(\Doctrine\ODM\MongoDB\DocumentManager::class);
+        
+        // Clear old MongoDB daily stats and audit logs for project
+        $dm->getDocumentCollection(\App\Document\DailyStat::class)->deleteMany(['projectUuid' => $project->getUuid()]);
+        $dm->getDocumentCollection(\App\Document\AuditLog::class)->deleteMany(['projectUuid' => $project->getUuid()]);
+
+        // Create an audit log 3 days ago
+        $threeDaysAgo = (new \DateTime())->modify('-3 days')->setTime(12, 0, 0);
+        
+        $auditLog = new \App\Document\AuditLog();
+        $auditLog->setProjectUuid($project->getUuid());
+        $auditLog->setUserUuid($user->getUuid());
+        $auditLog->setActionType('CREATE');
+        $auditLog->setCreatedAt($threeDaysAgo);
+        $dm->persist($auditLog);
+        $dm->flush();
+
+        $this->login($client, $user);
+        
+        // Request stats for 7 days (expects 7 past days + today = 8 history items)
+        $client->request('GET', '/api/projects/' . $project->getUuid() . '/stats?days=7');
+
+        $this->assertResponseIsSuccessful();
+        $response = $this->getResponseContent($client);
+        
+        $this->assertArrayHasKey('history', $response);
+        $history = $response['history'];
+        
+        // 7 days ago to yesterday + today = 8 items
+        $this->assertCount(8, $history);
+
+        // Find the stats item for 3 days ago
+        $targetDateStr = $threeDaysAgo->format('Y-m-d');
+        $foundTarget = false;
+        foreach ($history as $h) {
+            if ($h['date'] === $targetDateStr) {
+                $foundTarget = true;
+                $this->assertEquals(1, $h['tasksCreated'], "Expected tasksCreated to be 1 for date " . $targetDateStr);
+            }
+        }
+        $this->assertTrue($foundTarget, "Expected date " . $targetDateStr . " to be present in history.");
+    }
 }

@@ -26,6 +26,7 @@ import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.ui.theme.MaterialColorScheme
 import fr.studio.voxel.organ.viewmodel.TaskDetailsViewModel
 import fr.studio.voxel.organ.ui.organ.details.components.openBrowser
+import fr.studio.voxel.organ.domain.ValidateUrlUseCase
 
 @Composable
 fun TaskLinksCard(
@@ -37,8 +38,9 @@ fun TaskLinksCard(
     var newLinkUrl by remember { mutableStateOf("") }
     var newLinkDesc by remember { mutableStateOf("") }
 
+    val validateUrlUseCase = remember { ValidateUrlUseCase() }
     val isUrlValid = remember(newLinkUrl) {
-        newLinkUrl.isBlank() || android.util.Patterns.WEB_URL.matcher(newLinkUrl.trim()).matches()
+        validateUrlUseCase(newLinkUrl)
     }
 
     val context = LocalContext.current

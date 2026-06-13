@@ -9,13 +9,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import fr.studio.voxel.organ.data.OrganRepository
 import fr.studio.voxel.organ.data.ProjectRepository
-import fr.studio.voxel.organ.network.ApiClient
 import fr.studio.voxel.organ.network.services.Organ
-import fr.studio.voxel.organ.network.services.OrganApiService
-import fr.studio.voxel.organ.network.services.ProjectApiService
-import fr.studio.voxel.organ.network.services.CreateRoleRequest
-import fr.studio.voxel.organ.network.services.AssignRoleRequest
 import fr.studio.voxel.organ.ui.components.IconType
 import kotlinx.coroutines.launch
 import fr.studio.voxel.organ.utils.ImageHelper
@@ -46,9 +42,6 @@ data class FormMember(
 )
 
 class OrganFormViewModel : ViewModel() {
-
-    private val organService = ApiClient.createService(OrganApiService::class.java)
-    private val projectService = ApiClient.createService(ProjectApiService::class.java)
 
     var projectUuid by mutableStateOf("")
         private set
@@ -150,16 +143,14 @@ class OrganFormViewModel : ViewModel() {
         }
     }
 
-
-
     private fun checkPermissionsAndLoad(projectUuid: String, organUuid: String?) {
         viewModelScope.launch {
             isLoading = true
             try {
                 // Get available permissions
-                val permsRes = organService.getAvailablePermissions()
-                if (permsRes.isSuccessful) {
-                    val perms = permsRes.body()?.map { it.name } ?: emptyList()
+                val permsRes = OrganRepository.getAvailablePermissions()
+                permsRes.onSuccess { availableList ->
+                    val perms = availableList.map { it.name }
                     availablePermissions = perms
 
                     organPermissions = perms.filter { it.startsWith("ORGAN_") && it != "ORGAN_HARD_DELETE" }
@@ -171,34 +162,31 @@ class OrganFormViewModel : ViewModel() {
                 }
 
                 // Get project details
-                val projRes = projectService.getProject(projectUuid)
-                if (projRes.isSuccessful) {
-                    val proj = projRes.body()
-                    if (proj != null) {
-                        projectTitle = proj.title
-                        projectColor = parseHexColor(proj.color ?: "")
-                    }
+                val projRes = ProjectRepository.getProject(projectUuid)
+                projRes.onSuccess { proj ->
+                    projectTitle = proj.title
+                    projectColor = parseHexColor(proj.color ?: "")
                 }
 
                 // Get project members
-                val membersRes = projectService.getProjectMembers(projectUuid)
-                if (membersRes.isSuccessful) {
-                    projectMembers = membersRes.body() ?: emptyList()
+                val membersRes = ProjectRepository.getProjectMembers(projectUuid)
+                membersRes.onSuccess { membersList ->
+                    projectMembers = membersList
                 }
 
                 // Verify user privileges
                 var userPerms = emptyList<String>()
                 if (organUuid != null) {
-                    val userPermsRes = organService.getOrganPermissions(projectUuid, organUuid)
-                    if (userPermsRes.isSuccessful) {
-                        userPerms = userPermsRes.body()?.permissions ?: emptyList()
+                    val userPermsRes = OrganRepository.getOrganPermissions(projectUuid, organUuid)
+                    userPermsRes.onSuccess { permissionsResponse ->
+                        userPerms = permissionsResponse.permissions
                     }
                 }
 
-                val projectPermsRes = projectService.getProjectPermissions(projectUuid)
+                val projectPermsRes = ProjectRepository.getProjectPermissions(projectUuid)
                 var projectRole = "MEMBER"
-                if (projectPermsRes.isSuccessful) {
-                    projectRole = projectPermsRes.body()?.role ?: "MEMBER"
+                projectPermsRes.onSuccess { permissionsResponse ->
+                    projectRole = permissionsResponse.role
                 }
 
                 val fullUserPerms = userPerms.toMutableList()
@@ -219,37 +207,33 @@ class OrganFormViewModel : ViewModel() {
 
                 if (organUuid != null) {
                     // Edit organ
-                    val response = organService.getOrgan(projectUuid, organUuid)
-                    if (response.isSuccessful) {
-                        val organ = response.body()
-                        if (organ != null) {
-                            title = organ.title
-                            description = organ.description ?: ""
-                            selectedColor = parseHexColor(organ.highlightColor)
+                    val response = OrganRepository.getOrgan(projectUuid, organUuid)
+                    response.onSuccess { organ ->
+                        title = organ.title
+                        description = organ.description ?: ""
+                        selectedColor = parseHexColor(organ.highlightColor)
 
-                            val type = when (organ.iconType) {
-                                "EMOJI" -> IconType.EMOJI
-                                "SVG" -> IconType.SVG
-                                "IMAGE", "BLOB" -> IconType.IMAGE
-                                else -> IconType.EMOJI
+                        val type = when (organ.iconType) {
+                            "EMOJI" -> IconType.EMOJI
+                            "SVG" -> IconType.SVG
+                            "IMAGE", "BLOB" -> IconType.IMAGE
+                            else -> IconType.EMOJI
+                        }
+                        selectedIconTab = type
+                        when (type) {
+                            IconType.EMOJI -> selectedEmoji = organ.iconData ?: "🔧"
+                            IconType.SVG -> selectedSvgCode = organ.iconData ?: ""
+                            IconType.IMAGE -> {
+                                selectedImageUriString = organ.iconData ?: ""
+                                selectedImageUri = if (selectedImageUriString.isNotBlank()) Uri.parse(selectedImageUriString) else null
                             }
-                            selectedIconTab = type
-                            when (type) {
-                                IconType.EMOJI -> selectedEmoji = organ.iconData ?: "🔧"
-                                IconType.SVG -> selectedSvgCode = organ.iconData ?: ""
-                                IconType.IMAGE -> {
-                                    selectedImageUriString = organ.iconData ?: ""
-                                    selectedImageUri = if (selectedImageUriString.isNotBlank()) Uri.parse(selectedImageUriString) else null
-                                }
-                                else -> {}
-                            }
+                            else -> {}
                         }
                     }
 
                     // Load roles and assigned members
-                    val rolesRes = organService.getOrganRoles(projectUuid, organUuid)
-                    if (rolesRes.isSuccessful) {
-                        val rolesList = rolesRes.body() ?: emptyList()
+                    val rolesRes = OrganRepository.getOrganRoles(projectUuid, organUuid)
+                    rolesRes.onSuccess { rolesList ->
                         roles = rolesList.map { r ->
                             FormRole(
                                 id = r.uuid,
@@ -348,7 +332,7 @@ class OrganFormViewModel : ViewModel() {
                     IconType.IMAGE, IconType.CAMERA -> selectedImageUriString
                 }
 
-                val finalOrganUuid: String
+                var finalOrganUuid = ""
 
                 if (isEdit && organUuid != null) {
                     finalOrganUuid = organUuid!!
@@ -365,9 +349,9 @@ class OrganFormViewModel : ViewModel() {
                             createdAt = "",
                             deletedAt = null
                         )
-                        val response = organService.updateOrgan(projectUuid, finalOrganUuid, organData)
-                        if (!response.isSuccessful) {
-                            errorMessage = "Erreur lors de la mise à jour des détails : ${response.code()}"
+                        val response = OrganRepository.updateOrgan(projectUuid, finalOrganUuid, organData)
+                        response.onFailure { e ->
+                            errorMessage = "Erreur lors de la mise à jour des détails : ${e.message}"
                             isLoading = false
                             return@launch
                         }
@@ -385,11 +369,11 @@ class OrganFormViewModel : ViewModel() {
                         createdAt = "",
                         deletedAt = null
                     )
-                    val response = organService.createOrgan(projectUuid, organData)
-                    if (response.isSuccessful && response.body() != null) {
-                        finalOrganUuid = response.body()!!.uuid
-                    } else {
-                        errorMessage = "Erreur lors de la création de l'Organ : ${response.code()}"
+                    val response = OrganRepository.createOrgan(projectUuid, organData)
+                    response.onSuccess { created ->
+                        finalOrganUuid = created.uuid
+                    }.onFailure { e ->
+                        errorMessage = "Erreur lors de la création de l'Organ : ${e.message}"
                         isLoading = false
                         return@launch
                     }
@@ -403,7 +387,7 @@ class OrganFormViewModel : ViewModel() {
                     if (isEdit) {
                         for (origRole in originalRoles) {
                             if (!origRole.id.startsWith("role-") && !roles.any { it.id == origRole.id }) {
-                                organService.deleteOrganRole(projectUuid, finalOrganUuid, origRole.id)
+                                OrganRepository.deleteOrganRole(projectUuid, finalOrganUuid, origRole.id)
                             }
                         }
                     }
@@ -411,20 +395,13 @@ class OrganFormViewModel : ViewModel() {
                     // 2. Create new roles or update existing
                     for (role in roles) {
                         val isNew = role.id.startsWith("role-")
-                        val req = CreateRoleRequest(
-                            name = role.name,
-                            iconType = role.iconType,
-                            iconData = role.iconData,
-                            permissions = role.permissions
-                        )
-
                         if (isNew) {
-                            val res = organService.createOrganRole(projectUuid, finalOrganUuid, req)
-                            if (res.isSuccessful && res.body() != null) {
-                                roleIdMap[role.id] = res.body()!!.uuid
+                            val res = OrganRepository.createOrganRole(projectUuid, finalOrganUuid, role.name, role.iconType, role.iconData, role.permissions)
+                            res.onSuccess { createdRole ->
+                                roleIdMap[role.id] = createdRole.uuid
                             }
                         } else {
-                            organService.updateOrganRole(projectUuid, finalOrganUuid, role.id, req)
+                            OrganRepository.updateOrganRole(projectUuid, finalOrganUuid, role.id, role.name, role.iconType, role.iconData, role.permissions)
                             roleIdMap[role.id] = role.id
                         }
                     }
@@ -439,10 +416,10 @@ class OrganFormViewModel : ViewModel() {
                             val rolesToRemove = initialRolesServer.filter { !currentRolesServer.contains(it) }
 
                             for (serverRoleUuid in rolesToAdd) {
-                                organService.assignRole(projectUuid, finalOrganUuid, serverRoleUuid, AssignRoleRequest(member.userUuid))
+                                OrganRepository.assignRole(projectUuid, finalOrganUuid, serverRoleUuid, member.userUuid)
                             }
                             for (serverRoleUuid in rolesToRemove) {
-                                organService.unassignRole(projectUuid, finalOrganUuid, serverRoleUuid, member.userUuid)
+                                OrganRepository.unassignRole(projectUuid, finalOrganUuid, serverRoleUuid, member.userUuid)
                             }
                         }
 
@@ -454,7 +431,7 @@ class OrganFormViewModel : ViewModel() {
                             for (removed in removedMembers) {
                                 for (localRoleId in removed.initialRoles) {
                                     val serverRoleUuid = roleIdMap[localRoleId] ?: localRoleId
-                                    organService.unassignRole(projectUuid, finalOrganUuid, serverRoleUuid, removed.userUuid)
+                                    OrganRepository.unassignRole(projectUuid, finalOrganUuid, serverRoleUuid, removed.userUuid)
                                 }
                             }
                         }
@@ -466,10 +443,10 @@ class OrganFormViewModel : ViewModel() {
                         val rolesToRemove = member.initialRoles.filter { !member.roles.contains(it) }
 
                         for (roleId in rolesToAdd) {
-                            organService.assignRole(projectUuid, finalOrganUuid, roleId, AssignRoleRequest(member.userUuid))
+                            OrganRepository.assignRole(projectUuid, finalOrganUuid, roleId, member.userUuid)
                         }
                         for (roleId in rolesToRemove) {
-                            organService.unassignRole(projectUuid, finalOrganUuid, roleId, member.userUuid)
+                            OrganRepository.unassignRole(projectUuid, finalOrganUuid, roleId, member.userUuid)
                         }
                     }
 
@@ -479,7 +456,7 @@ class OrganFormViewModel : ViewModel() {
                         }
                         for (removed in removedMembers) {
                             for (roleId in removed.initialRoles) {
-                                organService.unassignRole(projectUuid, finalOrganUuid, roleId, removed.userUuid)
+                                OrganRepository.unassignRole(projectUuid, finalOrganUuid, roleId, removed.userUuid)
                             }
                         }
                     }
@@ -502,22 +479,14 @@ class OrganFormViewModel : ViewModel() {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
-            try {
-                val res = organService.deleteOrgan(projectUuid, oUuid, permanent = false)
-                if (res.isSuccessful) {
-                    ProjectRepository.removeOrgan(projectUuid, oUuid)
+            OrganRepository.deleteOrgan(projectUuid, oUuid, permanent = false)
+                .onSuccess {
                     onSuccess()
-                } else {
-                    errorMessage = res.message().ifBlank { "Échec de la suppression de l'Organ." }
+                }.onFailure { e ->
+                    errorMessage = e.message ?: "Échec de la suppression de l'Organ."
                     onError(errorMessage ?: "")
                 }
-            } catch (e: Exception) {
-                Log.e("ORGAN_FORM_VM", "Error deleting organ", e)
-                errorMessage = "Erreur réseau."
-                onError(errorMessage ?: "")
-            } finally {
-                isLoading = false
-            }
+            isLoading = false
         }
     }
 

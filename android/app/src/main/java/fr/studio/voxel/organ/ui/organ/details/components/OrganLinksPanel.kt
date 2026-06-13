@@ -1,5 +1,11 @@
 package fr.studio.voxel.organ.ui.organ.details.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -7,6 +13,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Link
@@ -77,17 +85,24 @@ fun OrganLinksPanel(
                 )
 
                 if (canManage) {
-                    TextButton(onClick = {
-                        showForm = !showForm
-                        editingLinkUuid = null
-                        linkUrl = ""
-                        linkDesc = ""
-                    }) {
-                        Text(
-                            text = if (showForm) "Fermer" else "+ Ajouter",
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                            color = highlightColor
-                        )
+                    IconButton(
+                        onClick = {
+                            showForm = !showForm
+                            if (showForm) {
+                                editingLinkUuid = null
+                                linkUrl = ""
+                                linkDesc = ""
+                            }
+                        }
+                    ) {
+                        Crossfade(targetState = showForm, label = "linkFormButtonAnim") { isFormOpen ->
+                            Icon(
+                                imageVector = if (isFormOpen) Icons.Default.Close else Icons.Default.Add,
+                                contentDescription = if (isFormOpen) "Fermer le formulaire" else "Ajouter un lien",
+                                modifier = Modifier.size(28.dp),
+                                tint = highlightColor
+                            )
+                        }
                     }
                 }
             }
@@ -196,88 +211,94 @@ fun OrganLinksPanel(
             }
 
             // Form
-            if (showForm && canManage) {
-                Spacer(modifier = Modifier.height(20.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(16.dp))
+            AnimatedVisibility(
+                visible = showForm && canManage,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = if (editingLinkUuid != null) "Modifier le lien" else "Nouveau lien",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                    Text(
+                        text = if (editingLinkUuid != null) "Modifier le lien" else "Nouveau lien",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedTextField(
-                    value = linkUrl,
-                    onValueChange = { linkUrl = it },
-                    placeholder = { Text("https://...") },
-                    singleLine = true,
-                    label = { Text("URL du lien") },
-                    isError = !isUrlValid,
-                    supportingText = {
-                        if (!isUrlValid) {
-                            Text("Veuillez saisir une URL valide")
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedTextField(
-                    value = linkDesc,
-                    onValueChange = { linkDesc = it },
-                    placeholder = { Text("Ex: Documentation API") },
-                    singleLine = true,
-                    label = { Text("Description (optionnel)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    TextButton(onClick = {
-                        showForm = false
-                        editingLinkUuid = null
-                        linkUrl = ""
-                        linkDesc = ""
-                    }) {
-                        Text("Annuler")
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Button(
-                        onClick = {
-                            if (linkUrl.isNotBlank() && isUrlValid) {
-                                val uuid = editingLinkUuid
-                                val desc = if (linkDesc.isBlank()) null else linkDesc
-                                if (uuid != null) {
-                                    onUpdateLink(uuid, linkUrl, desc)
-                                } else {
-                                    onCreateLink(linkUrl, desc)
-                                }
-                                showForm = false
-                                editingLinkUuid = null
-                                linkUrl = ""
-                                linkDesc = ""
+                    OutlinedTextField(
+                        value = linkUrl,
+                        onValueChange = { linkUrl = it },
+                        placeholder = { Text("https://...") },
+                        singleLine = true,
+                        label = { Text("URL du lien") },
+                        isError = !isUrlValid,
+                        supportingText = {
+                            if (!isUrlValid) {
+                                Text("Veuillez saisir une URL valide")
                             }
                         },
-                        enabled = linkUrl.isNotBlank() && isUrlValid && !isSavingLink,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = highlightColor)
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = linkDesc,
+                        onValueChange = { linkDesc = it },
+                        placeholder = { Text("Ex: Documentation API") },
+                        singleLine = true,
+                        label = { Text("Description (optionnel)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        if (isSavingLink) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
-                        } else {
-                            Text("Enregistrer")
+                        TextButton(onClick = {
+                            showForm = false
+                            editingLinkUuid = null
+                            linkUrl = ""
+                            linkDesc = ""
+                        }) {
+                            Text("Annuler")
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Button(
+                            onClick = {
+                                if (linkUrl.isNotBlank() && isUrlValid) {
+                                    val uuid = editingLinkUuid
+                                    val desc = if (linkDesc.isBlank()) null else linkDesc
+                                    if (uuid != null) {
+                                        onUpdateLink(uuid, linkUrl, desc)
+                                    } else {
+                                        onCreateLink(linkUrl, desc)
+                                    }
+                                    showForm = false
+                                    editingLinkUuid = null
+                                    linkUrl = ""
+                                    linkDesc = ""
+                                }
+                            },
+                            enabled = linkUrl.isNotBlank() && isUrlValid && !isSavingLink,
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = highlightColor)
+                        ) {
+                            if (isSavingLink) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
+                            } else {
+                                Text("Enregistrer")
+                            }
                         }
                     }
                 }

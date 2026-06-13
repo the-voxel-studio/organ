@@ -20,6 +20,7 @@ use App\Service\OrganCacheService;
 use App\Service\TaskService;
 use App\Service\GoogleDriveService;
 use App\Service\ProjectDriveCacheService;
+use App\Service\StatsAggregationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -572,7 +573,8 @@ class ProjectController extends AbstractController
     public function stats(
         string $uuid, 
         Request $request,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        StatsAggregationService $statsAggregationService
     ): JsonResponse {
         /** @var User|null $user */
         $user = $this->getUser();
@@ -603,20 +605,65 @@ class ProjectController extends AbstractController
                     '$gte' => new \MongoDB\BSON\UTCDateTime($start),
                     '$lt' => new \MongoDB\BSON\UTCDateTime($todayStart)
                 ]
-            ],
-            [
-                'sort' => ['date' => 1]
             ]
         );
 
-        $data = [];
+        $existingStatsByDate = [];
         foreach ($stats as $stat) {
             $dateObj = $stat['date'] ?? null;
-            $dateStr = '';
             if ($dateObj instanceof \MongoDB\BSON\UTCDateTime) {
-                $dateStr = $dateObj->toDateTime()->format('Y-m-d');
+                // Convert to application default timezone to match PHP DateTimes
+                $dateStr = $dateObj->toDateTime()->setTimezone(new \DateTimeZone(date_default_timezone_get()))->format('Y-m-d');
+                $existingStatsByDate[$dateStr] = $stat;
+            }
+        }
+
+        // Loop through all days in the requested range to aggregate missing ones on-demand
+        $interval = new \DateInterval('P1D');
+        $period = new \DatePeriod($start, $interval, $todayStart);
+        
+        $data = [];
+        $needsFlush = false;
+        foreach ($period as $dayDate) {
+            $dateStr = $dayDate->format('Y-m-d');
+            
+            if (!isset($existingStatsByDate[$dateStr])) {
+                // Run dynamic aggregation for that date
+                $statsAggregationService->aggregateForDate($dayDate);
+                
+                // Fetch the newly aggregated stats doc (if created by the aggregation service)
+                $statDoc = $dailyStatCollection->findOne([
+                    'projectUuid' => $project->getUuid(),
+                    'organUuid' => null,
+                    'date' => new \MongoDB\BSON\UTCDateTime($dayDate)
+                ]);
+                
+                if (!$statDoc) {
+                    // Cache the 0-value daily stats as a marker so we don't query audit_logs repeatedly
+                    $dummyStat = new \App\Document\DailyStat();
+                    $dummyStat->setDate($dayDate);
+                    $dummyStat->setProjectUuid($project->getUuid());
+                    $dummyStat->setOrganUuid(null);
+                    $this->dm->persist($dummyStat);
+                    $needsFlush = true;
+                    
+                    $statDoc = [
+                        'date' => new \MongoDB\BSON\UTCDateTime($dayDate),
+                        'tasksCreated' => 0,
+                        'tasksCompleted' => 0,
+                        'tasksCanceled' => 0,
+                        'commentsAdded' => 0,
+                        'attachmentsAdded' => 0,
+                        'membersActive' => 0,
+                        'statusChanges' => [],
+                        'extra' => ['consultations' => 0]
+                    ];
+                }
+                
+                $existingStatsByDate[$dateStr] = (array)$statDoc;
             }
             
+            $stat = $existingStatsByDate[$dateStr];
             $statusChanges = isset($stat['statusChanges']) ? (array)$stat['statusChanges'] : [];
             $extra = isset($stat['extra']) ? (array)$stat['extra'] : [];
 
@@ -631,6 +678,10 @@ class ProjectController extends AbstractController
                 'consultations' => $extra['consultations'] ?? 0,
                 'statusChanges' => $statusChanges,
             ];
+        }
+
+        if ($needsFlush) {
+            $this->dm->flush();
         }
 
         // Dynamically aggregate today's live stats from audit logs natively using a complex aggregation pipeline

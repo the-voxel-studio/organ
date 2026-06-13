@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fr.studio.voxel.organ.network.services.ProjectAuditLogItem
 import fr.studio.voxel.organ.ui.components.EmptyTrashState
+import fr.studio.voxel.organ.ui.components.ShimmerBox
 import fr.studio.voxel.organ.ui.project.stats.components.AuditPicActivityChart
 import fr.studio.voxel.organ.ui.project.stats.components.ChartCard
 import fr.studio.voxel.organ.ui.project.stats.components.MemberActivityStatsCard
@@ -169,15 +170,50 @@ fun LazyListScope.auditActivityTab(
         }
     }
 
-    if (auditIsLoading && auditLogs.isEmpty()) {
+    if (auditIsLoading) {
         item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = highlightColor)
+            ChartCard(title = "Pic d'Activité (Journal d'Audit)") {
+                ShimmerBox(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        }
+
+        item {
+            Text(
+                text = "Activité des Membres (Chargement...)",
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = Color.Black,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            )
+        }
+
+        repeat(3) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                    border = BorderStroke(1.dp, Color(0xFFF1F5F9)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        ShimmerBox(modifier = Modifier.size(40.dp), shape = androidx.compose.foundation.shape.CircleShape)
+                        Column(modifier = Modifier.weight(1f)) {
+                            ShimmerBox(modifier = Modifier.width(120.dp).height(20.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ShimmerBox(modifier = Modifier.width(180.dp).height(14.dp))
+                        }
+                        ShimmerBox(modifier = Modifier.width(60.dp).height(24.dp), shape = RoundedCornerShape(8.dp))
+                    }
+                }
             }
         }
     } else {

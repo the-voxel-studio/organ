@@ -7,11 +7,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fr.studio.voxel.organ.data.ProjectRepository
 import fr.studio.voxel.organ.data.UserRepository
+import fr.studio.voxel.organ.domain.ValidateEmailUseCase
+import fr.studio.voxel.organ.domain.ValidatePasswordUseCase
 import fr.studio.voxel.organ.network.services.User
 import fr.studio.voxel.organ.network.services.UserConnection
 import kotlinx.coroutines.launch
 
 class ParameterViewModel : ViewModel() {
+
+    private val validateEmailUseCase = ValidateEmailUseCase()
+    private val validatePasswordUseCase = ValidatePasswordUseCase()
 
     // Current User Session
     val currentUser: User?
@@ -75,6 +80,10 @@ class ParameterViewModel : ViewModel() {
             profileErrorMsg = "Tous les champs du profil sont obligatoires"
             return
         }
+        if (!validateEmailUseCase(email)) {
+            profileErrorMsg = "L'adresse e-mail n'est pas valide"
+            return
+        }
         viewModelScope.launch {
             isLoading = true
             profileSuccessMsg = null
@@ -94,7 +103,7 @@ class ParameterViewModel : ViewModel() {
             passwordErrorMsg = "Le mot de passe actuel et le nouveau mot de passe sont requis"
             return
         }
-        if (newPassword.length < 8) {
+        if (!validatePasswordUseCase(newPassword)) {
             passwordErrorMsg = "Le nouveau mot de passe doit faire au moins 8 caractères"
             return
         }

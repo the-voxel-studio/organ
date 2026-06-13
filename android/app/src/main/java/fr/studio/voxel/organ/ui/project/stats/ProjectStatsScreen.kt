@@ -66,7 +66,7 @@ fun ProjectStatsScreen(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        if (viewModel.isLoading && viewModel.statsData == null) {
+        if (viewModel.projectTitle.isEmpty() && viewModel.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = highlightColor)
             }
@@ -95,7 +95,7 @@ fun ProjectStatsScreen(
                                 label = "Retour au Projet",
                                 onClick = onBack,
                                 modifier = Modifier.fillMaxWidth()
-                            )
+                              )
 
                             Spacer(modifier = Modifier.height(12.dp))
 
@@ -188,6 +188,7 @@ fun ProjectStatsScreen(
                             totalComments = totalComments,
                             totalAttachments = totalAttachments,
                             totalConsultations = totalConsultations,
+                            isLoading = viewModel.isLoading,
                             onDaysSelected = { days ->
                                 viewModel.setStatsDaysAndReload(projectUuid, days)
                             }
