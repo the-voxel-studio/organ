@@ -26,6 +26,7 @@ import { KanbanViewComponent } from './components/kanban-view/kanban-view';
 import { ListViewComponent } from './components/list-view/list-view';
 import { OrganLinksComponent } from './components/organ-links/organ-links';
 import { OrganFiltersComponent } from './components/organ-filters/organ-filters';
+import { ShimmerComponent } from '../../shimmer/shimmer';
 
 @Component({
   selector: 'app-organ',
@@ -37,7 +38,8 @@ import { OrganFiltersComponent } from './components/organ-filters/organ-filters'
     KanbanViewComponent, 
     ListViewComponent,
     OrganLinksComponent,
-    OrganFiltersComponent
+    OrganFiltersComponent,
+    ShimmerComponent
   ],
   templateUrl: './organ.html'
 })

@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { Chart, registerables } from 'chart.js';
 import { ProjectStatsResponse } from '../../../../../models/project.model';
 import { TranslationService } from '../../../../../services/common/translation.service';
+import { ShimmerComponent } from '../../../../shimmer/shimmer';
 
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-stats-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ShimmerComponent],
   templateUrl: './stats-dashboard.html'
 })
 export class StatsDashboardComponent implements OnChanges, OnDestroy, AfterViewInit {
@@ -18,6 +19,7 @@ export class StatsDashboardComponent implements OnChanges, OnDestroy, AfterViewI
   @Input() statsData: ProjectStatsResponse | null = null;
   @Input() projectColor = '#FF7EB6';
   @Input() statsDays = 7;
+  @Input() isLoading = false;
   @Output() daysChanged = new EventEmitter<number>();
 
   @ViewChild('activityChart') activityChartCanvas!: ElementRef<HTMLCanvasElement>;

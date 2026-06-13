@@ -20,8 +20,15 @@
     <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
       <!-- Tags List -->
       @if (tagsLoading()) {
-        <div class="flex justify-center py-6">
-          <div class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" [style.border-color]="projectColor" [style.border-top-color]="'transparent'"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+              <div class="flex items-center gap-3 flex-1">
+                <app-shimmer width="16px" height="16px" className="rounded-full shrink-0"></app-shimmer>
+                <app-shimmer width="100px" height="16px" className="rounded"></app-shimmer>
+              </div>
+            </div>
+          }
         </div>
       } @else {
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -76,7 +83,7 @@
             <button type="submit" [disabled]="isSavingTag() || tagFormGroup.invalid" 
                     class="px-8 py-3 bg-black text-white font-bold rounded-xl hover:bg-black/90 transition-all shadow-lg active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
               @if (isSavingTag()) {
-                <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <app-spinner size="xs" [inline]="true" color="white"></app-spinner>
               }
               Enregistrer le tag
             </button>

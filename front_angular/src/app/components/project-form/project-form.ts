@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ProjectVisualIdentityComponent } from './components/project-visual-identity/project-visual-identity';
 import { ProjectMembersInviteComponent } from './components/project-members-invite/project-members-invite';
+import { SpinnerComponent } from '../spinner/spinner';
 
 @Component({
   selector: 'app-project-form',
@@ -11,7 +12,8 @@ import { ProjectMembersInviteComponent } from './components/project-members-invi
     CommonModule,
     ReactiveFormsModule,
     ProjectVisualIdentityComponent,
-    ProjectMembersInviteComponent
+    ProjectMembersInviteComponent,
+    SpinnerComponent
   ],
   templateUrl: './project-form.html'
 })

@@ -5,6 +5,7 @@ import { AvailablePermission } from '../../models/permission.model';
 import { IconType } from '../../models/project.model';
 import { OrganRolesComponent } from './components/organ-roles/organ-roles';
 import { OrganMembersComponent } from './components/organ-members/organ-members';
+import { SpinnerComponent } from '../spinner/spinner';
 
 @Component({
   selector: 'app-organ-form',
@@ -13,7 +14,8 @@ import { OrganMembersComponent } from './components/organ-members/organ-members'
     CommonModule,
     ReactiveFormsModule,
     OrganRolesComponent,
-    OrganMembersComponent
+    OrganMembersComponent,
+    SpinnerComponent
   ],
   templateUrl: './organ-form.html'
 })

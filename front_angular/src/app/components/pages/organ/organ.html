@@ -15,6 +15,43 @@
             {{ errorMessage() }}
         </div>
 
+        <!-- Shimmer loading state -->
+        <div *ngIf="isLoading() && !errorMessage()" class="flex flex-col gap-12">
+            <!-- Header Shimmer -->
+            <div class="flex items-center gap-6">
+                <app-shimmer width="64px" height="64px" className="rounded-2xl"></app-shimmer>
+                <div class="flex-1 space-y-3">
+                    <app-shimmer width="200px" height="28px" className="rounded-lg"></app-shimmer>
+                    <app-shimmer width="350px" height="16px" className="rounded"></app-shimmer>
+                </div>
+            </div>
+
+            <!-- Tabs and Filters Shimmer -->
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex gap-2">
+                    <app-shimmer width="120px" height="40px" className="rounded-xl"></app-shimmer>
+                    <app-shimmer width="120px" height="40px" className="rounded-xl"></app-shimmer>
+                </div>
+                <app-shimmer width="280px" height="40px" className="rounded-xl"></app-shimmer>
+            </div>
+
+            <!-- Kanban Columns Shimmer -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div *ngFor="let col of [1, 2, 3]" class="bg-gray-50/50 p-5 rounded-3xl border border-gray-100/50 space-y-4">
+                    <app-shimmer width="100px" height="20px" className="rounded mb-2"></app-shimmer>
+                    <div *ngFor="let card of [1, 2]" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-2xs space-y-3">
+                        <app-shimmer width="40px" height="12px" className="rounded"></app-shimmer>
+                        <app-shimmer width="80%" height="18px" className="rounded"></app-shimmer>
+                        <app-shimmer width="100%" height="12px" className="rounded"></app-shimmer>
+                        <div class="flex justify-between items-center pt-2">
+                            <app-shimmer width="32px" height="32px" className="rounded-full"></app-shimmer>
+                            <app-shimmer width="60px" height="14px" className="rounded"></app-shimmer>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div *ngIf="!errorMessage() && !isLoading()">
             <!-- HEADER -->
             <header class="flex flex-col gap-12">

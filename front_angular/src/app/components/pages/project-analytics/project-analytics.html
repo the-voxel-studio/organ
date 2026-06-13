@@ -60,9 +60,22 @@
     </div>
   </div>
 
-  @if (isLoading()) {
-    <!-- Global Loading State -->
-    <app-spinner [color]="getProjectColorHex()" size="lg" text="Chargement des données du projet..." [fullscreen]="true"></app-spinner>
+  @if (isLoading() && !projectTitle) {
+    <!-- KPI Summary Indicator Cards Shimmer -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <app-shimmer height="144px" className="rounded-3xl"></app-shimmer>
+      }
+    </div>
+
+    <!-- Main Historic Activity Chart Shimmer -->
+    <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-xs mb-10">
+      <app-shimmer height="24px" width="150px" className="rounded mb-2"></app-shimmer>
+      <app-shimmer height="14px" width="280px" className="rounded mb-6"></app-shimmer>
+      <div class="h-80 w-full">
+        <app-shimmer height="100%" className="rounded-2xl"></app-shimmer>
+      </div>
+    </div>
   } @else if (errorMessage()) {
     <!-- Global Error State -->
     <div class="bg-red-50 border border-red-200 text-red-800 rounded-3xl p-6 text-center max-w-lg mx-auto">
@@ -79,6 +92,7 @@
         [statsData]="statsData()" 
         [projectColor]="projectColor" 
         [statsDays]="statsDays()" 
+        [isLoading]="isLoading()"
         (daysChanged)="setStatsDays($event)">
       </app-stats-dashboard>
     </div>

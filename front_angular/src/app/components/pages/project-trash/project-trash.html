@@ -54,8 +54,24 @@
   </header>
 
   @if (isLoading()) {
-    <!-- Loading State -->
-    <app-spinner size="lg" text="Chargement des éléments de la corbeille..." [fullscreen]="true"></app-spinner>
+    <!-- Trash Shimmer -->
+    <div class="space-y-8">
+      <div *ngFor="let sec of [1, 2]" class="space-y-4">
+        <app-shimmer width="150px" height="24px" className="rounded"></app-shimmer>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div *ngFor="let item of [1, 2]" class="bg-white rounded-2xl p-5 border border-gray-100 shadow-2xs flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-1">
+              <app-shimmer width="32px" height="32px" className="rounded-xl"></app-shimmer>
+              <div class="space-y-2 flex-1">
+                <app-shimmer width="60%" height="16px" className="rounded"></app-shimmer>
+                <app-shimmer width="30%" height="12px" className="rounded"></app-shimmer>
+              </div>
+            </div>
+            <app-shimmer width="80px" height="32px" className="rounded-xl"></app-shimmer>
+          </div>
+        </div>
+      </div>
+    </div>
   } @else if (errorMessage()) {
     <!-- Error State -->
     <div class="bg-red-50 border border-red-200 text-red-800 rounded-3xl p-6 text-center max-w-lg mx-auto">

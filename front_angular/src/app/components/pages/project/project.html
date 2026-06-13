@@ -4,8 +4,48 @@
 
 <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
   @if (isLoading()) {
-    <!-- Loading State -->
-    <app-spinner [color]="getProjectColor()" size="lg" text="Chargement du projet..." [fullscreen]="true"></app-spinner>
+    <!-- Header Shimmer -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12 bg-white rounded-3xl p-8 border border-gray-100/50 shadow-2xs">
+      <div class="flex items-center gap-6">
+        <app-shimmer width="64px" height="64px" className="rounded-2xl"></app-shimmer>
+        <div class="space-y-3">
+          <app-shimmer width="250px" height="28px" className="rounded-lg"></app-shimmer>
+          <app-shimmer width="180px" height="16px" className="rounded"></app-shimmer>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <app-shimmer width="120px" height="48px" className="rounded-2xl"></app-shimmer>
+        <app-shimmer width="120px" height="48px" className="rounded-2xl"></app-shimmer>
+      </div>
+    </div>
+
+    <!-- Organs Section Shimmer -->
+    <section class="mb-12">
+      <div class="flex items-center justify-between mb-8">
+        <app-shimmer width="180px" height="32px" className="rounded"></app-shimmer>
+        <div class="flex gap-3">
+          <app-shimmer width="120px" height="44px" className="rounded-2xl"></app-shimmer>
+          <app-shimmer width="150px" height="44px" className="rounded-2xl"></app-shimmer>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        @for (i of [1, 2, 3]; track i) {
+          <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-2xs space-y-4">
+            <div class="flex items-center gap-4">
+              <app-shimmer width="40px" height="40px" className="rounded-xl"></app-shimmer>
+              <div class="space-y-2 flex-1">
+                <app-shimmer width="80%" height="18px" className="rounded"></app-shimmer>
+                <app-shimmer width="50%" height="12px" className="rounded"></app-shimmer>
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-2">
+              <app-shimmer width="100px" height="16px" className="rounded"></app-shimmer>
+              <app-shimmer width="50px" height="24px" className="rounded-lg"></app-shimmer>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
   } @else if (errorMessage()) {
     <!-- Error State -->
     <div class="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-6 text-center max-w-lg mx-auto mt-12">

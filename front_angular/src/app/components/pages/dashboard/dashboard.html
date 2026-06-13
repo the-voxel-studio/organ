@@ -2,7 +2,36 @@
   
   <!-- Loading State -->
   @if (isLoading()) {
-    <app-spinner size="lg" text="Chargement de votre espace de travail..." [fullscreen]="true"></app-spinner>
+    <!-- Header Section Shimmer -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+      <div>
+        <app-shimmer width="220px" height="32px" className="rounded mb-2"></app-shimmer>
+        <app-shimmer width="350px" height="16px" className="rounded"></app-shimmer>
+      </div>
+      <app-shimmer width="160px" height="56px" className="rounded-2xl"></app-shimmer>
+    </header>
+
+    <div class="grid grid-cols-1 gap-12">
+      <!-- Priority Tasks Shimmer -->
+      <div class="space-y-4">
+        <app-shimmer width="200px" height="24px" className="rounded"></app-shimmer>
+        <div class="space-y-3">
+          @for (i of [1, 2, 3]; track i) {
+            <app-shimmer height="72px" className="rounded-2xl"></app-shimmer>
+          }
+        </div>
+      </div>
+
+      <!-- Projects Grid Shimmer -->
+      <div class="space-y-4">
+        <app-shimmer width="150px" height="24px" className="rounded"></app-shimmer>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          @for (i of [1, 2, 3]; track i) {
+            <app-shimmer height="120px" className="rounded-2xl"></app-shimmer>
+          }
+        </div>
+      </div>
+    </div>
   } @else if (errorMessage()) {
     <!-- Error State -->
     <div class="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-6 text-center max-w-lg mx-auto mt-12">

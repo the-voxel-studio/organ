@@ -4,11 +4,13 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { TagService } from '../../../../../services/api/tag.service';
 import { TagResponse } from '../../../../../models/tag.model';
+import { ShimmerComponent } from '../../../../shimmer/shimmer';
+import { SpinnerComponent } from '../../../../spinner/spinner';
 
 @Component({
   selector: 'app-project-tags-panel',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ShimmerComponent, SpinnerComponent],
   templateUrl: './project-tags-panel.html'
 })
 export class ProjectTagsPanelComponent {

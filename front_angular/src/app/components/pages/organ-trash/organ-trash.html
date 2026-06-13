@@ -40,6 +40,28 @@
         {{ errorMessage() }}
     </div>
 
+    <!-- Shimmer loading state -->
+    <div *ngIf="isLoading() && !errorMessage()" class="space-y-8">
+      <div *ngFor="let sec of [1, 2]" class="space-y-4">
+        <app-shimmer width="150px" height="24px" className="rounded"></app-shimmer>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div *ngFor="let item of [1, 2]" class="bg-white rounded-[2rem] p-5 border border-gray-100 shadow-2xs flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-1">
+              <app-shimmer width="48px" height="48px" className="rounded-2xl"></app-shimmer>
+              <div class="space-y-2 flex-1">
+                <app-shimmer width="60%" height="16px" className="rounded"></app-shimmer>
+                <app-shimmer width="30%" height="12px" className="rounded"></app-shimmer>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <app-shimmer width="80px" height="38px" className="rounded-xl"></app-shimmer>
+              <app-shimmer width="38px" height="38px" className="rounded-xl"></app-shimmer>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Main Content -->
     <div *ngIf="!errorMessage() && !isLoading()">
         

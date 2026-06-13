@@ -8,6 +8,7 @@ import { OrganRoleService } from '../../../services/api/organ-role.service';
 import { PermissionService } from '../../../services/api/permission.service';
 import { AvailablePermission } from '../../../models/permission.model';
 import { OrganFormComponent } from '../../organ-form/organ-form';
+import { ShimmerComponent } from '../../shimmer/shimmer';
 import { SpinnerComponent } from '../../spinner/spinner';
 import { ChatbotService } from '../../../services/chatbot/chatbot.service';
 
@@ -18,6 +19,7 @@ import { ChatbotService } from '../../../services/chatbot/chatbot.service';
     CommonModule,
     RouterLink,
     OrganFormComponent,
+    ShimmerComponent,
     SpinnerComponent
   ],
   templateUrl: './organ-create.html'

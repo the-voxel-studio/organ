@@ -13,7 +13,7 @@ import { OrganCardComponent } from './components/organ-card/organ-card';
 import { ProjectTagsPanelComponent } from './components/project-tags-panel/project-tags-panel';
 import { ProjectAboutComponent } from './components/project-about/project-about';
 import { ProjectActivityFeedComponent } from './components/project-activity-feed/project-activity-feed';
-import { SpinnerComponent } from '../../spinner/spinner';
+import { ShimmerComponent } from '../../shimmer/shimmer';
 
 @Component({
   selector: 'app-project',
@@ -26,7 +26,7 @@ import { SpinnerComponent } from '../../spinner/spinner';
     ProjectTagsPanelComponent,
     ProjectAboutComponent,
     ProjectActivityFeedComponent,
-    SpinnerComponent
+    ShimmerComponent
   ],
   templateUrl: './project.html'
 })
