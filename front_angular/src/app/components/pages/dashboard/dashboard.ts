@@ -9,7 +9,7 @@ import { RefreshService } from '../../../services/common/refresh.service';
 
 import { PriorityTasksComponent } from './components/priority-tasks/priority-tasks';
 import { ProjectGridComponent } from './components/project-grid/project-grid';
-import { SpinnerComponent } from '../../spinner/spinner';
+import { ShimmerComponent } from '../../shimmer/shimmer';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,7 +19,7 @@ import { SpinnerComponent } from '../../spinner/spinner';
     RouterLink,
     PriorityTasksComponent,
     ProjectGridComponent,
-    SpinnerComponent
+    ShimmerComponent
   ],
   templateUrl: './dashboard.html'
 })

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { UserService } from '../../../../../services/api/user.service';
 import { UserConnection } from '../../../../../models/user.model';
 import { ConfirmationModalComponent } from '../../../../confirmation-modal/confirmation-modal';
+import { ShimmerComponent } from '../../../../shimmer/shimmer';
 
 @Component({
   selector: 'app-settings-connections',
   standalone: true,
-  imports: [CommonModule, ConfirmationModalComponent],
+  imports: [CommonModule, ConfirmationModalComponent, ShimmerComponent],
   templateUrl: './settings-connections.html'
 })
 export class SettingsConnectionsComponent implements OnInit {

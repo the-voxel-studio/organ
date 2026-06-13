@@ -310,7 +310,14 @@ fun TaskBasicInfoCard(
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
                         value = viewModel.estimatedHours,
-                        onValueChange = { if (viewModel.canEditField("estimatedHours")) viewModel.estimatedHours = it },
+                        onValueChange = { input ->
+                            if (viewModel.canEditField("estimatedHours")) {
+                                val sanitized = input.replace(',', '.')
+                                if (sanitized.isEmpty() || sanitized.matches(Regex("^\\d{0,8}(?:\\.\\d{0,2})?$"))) {
+                                    viewModel.estimatedHours = sanitized
+                                }
+                            }
+                        },
                         placeholder = { Text("Ex: 12.5") },
                         readOnly = !viewModel.canEditField("estimatedHours"),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

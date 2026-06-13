@@ -9,10 +9,113 @@ import fr.studio.voxel.organ.network.services.UserApiService
 
 object UserRepository {
     private val userService = ApiClient.createService(UserApiService::class.java)
+    private val authService = ApiClient.createService(fr.studio.voxel.organ.network.services.AuthApiService::class.java)
     private val tokenStorage = ApiClient.getTokenStorage()
 
     var currentUser by mutableStateOf<User?>(null)
         private set
+
+    class AutoLoginFailedException : Exception("Inscription réussie, mais la connexion automatique a échoué.")
+
+    suspend fun login(mail: String, password: String): Result<Unit> {
+        return try {
+            val response = authService.login(fr.studio.voxel.organ.network.services.LoginRequest(mail, password))
+            if (response.isSuccessful) {
+                fetchCurrentUser()
+                Result.success(Unit)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val rawError = try {
+                    val json = org.json.JSONObject(errorBody ?: "")
+                    json.optString("error", json.optString("message", ""))
+                } catch (e: Exception) {
+                    ""
+                }
+                val errorMsg = if (!rawError.isNullOrBlank()) {
+                    rawError
+                } else {
+                    fr.studio.voxel.organ.network.getErrorMessageForCode(response.code(), "Une erreur est survenue lors de la connexion")
+                }
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun register(mail: String, firstName: String, lastName: String, password: String): Result<Unit> {
+        return try {
+            val response = authService.register(
+                fr.studio.voxel.organ.network.services.RegisterRequest(email = mail, firstName = firstName, lastName = lastName, password = password)
+            )
+            if (response.isSuccessful) {
+                val loginResponse = authService.login(fr.studio.voxel.organ.network.services.LoginRequest(mail, password))
+                if (loginResponse.isSuccessful) {
+                    fetchCurrentUser()
+                    Result.success(Unit)
+                } else {
+                    Result.failure(AutoLoginFailedException())
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                val rawError = try {
+                    val bodyStr = errorBody ?: ""
+                    val json = org.json.JSONObject(bodyStr)
+                    if (json.has("detail")) {
+                        json.optString("detail")
+                    } else if (json.has("violations")) {
+                        val violations = json.getJSONArray("violations")
+                        val messages = mutableListOf<String>()
+                        for (i in 0 until violations.length()) {
+                            val violation = violations.getJSONObject(i)
+                            val field = violation.optString("propertyPath")
+                            val title = violation.optString("title")
+                            messages.add("$field: $title")
+                        }
+                        messages.joinToString("\n")
+                    } else {
+                        json.optString("error", "Erreur lors de l'inscription.")
+                    }
+                } catch (e: Exception) {
+                    try {
+                        val jsonArray = org.json.JSONArray(errorBody ?: "")
+                        val messages = mutableListOf<String>()
+                        for (i in 0 until jsonArray.length()) {
+                            val obj = jsonArray.getJSONObject(i)
+                            val msg = obj.optString("message") ?: obj.optString("title")
+                            if (msg.isNotEmpty()) messages.add(msg)
+                        }
+                        messages.joinToString("\n")
+                    } catch (e2: Exception) {
+                        "Erreur lors de l'inscription."
+                    }
+                }
+
+                val parsedError = when(rawError) {
+                    "User already exists" -> "Cet utilisateur existe déjà."
+                    "Password must be at least 8 characters" -> "Le mot de passe doit faire au moins 8 caractères."
+                    else -> rawError
+                }
+                Result.failure(Exception(parsedError))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun loginWithGoogle(idToken: String): Result<Unit> {
+        return try {
+            val response = authService.googleLogin(fr.studio.voxel.organ.network.services.GoogleLoginRequest(idToken = idToken))
+            if (response.isSuccessful) {
+                fetchCurrentUser()
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Erreur d'authentification Google : ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Problème réseau lors de la connexion Google", e))
+        }
+    }
 
     var isCheckingSession by mutableStateOf(false)
         private set

@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.network.services.ProjectStatsResponse
 import fr.studio.voxel.organ.ui.components.EmptyTrashState
+import fr.studio.voxel.organ.ui.components.ShimmerBox
 import fr.studio.voxel.organ.ui.project.stats.components.*
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -29,6 +30,7 @@ fun LazyListScope.statsDashboardTab(
     totalComments: Int,
     totalAttachments: Int,
     totalConsultations: Int,
+    isLoading: Boolean,
     onDaysSelected: (Int) -> Unit
 ) {
     // Days Filter Row
@@ -67,7 +69,46 @@ fun LazyListScope.statsDashboardTab(
         }
     }
 
-    if (statsData == null || statsData.history.isEmpty()) {
+    if (isLoading) {
+        // KPI Shimmer Cards Grid (2 columns)
+        item {
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                maxItemsInEachRow = 2,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                val kpiModifier = Modifier
+                    .weight(1f)
+                    .height(72.dp)
+                repeat(6) {
+                    ShimmerBox(
+                        modifier = kpiModifier,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                }
+            }
+        }
+
+        // Shimmer Chart Cards
+        repeat(3) { index ->
+            val title = when (index) {
+                0 -> "Activité sur la Période"
+                1 -> "Tâches et Estimations par Organ"
+                else -> "Répartition par Statut"
+            }
+            item {
+                ChartCard(title = title) {
+                    ShimmerBox(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            }
+        }
+    } else if (statsData == null || statsData.history.isEmpty()) {
         item {
             EmptyTrashState(
                 title = "Aucune donnée disponible",

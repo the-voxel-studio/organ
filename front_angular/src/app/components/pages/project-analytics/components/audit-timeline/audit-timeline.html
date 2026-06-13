@@ -101,8 +101,17 @@
 </div>
 
 <!-- Logs Timeline List -->
-<div *ngIf="auditIsLoading" class="bg-white rounded-3xl border border-gray-50 shadow-xs py-14">
-  <app-spinner [color]="getProjectColorHex()" size="md" text="Chargement des données..."></app-spinner>
+<div *ngIf="auditIsLoading" class="space-y-3.5">
+  <div *ngFor="let i of [1,2,3]" class="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-2xs flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5 w-full">
+      <app-shimmer width="36px" height="36px" className="rounded-xl"></app-shimmer>
+      <div class="space-y-2 w-1/2">
+        <app-shimmer width="100%" height="16px" className="rounded"></app-shimmer>
+        <app-shimmer width="60%" height="12px" className="rounded"></app-shimmer>
+      </div>
+    </div>
+    <app-shimmer width="80px" height="20px" className="rounded-lg"></app-shimmer>
+  </div>
 </div>
 
 <div *ngIf="!auditIsLoading && filteredLogs.length === 0" class="py-16 text-center bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-200">

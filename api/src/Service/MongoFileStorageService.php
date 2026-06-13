@@ -24,12 +24,20 @@ class MongoFileStorageService
         }
 
         $checksum = hash_file('sha256', $file->getRealPath());
-        $content = file_get_contents($file->getRealPath());
 
-        // For files > 16MB (BSON limit is 16MB), use GridFS
-        // Here we use a hybrid approach: if it's very large, GridFS. 
-        // But for simplicity and according to plan, let's stick to GridFS or BinData.
-        // Actually, MongoDB BinData has a 16MB limit. So GridFS is safer for anything up to 20MB.
+        // Deduplication: check if a file with the same checksum already exists in GridFS
+        try {
+            $existingFile = $this->dm->getClient()
+                ->selectDatabase($this->dm->getConfiguration()->getDefaultDB())
+                ->selectCollection('fs.files')
+                ->findOne(['metadata.checksum' => $checksum]);
+
+            if ($existingFile) {
+                return (string) $existingFile['_id'];
+            }
+        } catch (\Exception $e) {
+            // Fallback to uploading if database query fails
+        }
 
         $stream = fopen($file->getRealPath(), 'rb');
         $id = $this->bucket->uploadFromStream($file->getClientOriginalName(), $stream, [

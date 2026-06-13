@@ -4,14 +4,12 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import fr.studio.voxel.organ.network.services.CreateCommentRequest
-import fr.studio.voxel.organ.network.services.TaskApiService
+import fr.studio.voxel.organ.data.TaskRepository
 import fr.studio.voxel.organ.network.services.TaskCommentResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 class TaskCommentHandler(
-    private val taskService: TaskApiService,
     private val scope: CoroutineScope
 ) {
     var comments by mutableStateOf<List<TaskCommentResponse>>(emptyList())
@@ -21,42 +19,36 @@ class TaskCommentHandler(
 
     fun loadComments(pUuid: String, oUuid: String, tUuid: String) {
         scope.launch {
-            try {
-                val res = taskService.getComments(pUuid, oUuid, tUuid)
-                if (res.isSuccessful) {
-                    comments = res.body() ?: emptyList()
+            TaskRepository.getComments(pUuid, oUuid, tUuid)
+                .onSuccess { list ->
+                    comments = list
+                }.onFailure { e ->
+                    Log.e("TASK_COMMENT_HANDLER", "loadComments error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_COMMENT_HANDLER", "loadComments error", e)
-            }
         }
     }
 
     fun loadTrashData(pUuid: String, oUuid: String, tUuid: String) {
         scope.launch {
-            try {
-                val cRes = taskService.getTrashedComments(pUuid, oUuid, tUuid)
-                if (cRes.isSuccessful) {
-                    trashedComments = cRes.body() ?: emptyList()
+            TaskRepository.getTrashedComments(pUuid, oUuid, tUuid)
+                .onSuccess { list ->
+                    trashedComments = list
+                }.onFailure { e ->
+                    Log.e("TASK_COMMENT_HANDLER", "loadTrashData error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_COMMENT_HANDLER", "loadTrashData error", e)
-            }
         }
     }
 
     fun addComment(pUuid: String, oUuid: String, tUuid: String, content: String, onTimelineUpdate: () -> Unit) {
         if (content.isBlank()) return
         scope.launch {
-            try {
-                val response = taskService.createComment(pUuid, oUuid, tUuid, CreateCommentRequest(content))
-                if (response.isSuccessful) {
+            TaskRepository.createComment(pUuid, oUuid, tUuid, content)
+                .onSuccess {
                     loadComments(pUuid, oUuid, tUuid)
                     onTimelineUpdate()
+                }.onFailure { e ->
+                    Log.e("TASK_COMMENT_HANDLER", "addComment error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_COMMENT_HANDLER", "addComment error", e)
-            }
         }
     }
 
@@ -70,33 +62,29 @@ class TaskCommentHandler(
         onTimelineUpdate: () -> Unit
     ) {
         scope.launch {
-            try {
-                val response = taskService.deleteComment(pUuid, oUuid, tUuid, commentUuid, permanent)
-                if (response.isSuccessful) {
+            TaskRepository.deleteComment(pUuid, oUuid, tUuid, commentUuid, permanent)
+                .onSuccess {
                     loadComments(pUuid, oUuid, tUuid)
                     onTimelineUpdate()
                     if (isTrashOpen) {
                         loadTrashData(pUuid, oUuid, tUuid)
                     }
+                }.onFailure { e ->
+                    Log.e("TASK_COMMENT_HANDLER", "deleteComment error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_COMMENT_HANDLER", "deleteComment error", e)
-            }
         }
     }
 
     fun restoreComment(pUuid: String, oUuid: String, tUuid: String, commentUuid: String, onTimelineUpdate: () -> Unit) {
         scope.launch {
-            try {
-                val response = taskService.restoreComment(pUuid, oUuid, tUuid, commentUuid)
-                if (response.isSuccessful) {
+            TaskRepository.restoreComment(pUuid, oUuid, tUuid, commentUuid)
+                .onSuccess {
                     loadComments(pUuid, oUuid, tUuid)
                     onTimelineUpdate()
                     loadTrashData(pUuid, oUuid, tUuid)
+                }.onFailure { e ->
+                    Log.e("TASK_COMMENT_HANDLER", "restoreComment error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_COMMENT_HANDLER", "restoreComment error", e)
-            }
         }
     }
 }

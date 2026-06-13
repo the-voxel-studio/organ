@@ -6,15 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import fr.studio.voxel.organ.network.ApiClient
+import fr.studio.voxel.organ.data.OrganRepository
+import fr.studio.voxel.organ.data.ProjectRepository
+import fr.studio.voxel.organ.data.ProjectStatsRepository
+import fr.studio.voxel.organ.data.TagRepository
 import fr.studio.voxel.organ.network.services.*
 import kotlinx.coroutines.launch
 
 class ProjectTrashViewModel : ViewModel() {
-
-    private val projectService = ApiClient.createService(ProjectApiService::class.java)
-    private val organService = ApiClient.createService(OrganApiService::class.java)
-    private val tagService = ApiClient.createService(TagApiService::class.java)
 
     var projectTitle by mutableStateOf("")
         private set
@@ -66,7 +65,7 @@ class ProjectTrashViewModel : ViewModel() {
 
             try {
                 // 1. Get detailed project info to read role, title, and color
-                val detailedRes = projectService.getDetailedProject(projectUuid)
+                val detailedRes = ProjectStatsRepository.getDetailedProject(projectUuid)
                 if (detailedRes.isSuccessful) {
                     val detailedData = detailedRes.body()
                     if (detailedData != null) {
@@ -105,89 +104,73 @@ class ProjectTrashViewModel : ViewModel() {
 
     private suspend fun loadTrashedContent(projectUuid: String) {
         // Load Organs
-        val organsRes = organService.getTrashedOrgans(projectUuid)
-        if (organsRes.isSuccessful) {
-            trashedOrgans = organsRes.body() ?: emptyList()
-        }
+        OrganRepository.getTrashedOrgans(projectUuid)
+            .onSuccess { list ->
+                trashedOrgans = list
+            }
 
         // Load Members
-        val membersRes = projectService.getTrashedProjectMembers(projectUuid)
-        if (membersRes.isSuccessful) {
-            trashedMembers = membersRes.body() ?: emptyList()
-        }
+        ProjectRepository.getTrashedProjectMembers(projectUuid)
+            .onSuccess { list ->
+                trashedMembers = list
+            }
 
         // Load Tags
-        val tagsRes = tagService.getTrashedTags(projectUuid)
-        if (tagsRes.isSuccessful) {
-            trashedTags = tagsRes.body() ?: emptyList()
-        }
+        TagRepository.getTrashedTags(projectUuid)
+            .onSuccess { list ->
+                trashedTags = list
+            }
     }
 
     // Actions: ORGANS
     fun restoreOrgan(projectUuid: String, organUuid: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
-            try {
-                val res = organService.restoreOrgan(projectUuid, organUuid)
-                if (res.isSuccessful) {
+            OrganRepository.restoreOrgan(projectUuid, organUuid)
+                .onSuccess {
                     trashedOrgans = trashedOrgans.filter { it.uuid != organUuid }
                     onSuccess()
-                } else {
-                    onError(res.message().ifBlank { "Échec de la restauration de l'Organ." })
+                }.onFailure { e ->
+                    onError(e.message ?: "Échec de la restauration de l'Organ.")
                 }
-            } catch (e: Exception) {
-                onError("Erreur réseau.")
-            }
         }
     }
 
     fun deleteOrganPermanently(projectUuid: String, organUuid: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
-            try {
-                val res = organService.deleteOrgan(projectUuid, organUuid, permanent = true)
-                if (res.isSuccessful) {
+            OrganRepository.deleteOrgan(projectUuid, organUuid, permanent = true)
+                .onSuccess {
                     trashedOrgans = trashedOrgans.filter { it.uuid != organUuid }
                     onSuccess()
-                } else {
-                    onError(res.message().ifBlank { "Échec de la suppression définitive." })
+                }.onFailure { e ->
+                    onError(e.message ?: "Échec de la suppression définitive.")
                 }
-            } catch (e: Exception) {
-                onError("Erreur réseau.")
-            }
         }
     }
 
     // Actions: MEMBERS
     fun restoreMember(projectUuid: String, memberUuid: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
-            try {
-                val res = projectService.restoreMember(projectUuid, memberUuid)
-                if (res.isSuccessful) {
+            ProjectRepository.restoreMember(projectUuid, memberUuid)
+                .onSuccess {
                     trashedMembers = trashedMembers.filter { it.uuid != memberUuid }
                     selectedMembers = selectedMembers - memberUuid
                     onSuccess()
-                } else {
-                    onError(res.message().ifBlank { "Échec de la restauration du membre." })
+                }.onFailure { e ->
+                    onError(e.message ?: "Échec de la restauration du membre.")
                 }
-            } catch (e: Exception) {
-                onError("Erreur réseau.")
-            }
         }
     }
 
     fun deleteMemberPermanently(projectUuid: String, memberUuid: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
-            try {
-                val res = projectService.removeMember(projectUuid, memberUuid, permanent = true)
-                if (res.isSuccessful) {
+            ProjectRepository.removeMember(projectUuid, memberUuid, permanent = true)
+                .onSuccess {
                     trashedMembers = trashedMembers.filter { it.uuid != memberUuid }
                     selectedMembers = selectedMembers - memberUuid
                     onSuccess()
-                } else {
-                    onError(res.message().ifBlank { "Échec de la suppression définitive." })
+                }.onFailure { e ->
+                    onError(e.message ?: "Échec de la suppression définitive.")
                 }
-            } catch (e: Exception) {
-                onError("Erreur réseau.")
-            }
         }
     }
 
@@ -199,17 +182,13 @@ class ProjectTrashViewModel : ViewModel() {
             var successCount = 0
             var failCount = 0
             for (uuid in uuidsToRestore) {
-                try {
-                    val res = projectService.restoreMember(projectUuid, uuid)
-                    if (res.isSuccessful) {
+                ProjectRepository.restoreMember(projectUuid, uuid)
+                    .onSuccess {
                         successCount++
                         trashedMembers = trashedMembers.filter { it.uuid != uuid }
-                    } else {
+                    }.onFailure {
                         failCount++
                     }
-                } catch (e: Exception) {
-                    failCount++
-                }
             }
             selectedMembers = emptySet()
             if (failCount > 0) {
@@ -223,33 +202,25 @@ class ProjectTrashViewModel : ViewModel() {
     // Actions: TAGS
     fun restoreTag(projectUuid: String, tagUuid: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
-            try {
-                val res = tagService.restoreTag(projectUuid, tagUuid)
-                if (res.isSuccessful) {
+            TagRepository.restoreTag(projectUuid, tagUuid)
+                .onSuccess {
                     trashedTags = trashedTags.filter { it.uuid != tagUuid }
                     onSuccess()
-                } else {
-                    onError(res.message().ifBlank { "Échec de la restauration du tag." })
+                }.onFailure { e ->
+                    onError(e.message ?: "Échec de la restauration du tag.")
                 }
-            } catch (e: Exception) {
-                onError("Erreur réseau.")
-            }
         }
     }
 
     fun deleteTagPermanently(projectUuid: String, tagUuid: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
-            try {
-                val res = tagService.deleteTag(projectUuid, tagUuid, permanent = true)
-                if (res.isSuccessful) {
+            TagRepository.deleteTag(projectUuid, tagUuid, permanent = true)
+                .onSuccess {
                     trashedTags = trashedTags.filter { it.uuid != tagUuid }
                     onSuccess()
-                } else {
-                    onError(res.message().ifBlank { "Échec de la suppression définitive." })
+                }.onFailure { e ->
+                    onError(e.message ?: "Échec de la suppression définitive.")
                 }
-            } catch (e: Exception) {
-                onError("Erreur réseau.")
-            }
         }
     }
 }

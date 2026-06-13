@@ -12,8 +12,25 @@
   </div>
 
   @if (isLoading()) {
-    <!-- Loading State -->
-    <app-spinner size="lg" text="Chargement des paramètres..." [fullscreen]="true"></app-spinner>
+    <!-- Form Shimmer -->
+    <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-2xs space-y-6 mx-4">
+      <div class="space-y-2">
+        <app-shimmer width="120px" height="20px" className="rounded"></app-shimmer>
+        <app-shimmer height="48px" className="rounded-2xl"></app-shimmer>
+      </div>
+      <div class="space-y-2">
+        <app-shimmer width="150px" height="20px" className="rounded"></app-shimmer>
+        <app-shimmer height="96px" className="rounded-2xl"></app-shimmer>
+      </div>
+      <div class="space-y-2">
+        <app-shimmer width="100px" height="20px" className="rounded"></app-shimmer>
+        <app-shimmer height="48px" className="rounded-2xl"></app-shimmer>
+      </div>
+      <div class="flex justify-end gap-3 pt-4">
+        <app-shimmer width="100px" height="48px" className="rounded-xl"></app-shimmer>
+        <app-shimmer width="120px" height="48px" className="rounded-xl"></app-shimmer>
+      </div>
+    </div>
   } @else {
     <div class="px-4">
       <app-project-form

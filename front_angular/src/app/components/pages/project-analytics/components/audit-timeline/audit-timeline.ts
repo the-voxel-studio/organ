@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProjectAuditLogItem, MemberActivityStats } from '../../../../../models/project.model';
 import { AuditActionPipe } from '../../../../../pipes/audit-action.pipe';
 import { FormatDatePipe } from '../../../../../pipes/format-date.pipe';
-import { SpinnerComponent } from '../../../../spinner/spinner';
+import { ShimmerComponent } from '../../../../shimmer/shimmer';
 
 @Component({
   selector: 'app-audit-timeline',
@@ -14,7 +14,7 @@ import { SpinnerComponent } from '../../../../spinner/spinner';
     FormsModule,
     AuditActionPipe,
     FormatDatePipe,
-    SpinnerComponent
+    ShimmerComponent
   ],
   templateUrl: './audit-timeline.html'
 })

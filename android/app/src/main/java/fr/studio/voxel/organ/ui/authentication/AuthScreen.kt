@@ -120,17 +120,19 @@ fun AuthScreen(
                         viewModel = viewModel,
                         hasError = hasError,
                         showPasswordError = showPasswordError,
-                        showConfirmError = showConfirmError
+                        showConfirmError = showConfirmError,
+                        enabled = !viewModel.isLoading
                     )
                 } else {
                     SignInForm(
                         viewModel = viewModel,
-                        hasError = hasError
+                        hasError = hasError,
+                        enabled = !viewModel.isLoading
                     )
                 }
 
-                // Message d'erreur global (ex: erreur de login)
-                if (hasError && mode == AuthMode.SIGN_IN) {
+                // Message d'erreur global (ex: erreur de login ou d'inscription)
+                if (hasError) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = viewModel.authError ?: "",
@@ -149,6 +151,7 @@ fun AuthScreen(
                     Checkbox(
                         checked = checked,
                         onCheckedChange = { checked = it },
+                        enabled = !viewModel.isLoading,
                         modifier = Modifier.offset(x = (-6).dp).scale(1.4f)
                     )
                     val condition = buildAnnotatedString {
@@ -182,7 +185,8 @@ fun AuthScreen(
 
                 PrimaryButton(
                     onClick = { viewModel.handleAuth(mode) },
-                    enabled = checked,
+                    enabled = checked && !viewModel.isLoading,
+                    isLoading = viewModel.isLoading,
                     text = (if (mode == AuthMode.SIGN_UP) "Créer mon compte".uppercase() else "Se connecter").uppercase(),
                     modifier = Modifier.fillMaxWidth(),
                     colorText = MaterialTheme.colorScheme.surface
@@ -218,6 +222,7 @@ fun AuthScreen(
             PrimaryButton(
                 text = "Se connecter avec Google",
                 onClick = { viewModel.loginWithGoogle(context) },
+                enabled = !viewModel.isLoading,
                 color = MaterialTheme.colorScheme.background,
                 pressedColor = MaterialTheme.colorScheme.surface,
                 colorText = MaterialTheme.colorScheme.onSurface,
@@ -232,8 +237,10 @@ fun AuthScreen(
 
             LoginRedirectText(
                 onLoginClick = {
-                    val targetMode = if (mode == AuthMode.SIGN_UP) AuthMode.SIGN_IN else AuthMode.SIGN_UP
-                    onModeSwitch(targetMode)
+                    if (!viewModel.isLoading) {
+                        val targetMode = if (mode == AuthMode.SIGN_UP) AuthMode.SIGN_IN else AuthMode.SIGN_UP
+                        onModeSwitch(targetMode)
+                    }
                 },
                 normalText = if (mode == AuthMode.SIGN_UP) "Déjà un compte ? " else "Nouveau sur l'application ? ",
                 linkText = if (mode == AuthMode.SIGN_UP) "Se connecter" else "S'inscrire"

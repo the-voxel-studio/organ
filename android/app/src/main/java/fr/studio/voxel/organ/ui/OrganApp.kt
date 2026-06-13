@@ -69,6 +69,12 @@ fun OrganApp(
             NotificationRepository.setupMercure()
         } else {
             NotificationRepository.clear()
+            val currentRoute = navController.currentDestination?.route
+            if (currentRoute != OrganScreen.SignIn.name && currentRoute != OrganScreen.SignUp.name && currentRoute != null) {
+                navController.navigate(OrganScreen.SignIn.name) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
         }
     }
 

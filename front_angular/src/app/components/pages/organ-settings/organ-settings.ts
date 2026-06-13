@@ -11,6 +11,7 @@ import { RefreshService } from '../../../services/common/refresh.service';
 
 import { OrganFormComponent } from '../../organ-form/organ-form';
 import { OrganDangerZoneComponent } from './components/organ-danger-zone/organ-danger-zone';
+import { ShimmerComponent } from '../../shimmer/shimmer';
 import { SpinnerComponent } from '../../spinner/spinner';
 
 @Component({
@@ -21,6 +22,7 @@ import { SpinnerComponent } from '../../spinner/spinner';
     RouterLink,
     OrganFormComponent,
     OrganDangerZoneComponent,
+    ShimmerComponent,
     SpinnerComponent
   ],
   templateUrl: './organ-settings.html'

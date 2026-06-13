@@ -431,9 +431,14 @@ class TaskAttachmentController extends AbstractController
                 }
             }
 
-            // --- MongoDB Cleanup ---
+            // --- MongoDB Cleanup (Only if no other attachments share this file) ---
             if ($attachment->getMongoFileId()) {
-                $this->mongoFileStorageService->delete($attachment->getMongoFileId());
+                $otherAttachmentsCount = $entityManager->getRepository(TaskAttachment::class)->count([
+                    'mongoFileId' => $attachment->getMongoFileId()
+                ]);
+                if ($otherAttachmentsCount <= 1) {
+                    $this->mongoFileStorageService->delete($attachment->getMongoFileId());
+                }
             }
 
             $entityManager->remove($attachment);

@@ -18,11 +18,12 @@ import { TrashedOrganLinkSummary } from '../../../models/organ-link.model';
 
 // Components
 import { TaskModalComponent } from '../organ/components/task-modal/task-modal';
+import { ShimmerComponent } from '../../shimmer/shimmer';
 
 @Component({
   selector: 'app-organ-trash',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, TaskModalComponent],
+  imports: [CommonModule, RouterLink, FormsModule, TaskModalComponent, ShimmerComponent],
   templateUrl: './organ-trash.html'
 })
 export class OrganTrashComponent implements OnInit, OnDestroy {

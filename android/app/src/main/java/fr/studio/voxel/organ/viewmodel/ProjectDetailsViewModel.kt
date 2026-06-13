@@ -6,19 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import fr.studio.voxel.organ.network.ApiClient
-import fr.studio.voxel.organ.network.services.ProjectApiService
+import fr.studio.voxel.organ.data.ProjectStatsRepository
+import fr.studio.voxel.organ.data.TagRepository
 import fr.studio.voxel.organ.network.services.ProjectDetailedViewResponse
-import fr.studio.voxel.organ.network.services.TagApiService
 import fr.studio.voxel.organ.network.services.TagResponse
-import fr.studio.voxel.organ.network.services.CreateTagRequest
-import fr.studio.voxel.organ.network.services.UpdateTagRequest
 import kotlinx.coroutines.launch
+import fr.studio.voxel.organ.network.getErrorMessageForCode
 
 class ProjectDetailsViewModel : ViewModel() {
-
-    private val projectService = ApiClient.createService(ProjectApiService::class.java)
-    private val tagService = ApiClient.createService(TagApiService::class.java)
 
     var projectUuid by mutableStateOf<String?>(null)
         private set
@@ -56,7 +51,7 @@ class ProjectDetailsViewModel : ViewModel() {
             errorMessage = null
             isAccessDenied = false
             try {
-                val response = projectService.getDetailedProject(uuid)
+                val response = ProjectStatsRepository.getDetailedProject(uuid)
                 if (response.isSuccessful) {
                     projectData = response.body()
                     if (showTagsPanel) {
@@ -67,7 +62,7 @@ class ProjectDetailsViewModel : ViewModel() {
                     if (response.code() == 403 || errorBody.contains("Access denied", ignoreCase = true)) {
                         isAccessDenied = true
                     } else {
-                        errorMessage = "Erreur lors du chargement: ${response.code()}"
+                        errorMessage = getErrorMessageForCode(response.code())
                     }
                 }
             } catch (e: Exception) {
@@ -91,19 +86,14 @@ class ProjectDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isTagsLoading = true
             tagErrorMessage = null
-            try {
-                val response = tagService.getTags(uuid)
-                if (response.isSuccessful) {
-                    tags = response.body() ?: emptyList()
-                } else {
-                    tagErrorMessage = "Impossible de charger les tags: ${response.code()}"
+            TagRepository.getTags(uuid)
+                .onSuccess { list ->
+                    tags = list
+                }.onFailure { e ->
+                    tagErrorMessage = e.message ?: "Erreur réseau"
+                    Log.e("PROJECT_DETAILS_VM", "loadTags error", e)
                 }
-            } catch (e: Exception) {
-                tagErrorMessage = "Erreur réseau: ${e.localizedMessage}"
-                Log.e("PROJECT_DETAILS_VM", "loadTags error", e)
-            } finally {
-                isTagsLoading = false
-            }
+            isTagsLoading = false
         }
     }
 
@@ -112,19 +102,14 @@ class ProjectDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isSavingTag = true
             tagErrorMessage = null
-            try {
-                val response = tagService.createTag(uuid, CreateTagRequest(name, color))
-                if (response.isSuccessful) {
+            TagRepository.createTag(uuid, name, color)
+                .onSuccess {
                     loadTags()
-                } else {
-                    tagErrorMessage = "Erreur lors de la création du tag: ${response.code()}"
+                }.onFailure { e ->
+                    tagErrorMessage = e.message ?: "Erreur réseau"
+                    Log.e("PROJECT_DETAILS_VM", "createTag error", e)
                 }
-            } catch (e: Exception) {
-                tagErrorMessage = "Erreur réseau: ${e.localizedMessage}"
-                Log.e("PROJECT_DETAILS_VM", "createTag error", e)
-            } finally {
-                isSavingTag = false
-            }
+            isSavingTag = false
         }
     }
 
@@ -133,9 +118,8 @@ class ProjectDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isSavingTag = true
             tagErrorMessage = null
-            try {
-                val response = tagService.updateTag(uuid, tagUuid, UpdateTagRequest(name, color))
-                if (response.isSuccessful) {
+            TagRepository.updateTag(uuid, tagUuid, name, color)
+                .onSuccess {
                     tags = tags.map { tag ->
                         if (tag.uuid == tagUuid) {
                             tag.copy(name = name, color = color)
@@ -144,15 +128,11 @@ class ProjectDetailsViewModel : ViewModel() {
                         }
                     }
                     loadTags()
-                } else {
-                    tagErrorMessage = "Erreur lors de la mise à jour: ${response.code()}"
+                }.onFailure { e ->
+                    tagErrorMessage = e.message ?: "Erreur réseau"
+                    Log.e("PROJECT_DETAILS_VM", "updateTag error", e)
                 }
-            } catch (e: Exception) {
-                tagErrorMessage = "Erreur réseau: ${e.localizedMessage}"
-                Log.e("PROJECT_DETAILS_VM", "updateTag error", e)
-            } finally {
-                isSavingTag = false
-            }
+            isSavingTag = false
         }
     }
 
@@ -161,19 +141,14 @@ class ProjectDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isTagsLoading = true
             tagErrorMessage = null
-            try {
-                val response = tagService.deleteTag(uuid, tagUuid, permanent = false)
-                if (response.isSuccessful) {
+            TagRepository.deleteTag(uuid, tagUuid, permanent = false)
+                .onSuccess {
                     loadTags()
-                } else {
-                    tagErrorMessage = "Erreur lors de la suppression: ${response.code()}"
+                }.onFailure { e ->
+                    tagErrorMessage = e.message ?: "Erreur réseau"
+                    Log.e("PROJECT_DETAILS_VM", "deleteTag error", e)
                 }
-            } catch (e: Exception) {
-                tagErrorMessage = "Erreur réseau: ${e.localizedMessage}"
-                Log.e("PROJECT_DETAILS_VM", "deleteTag error", e)
-            } finally {
-                isTagsLoading = false
-            }
+            isTagsLoading = false
         }
     }
 }

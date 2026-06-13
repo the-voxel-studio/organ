@@ -1,26 +1,22 @@
 package fr.studio.voxel.organ.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import fr.studio.voxel.organ.data.OrganLinkRepository
+import fr.studio.voxel.organ.data.OrganRepository
+import fr.studio.voxel.organ.data.ProjectRepository
+import fr.studio.voxel.organ.data.TaskRepository
 import fr.studio.voxel.organ.data.UserRepository
-import fr.studio.voxel.organ.network.ApiClient
 import fr.studio.voxel.organ.network.services.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.isActive
-import java.text.SimpleDateFormat
-import java.util.Locale
+import fr.studio.voxel.organ.network.getErrorMessageForCode
 
 class OrganDetailsViewModel : ViewModel() {
-
-    private val projectService = ApiClient.createService(ProjectApiService::class.java)
-    private val organService = ApiClient.createService(OrganApiService::class.java)
-    private val taskService = ApiClient.createService(TaskApiService::class.java)
-    private val linkService = ApiClient.createService(OrganLinkApiService::class.java)
 
     var projectUuid by mutableStateOf<String?>(null)
         private set
@@ -188,7 +184,6 @@ class OrganDetailsViewModel : ViewModel() {
         }
     }
 
-
     fun initOrgan(projUuid: String, orgUuid: String) {
         if (projectUuid == projUuid && organUuid == orgUuid && organData != null) return
         projectUuid = projUuid
@@ -206,20 +201,37 @@ class OrganDetailsViewModel : ViewModel() {
             isAccessDenied = false
             try {
                 // Load Project, Organ and Permissions
-                val projectResponse = projectService.getProject(pUuid)
-                val organResponse = organService.getOrgan(pUuid, oUuid)
-                val permissionsResponse = organService.getOrganPermissions(pUuid, oUuid)
+                val projectRes = ProjectRepository.getProject(pUuid)
+                val organRes = OrganRepository.getOrgan(pUuid, oUuid)
+                val permissionsRes = OrganRepository.getOrganPermissions(pUuid, oUuid)
 
-                val isProjDenied = !projectResponse.isSuccessful && (projectResponse.code() == 403 || (projectResponse.errorBody()?.string() ?: "").contains("Access denied", ignoreCase = true))
-                val isOrganDenied = !organResponse.isSuccessful && (organResponse.code() == 403 || (organResponse.errorBody()?.string() ?: "").contains("Access denied", ignoreCase = true))
-                val isPermDenied = !permissionsResponse.isSuccessful && (permissionsResponse.code() == 403 || (permissionsResponse.errorBody()?.string() ?: "").contains("Access denied", ignoreCase = true))
+                var isProjDenied = false
+                projectRes.onFailure { e ->
+                    if (e.message?.contains("Access denied", ignoreCase = true) == true) {
+                        isProjDenied = true
+                    }
+                }
+
+                var isOrganDenied = false
+                organRes.onFailure { e ->
+                    if (e.message?.contains("Access denied", ignoreCase = true) == true) {
+                        isOrganDenied = true
+                    }
+                }
+
+                var isPermDenied = false
+                permissionsRes.onFailure { e ->
+                    if (e.message?.contains("Access denied", ignoreCase = true) == true) {
+                        isPermDenied = true
+                    }
+                }
 
                 if (isProjDenied || isOrganDenied || isPermDenied) {
                     isAccessDenied = true
-                } else if (projectResponse.isSuccessful && organResponse.isSuccessful && permissionsResponse.isSuccessful) {
-                    val project = projectResponse.body()
-                    val organ = organResponse.body()
-                    val perms = permissionsResponse.body()
+                } else if (projectRes.isSuccess && organRes.isSuccess && permissionsRes.isSuccess) {
+                    val project = projectRes.getOrNull()
+                    val organ = organRes.getOrNull()
+                    val perms = permissionsRes.getOrNull()
 
                     if (project != null && organ != null && perms != null) {
                         projectTitle = project.title
@@ -238,7 +250,7 @@ class OrganDetailsViewModel : ViewModel() {
                         errorMessage = "Une erreur est survenue lors de la récupération des données"
                     }
                 } else {
-                    errorMessage = "Erreur lors du chargement (Organ: ${organResponse.code()}, Projet: ${projectResponse.code()})"
+                    errorMessage = "Erreur de chargement des détails"
                 }
             } catch (e: Exception) {
                 errorMessage = "Erreur réseau: ${e.localizedMessage}"
@@ -254,16 +266,12 @@ class OrganDetailsViewModel : ViewModel() {
         val oUuid = organUuid ?: return
 
         viewModelScope.launch {
-            try {
-                val response = taskService.getTasks(pUuid, oUuid)
-                if (response.isSuccessful) {
-                    allTasks = response.body() ?: emptyList()
-                } else {
-                    Log.e("ORGAN_DETAILS_VM", "loadTasks failed: ${response.code()}")
+            TaskRepository.getTasks(pUuid, oUuid)
+                .onSuccess { list ->
+                    allTasks = list
+                }.onFailure { e ->
+                    Log.e("ORGAN_DETAILS_VM", "loadTasks failed", e)
                 }
-            } catch (e: Exception) {
-                Log.e("ORGAN_DETAILS_VM", "loadTasks error", e)
-            }
         }
     }
 
@@ -282,19 +290,14 @@ class OrganDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isLinksLoading = true
             linkErrorMessage = null
-            try {
-                val response = linkService.getLinks(pUuid, oUuid)
-                if (response.isSuccessful) {
-                    links = response.body() ?: emptyList()
-                } else {
-                    linkErrorMessage = "Erreur: ${response.code()}"
+            OrganLinkRepository.getLinks(pUuid, oUuid)
+                .onSuccess { list ->
+                    links = list
+                }.onFailure { e ->
+                    linkErrorMessage = e.message ?: "Erreur"
+                    Log.e("ORGAN_DETAILS_VM", "loadLinks error", e)
                 }
-            } catch (e: Exception) {
-                linkErrorMessage = "Erreur réseau: ${e.localizedMessage}"
-                Log.e("ORGAN_DETAILS_VM", "loadLinks error", e)
-            } finally {
-                isLinksLoading = false
-            }
+            isLinksLoading = false
         }
     }
 
@@ -305,19 +308,14 @@ class OrganDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isSavingLink = true
             linkErrorMessage = null
-            try {
-                val response = linkService.createLink(pUuid, oUuid, CreateOrganLinkRequest(url, description))
-                if (response.isSuccessful) {
+            OrganLinkRepository.createLink(pUuid, oUuid, url, description)
+                .onSuccess {
                     loadLinks()
-                } else {
-                    linkErrorMessage = "Erreur de création: ${response.code()}"
+                }.onFailure { e ->
+                    linkErrorMessage = e.message ?: "Erreur de création"
+                    Log.e("ORGAN_DETAILS_VM", "createLink error", e)
                 }
-            } catch (e: Exception) {
-                linkErrorMessage = "Erreur réseau: ${e.localizedMessage}"
-                Log.e("ORGAN_DETAILS_VM", "createLink error", e)
-            } finally {
-                isSavingLink = false
-            }
+            isSavingLink = false
         }
     }
 
@@ -328,19 +326,14 @@ class OrganDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isSavingLink = true
             linkErrorMessage = null
-            try {
-                val response = linkService.updateLink(pUuid, oUuid, linkUuid, UpdateOrganLinkRequest(url, description))
-                if (response.isSuccessful) {
+            OrganLinkRepository.updateLink(pUuid, oUuid, linkUuid, url, description)
+                .onSuccess {
                     loadLinks()
-                } else {
-                    linkErrorMessage = "Erreur de mise à jour: ${response.code()}"
+                }.onFailure { e ->
+                    linkErrorMessage = e.message ?: "Erreur de mise à jour"
+                    Log.e("ORGAN_DETAILS_VM", "updateLink error", e)
                 }
-            } catch (e: Exception) {
-                linkErrorMessage = "Erreur réseau: ${e.localizedMessage}"
-                Log.e("ORGAN_DETAILS_VM", "updateLink error", e)
-            } finally {
-                isSavingLink = false
-            }
+            isSavingLink = false
         }
     }
 
@@ -351,19 +344,14 @@ class OrganDetailsViewModel : ViewModel() {
         viewModelScope.launch {
             isLinksLoading = true
             linkErrorMessage = null
-            try {
-                val response = linkService.deleteLink(pUuid, oUuid, linkUuid, permanent = true)
-                if (response.isSuccessful) {
+            OrganLinkRepository.deleteLink(pUuid, oUuid, linkUuid, permanent = true)
+                .onSuccess {
                     loadLinks()
-                } else {
-                    linkErrorMessage = "Erreur de suppression: ${response.code()}"
+                }.onFailure { e ->
+                    linkErrorMessage = e.message ?: "Erreur de suppression"
+                    Log.e("ORGAN_DETAILS_VM", "deleteLink error", e)
                 }
-            } catch (e: Exception) {
-                linkErrorMessage = "Erreur réseau: ${e.localizedMessage}"
-                Log.e("ORGAN_DETAILS_VM", "deleteLink error", e)
-            } finally {
-                isLinksLoading = false
-            }
+            isLinksLoading = false
         }
     }
 
@@ -378,19 +366,13 @@ class OrganDetailsViewModel : ViewModel() {
         }
 
         viewModelScope.launch {
-            try {
-                val updatedTask = task.copy(status = newStatus)
-                val response = taskService.updateTask(pUuid, oUuid, task.uuid, updatedTask)
-                if (!response.isSuccessful) {
+            val updatedTask = task.copy(status = newStatus)
+            TaskRepository.updateTask(pUuid, oUuid, task.uuid, updatedTask)
+                .onFailure { e ->
                     // Revert on failure
                     allTasks = originalList
-                    Log.e("ORGAN_DETAILS_VM", "updateTaskStatus failed: ${response.code()}")
+                    Log.e("ORGAN_DETAILS_VM", "updateTaskStatus failed", e)
                 }
-            } catch (e: Exception) {
-                // Revert on error
-                allTasks = originalList
-                Log.e("ORGAN_DETAILS_VM", "updateTaskStatus error", e)
-            }
         }
     }
 

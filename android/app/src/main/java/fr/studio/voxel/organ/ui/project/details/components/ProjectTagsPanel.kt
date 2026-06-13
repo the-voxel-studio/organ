@@ -1,5 +1,11 @@
 package fr.studio.voxel.organ.ui.project.details.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -72,34 +78,20 @@ fun ProjectTagsPanel(
                 )
 
                 if (canManage) {
-                    if(showForm){
-                        IconButton(
-                            onClick = {
-                                showForm = !showForm
+                    IconButton(
+                        onClick = {
+                            showForm = !showForm
+                            if (showForm) {
                                 editingTagUuid = null
                                 tagName = ""
                                 tagColor = Color(0xFF808080)
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Fermer le formulaire",
-                                modifier = Modifier.size(28.dp),
-                                tint = projectColor
-                            )
                         }
-                    }else {
-                        IconButton(
-                            onClick = {
-                                showForm = !showForm
-                                editingTagUuid = null
-                                tagName = ""
-                                tagColor = Color(0xFF808080)
-                            }
-                        ) {
+                    ) {
+                        Crossfade(targetState = showForm, label = "tagFormButtonAnim") { isFormOpen ->
                             Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Ajouter un tag",
+                                imageVector = if (isFormOpen) Icons.Default.Close else Icons.Default.Add,
+                                contentDescription = if (isFormOpen) "Fermer le formulaire" else "Ajouter un tag",
                                 modifier = Modifier.size(28.dp),
                                 tint = projectColor
                             )
@@ -208,81 +200,87 @@ fun ProjectTagsPanel(
             }
 
             // Creation / Edit Form
-            if (showForm && canManage) {
-                Spacer(modifier = Modifier.height(20.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(16.dp))
+            AnimatedVisibility(
+                visible = showForm && canManage,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = if (editingTagUuid != null) "Modifier le tag" else "Nouveau tag",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                    Text(
+                        text = if (editingTagUuid != null) "Modifier le tag" else "Nouveau tag",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedTextField(
-                    value = tagName,
-                    onValueChange = { tagName = it },
-                    placeholder = { Text("Ex: Urgent, Bug...") },
-                    singleLine = true,
-                    label = { Text("Nom du tag") },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = "Couleur du tag",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                ColorSelector(
-                    selectedColor = tagColor,
-                    onColorSelected = { tagColor = it }
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    TextButton(onClick = {
-                        showForm = false
-                        editingTagUuid = null
-                        tagName = ""
-                    }) {
-                        Text("Annuler")
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Button(
-                        onClick = {
-                            val colorHex = String.format("#%06X", 0xFFFFFF and tagColor.toArgb())
-                            if (tagName.isNotBlank()) {
-                                val uuid = editingTagUuid
-                                if (uuid != null) {
-                                    onUpdateTag(uuid, tagName, colorHex)
-                                } else {
-                                    onCreateTag(tagName, colorHex)
-                                }
-                                showForm = false
-                                editingTagUuid = null
-                                tagName = ""
-                            }
-                        },
-                        enabled = tagName.isNotBlank() && !isSavingTag,
+                    OutlinedTextField(
+                        value = tagName,
+                        onValueChange = { tagName = it },
+                        placeholder = { Text("Ex: Urgent, Bug...") },
+                        singleLine = true,
+                        label = { Text("Nom du tag") },
+                        modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Couleur du tag",
+                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    ColorSelector(
+                        selectedColor = tagColor,
+                        onColorSelected = { tagColor = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        if (isSavingTag) {
-                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
-                        } else {
-                            Text("Enregistrer")
+                        TextButton(onClick = {
+                            showForm = false
+                            editingTagUuid = null
+                            tagName = ""
+                        }) {
+                            Text("Annuler")
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Button(
+                            onClick = {
+                                val colorHex = String.format("#%06X", 0xFFFFFF and tagColor.toArgb())
+                                if (tagName.isNotBlank()) {
+                                    val uuid = editingTagUuid
+                                    if (uuid != null) {
+                                        onUpdateTag(uuid, tagName, colorHex)
+                                    } else {
+                                        onCreateTag(tagName, colorHex)
+                                    }
+                                    showForm = false
+                                    editingTagUuid = null
+                                    tagName = ""
+                                }
+                            },
+                            enabled = tagName.isNotBlank() && !isSavingTag,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            if (isSavingTag) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp))
+                            } else {
+                                Text("Enregistrer")
+                            }
                         }
                     }
                 }

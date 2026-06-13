@@ -7,17 +7,20 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fr.studio.voxel.organ.data.UserRepository
-import fr.studio.voxel.organ.network.ApiClient
-import fr.studio.voxel.organ.network.services.AuthApiService
-import fr.studio.voxel.organ.network.services.LoginRequest
-import fr.studio.voxel.organ.network.services.RegisterRequest
+import fr.studio.voxel.organ.domain.LoginUseCase
+import fr.studio.voxel.organ.domain.RegisterUseCase
+import fr.studio.voxel.organ.domain.ValidateEmailUseCase
+import fr.studio.voxel.organ.domain.ValidatePasswordUseCase
 import fr.studio.voxel.organ.network.services.User
 import fr.studio.voxel.organ.ui.authentication.AuthMode
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
 
-    private val authService = ApiClient.createService(AuthApiService::class.java)
+    private val loginUseCase = LoginUseCase()
+    private val registerUseCase = RegisterUseCase()
+    private val validateEmailUseCase = ValidateEmailUseCase()
+    private val validatePasswordUseCase = ValidatePasswordUseCase()
 
     val currentUser: User?
         get() = UserRepository.currentUser
@@ -25,7 +28,7 @@ class AuthViewModel : ViewModel() {
     val isCheckingSession: Boolean
         get() = UserRepository.isCheckingSession
 
-    //Commun
+    // Commun
     var mail by mutableStateOf("")
         private set
     var password by mutableStateOf("")
@@ -35,7 +38,7 @@ class AuthViewModel : ViewModel() {
     var authError by mutableStateOf<String?>(null)
         private set
 
-    //Pour SignUp
+    // Pour SignUp
     var name by mutableStateOf("")
         private set
     var surname by mutableStateOf("")
@@ -53,25 +56,25 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    //Setters
+    // Setters
     fun updateMail(newValue: String) { mail = newValue; authError = null }
     fun updatePassword(newValue: String) { password = newValue; authError = null }
-    fun updateName(newValue: String) { name = newValue }
-    fun updateSurname(newValue: String) { surname = newValue }
-    fun updateConfirmPassword(newValue: String) { confirmPassword = newValue }
+    fun updateName(newValue: String) { name = newValue; authError = null }
+    fun updateSurname(newValue: String) { surname = newValue; authError = null }
+    fun updateConfirmPassword(newValue: String) { confirmPassword = newValue; authError = null }
 
-    //Validation de SignUp
+    // Validation de SignUp
     val passwordsMatch: Boolean
         get() = password == confirmPassword && confirmPassword.isNotEmpty()
 
     val isPasswordValid: Boolean
-        get() = password.length >= 8
+        get() = validatePasswordUseCase(password)
 
-    //Autres actions
-    fun handleAuth(mode: AuthMode){
-        if(mode == AuthMode.SIGN_IN){
+    // Autres actions
+    fun handleAuth(mode: AuthMode) {
+        if (mode == AuthMode.SIGN_IN) {
             performLogin()
-        }else{
+        } else {
             register()
         }
     }
@@ -79,73 +82,52 @@ class AuthViewModel : ViewModel() {
     var navigateToDashboard by mutableStateOf(false)
         private set
 
-    private fun performLogin(){
-        if(mail.isBlank() || password.isBlank()){
-            authError = "Veuillez remplir tous les champs"
-            return
-        }
+    private fun performLogin() {
         viewModelScope.launch {
             isLoading = true
             authError = null
-           try{
-               val response = authService.login(LoginRequest(mail, password))
-
-               if(response.isSuccessful){
-                   UserRepository.fetchCurrentUser()
-                   navigateToDashboard = true
-               } else if (response.code() == 401) {
-                   authError = "Le mail ou le mot de passe sont incorrects"
-               } else {
-                   authError = "Erreur: ${response.code()}"
-               }
-           }catch (e: Exception){
-               authError = "Problème réseau"
-           } finally {
-               isLoading = false
-           }
+            loginUseCase(mail, password)
+                .onSuccess {
+                    navigateToDashboard = true
+                }
+                .onFailure { e ->
+                    authError = e.message ?: "Une erreur est survenue lors de la connexion"
+                }
+            isLoading = false
         }
     }
 
-    fun onNavigated(){
+    fun onNavigated() {
         navigateToDashboard = false
     }
 
     var registrationSuccess by mutableStateOf(false)
         private set
 
-    fun onRegistrationHandled(){
+    fun onRegistrationHandled() {
         registrationSuccess = false
     }
 
-    private fun register(){
-        if (!isPasswordValid || !passwordsMatch || name.isBlank() || surname.isBlank()){
-            authError = "Veuillez vérifier les champs."
-            return
-        }
+    private fun register() {
         viewModelScope.launch {
             isLoading = true
             authError = null
-            try{
-                val response = authService.register(
-                    RegisterRequest(email = mail , firstName =  name, lastName = surname, password = password)
-                )
-                if(response.isSuccessful){
-                    val loginResponse = authService.login(LoginRequest(mail, password))
-                    if(loginResponse.isSuccessful){
-                        UserRepository.fetchCurrentUser()
-                        navigateToDashboard = true
-                    } else {
-                        registrationSuccess = true
-                    }
-                }else{
-                    authError = "Erreur lors de l'inscription."
+            registerUseCase(
+                mail = mail,
+                firstName = name,
+                lastName = surname,
+                pass = password,
+                confirmPass = confirmPassword
+            ).onSuccess {
+                navigateToDashboard = true
+            }.onFailure { e ->
+                if (e is UserRepository.AutoLoginFailedException) {
+                    registrationSuccess = true
+                } else {
+                    authError = e.message ?: "Erreur lors de l'inscription."
                 }
-            } catch (e: Exception){
-                authError = "Erreur : ${e.localizedMessage}"
-                Log.e("API_ERROR", "Détail : ", e)
-            } finally {
-                isLoading = false
             }
+            isLoading = false
         }
     }
 
@@ -182,18 +164,13 @@ class AuthViewModel : ViewModel() {
             }
 
             if (idToken != null) {
-                try {
-                    val response = authService.googleLogin(fr.studio.voxel.organ.network.services.GoogleLoginRequest(idToken = idToken))
-                    if (response.isSuccessful) {
-                        UserRepository.fetchCurrentUser()
+                UserRepository.loginWithGoogle(idToken)
+                    .onSuccess {
                         navigateToDashboard = true
-                    } else {
-                        val errorBody = response.errorBody()?.string() ?: ""
-                        authError = "Erreur d'authentification Google : ${response.code()}"
                     }
-                } catch (e: Exception) {
-                    authError = "Problème réseau lors de la connexion Google"
-                }
+                    .onFailure { e ->
+                        authError = e.message ?: "Problème réseau lors de la connexion Google"
+                    }
             }
             isLoading = false
         }

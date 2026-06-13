@@ -20,6 +20,24 @@ class TokenAuthenticator(
         }
 
         synchronized(this) {
+            val currentBearer = tokenStorage.getBearerToken()
+            val requestCookieHeader = response.networkResponse?.request?.header("Cookie")
+                ?: response.request.header("Cookie")
+            val requestBearer = requestCookieHeader?.let { header ->
+                header.split(";")
+                    .map { it.trim() }
+                    .firstOrNull { it.startsWith("BEARER=") }
+                    ?.substringAfter("BEARER=")
+            }
+
+            // If the token in tokenStorage is already different from the one we sent,
+            // another concurrent request has already completed the refresh successfully.
+            if (requestBearer != currentBearer && currentBearer != null) {
+                return response.request.newBuilder()
+                    .removeHeader("Cookie") // force OkHttp to load new cookies
+                    .build()
+            }
+
             val refreshToken = tokenStorage.getRefreshToken() ?: return null
 
             // Synchronously call the refresh endpoint
@@ -54,7 +72,9 @@ class TokenAuthenticator(
                     }
 
                     // Retry original request
-                    response.request.newBuilder().build()
+                    response.request.newBuilder()
+                        .removeHeader("Cookie") // force OkHttp to load new cookies
+                        .build()
                 } else {
                     tokenStorage.clear()
                     // Trigger a logout/navigation to Login screen

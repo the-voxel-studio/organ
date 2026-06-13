@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 class AuditLogService
 {
+    private array $buffer = [];
+
     public function __construct(
         private DocumentManager $dm,
         private RequestStack $requestStack
@@ -64,8 +66,27 @@ class AuditLogService
             'method' => $request?->getMethod(),
         ]);
 
-        $this->dm->persist($auditLog);
+        $this->buffer[] = $auditLog;
+
+        if ($request === null) {
+            $this->flushBuffer();
+        }
+    }
+
+    /**
+     * Flush all buffered logs to MongoDB.
+     */
+    public function flushBuffer(): void
+    {
+        if (empty($this->buffer)) {
+            return;
+        }
+
+        foreach ($this->buffer as $auditLog) {
+            $this->dm->persist($auditLog);
+        }
         $this->dm->flush();
+        $this->buffer = [];
     }
 
     public function logConsultation(

@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import fr.studio.voxel.organ.network.services.TaskApiService
+import fr.studio.voxel.organ.data.TaskRepository
 import fr.studio.voxel.organ.network.services.TaskAttachmentResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -13,7 +13,6 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
 
 class TaskAttachmentHandler(
-    private val taskService: TaskApiService,
     private val scope: CoroutineScope
 ) {
     var attachments by mutableStateOf<List<TaskAttachmentResponse>>(emptyList())
@@ -23,27 +22,23 @@ class TaskAttachmentHandler(
 
     fun loadAttachments(pUuid: String, oUuid: String, tUuid: String) {
         scope.launch {
-            try {
-                val res = taskService.getAttachments(pUuid, oUuid, tUuid)
-                if (res.isSuccessful) {
-                    attachments = res.body() ?: emptyList()
+            TaskRepository.getAttachments(pUuid, oUuid, tUuid)
+                .onSuccess { list ->
+                    attachments = list
+                }.onFailure { e ->
+                    Log.e("TASK_ATTACHMENT_HANDLER", "loadAttachments error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_ATTACHMENT_HANDLER", "loadAttachments error", e)
-            }
         }
     }
 
     fun loadTrashData(pUuid: String, oUuid: String, tUuid: String) {
         scope.launch {
-            try {
-                val aRes = taskService.getTrashedAttachments(pUuid, oUuid, tUuid)
-                if (aRes.isSuccessful) {
-                    trashedAttachments = aRes.body() ?: emptyList()
+            TaskRepository.getTrashedAttachments(pUuid, oUuid, tUuid)
+                .onSuccess { list ->
+                    trashedAttachments = list
+                }.onFailure { e ->
+                    Log.e("TASK_ATTACHMENT_HANDLER", "loadTrashData error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_ATTACHMENT_HANDLER", "loadTrashData error", e)
-            }
         }
     }
 
@@ -60,11 +55,13 @@ class TaskAttachmentHandler(
             try {
                 val requestBody = fileBytes.toRequestBody(mimeType.toMediaTypeOrNull())
                 val body = MultipartBody.Part.createFormData("file", fileName, requestBody)
-                val response = taskService.uploadAttachment(pUuid, oUuid, tUuid, body)
-                if (response.isSuccessful) {
-                    loadAttachments(pUuid, oUuid, tUuid)
-                    onTimelineUpdate()
-                }
+                TaskRepository.uploadAttachment(pUuid, oUuid, tUuid, body)
+                    .onSuccess {
+                        loadAttachments(pUuid, oUuid, tUuid)
+                        onTimelineUpdate()
+                    }.onFailure { e ->
+                        Log.e("TASK_ATTACHMENT_HANDLER", "uploadAttachment error", e)
+                    }
             } catch (e: Exception) {
                 Log.e("TASK_ATTACHMENT_HANDLER", "uploadAttachment error", e)
             }
@@ -81,18 +78,16 @@ class TaskAttachmentHandler(
         onTimelineUpdate: () -> Unit
     ) {
         scope.launch {
-            try {
-                val response = taskService.deleteAttachment(pUuid, oUuid, tUuid, attachmentUuid, permanent)
-                if (response.isSuccessful) {
+            TaskRepository.deleteAttachment(pUuid, oUuid, tUuid, attachmentUuid, permanent)
+                .onSuccess {
                     loadAttachments(pUuid, oUuid, tUuid)
                     onTimelineUpdate()
                     if (isTrashOpen) {
                         loadTrashData(pUuid, oUuid, tUuid)
                     }
+                }.onFailure { e ->
+                    Log.e("TASK_ATTACHMENT_HANDLER", "deleteAttachment error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_ATTACHMENT_HANDLER", "deleteAttachment error", e)
-            }
         }
     }
 
@@ -104,16 +99,14 @@ class TaskAttachmentHandler(
         onTimelineUpdate: () -> Unit
     ) {
         scope.launch {
-            try {
-                val response = taskService.restoreAttachment(pUuid, oUuid, tUuid, attachmentUuid)
-                if (response.isSuccessful) {
+            TaskRepository.restoreAttachment(pUuid, oUuid, tUuid, attachmentUuid)
+                .onSuccess {
                     loadAttachments(pUuid, oUuid, tUuid)
                     onTimelineUpdate()
                     loadTrashData(pUuid, oUuid, tUuid)
+                }.onFailure { e ->
+                    Log.e("TASK_ATTACHMENT_HANDLER", "restoreAttachment error", e)
                 }
-            } catch (e: Exception) {
-                Log.e("TASK_ATTACHMENT_HANDLER", "restoreAttachment error", e)
-            }
         }
     }
 }
