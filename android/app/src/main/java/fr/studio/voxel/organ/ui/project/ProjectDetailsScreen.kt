@@ -15,7 +15,7 @@ fun ProjectDetailsScreen(
     onStatsClick: (String) -> Unit = {},
     viewModel: fr.studio.voxel.organ.viewmodel.ProjectDetailsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    fr.studio.voxel.organ.ui.project.details.ProjectDetailsScreen(
+    fr.studio.voxel.organ.ui.project.details.ProjectScreen(
         projectUuid = projectUuid,
         onSidebarClick = onSidebarClick,
         onBack = onBack,

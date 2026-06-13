@@ -58,9 +58,8 @@ fun SessionItem(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "${connection.deviceName} • ${connection.browserName}",
-                        fontWeight = FontWeight.Bold,
                         color = Color.Black,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyLarge
                     )
                     if (connection.isCurrent) {
                         Spacer(modifier = Modifier.width(8.dp))
@@ -83,21 +82,26 @@ fun SessionItem(
                     color = Color.Gray,
                     style = MaterialTheme.typography.bodySmall
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
                     text = "Dernière activité : ${formatRelativeDate(connection.lastUsedAt)}",
-                    fontSize = 8.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.LightGray,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = MaterialTheme.colorScheme.outline,
                     letterSpacing = 0.05.em,
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         IconButton(onClick = onRevoke) {
             Icon(
                 painter = painterResource(id = R.drawable.poubelle_logo),
-                contentDescription = "Régler la session",
-                tint = Color.LightGray,
+                contentDescription = "Supprimer la session",
+                tint = Color.Red,
                 modifier = Modifier.size(20.dp)
             )
         }

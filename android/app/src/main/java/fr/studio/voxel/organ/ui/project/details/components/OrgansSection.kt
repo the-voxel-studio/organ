@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fr.studio.voxel.organ.R
 import fr.studio.voxel.organ.network.services.ProjectDetailedOrgan
 
@@ -215,14 +216,14 @@ fun OrganItemCard(
             ) {
                 Text(
                     text = "Voir les tâches",
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Black),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 16.sp, fontWeight = FontWeight.Black),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 )
                 Icon(
                     imageVector = Icons.Default.PlayArrow,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                    modifier = Modifier.size(12.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }

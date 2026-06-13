@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import fr.studio.voxel.organ.viewmodel.OrganDetailsViewModel
 
 @Composable
@@ -41,7 +42,7 @@ fun FilterChipCustom(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold),
             color = if (selected) highlightColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
         )
     }

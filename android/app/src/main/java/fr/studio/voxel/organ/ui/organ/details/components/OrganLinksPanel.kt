@@ -85,20 +85,34 @@ fun OrganLinksPanel(
                 )
 
                 if (canManage) {
-                    IconButton(
-                        onClick = {
-                            showForm = !showForm
-                            if (showForm) {
+                    if(showForm){
+                        IconButton(
+                            onClick = {
+                                showForm = !showForm
                                 editingLinkUuid = null
                                 linkUrl = ""
                                 linkDesc = ""
                             }
-                        }
-                    ) {
-                        Crossfade(targetState = showForm, label = "linkFormButtonAnim") { isFormOpen ->
+                        ) {
                             Icon(
-                                imageVector = if (isFormOpen) Icons.Default.Close else Icons.Default.Add,
-                                contentDescription = if (isFormOpen) "Fermer le formulaire" else "Ajouter un lien",
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Fermer le formulaire",
+                                modifier = Modifier.size(28.dp),
+                                tint = highlightColor
+                            )
+                        }
+                    }else {
+                        IconButton(
+                            onClick = {
+                                showForm = !showForm
+                                editingLinkUuid = null
+                                linkUrl = ""
+                                linkDesc = ""
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Ajouter un tag",
                                 modifier = Modifier.size(28.dp),
                                 tint = highlightColor
                             )

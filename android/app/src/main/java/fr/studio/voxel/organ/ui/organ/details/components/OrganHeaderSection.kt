@@ -143,7 +143,7 @@ fun OrganHeaderSection(
                             Icon(
                                 imageVector = Icons.Default.Delete,
                                 contentDescription = "Corbeille",
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
 
@@ -165,10 +165,10 @@ fun OrganHeaderSection(
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Configuration",
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = "Configuration", style = MaterialTheme.typography.labelMedium)
+                            Text(text = "Configuration", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

@@ -5,7 +5,7 @@ import androidx.navigation.NavHostController
 
 @Deprecated("Use fr.studio.voxel.organ.ui.parameter.details.Parameter instead")
 @Composable
-fun Parameter(
+fun ParameterDetailScreen(
     navController: NavHostController,
     parameterVM: fr.studio.voxel.organ.viewmodel.ParameterViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onLoggedOut: () -> Unit = {}
