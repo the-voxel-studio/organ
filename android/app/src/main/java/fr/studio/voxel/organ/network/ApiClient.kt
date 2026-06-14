@@ -27,6 +27,7 @@ object ApiClient {
 
         okHttpClient = OkHttpClient.Builder()
             .addInterceptor(logging)
+            .addInterceptor(MockInterceptor)
             .cookieJar(cookieJar)
             .authenticator(authenticator)
             .connectTimeout(60, TimeUnit.SECONDS)
