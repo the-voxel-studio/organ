@@ -12,6 +12,13 @@ use App\Enum\ProjectGlobalRole;
 use App\Service\ProjectMembershipService;
 use App\Service\UserCacheService;
 use App\Service\NotificationService;
+use App\Entity\Organ;
+use App\Entity\UserOrganRole;
+use App\Entity\Task;
+use App\Entity\TaskAssignee;
+use App\Service\OrganPermissionService;
+use App\Service\OrganCacheService;
+use App\Service\TaskCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -25,7 +32,10 @@ class ProjectMemberController extends AbstractController
     public function __construct(
         private readonly UserCacheService $userCacheService,
         private readonly ProjectMembershipService $membershipService,
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
+        private readonly OrganPermissionService $permissionService,
+        private readonly OrganCacheService $organCacheService,
+        private readonly TaskCacheService $taskCacheService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -257,6 +267,67 @@ class ProjectMemberController extends AbstractController
             $targetMember->setDeletedAt(new \DateTime());
         }
 
+        // Clean up user access, roles, and assignments in all project Organs
+        $targetUser = $targetMember->getUser();
+        $organs = $entityManager->getRepository(Organ::class)->findBy(['project' => $project]);
+
+        foreach ($organs as $organ) {
+            // 1. Remove/Soft-delete UserOrganRole relationships
+            $uorQuery = $entityManager->getRepository(UserOrganRole::class)->createQueryBuilder('uor')
+                ->join('uor.role', 'r')
+                ->where('uor.user = :user')
+                ->andWhere('r.organ = :organ')
+                ->setParameter('user', $targetUser)
+                ->setParameter('organ', $organ);
+            if (!$isPermanent) {
+                $uorQuery->andWhere('uor.deletedAt IS NULL');
+            }
+            $uors = $uorQuery->getQuery()->getResult();
+
+            foreach ($uors as $uor) {
+                if ($isPermanent) {
+                    $entityManager->remove($uor);
+                } else {
+                    $uor->setDeletedAt(new \DateTime());
+                }
+            }
+
+            // 2. Remove/Soft-delete TaskAssignee relationships
+            $taQuery = $entityManager->getRepository(TaskAssignee::class)->createQueryBuilder('ta')
+                ->join('ta.task', 't')
+                ->where('ta.user = :user')
+                ->andWhere('t.organ = :organ')
+                ->setParameter('user', $targetUser)
+                ->setParameter('organ', $organ);
+            if (!$isPermanent) {
+                $taQuery->andWhere('ta.deletedAt IS NULL');
+            }
+            $assignees = $taQuery->getQuery()->getResult();
+
+            foreach ($assignees as $ta) {
+                if ($isPermanent) {
+                    $entityManager->remove($ta);
+                } else {
+                    $ta->setDeletedAt(new \DateTime());
+                }
+            }
+
+            // 3. Unset this user as manager of tasks in this organ
+            $managedTasks = $entityManager->getRepository(Task::class)->findBy([
+                'organ' => $organ,
+                'manager' => $targetUser
+            ]);
+
+            foreach ($managedTasks as $task) {
+                $task->setManager(null);
+            }
+
+            // 4. Invalidate caches for this user and organ
+            $this->permissionService->invalidateUserRoles($targetUser->getUuid(), $organ->getUuid());
+            $this->organCacheService->invalidateMemberList($organ->getUuid());
+            $this->taskCacheService->invalidateUserTasksInOrgan($targetUser->getUuid(), $organ->getUuid());
+        }
+
         $entityManager->flush();
         $this->membershipService->invalidate($targetUserUuid, $project->getUuid());
 
@@ -282,9 +353,60 @@ class ProjectMemberController extends AbstractController
             return $this->json(['message' => 'Managers can only restore users with MEMBER role'], Response::HTTP_FORBIDDEN);
         }
 
+        $deletedTime = $targetMember->getDeletedAt();
+        $targetUser = $targetMember->getUser();
+
         $targetMember->setDeletedAt(null);
+
+        if ($deletedTime) {
+            $organs = $entityManager->getRepository(Organ::class)->findBy(['project' => $project]);
+
+            foreach ($organs as $organ) {
+                // Restore UserOrganRole relationships deleted at the same time
+                $uors = $entityManager->getRepository(UserOrganRole::class)->createQueryBuilder('uor')
+                    ->join('uor.role', 'r')
+                    ->where('uor.user = :user')
+                    ->andWhere('r.organ = :organ')
+                    ->andWhere('uor.deletedAt IS NOT NULL')
+                    ->setParameter('user', $targetUser)
+                    ->setParameter('organ', $organ)
+                    ->getQuery()
+                    ->getResult();
+
+                foreach ($uors as $uor) {
+                    $diff = abs($uor->getDeletedAt()->getTimestamp() - $deletedTime->getTimestamp());
+                    if ($diff <= 5) {
+                        $uor->setDeletedAt(null);
+                    }
+                }
+
+                // Restore TaskAssignee relationships deleted at the same time
+                $assignees = $entityManager->getRepository(TaskAssignee::class)->createQueryBuilder('ta')
+                    ->join('ta.task', 't')
+                    ->where('ta.user = :user')
+                    ->andWhere('t.organ = :organ')
+                    ->andWhere('ta.deletedAt IS NOT NULL')
+                    ->setParameter('user', $targetUser)
+                    ->setParameter('organ', $organ)
+                    ->getQuery()
+                    ->getResult();
+
+                foreach ($assignees as $ta) {
+                    $diff = abs($ta->getDeletedAt()->getTimestamp() - $deletedTime->getTimestamp());
+                    if ($diff <= 5) {
+                        $ta->setDeletedAt(null);
+                    }
+                }
+
+                // Invalidate caches for this user and organ
+                $this->permissionService->invalidateUserRoles($targetUser->getUuid(), $organ->getUuid());
+                $this->organCacheService->invalidateMemberList($organ->getUuid());
+                $this->taskCacheService->invalidateUserTasksInOrgan($targetUser->getUuid(), $organ->getUuid());
+            }
+        }
+
         $entityManager->flush();
-        $this->membershipService->invalidate($targetMember->getUser()->getUuid(), $project->getUuid());
+        $this->membershipService->invalidate($targetUser->getUuid(), $project->getUuid());
 
         return $this->json(['message' => 'Member restored successfully']);
     }

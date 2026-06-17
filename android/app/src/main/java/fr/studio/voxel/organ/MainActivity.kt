@@ -1,5 +1,6 @@
 package fr.studio.voxel.organ
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -32,6 +33,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ApiClient.init(this)
+        enableHighRefreshRate()
         enableEdgeToEdge()
         setContent {
             OrganTheme {
@@ -40,6 +42,24 @@ class MainActivity : ComponentActivity() {
                     Spacer(modifier = Modifier.height(16.dp)) */
                     Organ()
                 }
+            }
+        }
+    }
+
+    private fun enableHighRefreshRate() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val layoutParams = window.attributes
+            val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                this.display
+            } else {
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay
+            }
+
+            val bestMode = display?.supportedModes?.maxByOrNull { it.refreshRate }
+            if (bestMode != null) {
+                layoutParams.preferredDisplayModeId = bestMode.modeId
+                window.attributes = layoutParams
             }
         }
     }

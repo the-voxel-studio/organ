@@ -207,21 +207,33 @@ class OrganDetailsViewModel : ViewModel() {
 
                 var isProjDenied = false
                 projectRes.onFailure { e ->
-                    if (e.message?.contains("Access denied", ignoreCase = true) == true) {
+                    val msg = e.message ?: ""
+                    if (msg.contains("Access denied", ignoreCase = true) ||
+                        msg.contains("Accès refusé", ignoreCase = true) ||
+                        msg.contains("403")
+                    ) {
                         isProjDenied = true
                     }
                 }
 
                 var isOrganDenied = false
                 organRes.onFailure { e ->
-                    if (e.message?.contains("Access denied", ignoreCase = true) == true) {
+                    val msg = e.message ?: ""
+                    if (msg.contains("Access denied", ignoreCase = true) ||
+                        msg.contains("Accès refusé", ignoreCase = true) ||
+                        msg.contains("403")
+                    ) {
                         isOrganDenied = true
                     }
                 }
 
                 var isPermDenied = false
                 permissionsRes.onFailure { e ->
-                    if (e.message?.contains("Access denied", ignoreCase = true) == true) {
+                    val msg = e.message ?: ""
+                    if (msg.contains("Access denied", ignoreCase = true) ||
+                        msg.contains("Accès refusé", ignoreCase = true) ||
+                        msg.contains("403")
+                    ) {
                         isPermDenied = true
                     }
                 }

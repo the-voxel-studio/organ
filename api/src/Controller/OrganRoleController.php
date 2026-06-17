@@ -10,6 +10,8 @@ use App\Entity\Permission;
 use App\Entity\Project;
 use App\Entity\User;
 use App\Entity\UserOrganRole;
+use App\Entity\Task;
+use App\Entity\TaskAssignee;
 use App\Enum\IconType;
 use App\Service\OrganCacheService;
 use App\Service\OrganPermissionService;
@@ -449,6 +451,49 @@ class OrganRoleController extends AbstractController
             $entityManager->remove($uor);
         } else {
             $uor->setDeletedAt(new \DateTime());
+        }
+
+        // Check if user has any other active roles left in this organ
+        $remainingRoles = $entityManager->getRepository(UserOrganRole::class)->createQueryBuilder('uor')
+            ->join('uor.role', 'r')
+            ->where('uor.user = :user')
+            ->andWhere('r.organ = :organ')
+            ->andWhere('uor.deletedAt IS NULL')
+            ->andWhere('r.uuid != :unassignedRoleUuid')
+            ->setParameter('user', $targetUser)
+            ->setParameter('organ', $organ)
+            ->setParameter('unassignedRoleUuid', $roleUuid)
+            ->getQuery()
+            ->getResult();
+
+        if (empty($remainingRoles)) {
+            // Remove/Soft-delete TaskAssignee relationships
+            $assignees = $entityManager->getRepository(TaskAssignee::class)->createQueryBuilder('ta')
+                ->join('ta.task', 't')
+                ->where('ta.user = :user')
+                ->andWhere('t.organ = :organ')
+                ->setParameter('user', $targetUser)
+                ->setParameter('organ', $organ)
+                ->getQuery()
+                ->getResult();
+
+            foreach ($assignees as $ta) {
+                if ($isPermanent) {
+                    $entityManager->remove($ta);
+                } else {
+                    $ta->setDeletedAt(new \DateTime());
+                }
+            }
+
+            // Unset this user as manager of tasks in this organ
+            $managedTasks = $entityManager->getRepository(Task::class)->findBy([
+                'organ' => $organ,
+                'manager' => $targetUser
+            ]);
+
+            foreach ($managedTasks as $task) {
+                $task->setManager(null);
+            }
         }
         
         $entityManager->flush();
