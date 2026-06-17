@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Document\FileStorage;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use MongoDB\GridFS\Bucket;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
