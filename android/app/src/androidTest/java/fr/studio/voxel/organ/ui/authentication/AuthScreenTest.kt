@@ -28,6 +28,7 @@ class AuthScreenTest {
     fun setUp() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         ApiClient.init(context)
+        fr.studio.voxel.organ.data.UserRepository.clear()
         MockInterceptor.isMockEnabled = true
     }
 

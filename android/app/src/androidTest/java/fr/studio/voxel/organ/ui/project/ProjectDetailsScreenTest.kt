@@ -7,7 +7,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import fr.studio.voxel.organ.TestAssetHelper
 import fr.studio.voxel.organ.network.ApiClient
 import fr.studio.voxel.organ.network.MockInterceptor
-import fr.studio.voxel.organ.ui.project.details.ProjectDetailsScreen
+import fr.studio.voxel.organ.ui.project.details.ProjectScreen
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -41,7 +41,7 @@ class ProjectDetailsScreenTest {
         MockInterceptor.addMock("/api/projects/$projectUuid/detailed", projectDetailedJson, 200)
 
         composeTestRule.setContent {
-            ProjectDetailsScreen(
+            ProjectScreen(
                 projectUuid = projectUuid,
                 onSidebarClick = {},
                 onBack = {},
@@ -76,7 +76,7 @@ class ProjectDetailsScreenTest {
 
         var backCalled = false
         composeTestRule.setContent {
-            ProjectDetailsScreen(
+            ProjectScreen(
                 projectUuid = projectUuid,
                 onSidebarClick = {},
                 onBack = { backCalled = true },
