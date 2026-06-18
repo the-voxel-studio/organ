@@ -26,7 +26,3 @@ export interface GoogleLoginRequest {
 export interface LoginResponse {
   token: string;
 }
-
-export interface LogoutResponse {
-  message: string;
-}

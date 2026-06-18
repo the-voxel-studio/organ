@@ -149,14 +149,12 @@ data class Project(
     @SerializedName("deletedAt")
     val dateSuppression: String?,
 
-    // Relations (si votre API les renvoie dans le même objet)
     val memberIds: List<Int>? = emptyList(),
     val organs: List<Organ>? = emptyList(),
     val role: String? = null
 ) {
     /**
-     * Helper calculé : Transforme les colonnes icon_type/data en objet ProjectVisual
-     * que vos composants Compose (ProjectIconBadge) comprennent déjà.
+     * Helper calculé : Transforme les colonnes icon_type/data en objet ProjectVisual.
      */
     val visual: ProjectVisual?
         get() = when (iconType) {

@@ -13,10 +13,6 @@ export interface ProjectSummary {
   deletedAt?: string; // ISO DateTime
 }
 
-export interface ProjectDetailResponse extends ProjectSummary {
-  role: string;
-}
-
 export interface CreateProjectRequest {
   title: string;
   description?: string;

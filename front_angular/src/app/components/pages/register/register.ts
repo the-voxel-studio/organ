@@ -186,7 +186,11 @@ export class RegisterComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set(err.error?.message || "Une erreur est survenue lors de l'inscription.");
+        if (err.status === 400 && (err.error?.error === 'User already exists' || err.error?.message === 'User already exists')) {
+          this.errorMessage.set("Un utilisateur existe déjà avec cette adresse email.");
+        } else {
+          this.errorMessage.set(err.error?.message || "Une erreur est survenue lors de l'inscription.");
+        }
       }
     });
   }
