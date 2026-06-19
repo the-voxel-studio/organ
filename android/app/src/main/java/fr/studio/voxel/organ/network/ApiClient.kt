@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    private const val BASE_URL = "http://192.168.1.3:8001" // Android Emulator's localhost
+    private const val BASE_URL = "http://10.0.2.2:8001" // Android Emulator's localhost
     const val GOOGLE_SERVER_CLIENT_ID = "805077826497-lu17a6mrre44jl5t4p20nfo9gqf9sddn.apps.googleusercontent.com"
 
 
