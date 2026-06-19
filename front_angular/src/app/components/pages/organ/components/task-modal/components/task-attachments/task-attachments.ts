@@ -70,10 +70,12 @@ export class TaskAttachmentsComponent {
 
       const limitMb = 10;
       let message = err?.error?.message || err?.message || 'Erreur lors de la transmission du fichier.';
-      if (err?.status === 413) {
-        message = `Fichier trop volumineux pour le stockage local (max ${limitMb} Mo). Veuillez compresser votre fichier ou configurer Google Drive pour lever cette limite.`;
-      }
-      if (message.includes('drive') || message.includes('Drive')) {
+      if (message === 'error.upload.unsupported_format_no_cloud' || err?.error?.code === 'UNSUPPORTED_FORMAT_NO_CLOUD') {
+        message = "Ce format de fichier n'est pas supporté pour le stockage local. Veuillez configurer Google Drive dans les réglages du projet pour accepter tous les types de fichiers (ZIP, etc.).";
+      } else if (message === 'error.upload.file_too_large_no_cloud' || err?.error?.code === 'FILE_TOO_LARGE_NO_CLOUD' || err?.status === 413) {
+        const limit = err?.error?.limit || limitMb;
+        message = `Fichier trop volumineux pour le stockage local (max ${limit} Mo). Veuillez compresser votre fichier ou configurer Google Drive pour lever cette limite.`;
+      } else if (message.includes('drive') || message.includes('Drive')) {
         message = 'Impossible d\'envoyer le fichier sur Google Drive. Vérifiez la configuration Drive du projet.';
       }
       this.errorOccurred.emit({ title: 'Erreur de transfert', message });

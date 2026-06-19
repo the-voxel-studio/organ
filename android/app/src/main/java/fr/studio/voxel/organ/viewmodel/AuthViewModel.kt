@@ -56,6 +56,10 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun setForcedLogoutError() {
+        authError = "Une erreur est survenue, veuillez vous reconnecter."
+    }
+
     // Setters
     fun updateMail(newValue: String) { mail = newValue; authError = null }
     fun updatePassword(newValue: String) { password = newValue; authError = null }

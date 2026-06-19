@@ -41,11 +41,6 @@ export const refreshTokenInterceptor: HttpInterceptorFn = (req:
                     return throwError(() => error);
                 }
 
-                // Détecte si le message indique que le token a été invalidé
-                const errorMessage = error.error?.message || (typeof error.error === 'string' ? error.error : '');
-                if (errorMessage === "Token has been invalidated. Please refresh your session.") {
-                    return handleLogoutAndRedirect(error);
-                }
 
                 // On appelle l'endpoint de refresh                              
                 return authService.refreshToken().pipe(

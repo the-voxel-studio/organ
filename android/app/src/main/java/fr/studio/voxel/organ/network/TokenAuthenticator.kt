@@ -1,5 +1,6 @@
 package fr.studio.voxel.organ.network
 
+import fr.studio.voxel.organ.data.UserRepository
 import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 
@@ -14,8 +15,7 @@ class TokenAuthenticator(
 
         // Avoid infinite loop if refresh itself fails
         if (response.request.url.toString().contains("/api/auth/refresh")) {
-            tokenStorage.clear()
-            // Here trigger a logout/navigation to Login screen
+            UserRepository.clear(forced = true)
             return null
         }
 
@@ -58,10 +58,6 @@ class TokenAuthenticator(
             return try {
                 val refreshResponse = client.newCall(refreshRequest).execute()
                 if (refreshResponse.isSuccessful) {
-                    // CookieJar on the MAIN client will handle saving the new cookies 
-                    // IF we used the main client, but we don't.
-                    // So we must manually extract and save if we use a clean client.
-                    
                     val cookies = Cookie.parseAll(refreshRequest.url, refreshResponse.headers)
                     cookies.forEach { cookie ->
                         if (cookie.name == "BEARER") {
@@ -76,13 +72,11 @@ class TokenAuthenticator(
                         .removeHeader("Cookie") // force OkHttp to load new cookies
                         .build()
                 } else {
-                    tokenStorage.clear()
-                    // Trigger a logout/navigation to Login screen
+                    UserRepository.clear(forced = true)
                     null
                 }
             } catch (e: Exception) {
-                tokenStorage.clear()
-                // Trigger a logout/navigation to Login screen
+                UserRepository.clear(forced = true)
                 null
             }
         }

@@ -15,6 +15,8 @@ object UserRepository {
     var currentUser by mutableStateOf<User?>(null)
         private set
 
+    var showForcedLogoutMessage by mutableStateOf(false)
+
     class AutoLoginFailedException : Exception("Inscription réussie, mais la connexion automatique a échoué.")
 
     suspend fun login(mail: String, password: String): Result<Unit> {
@@ -299,8 +301,11 @@ object UserRepository {
         }
     }
 
-    fun clear() {
+    fun clear(forced: Boolean = false) {
         currentUser = null
+        if (forced) {
+            showForcedLogoutMessage = true
+        }
         try {
             tokenStorage.clear()
         } catch (e: Exception) {

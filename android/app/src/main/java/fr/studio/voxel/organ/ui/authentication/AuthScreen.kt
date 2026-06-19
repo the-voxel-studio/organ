@@ -62,6 +62,13 @@ fun AuthScreen(
         }
     }
 
+    LaunchedEffect(fr.studio.voxel.organ.data.UserRepository.showForcedLogoutMessage) {
+        if (fr.studio.voxel.organ.data.UserRepository.showForcedLogoutMessage) {
+            viewModel.setForcedLogoutError()
+            fr.studio.voxel.organ.data.UserRepository.showForcedLogoutMessage = false
+        }
+    }
+
     val hasError = viewModel.authError != null
     val showPasswordError = mode == AuthMode.SIGN_UP && viewModel.password.isNotEmpty() && !viewModel.isPasswordValid
     val showConfirmError = mode == AuthMode.SIGN_UP && viewModel.confirmPassword.isNotEmpty() && !viewModel.passwordsMatch
