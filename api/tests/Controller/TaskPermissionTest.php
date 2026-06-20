@@ -58,7 +58,8 @@ class TaskPermissionTest extends ApiTestCase
             'organ' => $organ,
             'manager' => $manager,
             'title' => 'Collaborative Task',
-            'status' => TaskStatus::TODO
+            'status' => TaskStatus::TODO,
+            'priority' => 1
         ]);
         
         // Créer l'assignation manuellement car c'est une entité de relation
