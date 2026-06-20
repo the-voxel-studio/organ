@@ -236,8 +236,8 @@ class TaskControllerTest extends ApiTestCase
         $this->assertEquals($tag->getUuid(), $data['tags'][0]['uuid']);
     }
 
-    public function testGetTaskTimelineSqlSuccess(): void
-        {
+    public function testGetTaskTimelineMongoSuccess(): void
+    {
         $client = static::createClient();
         $user = UserFactory::createOne();
         $project = ProjectFactory::createOne();
@@ -249,9 +249,8 @@ class TaskControllerTest extends ApiTestCase
         $organ = OrganFactory::createOne(['project' => $project]);
         $task = TaskFactory::createOne(['organ' => $organ]);
 
-        // Create some events
+        // Create some events (will trigger COMMENT_ADD audit log in MongoDB via TaskAuditListener)
         \App\Factory\TaskCommentFactory::createOne(['task' => $task, 'user' => $user, 'content' => 'First comment']);
-        // Skip history and attachment factories as they do not exist
 
         $this->login($client, $user);
         $client->request('GET', sprintf('/api/projects/%s/organs/%s/tasks/%s/timeline', $project->getUuid(), $organ->getUuid(), $task->getUuid()));
@@ -259,20 +258,21 @@ class TaskControllerTest extends ApiTestCase
         $this->assertResponseIsSuccessful();
         $data = $this->getResponseContent($client);
 
-        $this->assertCount(3, $data); // 1 comment + 2 auto-generated history (CREATE task + COMMENT_ADD)
+        $this->assertCount(2, $data); // 2 history events from MongoDB (CREATE task + COMMENT_ADD)
 
         $types = array_column($data, 'type');
-        $this->assertContains('COMMENT', $types);
         $this->assertContains('HISTORY', $types);
+        $this->assertNotContains('COMMENT', $types);
 
-        // Find the comment in results
-        $comment = null;
+        // Find the comment event in results
+        $commentEvent = null;
         foreach ($data as $item) {
-            if ($item['type'] === 'COMMENT') {
-                $comment = $item;
+            if ($item['actionType'] === 'COMMENT_ADD') {
+                $commentEvent = $item;
                 break;
             }
         }
-        $this->assertNotNull($comment);
-        $this->assertEquals('First comment', $comment['detail']);
-        }        }
+        $this->assertNotNull($commentEvent);
+        $this->assertEquals('First comment', $commentEvent['newValue']['content']);
+    }
+}

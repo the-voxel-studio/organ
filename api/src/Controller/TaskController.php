@@ -550,38 +550,8 @@ class TaskController extends AbstractController
         $offset = $request->query->getInt('offset', 0);
         $limit = $request->query->getInt('limit', 20);
 
-        // 1. Fetch Comments & Attachments from SQL
-        $conn = $entityManager->getConnection();
-        $sqlSql = "
-            (SELECT 
-                'COMMENT' as type, 
-                tc.content as detail, 
-                tc.created_at, 
-                u.first_name,
-                u.last_name,
-                u.uuid as user_uuid
-            FROM task_comments tc
-            JOIN users u ON tc.user_id = u.id
-            WHERE tc.task_id = :taskId AND tc.deleted_at IS NULL)
-            
-            UNION ALL
-            
-            (SELECT 
-                'ATTACHMENT' as type, 
-                ta.file_name as detail, 
-                ta.created_at, 
-                u.first_name,
-                u.last_name,
-                u.uuid as user_uuid
-            FROM task_attachments ta
-            JOIN users u ON ta.uploaded_by = u.id
-            WHERE ta.task_id = :taskId AND ta.deleted_at IS NULL)
-            
-            ORDER BY created_at DESC
-        ";
-        $sqlItems = $conn->executeQuery($sqlSql, ['taskId' => $task->getId()])->fetchAllAssociative();
-
-        // 2. Fetch Audit Logs from MongoDB
+        
+        // Fetch Audit Logs from MongoDB
         $mongoLogs = $this->dm->getRepository(\App\Document\AuditLog::class)->createQueryBuilder()
             ->field('taskUuid')->equals($task->getUuid())
             ->sort('createdAt', 'desc')
@@ -591,17 +561,6 @@ class TaskController extends AbstractController
 
         $timeline = [];
         
-        // Transform SQL items
-        foreach ($sqlItems as $item) {
-            $timeline[] = [
-                'type' => $item['type'],
-                'detail' => $item['detail'],
-                'createdAt' => (new \DateTime($item['created_at']))->format(\DateTimeInterface::ATOM),
-                'userName' => $item['first_name'] . ' ' . $item['last_name'],
-                'userUuid' => $item['user_uuid']
-            ];
-        }
-
         // Transform Mongo logs
         foreach ($mongoLogs as $log) {
             $userSummary = $log->getUserUuid() ? $this->userCacheService->getUserSummaryByUuid($log->getUserUuid()) : null;
