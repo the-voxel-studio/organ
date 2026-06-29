@@ -1,36 +1,44 @@
 # Environments
 .env
 .env.*
+!.env.test
 !.env.example
 !.env.dist
 
 # Vendor
 /vendor/
 /api/vendor/
-/front/vendor/
+/front_php/vendor/
 
 # Node modules
 /node_modules/
 /api/node_modules/
-/front/node_modules/
+/front_php/node_modules/
+/front_angular/node_modules/
 
 # Logs
 *.log
 /logs/
 /api/var/log/
-/front/var/log/
+/front_php/var/log/
 
 # Cache
 /var/cache/
 /api/var/cache/
-/front/var/cache/
+/front_php/var/cache/
 
 # Build
 /build/
 /public/build/
 /api/public/build/
-/front/public/build/
+/front_php/public/build/
+/front_angular/dist/
+
+/.idea/
 
 # Docker
 !/docker/
 !/docker-compose.yml
+
+# Nix
+shell.nix

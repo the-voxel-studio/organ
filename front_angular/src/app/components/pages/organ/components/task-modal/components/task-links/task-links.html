@@ -1,0 +1,53 @@
+<div class="space-y-4">
+    <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+        </svg>
+        Liens utiles
+    </h3>
+    
+    <div class="space-y-2">
+        <div *ngFor="let l of links" class="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-2xl group shadow-sm hover:shadow transition-shadow">
+            <div class="flex flex-col min-w-0">
+                <a [href]="l.url" target="_blank" 
+                   class="text-xs font-bold text-gray-900 hover:text-[var(--highlight-color)] transition-colors flex items-center gap-2" 
+                   [style.--highlight-color]="highlightColor">
+                    {{ l.description || l.url }}
+                    <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                </a>
+                <span class="text-[10px] text-gray-400 font-medium truncate max-w-[250px]">{{ l.url }}</span>
+            </div>
+            <button *ngIf="canManageLinks && !isTaskTrashed" 
+                    (click)="onRemoveLink(l.uuid)" 
+                    type="button" 
+                    class="p-2 text-gray-300 hover:text-rose-500 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <p *ngIf="links.length === 0" class="text-xs text-gray-400 italic font-medium ml-1">Aucun lien</p>
+    </div>
+
+    <button *ngIf="canManageLinks && !isTaskTrashed && !showLinkForm()" 
+            (click)="toggleLinkForm()" 
+            class="w-full py-3 bg-white border border-dashed border-gray-200 rounded-xl text-xs font-bold text-gray-400 hover:text-gray-600 hover:border-gray-300 transition-all cursor-pointer">
+        + Ajouter un lien
+    </button>
+    
+    <!-- Add Link Form -->
+    <div *ngIf="showLinkForm()" class="p-4 bg-white border border-gray-100 rounded-2xl space-y-4">
+        <input type="url" [(ngModel)]="newLinkUrl" placeholder="URL (https://...)" 
+               class="w-full px-4 py-2 text-xs bg-gray-50 rounded-lg outline-none focus:bg-white border border-transparent focus:border-[var(--highlight-color)] transition-all" 
+               [style.--highlight-color]="highlightColor">
+        <input type="text" [(ngModel)]="newLinkDesc" placeholder="Description" 
+               class="w-full px-4 py-2 text-xs bg-gray-50 rounded-lg outline-none focus:bg-white border border-transparent focus:border-[var(--highlight-color)] transition-all" 
+               [style.--highlight-color]="highlightColor">
+        <div class="flex justify-end gap-2">
+            <button (click)="toggleLinkForm()" class="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-gray-400 cursor-pointer">Annuler</button>
+            <button (click)="onSaveLink()" class="px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-lg cursor-pointer">Enregistrer</button>
+        </div>
+    </div>
+</div>

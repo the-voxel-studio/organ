@@ -1,0 +1,130 @@
+.floating-trigger {
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 32px 0 rgba(255, 125, 212, 0.35), 0 8px 32px 0 rgba(53, 94, 228, 0.35);
+  background: rgba(13, 6, 48, 0.8) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* Reset default button border/outline entirely */
+  border: none !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  
+  /* Local color variables for safety */
+  --bubblegum-color: #FF7DD4;
+  --highlight-color: #355EE4;
+  
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform: scale(1) rotate(0);
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 1;
+}
+
+/* Ensure no default focus rings/borders/light backgrounds appear on click */
+.floating-trigger:focus,
+.floating-trigger:focus-visible,
+.floating-trigger:active {
+  border: none !important;
+  outline: none !important;
+  background: rgba(13, 6, 48, 0.8) !important;
+  box-shadow: 0 8px 32px 0 rgba(255, 125, 212, 0.45), 0 8px 32px 0 rgba(53, 94, 228, 0.45) !important;
+}
+
+/* Moving liquid blobs inside the glass button with higher intensity and 50/50 duality */
+.floating-trigger::before,
+.floating-trigger::after {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 120%;
+  height: 120%;
+  z-index: -1;
+  filter: blur(8px);
+  opacity: 1;
+}
+
+.floating-trigger::before {
+  background: radial-gradient(circle at center, var(--bubblegum-color) 0%, var(--bubblegum-color) 45%, rgba(255, 125, 212, 0.3) 75%, rgba(255, 125, 212, 0) 100%);
+  animation: liquid-spin-1 8s infinite ease-in-out;
+}
+
+.floating-trigger::after {
+  background: radial-gradient(circle at center, var(--highlight-color) 0%, var(--highlight-color) 45%, rgba(53, 94, 228, 0.3) 75%, rgba(53, 94, 228, 0) 100%);
+  animation: liquid-spin-2 10s infinite ease-in-out;
+}
+
+.floating-trigger:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 12px 40px 0 rgba(255, 125, 212, 0.55), 0 12px 40px 0 rgba(53, 94, 228, 0.55) !important;
+  background: rgba(13, 6, 48, 0.8) !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.floating-trigger:hover::before {
+  animation-duration: 4s;
+}
+
+.floating-trigger:hover::after {
+  animation-duration: 5s;
+}
+
+.floating-trigger:active {
+  transform: scale(0.95);
+}
+
+.floating-trigger.btn-hidden {
+  transform: scale(0) rotate(-45deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Animations for the liquid blobs with organic shapes, scaling, and wide spatial translations */
+@keyframes liquid-spin-1 {
+  0% {
+    transform: translate(-22px, -22px) rotate(0deg) scale(1);
+    border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
+  }
+  25% {
+    transform: translate(22px, -18px) rotate(90deg) scale(1.15);
+    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
+  }
+  50% {
+    transform: translate(22px, 22px) rotate(180deg) scale(1);
+    border-radius: 60% 40% 50% 50% / 50% 60% 40% 50%;
+  }
+  75% {
+    transform: translate(-18px, 22px) rotate(270deg) scale(0.85);
+    border-radius: 40% 60% 65% 35% / 40% 45% 55% 60%;
+  }
+  100% {
+    transform: translate(-22px, -22px) rotate(360deg) scale(1);
+    border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
+  }
+}
+
+@keyframes liquid-spin-2 {
+  0% {
+    transform: translate(22px, 22px) rotate(0deg) scale(1);
+    border-radius: 60% 40% 50% 50% / 50% 60% 40% 50%;
+  }
+  25% {
+    transform: translate(-18px, 22px) rotate(-90deg) scale(0.85);
+    border-radius: 40% 60% 65% 35% / 40% 45% 55% 60%;
+  }
+  50% {
+    transform: translate(-22px, -22px) rotate(-180deg) scale(1.1);
+    border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%;
+  }
+  75% {
+    transform: translate(22px, -18px) rotate(-270deg) scale(0.95);
+    border-radius: 50% 50% 40% 60% / 60% 40% 60% 40%;
+  }
+  100% {
+    transform: translate(22px, 22px) rotate(-360deg) scale(1);
+    border-radius: 60% 40% 50% 50% / 50% 60% 40% 50%;
+  }
+}

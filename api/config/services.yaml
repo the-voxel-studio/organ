@@ -7,6 +7,9 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    notification_base_url: '%env(resolve:NOTIFICATION_BASE_URL)%'
+    google_client_id: '%env(resolve:GOOGLE_CLIENT_ID)%'
+    google_client_secret: '%env(resolve:GOOGLE_CLIENT_SECRET)%'
 
 services:
     # default configuration for services in *this* file
@@ -18,6 +21,31 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+    
+    App\Service\GoogleAuthService:
+        arguments:
+            $googleClientId: '%google_client_id%'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    App\Service\GoogleDriveService:
+        arguments:
+            $googleClientId: '%google_client_id%'
+            $googleClientSecret: '%google_client_secret%'
+
+    App\Service\NotificationService:
+        arguments:
+            $baseUrl: '%notification_base_url%'
+
+    # Alias to tell Symfony which success handler to use for the interface
+    Symfony\Component\Security\Http\Authentication\AuthenticationSuccessHandlerInterface: '@lexik_jwt_authentication.handler.authentication_success'
+
+    App\EventListener\JWTPayloadListener:
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_created, method: onJWTCreated }
+
+    App\EventListener\JWTDecodedListener:
+        tags:
+            - { name: kernel.event_listener, event: lexik_jwt_authentication.on_jwt_decoded, method: onJWTDecoded }
+
+    App\EventListener\TaskAuditListener:
+        tags:
+            - { name: doctrine.event_listener, event: onFlush }

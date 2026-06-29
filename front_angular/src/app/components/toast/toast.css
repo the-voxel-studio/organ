@@ -1,0 +1,38 @@
+:host {
+  display: block;
+}
+
+.toast-wrapper {
+  transition: transform 300ms cubic-bezier(0.16, 1, 0.3, 1), 
+              opacity 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              margin 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              max-height 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              padding 300ms cubic-bezier(0.16, 1, 0.3, 1),
+              border-width 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 150px;
+}
+
+/* Entering state */
+.state-entering {
+  opacity: 0;
+  transform: translateX(50px) scale(0.95);
+}
+
+/* Active state */
+.state-active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+
+/* Exiting state */
+.state-exiting {
+  opacity: 0;
+  transform: translateX(50px) scale(0.95);
+  max-height: 0;
+  margin-top: -12px; /* Smooth collapse margin */
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top-width: 0 !important;
+  border-bottom-width: 0 !important;
+  overflow: hidden;
+}

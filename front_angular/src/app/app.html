@@ -1,0 +1,13 @@
+<router-outlet></router-outlet>
+
+@if (showChatbot()) {
+  <app-chatbot></app-chatbot>
+}
+
+<!-- Custom mutualized toast notifications -->
+<div class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 w-full max-w-sm pointer-events-none">
+  @for (toast of toastService.toasts(); track toast.id) {
+    <app-toast [toast]="toast"></app-toast>
+  }
+</div>
+

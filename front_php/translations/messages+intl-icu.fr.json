@@ -1,0 +1,597 @@
+{
+    "generic": {
+        "confirmation": "Confirmation",
+        "error": "Erreur",
+        "ok": "D'accord",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "confirm": "Confirmer",
+        "confirm_delete": "Confirmer la suppression",
+        "confirm_delete_permanent": "Confirmer la suppression définitive",
+        "network_error": "Erreur réseau",
+        "server_unreachable": "Impossible de contacter le serveur.",
+        "save_error": "Échec de l'enregistrement."
+    },
+    "home": "Accueil",
+    "sidebar": {
+        "help": "Aide",
+        "notifications": "Notifications",
+        "mark_all_read": "Tout marquer comme lu",
+        "no_notifications": "Aucune notification",
+        "view_all_notifications": "Voir toutes les notifications",
+        "load_more_notifications": "Charger plus de notifications",
+        "dashboard": "Dashboard",
+        "my_projects": "Mes Projets",
+        "admin_role": "Administrateur",
+        "user_role": "Utilisateur",
+        "settings": "Paramètres",
+        "logout": "Se déconnecter"
+    },
+    "dashboard": {
+        "title": "Tableau de bord",
+        "subtitle": "Gérez vos projets et tâches prioritaires.",
+        "new_project": "Nouveau Projet",
+        "tasks": {
+            "title": "Tâches prioritaires",
+            "subtitle": "Vos tâches les plus importantes à faire.",
+            "empty": "Aucune tâche prioritaire pour le moment.",
+            "headers": {
+                "name": "Tâche",
+                "date": "Échéance",
+                "project": "Projet"
+            }
+        },
+        "projects": {
+            "title": "Mes Projets",
+            "subtitle": "Les projets auxquels vous participez.",
+            "empty": "Vous n'avez pas encore de projet."
+        }
+    },
+    "auth": {
+        "slogan": "L'organisation devient <span class=\"text-bubblegum italic text-balance\">un réflexe.</span>",
+        "subtitle": "Rejoignez la structure qui s'adapte à votre vie."
+    },
+    "notifications": {
+        "title": "Notifications",
+        "empty": "Aucune notification",
+        "error": {
+            "accept_invitation": "Impossible d'accepter l'invitation"
+        }
+    },
+    "project": {
+        "status": {
+            "active": "Actif",
+            "archived": "Archivé",
+            "inactive": "Inactif"
+        },
+        "show": {
+            "role": "Votre rôle",
+            "manage_members": "Gérer les membres",
+            "settings": "Paramètres",
+            "organs": "Organs du projet",
+            "add_organ": "Ajouter un Organ",
+            "view_tasks": "Voir les tâches",
+            "no_organs": "Aucun Organ n'a encore été créé pour ce projet.",
+            "manage_tags": "Gérer les tags",
+            "view_tags_btn": "Voir les tags",
+            "tags_title": "Gestion des Tags",
+            "tags_list_title": "Tags du projet",
+            "add_tag": "Ajouter un tag",
+            "tag_name": "Nom du tag",
+            "tag_color": "Couleur",
+            "save_tag": "Enregistrer le tag",
+            "tag_color_hint": "Choisissez une couleur pour ce tag",
+            "tag_name_placeholder": "Ex: Prioritaire",
+            "no_tags": "Aucun tag n'est encore configuré pour ce projet.",
+            "delete_tag_confirm": "Supprimer ce tag ?",
+            "delete_tag_confirm_message": "Voulez-vous vraiment supprimer le tag \"{name}\" ?",
+            "active_tasks": "{count, plural, =0 {aucune tâche active} =1 {1 tâche active} other {# tâches actives}}",
+            "restore_batch_status": "{success} membres restaurés, {fail} échecs.",
+            "bulk_restore_btn": "Restaurer la sélection ({count})",
+            "about": "À propos du projet",
+            "no_description": "Aucune description fournie.",
+            "created_at": "Projet créé le",
+            "latest_activities": "Dernières activités",
+            "no_activity": "Aucune activité récente sur les tâches.",
+            "security_logs": "Historique de sécurité",
+            "no_security_logs": "Aucun événement de sécurité critique à signaler.",
+            "actions": {
+                "preposition_on": "sur",
+                "preposition_in": "dans"
+            }
+        },
+        "trash": {
+            "title": "Corbeille",
+            "subtitle": "Retrouvez ici vos projets supprimés. Seul un administrateur peut les restaurer.",
+            "empty": "Votre corbeille est vide",
+            "empty_subtitle": "Tout est à sa place ! Aucun projet n'attend d'être restauré.",
+            "deleted_at": "Supprimé le {date}",
+            "restore_btn": "Restaurer",
+            "delete_permanent_btn": "Supprimer définitivement",
+            "confirm": {
+                "restore_title": "Restaurer le projet ?",
+                "restore_message": "Le projet sera de nouveau accessible sur votre tableau de bord.",
+                "restore_warning_title": "Action requise après restauration",
+                "restore_warning_message": "Les autres membres du projet <b>ne seront pas</b> restaurés automatiquement pour des raisons de sécurité. Vous devrez les réactiver manuellement depuis la corbeille du projet.",
+                "delete_permanent_title": "Suppression irréversible",
+                "delete_permanent_message": "Cette action est <b>définitive</b>. Le projet et toutes ses données (organs, tâches, fichiers) seront supprimés sans possibilité de retour."
+            },
+            "specific": {
+                "title": "Corbeille du projet",
+                "subtitle": "Retrouvez ici les organs et membres supprimés du projet.",
+                "back_to_project": "Retour au projet",
+                "search_placeholder": "Rechercher...",
+                "empty": "La corbeille du projet est vide",
+                "empty_subtitle": "Tout est à sa place ! Aucun élément n'attend d'être restauré.",
+                "restored_success_title": "Projet restauré avec succès !",
+                "restored_success_message": "Le projet est de retour, mais les membres qui ont accepté de rejoindre le projet sont toujours désactivés. <br>Utilisez la liste ci-dessous pour les restaurer, individuellement ou par groupe.",
+                "sections": {
+                    "organs": "Organ",
+                    "members": "Membres",
+                    "tags": "Tags"
+                },
+                "actions": {
+                    "select_all": "Tout sélectionner",
+                    "restore_selection": "Restaurer la sélection",
+                    "restore": "Restaurer",
+                    "deleted_at": "Supprimé le {date}",
+                    "removed_at": "Retiré le {date}",
+                    "batch_label": "Lot de suppression",
+                    "previous_role": "Rôle précédent : {role}"
+                },
+                "confirm": {
+                    "delete_permanent_message": "Êtes-vous sûr de vouloir supprimer {title} définitivement ? Cette action est irréversible.",
+                    "restore_message": "Voulez-vous restaurer {title} ? Il reprendra sa place dans le projet.",
+                    "bulk_restore_title": "Restaurer la sélection ?",
+                    "bulk_restore_message": "Vous allez restaurer {count} membres sélectionnés. Ils retrouveront immédiatement leur accès au projet."
+                }
+            }
+        },
+        "edit": {
+            "title": "Paramètres du Projet",
+            "back_to_project": "Retour au Projet",
+            "form": {
+                "actions": {
+                    "submit": "Mettre à jour le projet"
+                }
+            }
+        },
+        "create": {
+            "title": "Créer un Nouveau Projet",
+            "back_to_dashboard": "Retour au Dashboard",
+            "form": {
+                "name": {
+                    "label": "Nom du projet",
+                    "placeholder": "Ex: Refonte du site web"
+                },
+                "description": {
+                    "label": "Description",
+                    "placeholder": "Décrivez brièvement les objectifs du projet..."
+                },
+                "status": {
+                    "label": "Statut du projet"
+                },
+                "identity": {
+                    "title": "Identité visuelle",
+                    "color": "Couleur",
+                    "icon": "Icône",
+                    "choose_icon": "Choisir une icône",
+                    "mode": {
+                        "emoji": "Emoji",
+                        "image": "Image",
+                        "svg": "SVG"
+                    },
+                    "placeholders": {
+                        "emoji": "Utilisez un emoji",
+                        "image": "Importer une image",
+                        "svg": "Coller du code SVG",
+                        "svg_hint": "Le code doit commencer par <svg>"
+                    }
+                },
+                "members": {
+                    "title": "Inviter des membres",
+                    "email": {
+                        "label": "Email",
+                        "placeholder": "email@exemple.com"
+                    },
+                    "role": {
+                        "label": "Rôle global",
+                        "admin": "Administrateur",
+                        "manager": "Manager",
+                        "member": "Membre"
+                    },
+                    "add": "Ajouter",
+                    "understand_roles": "Comprendre les rôles",
+                    "added_list": "Membres ajoutés",
+                    "no_members": "Aucun membre ajouté pour le moment.",
+                    "roles_explanation": {
+                        "admin": "<b>Administrateur :</b> Contrôle total sur le projet, ses paramètres et ses membres.",
+                        "manager": "<b>Manager :</b> Peut gérer les tâches, les membres et les paramètres du projet.",
+                        "member": "<b>Membre :</b> Peut voir le projet, gérer ses tâches et participer aux discussions.",
+                        "single_admin_warning": "Attention : Il ne peut y avoir qu'un seul administrateur par projet. Si vous nommez un autre membre administrateur, vous perdrez ce rôle au profit du nouveau responsable."
+                    }
+                },
+                "actions": {
+                    "cancel": "Annuler",
+                    "submit": "Créer le projet"
+                }
+            },
+            "success": "Projet créé avec succès !",
+            "error": {
+                "creation": "Une erreur est survenue lors de la création du projet.",
+                "invitation": "Certaines invitations n'ont pas pu être envoyées.",
+                "save": "Erreur lors de la sauvegarde",
+                "network": "Une erreur réseau est survenue."
+            },
+            "drive": {
+                "linked": "Compte Google lié",
+                "success": {
+                    "generated": "Dossier de stockage généré avec succès !"
+                },
+                "error": {
+                    "creation": "Erreur lors de la création"
+                },
+                "empty_folders": "Aucun dossier projet provisionné."
+            }
+        }
+    },
+    "organ": {
+        "edit": {
+            "title": "Paramètres de l'Organ",
+            "back_to_organ": "Retour à l'Organ",
+            "form": {
+                "actions": {
+                    "submit": "Mettre à jour l'Organ"
+                }
+            }
+        },
+        "create": {
+            "title": "Créer un Nouvel Organ",
+            "back_to_project": "Retour au Projet",
+            "form": {
+                "name": {
+                    "label": "Nom de l'Organ",
+                    "placeholder": "Ex: Développement Frontend"
+                },
+                "description": {
+                    "label": "Description",
+                    "placeholder": "Décrivez le rôle de cet Organ dans le projet..."
+                },
+                "identity": {
+                    "color": "Couleur distinctive",
+                    "icon": "Icône"
+                },
+                "actions": {
+                    "cancel": "Annuler",
+                    "submit": "Créer l'Organ"
+                },
+                "members": {
+                    "empty": "Aucun membre ajouté à l'Organ."
+                },
+                "sync": {
+                    "roles": "Synchronisation des rôles...",
+                    "members": "Synchronisation des membres...",
+                    "members_update": "Mise à jour des membres..."
+                }
+            }
+        },
+        "trash": {
+            "title": "Corbeille - {title}",
+            "subtitle": "Retrouvez ici les éléments supprimés auxquels vous avez accès.",
+            "back_to_organ": "Retour à l'Organ",
+            "search_placeholder": "Rechercher...",
+            "empty": "La corbeille de cet Organ est vide",
+            "empty_subtitle": "Tout est à sa place ! Aucun élément n'attend d'être restauré.",
+            "sections": {
+                "tasks": "Tâches",
+                "roles": "Rôles",
+                "members": "Membres",
+                "links": "Liens"
+            },
+            "filters": {
+                "all_tasks": "Toutes les tâches",
+                "my_tasks": "Mes tâches uniquement"
+            },
+            "actions": {
+                "restore": "Restaurer",
+                "deleted_at": "Supprimé le {date}",
+                "removed_at": "Retiré le {date}",
+                "previous_role": "Rôle précédent : {role}"
+            },
+            "error": {
+                "restore": "Erreur lors de la restauration.",
+                "delete_permanent": "Erreur lors de la suppression définitive."
+            },
+            "confirm": {
+                "delete_permanent": "Cette action est irréversible. Voulez-vous supprimer cet élément définitivement ?",
+                "delete_permanent_title": "Suppression irréversible",
+                "delete_permanent_message": "Voulez-vous vraiment supprimer \"{title}\" définitivement ? Cette action est irréversible."
+            }
+        },
+        "view": {
+            "error": {
+                "move_task": "Erreur lors du déplacement"
+            }
+        },
+        "show": {
+            "kanban": "Kanban",
+            "list": "Liste",
+            "links": "Liens",
+            "filter": "Filtrer",
+            "new_task": "Nouvelle tâche",
+            "no_links": "Aucun lien associé.",
+            "add_link": "Ajouter un lien",
+            "url_placeholder": "https://...",
+            "description_placeholder": "Ex: Cahier des charges",
+            "save_link": "Enregistrer le lien",
+            "delete_link_confirm": "Supprimer ce lien ?",
+            "delete_link_confirm_message": "Voulez-vous vraiment supprimer le lien \"{url}\" ?",
+            "todo": "À Faire",
+            "in_progress": "En Cours",
+            "done": "Terminé",
+            "waiting": "En Attente",
+            "canceled": "Annulé",
+            "no_tasks": "Aucune tâche à afficher.",
+            "add_task": "Ajouter une tâche",
+            "sort_by": "Trier par",
+            "sort_priority": "Priorité",
+            "sort_due_date": "Date d'échéance",
+            "sort_date": "Date de création",
+            "filter_by": "Filtrer par",
+            "filter_me": "Me concerne",
+            "filter_priority_min": "Priorité minimale",
+            "reset_filters": "Réinitialiser",
+            "trash": "Corbeille",
+            "links_title": "Liens de l'Organ",
+            "add_link_btn": "+ Ajouter un lien",
+            "url_label": "URL du lien",
+            "description_label": "Description (optionnel)",
+            "description_placeholder_alt": "Ex: Documentation API",
+            "table": {
+                "task": "Tâche",
+                "status": "Statut",
+                "priority": "Priorité",
+                "due_date": "Date d'échéance"
+            }
+        },
+        "permissions.categories": {
+            "organ": "Gestion de l'Organ",
+            "tasks": "Gestion des tâches",
+            "interactions": "Interactions et fichiers"
+        },
+        "permissions.ORGAN_VIEW.label": "Voir l'Organ",
+        "permissions.ORGAN_VIEW.description": "Accès obligatoire pour voir l'Organ et ses tâches.",
+        "permissions.ORGAN_EDIT.label": "Modifier l'Organ",
+        "permissions.ORGAN_EDIT.description": "Changer le nom, la description ou l'identité visuelle.",
+        "permissions.ORGAN_MANAGE_ROLES.label": "Gérer la structure (rôles et membres)",
+        "permissions.ORGAN_MANAGE_ROLES.description": "Modifier les rôles, les permissions et gérer l'affectation des membres.",
+        "permissions.ORGAN_MANAGE_MEMBERS.label": "Gérer les membres (couplé)",
+        "permissions.ORGAN_MANAGE_MEMBERS.description": "Cette permission est actuellement liée à la gestion des rôles.",
+        "permissions.ORGAN_LINK_MANAGE.label": "Gérer les liens de l'Organ",
+        "permissions.ORGAN_LINK_MANAGE.description": "Ajouter ou supprimer des liens utiles à l'Organ.",
+
+        "permission_count": "{count, plural, =0 {aucune permission} =1 {1 permission} other {# permissions}}",
+
+        "permissions.TASK_CREATE.label": "Créer des tâches",
+        "permissions.TASK_CREATE.description": "Ouvrir de nouveaux tickets dans cet Organ.",
+        "permissions.TASK_EDIT_OWN.label": "Modifier vos tâches",
+        "permissions.TASK_EDIT_OWN.description": "Modifier les tâches dont vous êtes le créateur ou responsable.",
+        "permissions.TASK_EDIT_ALL.label": "Modifier toutes les tâches",
+        "permissions.TASK_EDIT_ALL.description": "Modifier n'importe quelle tâche de l'Organ.",
+        "permissions.TASK_DELETE_OWN.label": "Supprimer vos tâches (corbeille)",
+        "permissions.TASK_DELETE_OWN.description": "Déplacer vos propres tâches vers la corbeille de l'Organ.",
+        "permissions.TASK_DELETE_ALL.label": "Supprimer toutes les tâches (corbeille)",
+        "permissions.TASK_DELETE_ALL.description": "Déplacer n'importe quelle tâche vers la corbeille.",
+        "permissions.TASK_HARD_DELETE_OWN.label": "Supprimer définitivement vos tâches",
+        "permissions.TASK_HARD_DELETE_OWN.description": "Effacer irréversiblement vos propres tâches (depuis la corbeille).",
+        "permissions.TASK_HARD_DELETE_ALL.label": "Supprimer définitivement toutes les tâches",
+        "permissions.TASK_HARD_DELETE_ALL.description": "Nettoyer définitivement la corbeille des tâches de l'Organ.",
+        "permissions.TASK_STATUS_CHANGE_OWN.label": "Changer le statut de vos tâches",
+        "permissions.TASK_STATUS_CHANGE_OWN.description": "Faire avancer vos propres tâches.",
+        "permissions.TASK_STATUS_CHANGE_ALL.label": "Changer le statut de toutes les tâches",
+        "permissions.TASK_STATUS_CHANGE_ALL.description": "Faire avancer n'importe quelle tâche.",
+        "permissions.TASK_PRIORITY_CHANGE_OWN.label": "Changer la priorité de vos tâches",
+        "permissions.TASK_PRIORITY_CHANGE_OWN.description": "Gérer l'urgence de vos propres tâches.",
+        "permissions.TASK_PRIORITY_CHANGE_ALL.label": "Changer la priorité de toutes les tâches",
+        "permissions.TASK_PRIORITY_CHANGE_ALL.description": "Gérer l'urgence de toutes les tâches.",
+        "permissions.TASK_DATES_MANAGE_OWN.label": "Gérer les échéances de vos tâches",
+        "permissions.TASK_DATES_MANAGE_OWN.description": "Modifier les dates de vos propres tâches.",
+        "permissions.TASK_DATES_MANAGE_ALL.label": "Gérer les échéances de toutes les tâches",
+        "permissions.TASK_DATES_MANAGE_ALL.description": "Modifier les dates de toutes les tâches.",
+        "permissions.TASK_ESTIMATE_MANAGE_OWN.label": "Gérer les estimations de vos tâches",
+        "permissions.TASK_ESTIMATE_MANAGE_OWN.description": "Estimer le temps de vos propres tâches.",
+        "permissions.TASK_ESTIMATE_MANAGE_ALL.label": "Gérer les estimations de toutes les tâches",
+        "permissions.TASK_ESTIMATE_MANAGE_ALL.description": "Estimer le temps de toutes les tâches.",
+        "permissions.TASK_ASSIGN_SELF.label": "S'assigner des tâches",
+        "permissions.TASK_ASSIGN_SELF.description": "S'assigner ou se retirer d'une tâche.",
+        "permissions.TASK_ASSIGN_OTHERS.label": "Assigner d'autres membres",
+        "permissions.TASK_ASSIGN_OTHERS.description": "Assigner ou retirer des membres sur n'importe quelle tâche.",
+        "permissions.TASK_VALIDATE.label": "Valider les tâches",
+        "permissions.TASK_VALIDATE.description": "Marquer une tâche comme officiellement terminée.",
+        "permissions.TASK_LINK_MANAGE_OWN.label": "Gérer les liens de vos tâches",
+        "permissions.TASK_LINK_MANAGE_OWN.description": "Ajouter ou retirer des liens sur vos propres tâches.",
+        "permissions.TASK_LINK_MANAGE_ALL.label": "Gérer les liens de toutes les tâches",
+        "permissions.TASK_LINK_MANAGE_ALL.description": "Gérer les liens sur n'importe quelle tâche.",
+        "permissions.TASK_LINK_HARD_DELETE_OWN.label": "Supprimer définitivement les liens de vos tâches",
+        "permissions.TASK_LINK_HARD_DELETE_OWN.description": "Supprimer définitivement un lien sur vos tâches.",
+        "permissions.TASK_LINK_HARD_DELETE_ALL.label": "Supprimer définitivement les liens (toutes les tâches)",
+        "permissions.TASK_LINK_HARD_DELETE_ALL.description": "Modérer définitivement les liens de toutes les tâches.",
+        "permissions.TASK_TAG_MANAGE_OWN.label": "Gérer les étiquettes de vos tâches",
+        "permissions.TASK_TAG_MANAGE_OWN.description": "Gérer les étiquettes de vos propres tâches.",
+        "permissions.TASK_TAG_MANAGE_ALL.label": "Gérer les étiquettes de toutes les tâches",
+        "permissions.TASK_TAG_MANAGE_ALL.description": "Gérer les étiquettes de n'importe quelle tâche.",
+        "permissions.TASK_TAG_HARD_DELETE.label": "Supprimer définitivement les étiquettes",
+        "permissions.TASK_TAG_HARD_DELETE.description": "Action de suppression irréversible sur les tags de tâche.",
+        "permissions.TASK_DEPENDENCY_MANAGE_OWN.label": "Gérer les dépendances de vos tâches",
+        "permissions.TASK_DEPENDENCY_MANAGE_OWN.description": "Lier vos tâches entre elles.",
+        "permissions.TASK_DEPENDENCY_MANAGE_ALL.label": "Gérer les dépendances de toutes les tâches",
+        "permissions.TASK_DEPENDENCY_MANAGE_ALL.description": "Lier n'importe quelle tâche.",
+        
+        "permissions.COMMENT_CREATE.label": "Commenter",
+        "permissions.COMMENT_CREATE.description": "Participer aux discussions sur les tâches.",
+        "permissions.COMMENT_EDIT_OWN.label": "Modifier vos commentaires",
+        "permissions.COMMENT_EDIT_OWN.description": "Corriger vos propres messages.",
+        "permissions.COMMENT_EDIT_ALL.label": "Modifier tous les commentaires",
+        "permissions.COMMENT_EDIT_ALL.description": "Modérer les discussions.",
+        "permissions.COMMENT_DELETE_OWN.label": "Supprimer vos commentaires (corbeille)",
+        "permissions.COMMENT_DELETE_OWN.description": "Retirer vos propres messages (vers la corbeille).",
+        "permissions.COMMENT_DELETE_ALL.label": "Supprimer tous les commentaires (corbeille)",
+        "permissions.COMMENT_DELETE_ALL.description": "Nettoyer les discussions (vers la corbeille).",
+        "permissions.COMMENT_HARD_DELETE_OWN.label": "Supprimer définitivement vos commentaires",
+        "permissions.COMMENT_HARD_DELETE_OWN.description": "Effacer irréversiblement vos propres messages.",
+        "permissions.COMMENT_HARD_DELETE_ALL.label": "Supprimer définitivement tous les commentaires",
+        "permissions.COMMENT_HARD_DELETE_ALL.description": "Action de modération irréversible sur les discussions.",
+        "permissions.ATTACHMENT_ADD.label": "Ajouter des fichiers",
+        "permissions.ATTACHMENT_ADD.description": "Envoyer des documents sur les tâches.",
+        "permissions.ATTACHMENT_DELETE_OWN.label": "Supprimer vos fichiers (corbeille)",
+        "permissions.ATTACHMENT_DELETE_OWN.description": "Retirer vos propres documents (vers la corbeille).",
+        "permissions.ATTACHMENT_DELETE_ALL.label": "Supprimer tous les fichiers (corbeille)",
+        "permissions.ATTACHMENT_DELETE_ALL.description": "Modérer les documents de l'Organ (vers la corbeille).",
+        "permissions.ATTACHMENT_HARD_DELETE_OWN.label": "Supprimer définitivement vos fichiers",
+        "permissions.ATTACHMENT_HARD_DELETE_OWN.description": "Effacer irréversiblement vos propres documents.",
+        "permissions.ATTACHMENT_HARD_DELETE_ALL.label": "Supprimer définitivement tous les fichiers",
+        "permissions.ATTACHMENT_HARD_DELETE_ALL.description": "Nettoyage définitif du stockage de l'Organ.",
+        "permissions.ORGAN_HARD_DELETE.label": "Supprimer définitivement l'Organ",
+        "permissions.ORGAN_HARD_DELETE.description": "Action critique : effacement complet de l'Organ et de ses données.",
+        "role_presets": {
+            "responsible": {
+                "name": "Responsable",
+                "description": "Contrôle total sur l'Organ, les rôles et toutes les tâches."
+            },
+            "manager": {
+                "name": "Manager",
+                "description": "Gère l'intégralité du cycle de vie des tâches, les assignations et les membres."
+            },
+            "participant": {
+                "name": "Participant",
+                "description": "Peut créer des tâches et gérer ses propres tickets et commentaires."
+            },
+            "reviewer": {
+                "name": "Correcteur",
+                "description": "Focus sur la revue, la validation et le changement de statut des tâches."
+            },
+            "tester": {
+                "name": "Testeur",
+                "description": "Rapporte des bugs et valide les corrections effectuées."
+            },
+            "observer": {
+                "name": "Observateur",
+                "description": "Accès en lecture seule avec possibilité de commenter."
+            },
+            "guest": {
+                "name": "Invité",
+                "description": "Accès très restreint, uniquement en lecture seule."
+            }
+        }
+    },
+    "settings": {
+        "error": {
+            "connection": "Erreur de connexion"
+        },
+        "devices": {
+            "empty": "Aucune session active trouvée.",
+            "error": {
+                "disconnect": "Échec de la déconnexion de l'appareil"
+            }
+        }
+    },
+    "task": {
+        "modal": {
+            "create_title": "Créer une nouvelle tâche",
+            "edit_title": "Modifier la tâche",
+            "loading": "Chargement de la tâche...",
+            "hints": {
+                "required": "(requis)",
+                "optional": "(facultatif)",
+                "priority_range": "Entre 1 (faible) et 10 (urgent)"
+            },
+            "fields": {
+                "title": "Titre de la tâche",
+                "description": "Description détaillée",
+                "status": "Statut",
+                "status_message": "Message de statut",
+                "statusMessage": "Message de statut",
+                "priority": "Priorité",
+                "estimated_hours": "Temps estimé (h)",
+                "estimatedHours": "Temps estimé (h)",
+                "start_date": "Date de début",
+                "startDate": "Date de début",
+                "expires_at": "Échéance",
+                "expiresAt": "Échéance",
+                "manager": "Responsable",
+                "assignees": "Assignés",
+                "assignee": "Assignation",
+                "deletedAt": "Date de suppression",
+                "deleted_at": "Date de suppression",
+                "tags": "Étiquettes",
+                "links": "Liens utiles",
+                "dependencies": "Dépendances",
+                "attachments": "Pièces jointes"
+            },
+            "placeholders": {
+                "title": "Ex: Finaliser le design de l'accueil",
+                "description": "Expliquez ici ce qui doit être fait...",
+                "status_message": "Expliquez pourquoi le statut a changé ou donnez des précisions..."
+            },
+            "buttons": {
+                "cancel": "Annuler",
+                "save": "Enregistrer les modifications",
+                "create": "Créer la tâche",
+                "delete": "Supprimer la tâche"
+            },
+            "confirm": {
+                "delete_title": "Supprimer la tâche ?",
+                "delete_message": "La tâche sera déplacée vers la corbeille de l'Organ.",
+                "delete_permanent_title": "Supprimer définitivement ?",
+                "delete_permanent_message": "Cette action est irréversible. La tâche et toutes ses données seront définitivement supprimées."
+            },
+            "status_labels": {
+                "TODO": "À faire",
+                "IN_PROGRESS": "En cours",
+                "WAITING": "En attente",
+                "DONE": "Terminé",
+                "CANCELED": "Annulé"
+            },
+            "empty": {
+                "manager": "Non assigné",
+                "tags": "Aucune étiquette définie dans le projet.",
+                "comments": "Aucun commentaire en corbeille.",
+                "attachments": "Aucun fichier en corbeille.",
+                "links": "Aucun lien en corbeille."
+            },
+            "error": {
+                "save_title": "Erreur de sauvegarde",
+                "save_generic": "Une erreur est survenue lors de l'enregistrement.",
+                "access_denied": "Accès refusé : vous n'avez pas les permissions nécessaires pour cette action.",
+                "upload": {
+                    "unsupported_format_no_cloud": "Ce format de fichier n'est pas supporté pour le stockage local. Veuillez configurer Google Drive dans les réglages du projet pour accepter tous les types de fichiers (ZIP, etc.).",
+                    "file_too_large_no_cloud": "Fichier trop volumineux pour le stockage local (max {limit} Mo). Veuillez compresser votre fichier ou configurer Google Drive pour lever cette limite."
+                }
+            }
+        },
+        "history": {
+            "title": "Historique",
+            "load_more": "Charger plus",
+            "types": {
+                "COMMENT": "Commentaire",
+                "HISTORY": "Activité",
+                "ATTACHMENT": "Fichier"
+            },
+            "actions": {
+                "CREATE": "a créé la tâche",
+                "UPDATE": "a modifié",
+                "STATUS_CHANGE": "a changé le statut",
+                "PRIORITY_CHANGE": "a changé la",
+                "COMMENT_ADD": "a ajouté un commentaire",
+                "COMMENT_CREATE": "a ajouté un commentaire",
+                "ATTACHMENT_ADD": "a ajouté une pièce jointe",
+                "LINK_ADD": "a ajouté un lien",
+                "ASSIGNEE_ADD": "a assigné la tâche à",
+                "ASSIGNEE_REMOVE": "a retiré l'assignation de",
+                "RESTORE": "a restauré",
+                "preposition_on": "sur",
+                "preposition_in": "dans"
+            }
+        }
+    }
+}

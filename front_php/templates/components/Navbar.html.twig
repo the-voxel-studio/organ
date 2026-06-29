@@ -1,0 +1,66 @@
+{# templates/components/_navbar_base.html.twig #}
+{% props hide_mobile_menu = false, brand_url = null %}
+<nav class="sticky top-0 z-50 bg-white/60 backdrop-blur-md border-b border-gray-100 shadow-sm" data-controller="mobile-menu scroll-spy">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-20">
+            
+            <div class="flex items-center">
+                <a href="{{ brand_url|default(path('app_home')) }}" class="flex items-center gap-3 group">
+                    <twig:DynamicLogo id="nav-logo" size="48px"/>
+                    <span class="text-2xl font-extrabold tracking-tight text-black">Organ</span>
+                </a>
+            </div>
+
+            <div class="hidden xl:flex items-center space-x-10">
+                {% block desktop_links %}{% endblock %}
+            </div>
+
+            <div class="hidden xl:flex items-center space-x-4">
+                {% block desktop_actions %}{% endblock %}
+            </div>
+
+            {% if not hide_mobile_menu %}
+                <div class="xl:hidden flex items-center ml-4">
+                    <button type="button" class="text-gray-500 hover:text-black focus:outline-none" data-action="click->mobile-menu#toggle">
+                        <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M4 18L20 18" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M4 12L20 12" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M4 6L20 6" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not hide_mobile_menu %}
+        <div class="hidden fixed inset-0 z-[100] w-[100vw] h-[100vh] overflow-y-auto bg-white transform -translate-y-full transition-transform duration-500 ease-in-out flex flex-col" data-mobile-menu-target="menu">
+            
+            <div class="container mx-auto px-4 sm:px-6">
+                <div class="flex justify-between items-center h-20">
+                    <div class="flex items-center gap-3">
+                        <a href="{{ brand_url|default(path('app_home')) }}" class="flex items-center gap-3 group">
+                            <twig:DynamicLogo id="nav-logo-mobile" size="48px"/>
+                            <span class="text-2xl font-extrabold tracking-tight text-black">Organ</span>
+                        </a>
+                    </div>
+                    <button type="button" class="text-gray-500 hover:text-black focus:outline-none p-2 -mr-2" data-action="click->mobile-menu#toggle">
+                        <svg class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-grow flex flex-col justify-center items-center gap-10 px-6">
+                {% block mobile_links %}{% endblock %}
+            </div>
+
+            <div class="p-8 border-t border-gray-100 bg-gray-50/80 backdrop-blur-sm">
+                <div class="container mx-auto flex flex-col gap-4">
+                    {% block mobile_actions %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</nav>

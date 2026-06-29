@@ -1,0 +1,38 @@
+<!-- Danger Zone -->
+<section class="bg-red-50/30 rounded-3xl border border-red-100 overflow-hidden">
+  <div class="p-8">
+    <div class="flex items-center gap-4 mb-6">
+      <div class="p-3 bg-red-100 rounded-2xl text-red-600">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+          <path d="M9.1709 4C9.58273 2.83481 10.694 2 12.0002 2C13.3064 2 14.4177 2.83481 14.8295 4" stroke="currentColor" stroke-linecap="round"></path>
+          <path d="M20.5001 6H3.5" stroke="currentColor"  stroke-linecap="round"></path>
+          <path d="M18.8332 8.5L18.3732 15.3991C18.1962 18.054 18.1077 19.3815 17.2427 20.1907C16.3777 21 15.0473 21 12.3865 21H11.6132C8.95235 21 7.62195 21 6.75694 20.1907C5.89194 19.3815 5.80344 18.054 5.62644 15.3991L5.1665 8.5" stroke="currentColor" stroke-linecap="round"></path>
+          <path d="M9.5 11L10 16" stroke="currentColor"  stroke-linecap="round"></path>
+          <path d="M14.5 11L14 16" stroke="currentColor"  stroke-linecap="round"></path>
+        </svg>
+      </div>
+      <div>
+        <h2 class="text-xl font-bold text-red-900">Supprimer le compte</h2>
+        <p class="text-sm text-red-700/60 font-medium">Cette action est irréversible. Toutes vos données seront perdues.</p>
+      </div>
+    </div>
+    <button type="button" (click)="onOpenDeleteModal()" class="px-8 py-4 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl shadow-lg shadow-red-200 transition-all active:scale-[0.98] cursor-pointer">
+      Supprimer mon compte Organ
+    </button>
+  </div>
+</section>
+
+<!-- Generic Confirmation Modal for Account Deletion -->
+<app-confirmation-modal
+  [isOpen]="isDeleteModalOpen"
+  [title]="'Désactiver le compte ?'"
+  [message]="'Votre compte sera immédiatement <span class=\'text-red-600 font-bold text-base uppercase\'>désactivé</span> pour une période de <span class=\'text-black font-bold\'>30 jours</span>.<br/><br/>Pendant ce délai, vos données resteront conservées mais vous ne serez plus visible. À l\'issue de ces 30 jours, votre compte et toutes ses données seront <span class=\'text-black font-bold italic\'>définitivement supprimés</span>.'"
+  [infoTitle]="'Comment annuler ?'"
+  [infoText]="'Il vous suffit de vous reconnecter à votre compte Organ avant la fin du délai de 30 jours pour annuler automatiquement la procédure de suppression.'"
+  [confirmLabel]="'Confirmer la désactivation'"
+  [cancelLabel]="'Annuler'"
+  [type]="'danger'"
+  [isLoading]="isDeleteLoading"
+  (confirm)="confirmDeleteAccount()"
+  (cancel)="isDeleteModalOpen = false">
+</app-confirmation-modal>

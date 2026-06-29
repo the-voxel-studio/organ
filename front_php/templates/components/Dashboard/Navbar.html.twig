@@ -1,0 +1,16 @@
+{% props hide_mobile_menu = false %}
+<twig:Navbar
+	brand_url="{{ path('app_dashboard') }}"
+	hide_mobile_menu="{{ hide_mobile_menu }}">
+
+	{# --- ACTIONS DESKTOP --- #}
+	<twig:block name="desktop_actions">
+		{# La Navbar est volontairement épurée (les notifications sont dans la Sidebar) #}
+	</twig:block>
+
+	{# --- ACTIONS MOBILE --- #}
+	<twig:block name="mobile_actions">
+		{# La Navbar est volontairement épurée #}
+	</twig:block>
+
+</twig:Navbar>

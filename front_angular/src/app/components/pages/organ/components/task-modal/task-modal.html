@@ -1,0 +1,223 @@
+<div *ngIf="isOpen()" class="fixed inset-0 z-[100] flex justify-end">
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 pointer-events-auto"
+       [class.opacity-100]="backdropVisible()"
+       [class.opacity-0]="!backdropVisible()"
+       (click)="close()">
+  </div>
+
+  <!-- Panel -->
+  <div class="relative w-full md:w-[600px] lg:w-[800px] bg-white shadow-2xl transition-transform duration-300 ease-in-out flex flex-col h-full pointer-events-auto transform z-10"
+       [class.translate-x-0]="panelVisible()"
+       [class.translate-x-full]="!panelVisible()">
+      
+      <!-- Header -->
+      <header class="p-6 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white z-10">
+          <div class="flex flex-col">
+              <h2 class="text-xl font-bold text-black">
+                  {{ taskId() ? 'Modifier la tâche' : 'Créer une nouvelle tâche' }}
+              </h2>
+              <div *ngIf="taskId()" class="flex items-center gap-2 mt-1">
+                  <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">UUID: {{ taskId()!.substring(0,8) }}</span>
+                  <span class="text-[10px] font-bold text-gray-300">•</span>
+                  <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Créée le : {{ formatDateString(taskData?.createdAt) }}</span>
+              </div>
+          </div>
+          <div class="flex items-center gap-2">
+              <!-- Restore Button -->
+              <button *ngIf="isTaskTrashed() && hasPerm('TASK_RESTORE', isTaskOwner())"
+                      (click)="restoreTask()" 
+                      class="px-4 py-2 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l5 5m-5-5l5-5"/></svg>
+                  Restaurer
+              </button>
+              
+              <!-- Soft/Hard Delete Button -->
+              <button *ngIf="taskId() && (isTaskTrashed() ? hasPerm('TASK_HARD_DELETE', isTaskOwner()) : hasPerm('TASK_DELETE', isTaskOwner()))"
+                      (click)="deleteTask()" 
+                      class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                      [title]="isTaskTrashed() ? 'Supprimer définitivement' : 'Supprimer la tâche'">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              </button>
+              
+              <button (click)="close()" class="p-2 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+          </div>
+      </header>
+
+      <!-- Content -->
+      <div class="flex-grow overflow-y-auto custom-scrollbar bg-gray-50/30">
+          <div class="p-8 space-y-12 pb-32">
+              
+              <!-- Loader -->
+              <div *ngIf="isLoading()" class="space-y-8 animate-pulse">
+                  <div class="h-10 bg-gray-200 rounded-2xl w-3/4"></div>
+                  <div class="h-40 bg-gray-200 rounded-2xl"></div>
+                  <div class="grid grid-cols-2 gap-8">
+                      <div class="h-12 bg-gray-200 rounded-2xl"></div>
+                      <div class="h-12 bg-gray-200 rounded-2xl"></div>
+                  </div>
+              </div>
+
+              <!-- Form & Sub-resources content -->
+              <div *ngIf="!isLoading()" class="space-y-12">
+                  <app-task-basic-info
+                      [taskForm]="taskForm"
+                      [taskId]="taskId()"
+                      [highlightColor]="highlightColor"
+                      [isTaskTrashed]="isTaskTrashed()"
+                      [initialStatus]="initialStatus"
+                      [members]="members"
+                      [projectTags]="projectTags"
+                      [organTasks]="organTasks"
+                      [assignees]="assignees"
+                      [tags]="tags"
+                      [dependencies]="dependencies"
+                      [stagedAssignees]="stagedAssignees"
+                      [stagedTags]="stagedTags"
+                      [stagedDependencies]="stagedDependencies"
+                      [currentPerms]="currentPerms"
+                      [editableFields]="editableFields"
+                      (assigneeAdded)="addAssignee($event)"
+                      (assigneeRemoved)="removeAssignee($event)"
+                      (tagAdded)="addTag($event)"
+                      (tagRemoved)="removeTag($event)"
+                      (dependencyAdded)="addDependency($event)"
+                      (dependencyRemoved)="removeDependency($event)">
+                  </app-task-basic-info>
+
+                  <div class="pt-8 border-t border-gray-100">
+                      <app-task-links
+                          [links]="links"
+                          [highlightColor]="highlightColor"
+                          [isTaskTrashed]="isTaskTrashed()"
+                          [canManageLinks]="!isTaskTrashed() && hasPerm('TASK_LINK_MANAGE', isTaskOwner())"
+                          (linkAdded)="addLink($event)"
+                          (linkRemoved)="removeLink($event)">
+                      </app-task-links>
+                  </div>
+
+                  <div *ngIf="taskId()" class="pt-8 border-t border-gray-100">
+                      <app-task-attachments
+                          [projectUuid]="projectUuid"
+                          [organUuid]="organUuid"
+                          [taskId]="taskId()!"
+                          [attachments]="attachments"
+                          [highlightColor]="highlightColor"
+                          [isTaskTrashed]="isTaskTrashed()"
+                          [canAddAttachment]="!isTaskTrashed() && hasPerm('ATTACHMENT_ADD', isTaskOwner())"
+                          [canDeleteAttachment]="!isTaskTrashed() && hasPerm('ATTACHMENT_DELETE', isTaskOwner())"
+                          (attachmentChanged)="refreshTaskData()"
+                          (uploadStateChange)="isUploading.set($event)"
+                          (errorOccurred)="showError($event.title, $event.message)">
+                      </app-task-attachments>
+                  </div>
+
+                  <div *ngIf="taskId()" class="pt-8 border-t border-gray-100">
+                      <app-task-comments
+                          [comments]="comments"
+                          [highlightColor]="highlightColor"
+                          [isTaskTrashed]="isTaskTrashed()"
+                          [currentUserId]="authService.currentUser()?.uuid || ''"
+                          [canAddComment]="!isTaskTrashed() && hasPerm('COMMENT_CREATE', isTaskOwner())"
+                          [hasCommentDeleteAll]="hasPerm('COMMENT_DELETE_ALL')"
+                          [hasCommentDeleteOwn]="hasPerm('COMMENT_DELETE_OWN')"
+                          (commentAdded)="addComment($event)"
+                          (commentDeleted)="deleteComment($event)">
+                      </app-task-comments>
+                  </div>
+
+                  <div *ngIf="taskId() && timeline.length > 0" class="pt-8 border-t border-gray-100">
+                      <app-task-timeline
+                          [timeline]="timeline"
+                          [hasMoreTimeline]="hasMoreTimeline()"
+                          [highlightColor]="highlightColor"
+                          (loadMore)="loadTimeline(true)">
+                      </app-task-timeline>
+                  </div>
+
+                  <!-- Task Trash / Restoration Section (Only visible in edit mode) -->
+                  <div *ngIf="taskId()" class="pt-12 border-t border-gray-100 space-y-6">
+                      <div class="flex items-center justify-between">
+                          <h3 class="text-xs font-black uppercase tracking-widest text-gray-400 flex items-center gap-2">
+                              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                              Corbeille de la tâche
+                          </h3>
+                          <button (click)="toggleTrash()" class="text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[var(--highlight-color)] transition-colors cursor-pointer" [style.--highlight-color]="highlightColor">
+                              {{ isTrashOpen() ? 'Masquer' : 'Afficher' }}
+                          </button>
+                      </div>
+
+                      <app-task-trash-tab *ngIf="isTrashOpen()"
+                          [deletedAttachments]="deletedAttachments"
+                          [deletedComments]="deletedComments"
+                          [highlightColor]="highlightColor"
+                          [hasAttachmentHardDeletePerm]="hasPerm('ATTACHMENT_HARD_DELETE', isTaskOwner())"
+                          [hasCommentDeletePerm]="hasPerm('COMMENT_DELETE', isTaskOwner())"
+                          (restoreAttachment)="restoreAttachment($event)"
+                          (hardDeleteAttachment)="hardDeleteAttachment($event)"
+                          (restoreComment)="restoreComment($event)"
+                          (hardDeleteComment)="hardDeleteComment($event)">
+                      </app-task-trash-tab>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <!-- Sticky Footer -->
+      <footer *ngIf="!isTaskTrashed() && !isLoading()" class="p-6 bg-white border-t border-gray-100 flex justify-end shrink-0 z-20">
+          <button type="button" (click)="saveTask()" class="px-10 py-4 bg-black text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-black/90 transition-all shadow-lg active:scale-95 flex items-center gap-2 cursor-pointer">
+              <span>{{ taskId() ? 'Enregistrer les modifications' : 'Créer la tâche' }}</span>
+          </button>
+      </footer>
+  </div>
+</div>
+
+<!-- In-App Confirmation Modal -->
+<div *ngIf="showConfirmModal()" class="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" (click)="cancelConfirm()"></div>
+  <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
+      <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      </div>
+      
+      <div class="text-center space-y-2">
+          <h3 class="text-xl font-bold text-gray-900">{{ confirmTitle }}</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">{{ confirmMessage }}</p>
+      </div>
+
+      <div class="flex flex-col gap-3 pt-2">
+          <button type="button" (click)="executeConfirm()" 
+                  class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-[0.98] cursor-pointer">
+              Confirmer
+          </button>
+          <button type="button" (click)="cancelConfirm()" 
+                  class="w-full py-4 bg-white border border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-50 transition-all cursor-pointer">
+              Annuler
+          </button>
+      </div>
+  </div>
+</div>
+
+<!-- Error Modal -->
+<div *ngIf="showErrorModal()" class="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" (click)="hideError()"></div>
+  <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
+      <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      </div>
+      
+      <div class="text-center space-y-2">
+          <h3 class="text-xl font-bold text-gray-900">{{ errorTitle }}</h3>
+          <p class="text-sm text-gray-500 leading-relaxed">{{ errorMessage }}</p>
+      </div>
+
+      <div class="pt-2">
+          <button type="button" (click)="hideError()" 
+                  class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-[0.98] cursor-pointer">
+              OK
+          </button>
+      </div>
+  </div>
+</div>

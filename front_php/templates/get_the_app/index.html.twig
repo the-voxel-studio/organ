@@ -1,0 +1,59 @@
+{% extends 'layouts/base_layout.html.twig' %}
+
+{% block title %}{{ 'title'|trans({}, 'get_the_app') }}{% endblock %}
+
+{% block body %}
+<div class="min-h-[85vh] flex flex-col items-center justify-center relative overflow-hidden">
+    <!-- Éléments de décoration en arrière-plan -->
+    <div class="absolute top-0 left-0 w-full h-full -z-10 opacity-10 pointer-events-none">
+        <div class="absolute top-10 left-10 w-64 h-64 bg-bubblegum rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 right-10 w-80 h-80 bg-light-blue rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="max-w-2xl w-full text-center space-y-10">
+        <!-- Logo ou Icône décorative -->
+        <div class="flex justify-center">
+            <div class="w-24 h-24 bg-bubblegum/20 rounded-3xl flex items-center justify-center rotate-3 hover:rotate-6 transition-transform duration-300 shadow-xl shadow-bubblegum/10">
+                <svg class="w-14 h-14 text-bubblegum" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <h1 class="text-5xl font-black tracking-tight text-black sm:text-6xl">
+                {{ 'header'|trans({}, 'get_the_app') }}
+            </h1>
+            <p class="text-xl text-gray-600 max-w-lg mx-auto leading-relaxed">
+                {{ 'description'|trans({}, 'get_the_app') }}
+            </p>
+        </div>
+
+        <div class="pt-8">
+            <div class="flex flex-col items-center space-y-6">
+                <a href="#" class="group relative inline-flex items-center justify-center px-10 py-4 font-bold text-white transition-all duration-200 bg-bubblegum rounded-2xl hover:bg-bubblegum/90 focus:outline-none focus:ring-4 focus:ring-bubblegum/30 shadow-lg shadow-bubblegum/40 active:scale-95">
+                    <svg class="w-7 h-7 mr-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.523 15.3414L20.355 12.1567L17.523 8.97194L17.523 15.3414ZM3.60156 2.55104C3.41468 2.68065 3.3323 2.88722 3.3323 3.13175V20.8682C3.3323 21.1127 3.41468 21.3193 3.60156 21.4489L12.5085 12.1567L3.60156 2.55104ZM13.8016 13.5048L16.223 15.939L4.823 22.1894C5.07119 22.3168 5.37894 22.3129 5.67381 22.1501L13.8016 13.5048ZM13.8016 10.8087L5.67381 2.16335C5.37894 2.00055 5.07119 1.99661 4.823 2.12404L16.223 8.37446L13.8016 10.8087Z"/>
+                    </svg>
+                    <span class="text-lg">{{ 'play_store'|trans({}, 'get_the_app') }}</span>
+                </a>
+
+                <div class="p-6 bg-off-white/80 backdrop-blur-sm border border-bubblegum/20 rounded-2xl max-w-sm">
+                    <p class="text-sm font-medium text-black italic">
+                        {{ 'ios_not_available'|trans({}, 'get_the_app') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-16 border-t border-gray-100 mt-12">
+            <p class="text-gray-500 font-medium">
+                {{ 'desktop_prompt'|trans({}, 'get_the_app') }} 
+                <a href="{{ path('app_home') }}" class="inline-block ml-2 text-bubblegum hover:text-bubblegum/80 underline decoration-2 underline-offset-4 transition-all hover:scale-105">
+                    {{ 'web_version_link'|trans({}, 'get_the_app') }}
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

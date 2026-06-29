@@ -1,7 +1,7 @@
 gesdinet_jwt_refresh_token:
     refresh_token_class: App\Entity\UserSession
     manager_type: orm
-    ttl: 2592000 # 30 days
+    ttl: 2592000 # 1 month
     ttl_update: true
     cookie:
         enabled: true
@@ -9,5 +9,5 @@ gesdinet_jwt_refresh_token:
         path: /
         domain: null
         http_only: true
-        secure: true
+        secure: '%env(bool:COOKIE_SECURE)%'
         remove_token_from_body: true

@@ -1,0 +1,210 @@
+<div
+  class="chatbot-panel flex flex-col w-96 max-w-[calc(100vw-2rem)] h-[550px] max-h-[calc(100vh-6rem)] rounded-2xl overflow-hidden"
+  [class.open]="isOpen">
+  <!-- HEADER -->
+  <div class="flex items-center justify-between px-4 py-3 bg-[#0D0630]/60 border-b border-white/10 shrink-0">
+    <div class="flex items-center gap-2.5">
+      <!-- Petit indicateur actif -->
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF7DD4] opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FF7DD4]"></span>
+      </span>
+      <div>
+        <h3 class="text-sm font-bold text-white leading-none">Assistant Organ</h3>
+        <span class="text-[10px] text-white/50 font-medium">Tuteur & Guide IA</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <!-- Reset Chat Button -->
+      <button (click)="resetChat()"
+        class="control-btn p-1.5 rounded-lg cursor-pointer flex items-center justify-center text-white/60 hover:text-[#FF7DD4]"
+        title="Réinitialiser la conversation">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0 0 13.803 -3.7M4.031 9.865a8.25 8.25 0 0 1 13.803 -3.7l3.181 3.182m0-4.991v4.99" />
+        </svg>
+      </button>
+
+      <!-- Help Button -->
+      <button (click)="toggleHelp()"
+        class="control-btn p-1.5 rounded-lg cursor-pointer flex items-center justify-center text-white/60 hover:text-[#FF7DD4]"
+        [class.text-[#FF7DD4]]="showHelp"
+        title="Aide & Guide des commandes">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+        </svg>
+      </button>
+
+      <!-- Close Button -->
+      <button (click)="toggleChat()" class="control-btn p-1.5 rounded-lg cursor-pointer" title="Masquer le tuteur">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- HISTORIQUE DES MESSAGES -->
+  <div #chatHistoryContainer
+    class="chatbot-chat-history flex-grow overflow-y-auto p-4 flex flex-col gap-4 bg-[#0D0630]/20 scroll-smooth">
+
+    <!-- Message initial de bienvenue si vide -->
+    @if (messages.length === 0) {
+    <div class="bubble-assistant p-3.5 text-xs leading-relaxed max-w-[85%] self-start flex flex-col gap-2">
+      <div>
+        Bonjour ! Je suis votre <strong>assistant virtuel</strong>. Je connais parfaitement le fonctionnement d'<strong>Organ</strong>.
+      </div>
+      <div>
+        Vous pouvez utiliser les commandes guidées suivantes pour m'indiquer vos intentions et éviter les requêtes vides :
+      </div>
+      <div class="flex flex-col gap-1.5 mt-1">
+        <button (click)="insertCommand('/create ')" class="text-left text-xs bg-white/5 hover:bg-white/10 px-2 py-1.5 rounded border border-white/10 text-white transition-all cursor-pointer">
+          <code class="text-[#FF7DD4] font-bold">/create</code> : Créer projets, organes, rôles, tâches
+        </button>
+        <button (click)="insertCommand('/edit ')" class="text-left text-xs bg-white/5 hover:bg-white/10 px-2 py-1.5 rounded border border-white/10 text-white transition-all cursor-pointer">
+          <code class="text-[#FF7DD4] font-bold">/edit</code> : Modifier ou mettre à jour des tâches
+        </button>
+        <button (click)="insertCommand('/role ')" class="text-left text-xs bg-white/5 hover:bg-white/10 px-2 py-1.5 rounded border border-white/10 text-white transition-all cursor-pointer">
+          <code class="text-[#FF7DD4] font-bold">/role</code> : Configurer un rôle dans un organe
+        </button>
+        <button (click)="insertCommand('/ask ')" class="text-left text-xs bg-white/5 hover:bg-white/10 px-2 py-1.5 rounded border border-white/10 text-white transition-all cursor-pointer">
+          <code class="text-[#FF7DD4] font-bold">/ask</code> : Poser une question générale (par défaut)
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- Affichage des messages réels -->
+    @for (msg of messages; track $index) {
+    <div
+      [class]="msg.role === 'user' ? 'bubble-user p-3 text-xs leading-relaxed max-w-[85%] self-end break-words' : 'bubble-assistant p-3.5 text-xs leading-relaxed max-w-[85%] self-start break-words'"
+      [innerHTML]="renderMarkdown(msg.content)">
+    </div>
+    }
+
+    <!-- Indicateur de chargement (Typing) -->
+    @if (isLoading) {
+    <div class="bubble-assistant p-3.5 rounded-2xl self-start flex items-center gap-1.5 shrink-0">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+    </div>
+    }
+  </div>
+
+  <!-- FOOTER / ZONE DE SAISIE -->
+  <div class="p-3 bg-[#0D0630]/40 border-t border-white/5 flex flex-col gap-2.5 shrink-0">
+    <!-- Commutateur d'autorisation d'actions -->
+    <div class="flex items-center justify-between px-1">
+      <label class="flex items-center gap-2 cursor-pointer select-none text-[10px] text-white/60 hover:text-white/80 transition-colors">
+        <input type="checkbox" [(ngModel)]="actionsEnabled" class="sr-only peer">
+        <div class="relative w-7 h-4 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-[#FF7DD4]"></div>
+        <span class="font-bold flex items-center gap-1">
+          Autoriser l'IA à effectuer des actions
+        </span>
+      </label>
+      
+      @if (actionsEnabled) {
+        <span class="text-[9px] text-[#FF7DD4] font-semibold tracking-wide uppercase">Actions Actives</span>
+      } @else {
+        <span class="text-[9px] text-white/30 font-semibold tracking-wide uppercase">Lecture Seule</span>
+      }
+    </div>
+
+    <div class="flex gap-2 items-center">
+      <!-- SELECTEUR DE COMMANDE -->
+      <select [(ngModel)]="activeCommand" (change)="onCommandChange()"
+        class="bg-[#0D0630]/80 border border-white/10 text-white text-xs rounded-xl px-2 py-2 focus:outline-none focus:border-[#FF7DD4]/50 cursor-pointer transition-all font-semibold shrink-0 max-w-[85px] h-9">
+        <option value="ask">💬 /ask</option>
+        <option value="create">➕ /create</option>
+        <option value="edit">✏️ /edit</option>
+        <option value="role">🛡️ /role</option>
+      </select>
+
+      <input #chatInput type="text" [(ngModel)]="inputValue" (input)="onInputChange()" (keydown.enter)="sendMessage()"
+        placeholder="Saisissez votre demande..."
+        class="flex-grow bg-[#0D0630]/60 border border-white/10 text-white placeholder-white/40 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-[#FF7DD4]/50 transition-all font-medium h-9"
+        [disabled]="isLoading">
+
+      <button (click)="sendMessage()" [disabled]="isLoading || !inputValue.trim()"
+        class="w-9 h-9 flex items-center justify-center rounded-xl bg-[#FF7DD4] hover:bg-[#f767c2] text-[#0D0630] disabled:bg-white/10 disabled:text-white/30 cursor-pointer disabled:cursor-not-allowed transition-all duration-200 shrink-0">
+        <svg class="w-4 h-4 transform rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+            d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- OVERLAY MINI-PAGE D'AIDE -->
+  @if (showHelp) {
+  <div class="absolute inset-x-0 bottom-[56px] top-[48px] bg-[#0D0630]/95 backdrop-blur-md z-[100] p-4 overflow-y-auto text-white flex flex-col gap-4 animate-fade-in">
+    <div class="flex items-center justify-between border-b border-white/10 pb-2">
+      <h4 class="text-xs font-bold text-[#FF7DD4] flex items-center gap-1.5 uppercase tracking-wider">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
+        </svg>
+        Guide & Actions IA
+      </h4>
+      <button (click)="toggleHelp()" class="text-white/60 hover:text-white text-[11px] cursor-pointer">Fermer</button>
+    </div>
+
+    <!-- COMMANDES DE SAISIE -->
+    <div class="flex flex-col gap-3 text-xs text-white/80">
+      <h5 class="text-[11px] font-bold text-[#FF7DD4] uppercase tracking-wider border-b border-white/5 pb-1">💬 Commandes disponibles</h5>
+      <div>
+        <div class="font-bold text-white mb-0.5">/ask [question]</div>
+        <p class="leading-relaxed pl-3 border-l border-[#FF7DD4]/20">Pose des questions d'explication ou d'utilisation d'Organ (mode par défaut).</p>
+      </div>
+
+      <div>
+        <div class="font-bold text-white mb-0.5">/create [description]</div>
+        <p class="leading-relaxed pl-3 border-l border-[#FF7DD4]/20">Indique à l'IA de concevoir et créer un nouvel élément.</p>
+      </div>
+
+      <div>
+        <div class="font-bold text-white mb-0.5">/edit [instructions]</div>
+        <p class="leading-relaxed pl-3 border-l border-[#FF7DD4]/20">Indique à l'IA de modifier ou mettre à jour un élément existant.</p>
+      </div>
+
+      <div>
+        <div class="font-bold text-white mb-0.5">/role [details]</div>
+        <p class="leading-relaxed pl-3 border-l border-[#FF7DD4]/20">Crée et configure un nouveau rôle au sein de l'organe.</p>
+      </div>
+    </div>
+
+    <!-- ACTIONS DE L'IA -->
+    <div class="border-t border-white/10 pt-3 flex flex-col gap-2">
+      <h5 class="text-[11px] font-bold text-[#355EE4] uppercase tracking-wider border-b border-white/5 pb-1">🤖 Actions exécutables par l'IA</h5>
+      <p class="text-[11px] text-white/70 leading-relaxed">
+        L'IA peut automatiser et effectuer de réelles actions sur votre espace de travail :
+      </p>
+      <ul class="text-[11px] text-white/80 list-disc pl-5 flex flex-col gap-1.5">
+        <li><strong>Navigation</strong> : redirection automatique vers les différentes pages de l'application (projets, organes, corbeille).</li>
+        <li><strong>Création</strong> : conception et création complète de projets ou d'organes avec couleurs et icônes.</li>
+        <li><strong>Copier-coller</strong> : duplication de rôles et de leurs permissions d'un organe à un autre.</li>
+        <li><strong>Gestion des tâches</strong> : ajout de nouvelles tâches ou modification instantanée des priorités, descriptions et statuts.</li>
+      </ul>
+      
+      <!-- COMMUTATEUR -->
+      <p class="text-[10.5px] text-white/60 leading-relaxed mt-1">
+        💡 Vous pouvez activer ou bloquer ces actions à tout moment grâce au bouton <strong>"Autoriser l'IA à effectuer des actions"</strong> présent en bas du panneau.
+      </p>
+
+      <!-- RECOMMANDATION ÉTAPE PAR ÉTAPE -->
+      <div class="mt-2 p-2.5 bg-[#FF7DD4]/10 border border-[#FF7DD4]/30 rounded-xl flex flex-col gap-1">
+        <span class="text-[10px] font-bold text-[#FF7DD4] flex items-center gap-1.5">
+          ⚠️ Recommandation d'usage importante
+        </span>
+        <p class="text-[10.5px] text-white/90 leading-relaxed">
+          Pour éviter toute action imprévue ou erronée, formulez vos demandes <strong>étape par étape</strong> (ex: d'abord créer l'organe, vérifier le résultat, puis demander d'y ajouter des rôles et des tâches).
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-auto border-t border-white/10 pt-2 text-[10px] text-white/40 text-center">
+      Sélectionnez la commande dans la liste du bas ou cliquez sur ses boutons raccourcis.
+    </div>
+  </div>
+  }
+</div>

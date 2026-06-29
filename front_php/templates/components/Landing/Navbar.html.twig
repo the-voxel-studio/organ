@@ -1,0 +1,64 @@
+{% set links = [
+    {'id': 'features', 'label': 'navbar.features'|trans({}, 'landing')},
+    {'id': 'collaboration', 'label': 'navbar.collaboration'|trans({}, 'landing')},
+    {'id': 'use-cases', 'label': 'navbar.use_cases'|trans({}, 'landing')},
+    {'id': 'about', 'label': 'navbar.about'|trans({}, 'landing')},
+    {'id': 'social-proof', 'label': 'navbar.social_proof'|trans({}, 'landing')}
+] %}
+
+<twig:Navbar>
+    
+    {# --- LIENS DESKTOP --- #}
+    <twig:block name="desktop_links">
+        {% for link in links %}
+            <a href="#{{ link.id }}" 
+               data-scroll-spy-target="link"
+               class="relative text-gray-600 hover:text-black font-bold transition-all text-xs uppercase tracking-widest py-2 group">
+                {{ link.label }}
+                <span class="nav-indicator absolute bottom-0 left-0 w-full h-1 bg-bubblegum rounded-full transform scale-x-0 transition-transform duration-300 origin-left group-hover:scale-x-100"></span>
+            </a>
+        {% endfor %}
+    </twig:block>
+
+    {# --- ACTIONS DESKTOP --- #}
+    <twig:block name="desktop_actions">
+        {% if app.user %}
+            <a href="{{ path('app_dashboard') }}" class="bg-bubblegum hover:bg-bubblegum/90 text-white font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-bubblegum/20 transition-all transform hover:-translate-y-0.5">
+                {{ 'navbar.dashboard'|trans({}, 'landing') }}
+            </a>
+        {% else %}
+            <a href="{{ path('app_login') }}" class="text-gray-600 hover:text-black font-semibold px-4 py-2 transition-colors">
+                {{ 'navbar.login'|trans({}, 'landing') }}
+            </a>
+            <a href="{{ path('app_register') }}" class="bg-bubblegum hover:bg-bubblegum/90 text-white font-bold px-6 py-2.5 rounded-full shadow-lg hover:shadow-bubblegum/20 transition-all transform hover:-translate-y-0.5">
+                {{ 'navbar.register'|trans({}, 'landing') }}
+            </a>
+        {% endif %}
+    </twig:block>
+
+    {# --- LIENS MOBILE --- #}
+    <twig:block name="mobile_links">
+        {% for link in links %}
+            <a href="#{{ link.id }}" class="text-3xl text-black hover:text-bubblegum font-black uppercase tracking-[0.2em] transition-all transform hover:scale-110" data-action="click->mobile-menu#toggle">
+                {{ link.label }}
+            </a>
+        {% endfor %}
+    </twig:block>
+
+    {# --- ACTIONS MOBILE --- #}
+    <twig:block name="mobile_actions">
+        {% if app.user %}
+            <a href="{{ path('app_dashboard') }}" class="text-center bg-bubblegum hover:bg-bubblegum/90 text-white font-black py-5 rounded-2xl shadow-xl shadow-bubblegum/20 text-xl uppercase tracking-widest transition-transform active:scale-95">
+                {{ 'navbar.dashboard'|trans({}, 'landing') }}
+            </a>
+        {% else %}
+            <a href="{{ path('app_login') }}" class="text-center text-gray-800 hover:text-black font-bold py-4 border-2 border-gray-200 rounded-2xl transition-colors text-lg bg-white">
+                {{ 'navbar.login'|trans({}, 'landing') }}
+            </a>
+            <a href="{{ path('app_register') }}" class="text-center bg-bubblegum hover:bg-bubblegum/90 text-white font-black py-5 rounded-2xl shadow-xl shadow-bubblegum/20 text-xl uppercase tracking-widest transition-transform active:scale-95">
+                {{ 'navbar.register'|trans({}, 'landing') }}
+            </a>
+        {% endif %}
+    </twig:block>
+
+</twig:Navbar>

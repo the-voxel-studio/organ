@@ -1,0 +1,345 @@
+{% extends 'layouts/logged/sidebar_layout.html.twig' %}
+
+{% block title %}{{ 'organ.trash.title'|trans({'title': organ.title}) }}{% endblock %}
+
+{% block content %}
+{% set highlight_color = organ.highlightColor|default('#FF7DD4') %}
+{% set canManageTasks = 'TASK_DELETE' in userPermissions or 'ORGAN_EDIT' in userPermissions or 'ALL' in userPermissions %}
+{% set canManageRoles = 'ORGAN_MANAGE_ROLES' in userPermissions or 'ORGAN_EDIT' in userPermissions or 'ALL' in userPermissions %}
+{% set canManageLinks = 'ORGAN_LINK_MANAGE' in userPermissions or 'ALL' in userPermissions %}
+
+<div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8" 
+     data-controller="organ-trash" 
+     data-organ-trash-api-url-value="/api"
+     data-organ-trash-project-uuid-value="{{ project.uuid }}"
+     data-organ-trash-organ-uuid-value="{{ organ.uuid }}">
+    
+    <header class="mb-12">
+        <div class="flex items-center justify-between mb-6">
+            <a href="{{ path('app_organ_show', {projectUuid: project.uuid, organUuid: organ.uuid}) }}" class="flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-black transition-colors group">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-1 transition-transform">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+                {{ 'organ.trash.back_to_organ'|trans }}
+            </a>
+        </div>
+
+        <div class="flex items-end justify-between">
+            <div>
+                <h1 class="text-4xl font-black text-black mb-2 flex items-center gap-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10 text-red-500">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                    </svg>
+                    {{ 'organ.trash.title'|trans({'title': organ.title}) }}
+                </h1>
+                <p class="text-gray-500 font-medium italic">{{ 'organ.trash.subtitle'|trans }}</p>
+            </div>
+            
+            <div class="relative w-64">
+                <input type="text" 
+                       data-organ-trash-target="searchInput"
+                       data-action="input->organ-trash#search"
+                       placeholder="{{ 'organ.trash.search_placeholder'|trans }}" 
+                       class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-100 rounded-2xl text-sm transition-all focus:border-[{{ highlight_color }}] outline-none shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+            </div>
+        </div>
+    </header>
+
+    {% if trashedTasks|length > 0 or trashedRoles|length > 0 or trashedMembers|length > 0 or trashedLinks|length > 0 %}
+        
+        {# --- TASKS SECTION --- #}
+        {% if canManageTasks %}
+            <section data-organ-trash-target="tasksSection" class="trash-section mb-12 {% if trashedTasks|length == 0 %}hidden{% endif %}">
+                <div class="flex items-center justify-between mb-6">
+                    <button type="button" 
+                            data-action="click->organ-trash#toggleSection"
+                            class="flex items-center gap-3 group cursor-pointer">
+                        <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
+                            <span class="w-8 h-[1px] bg-gray-100"></span>
+                            {{ 'organ.trash.sections.tasks'|trans }}
+                        </h2>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-organ-trash-target="chevron">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    {% if 'TASK_DELETE_ALL' in userPermissions or 'ORGAN_EDIT' in userPermissions or 'ALL' in userPermissions %}
+                        <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-blue-100">{{ 'organ.trash.filters.all_tasks'|trans }}</span>
+                    {% else %}
+                        <span class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-amber-100">{{ 'organ.trash.filters.my_tasks'|trans }}</span>
+                    {% endif %}
+                </div>
+                <div class="space-y-4" data-organ-trash-target="content">
+                    {% for task in trashedTasks %}
+                        <div class="trash-item bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-6 hover:shadow-md transition-all duration-300 cursor-pointer"
+                             data-organ-trash-target="item"
+                             data-type="task"
+                             data-action="click->task-modal#openForEdit"
+                             data-task-modal-uuid-param="{{ task.uuid }}"
+                             data-task-modal-is-trash-param="true"
+                             data-search="{{ task.title }}">
+                            <div class="flex items-center gap-6 min-w-0">
+                                <div class="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 shrink-0 border border-slate-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.375M9 18h3.375m4.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25L13.125 6Z" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <h3 class="text-lg font-bold text-black truncate">{{ task.title }}</h3>
+                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
+                                        {{ 'organ.trash.actions.deleted_at'|trans({'date': task.deletedAt|date('d/m/Y à H:i')}) }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2" data-action="click->stopImmediatePropagation">
+                                <button type="button" 
+                                        data-action="click->organ-trash#restore"
+                                        data-type="task"
+                                        data-uuid="{{ task.uuid }}"
+                                        class="px-5 py-2.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                                    {{ 'organ.trash.actions.restore'|trans }}
+                                </button>
+                                <button type="button" 
+                                        data-action="click->organ-trash#removePermanent"
+                                        data-type="task"
+                                        data-uuid="{{ task.uuid }}"
+                                        data-title="{{ task.title }}"
+                                        class="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
+                                        title="{{ 'project.trash.delete_permanent_btn'|trans }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {# --- ROLES SECTION --- #}
+        {% if canManageRoles %}
+            <section data-organ-trash-target="rolesSection" class="trash-section mb-12 {% if trashedRoles|length == 0 %}hidden{% endif %}">
+                <button type="button" 
+                        data-action="click->organ-trash#toggleSection"
+                        class="w-full flex items-center justify-between mb-6 group cursor-pointer">
+                    <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
+                        <span class="w-8 h-[1px] bg-gray-100"></span>
+                        {{ 'organ.trash.sections.roles'|trans }}
+                    </h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-organ-trash-target="chevron">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div class="space-y-4" data-organ-trash-target="content">
+                    {% for role in trashedRoles %}
+                        <div class="trash-item bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-6 hover:shadow-md transition-all duration-300"
+                             data-organ-trash-target="item"
+                             data-type="role"
+                             data-search="{{ role.name }}">
+                            <div class="flex items-center gap-6 min-w-0">
+                                <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center border-2 shrink-0"
+                                     style="border-color: {{ highlight_color }}22; color: {{ highlight_color }}">
+                                    {% if role.iconType == 'EMOJI' %}
+                                        <span class="text-2xl">{{ role.iconData|default('🎭') }}</span>
+                                    {% else %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+                                        </svg>
+                                    {% endif %}
+                                </div>
+                                <div class="min-w-0">
+                                    <h3 class="text-lg font-bold text-black truncate">{{ role.name }}</h3>
+                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
+                                        {{ 'organ.trash.actions.deleted_at'|trans({'date': role.deletedAt|date('d/m/Y à H:i')}) }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" 
+                                        data-action="click->organ-trash#restore"
+                                        data-type="role"
+                                        data-uuid="{{ role.uuid }}"
+                                        class="px-5 py-2.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                                    {{ 'organ.trash.actions.restore'|trans }}
+                                </button>
+                                <button type="button" 
+                                        data-action="click->organ-trash#removePermanent"
+                                        data-type="role"
+                                        data-uuid="{{ role.uuid }}"
+                                        data-title="{{ role.name }}"
+                                        class="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
+                                        title="{{ 'project.trash.delete_permanent_btn'|trans }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {# --- MEMBERS SECTION --- #}
+        {% if canManageRoles %}
+            <section data-organ-trash-target="membersSection" class="trash-section mb-12 {% if trashedMembers|length == 0 %}hidden{% endif %}">
+                <button type="button" 
+                        data-action="click->organ-trash#toggleSection"
+                        class="w-full flex items-center justify-between mb-6 group cursor-pointer">
+                    <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
+                        <span class="w-8 h-[1px] bg-gray-100"></span>
+                        {{ 'organ.trash.sections.members'|trans }}
+                    </h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-organ-trash-target="chevron">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div class="space-y-4" data-organ-trash-target="content">
+                    {% for assignment in trashedMembers %}
+                        <div class="trash-item bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-6 hover:shadow-md transition-all duration-300"
+                             data-organ-trash-target="item"
+                             data-type="member"
+                             data-search="{{ assignment.user.firstName }} {{ assignment.user.lastName }} {{ assignment.role.name }}">
+                            <div class="flex items-center gap-6 min-w-0">
+                                <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 shrink-0 border border-amber-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <h3 class="text-lg font-bold text-black truncate">{{ assignment.user.firstName }} {{ assignment.user.lastName }}</h3>
+                                    <p class="text-xs text-gray-500 font-medium">{{ 'organ.trash.actions.previous_role'|trans({'role': assignment.role.name}) }}</p>
+                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
+                                        {{ 'organ.trash.actions.removed_at'|trans({'date': assignment.deletedAt|date('d/m/Y à H:i')}) }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" 
+                                        data-action="click->organ-trash#restore"
+                                        data-type="member"
+                                        data-uuid="{{ assignment.uuid }}"
+                                        class="px-5 py-2.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                                    {{ 'organ.trash.actions.restore'|trans }}
+                                </button>
+                                <button type="button" 
+                                        data-action="click->organ-trash#removePermanent"
+                                        data-type="member"
+                                        data-uuid="{{ assignment.uuid }}"
+                                        data-title="{{ assignment.user.firstName }} {{ assignment.user.lastName }}"
+                                        class="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
+                                        title="{{ 'project.trash.delete_permanent_btn'|trans }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {# --- LINKS SECTION --- #}
+        {% if canManageLinks %}
+            <section data-organ-trash-target="linksSection" class="trash-section mb-12 {% if trashedLinks|length == 0 %}hidden{% endif %}">
+                <button type="button" 
+                        data-action="click->organ-trash#toggleSection"
+                        class="w-full flex items-center justify-between mb-6 group cursor-pointer">
+                    <h2 class="text-xs font-black uppercase tracking-[0.2em] text-gray-400 flex items-center gap-3">
+                        <span class="w-8 h-[1px] bg-gray-100"></span>
+                        {{ 'organ.trash.sections.links'|trans }}
+                    </h2>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 text-gray-300 group-hover:text-black transition-all transform rotate-0" data-organ-trash-target="chevron">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                    </svg>
+                </button>
+                <div class="space-y-4" data-organ-trash-target="content">
+                    {% for link in trashedLinks %}
+                        <div class="trash-item bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center justify-between gap-6 hover:shadow-md transition-all duration-300"
+                             data-organ-trash-target="item"
+                             data-type="link"
+                             data-search="{{ link.url }} {{ link.description }}">
+                            <div class="flex items-center gap-6 min-w-0">
+                                <div class="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-500 shrink-0 border border-indigo-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                                    </svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <h3 class="text-lg font-bold text-black truncate">{{ link.description|default(link.url) }}</h3>
+                                    <p class="text-xs text-gray-500 truncate">{{ link.url }}</p>
+                                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1">
+                                        {{ 'organ.trash.actions.deleted_at'|trans({'date': link.deletedAt|date('d/m/Y à H:i')}) }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" 
+                                        data-action="click->organ-trash#restore"
+                                        data-type="link"
+                                        data-uuid="{{ link.uuid }}"
+                                        class="px-5 py-2.5 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl shadow-lg hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                                    {{ 'organ.trash.actions.restore'|trans }}
+                                </button>
+                                <button type="button" 
+                                        data-action="click->organ-trash#removePermanent"
+                                        data-type="link"
+                                        data-uuid="{{ link.uuid }}"
+                                        data-title="{{ link.description|default(link.url) }}"
+                                        class="p-2.5 bg-rose-50 text-rose-500 rounded-xl hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
+                                        title="{{ 'project.trash.delete_permanent_btn'|trans }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+    {% else %}
+        <div class="py-20 text-center bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
+            <div class="mb-6 inline-flex p-6 bg-white rounded-full text-gray-200 shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-16 h-16">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
+                </svg>
+            </div>
+            <h2 class="text-xl font-bold text-gray-900 mb-2">{{ 'organ.trash.empty'|trans }}</h2>
+            <p class="text-gray-500 font-medium italic">{{ 'organ.trash.empty_subtitle'|trans }}</p>
+        </div>
+    {% endif %}
+
+    {# Custom Confirmation Modal #}
+    <div data-organ-trash-target="confirmModal" 
+         class="hidden fixed inset-0 z-[110] flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" data-action="click->organ-trash#closeConfirm"></div>
+        <div class="relative bg-white rounded-[2.5rem] shadow-2xl max-w-sm w-full p-8 space-y-6 animate-in zoom-in-95 duration-200">
+            <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-500 mx-auto">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+            
+            <div class="text-center space-y-2">
+                <h3 data-organ-trash-target="confirmTitle" class="text-xl font-bold text-gray-900">{{ 'generic.confirmation'|trans }}</h3>
+                <p data-organ-trash-target="confirmMessage" class="text-sm text-gray-500 leading-relaxed"></p>
+            </div>
+
+            <div class="flex flex-col gap-3 pt-2">
+                <button type="button" data-action="click->organ-trash#confirmDelete" 
+                        class="w-full py-4 bg-black text-white font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-900 transition-all shadow-lg active:scale-95 cursor-pointer">
+                    {{ 'generic.confirm_delete_permanent'|trans }}
+                </button>
+                <button type="button" data-action="click->organ-trash#closeConfirm" 
+                        class="w-full py-4 bg-white border border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-2xl hover:bg-gray-50 transition-all cursor-pointer">
+                    {{ 'generic.cancel'|trans }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

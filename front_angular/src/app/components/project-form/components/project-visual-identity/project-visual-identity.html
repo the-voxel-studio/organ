@@ -1,0 +1,79 @@
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10 animate-in fade-in duration-200">
+  <!-- COULEUR -->
+  <div class="space-y-4">
+    <label class="block text-sm font-semibold text-gray-700">Couleur du projet</label>
+    <div class="flex flex-wrap gap-3 items-center">
+      @for (color of colors; track color) {
+        <label class="relative cursor-pointer group">
+          <input type="radio" name="project_color" [value]="color" class="sr-only peer"
+                 [checked]="selectedColor === color"
+                 (change)="selectPresetColor(color)">
+          <div class="w-10 h-10 rounded-full border-2 border-transparent peer-checked:border-black transition-all group-hover:scale-110" [style.background-color]="color"></div>
+        </label>
+      }
+      
+      <label class="relative cursor-pointer group">
+        <input type="radio" name="project_color" value="custom" class="sr-only peer"
+               [checked]="isCustomColor"
+               (change)="selectCustomColorMode()">
+        <input type="color" [value]="customColor" (input)="onCustomColorInput($event)" class="sr-only" #customColorPicker>
+        <div (click)="customColorPicker.click()"
+             class="w-10 h-10 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 peer-checked:border-black peer-checked:border-solid flex items-center justify-center text-gray-500 transition-all group-hover:scale-110"
+             [style.background-color]="isCustomColor ? selectedColor : ''">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" [ngClass]="isCustomColor ? 'hidden' : ''"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- ICÔNE -->
+  <div class="space-y-4">
+    <label class="block text-sm font-semibold text-gray-700">Icône du projet</label>
+    
+    <div class="flex flex-wrap gap-2 p-1 bg-gray-50 rounded-xl w-fit">
+      <button type="button" (click)="switchIconMode('BLOB')" [ngClass]="iconMode() === 'BLOB' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer">Image</button>
+      <button type="button" (click)="switchIconMode('EMOJI')" [ngClass]="iconMode() === 'EMOJI' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer">Emoji</button>
+      <button type="button" (click)="switchIconMode('SVG')" [ngClass]="iconMode() === 'SVG' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer">SVG</button>
+    </div>
+
+    <!-- Image Upload (BLOB) -->
+    @if (iconMode() === 'BLOB') {
+      <div class="animate-in fade-in duration-150">
+        <label class="flex items-center justify-center w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-bubblegum transition-all group overflow-hidden">
+          <input type="file" class="sr-only" accept="image/*" (change)="handleImageUpload($event)">
+          
+          @if (imagePreview) {
+            <img [src]="imagePreview" class="w-full h-full object-cover">
+          } @else {
+            <div class="text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-8 w-8 text-gray-400 group-hover:text-bubblegum" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              <span class="mt-2 block text-xs font-semibold text-gray-400 group-hover:text-bubblegum">Upload</span>
+            </div>
+          }
+        </label>
+      </div>
+    }
+
+    <!-- Emoji Input -->
+    @if (iconMode() === 'EMOJI') {
+      <div class="animate-in fade-in duration-150">
+        <div class="flex items-center gap-4">
+          <input type="text" [(ngModel)]="emojiValue" name="emojiValue" (input)="onEmojiInput()"
+                 class="w-16 h-16 text-3xl text-center bg-gray-50 border-2 border-dashed border-gray-200 focus:border-bubblegum focus:bg-white rounded-2xl outline-none transition-all"
+                 placeholder="🚀" maxlength="2">
+        </div>
+      </div>
+    }
+
+    <!-- Custom SVG -->
+    @if (iconMode() === 'SVG') {
+      <div class="space-y-3 animate-in fade-in duration-150">
+        <textarea [(ngModel)]="svgValue" name="svgValue" (input)="onSvgInput()" rows="3"
+                  class="block w-full px-4 py-3 bg-gray-50 border-2 border-dashed border-gray-200 focus:border-bubblegum focus:bg-white rounded-2xl text-xs font-mono transition-all resize-none"
+                  placeholder="<svg ...>...</svg>"></textarea>
+      </div>
+    }
+  </div>
+</div>

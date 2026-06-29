@@ -1,15 +1,20 @@
-app_openapi_json:
-    path: /api/doc.json
-    methods: [GET]
-    defaults: { _controller: nelmio_api_doc.controller.swagger_json }
-
-app_api_doc:
-    path: /api/doc
-    methods: [GET]
-    defaults: { _controller: nelmio_api_doc.controller.swagger_ui }
-
 controllers:
     resource:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+    prefix: /api
+
+app_openapi_json:
+    path: /api/docs.json
+    methods: [GET]
+    defaults: { _controller: nelmio_api_doc.controller.swagger_json }
+
+app_api_doc:
+    path: /api/docs
+    methods: [GET]
+    defaults: { _controller: nelmio_api_doc.controller.swagger_ui }
+
+auth_refresh:
+    path: /api/auth/refresh
+    methods: [POST]

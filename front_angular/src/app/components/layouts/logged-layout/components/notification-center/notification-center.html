@@ -1,0 +1,96 @@
+<!-- Notifications Dropdown Container -->
+<div class="relative flex items-center">
+  <!-- Bell button -->
+  <button type="button" 
+          (click)="toggleNotifications()"
+          class="relative text-black/80 hover:text-black transition-colors duration-200 cursor-pointer focus:outline-none">
+    <span class="sr-only">Notifications</span>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+      <path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clip-rule="evenodd"/>
+    </svg>
+    @if (unreadNotificationsCount() > 0) {
+      <span class="absolute -top-0.5 -right-0.5 flex h-3 w-3 items-center justify-center text-[8px] font-bold text-white bg-bubblegum rounded-full border border-white animate-pulse">
+        {{ unreadNotificationsCount() }}
+      </span>
+    }
+  </button>
+
+  <!-- Dropdown Notifications Menu -->
+  @if (isNotificationsOpen()) {
+    <div class="absolute left-full ml-4 -top-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 cursor-default flex flex-col animate-in fade-in slide-in-from-left-2 duration-200">
+      <!-- Triangle indicator -->
+      <div class="absolute -left-1.5 top-5 w-3 h-3 bg-white border-l border-b border-gray-100 transform rotate-45"></div>
+
+      <div class="relative z-10 flex flex-col bg-white w-full h-full rounded-2xl">
+        <!-- Header -->
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-white rounded-t-2xl">
+          <span class="font-black text-black text-sm tracking-wide">Notifications</span>
+          <button type="button" 
+                  (click)="markAllNotificationsAsRead()" 
+                  class="text-[11px] font-black uppercase tracking-widest text-bubblegum hover:text-black transition-colors cursor-pointer">
+            Tout marquer comme lu
+          </button>
+        </div>
+
+        <!-- Notifications list -->
+        <div class="max-h-96 overflow-y-auto p-3 space-y-2 bg-gray-50/30 notif-list-container">
+          @for (notif of notifications(); track notif.uuid) {
+            <div class="notif-card p-4 rounded-xl border text-left flex flex-col gap-1 shadow-sm"
+                 (mouseenter)="onMouseEnterNotification(notif)"
+                 (mouseleave)="onMouseLeaveNotification(notif)"
+                 [class.is-hovering]="hoveredNotificationUuid() === notif.uuid"
+                 [class.bg-white]="notif.isRead"
+                 [class.border-gray-100]="notif.isRead"
+                 [class.text-gray-400]="notif.isRead"
+                 [class.bg-gradient-to-r]="!notif.isRead"
+                 [class.from-pink-50/20]="!notif.isRead"
+                 [class.to-bubblegum/5]="!notif.isRead"
+                 [class.border-bubblegum/10]="!notif.isRead"
+                 [class.text-black]="!notif.isRead"
+                 [class.font-semibold]="!notif.isRead">
+              
+              <!-- Progress bar for hover auto-read -->
+              @if (!notif.isRead && !notif.isRealInvite) {
+                <div class="progress-bar-hovered"></div>
+              }
+
+              <div class="flex items-start gap-3 w-full">
+                <!-- Pulsing dot for unread -->
+                @if (!notif.isRead) {
+                  <span class="pulse-dot shrink-0 mt-1"></span>
+                }
+                
+                <div class="flex-grow text-xs leading-relaxed">{{ notif.message }}</div>
+              </div>
+
+              @if (notif.isRealInvite) {
+                <div class="flex gap-2 mt-3 w-full">
+                  <button type="button"
+                          (click)="acceptInvite(notif.uuid, $event)"
+                          class="flex-1 px-3 py-1.5 bg-bubblegum text-white text-[10px] font-bold rounded-lg hover:bg-bubblegum/90 transition-all active:scale-95 cursor-pointer text-center shadow-sm">
+                    Accepter
+                  </button>
+                  <button type="button"
+                          (click)="refuseInvite(notif.uuid, $event)"
+                          class="flex-1 px-3 py-1.5 bg-white text-black/70 border border-gray-200 text-[10px] font-bold rounded-lg hover:bg-gray-50 hover:text-black transition-all active:scale-95 cursor-pointer text-center">
+                    Refuser
+                  </button>
+                </div>
+              }
+            </div>
+          } @empty {
+            <!-- Empty State -->
+            <div class="py-12 text-center px-6">
+              <div class="mb-4 text-gray-200 flex justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
+                  <path fill-rule="evenodd" d="M5.25 9a6.75 6.75 0 0 1 13.5 0v.75c0 2.123.8 4.057 2.118 5.52a.75.75 0 0 1-.297 1.206c-1.544.57-3.16.99-4.831 1.243a3.75 3.75 0 1 1-7.48 0 24.585 24.585 0 0 1-4.831-1.244.75.75 0 0 1-.298-1.205A8.217 8.217 0 0 0 5.25 9.75V9Zm4.502 8.9a2.25 2.25 0 1 0 4.496 0 25.057 25.057 0 0 1-4.496 0Z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Aucune notification</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

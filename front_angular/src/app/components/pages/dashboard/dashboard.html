@@ -1,0 +1,70 @@
+<div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+  
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <!-- Header Section Shimmer -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+      <div>
+        <app-shimmer width="220px" height="32px" className="rounded mb-2"></app-shimmer>
+        <app-shimmer width="350px" height="16px" className="rounded"></app-shimmer>
+      </div>
+      <app-shimmer width="160px" height="56px" className="rounded-2xl"></app-shimmer>
+    </header>
+
+    <div class="grid grid-cols-1 gap-12">
+      <!-- Priority Tasks Shimmer -->
+      <div class="space-y-4">
+        <app-shimmer width="200px" height="24px" className="rounded"></app-shimmer>
+        <div class="space-y-3">
+          @for (i of [1, 2, 3]; track i) {
+            <app-shimmer height="72px" className="rounded-2xl"></app-shimmer>
+          }
+        </div>
+      </div>
+
+      <!-- Projects Grid Shimmer -->
+      <div class="space-y-4">
+        <app-shimmer width="150px" height="24px" className="rounded"></app-shimmer>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          @for (i of [1, 2, 3]; track i) {
+            <app-shimmer height="120px" className="rounded-2xl"></app-shimmer>
+          }
+        </div>
+      </div>
+    </div>
+  } @else if (errorMessage()) {
+    <!-- Error State -->
+    <div class="bg-red-50 border border-red-200 text-red-800 rounded-2xl p-6 text-center max-w-lg mx-auto mt-12">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-12 h-12 text-red-500 mx-auto mb-4 animate-bounce">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+      </svg>
+      <h3 class="text-lg font-bold mb-2">Une erreur est survenue</h3>
+      <p class="text-sm text-red-600 mb-6">{{ errorMessage() }}</p>
+      <button type="button" (click)="loadDashboardData()" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow transition-all cursor-pointer">
+        Réessayer
+      </button>
+    </div>
+  } @else if (dashboardData()) {
+    <!-- Header Section -->
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+      <div>
+        <h1 class="text-3xl font-black text-black mb-2">Tableau de bord</h1>
+        <p class="text-gray-500 font-medium">Suivez l'avancement de vos projets et tâches prioritaires.</p>
+      </div>
+      <a routerLink="/project/new" class="px-8 py-4 bg-bubblegum hover:bg-bubblegum/90 text-white font-bold rounded-2xl shadow-lg hover:shadow-bubblegum/30 transition-all transform hover:-translate-y-1 active:scale-[0.98] flex items-center gap-3 w-fit cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+        </svg>
+        Nouveau projet
+      </a>
+    </header>
+
+    <div class="grid grid-cols-1 gap-12">
+      <!-- Priority Tasks -->
+      <app-priority-tasks [tasks]="dashboardData()?.tasks || []"></app-priority-tasks>
+
+      <!-- Projects Grid -->
+      <app-project-grid [projects]="dashboardData()?.projects || []"></app-project-grid>
+    </div>
+  }
+</div>

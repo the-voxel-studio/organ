@@ -1,0 +1,204 @@
+<!-- Selected user stats box -->
+<div *ngIf="selectedUserUuid && selectedUserStats" 
+     class="bg-white rounded-3xl p-6 border border-gray-100 shadow-xs flex flex-col gap-5 animate-in fade-in duration-300 mb-10">
+  <!-- Selected Member info header -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg text-white shadow-xs"
+           [style.background-color]="getProjectColorHex()">
+        {{ getInitials(selectedUserStats.firstName, selectedUserStats.lastName) }}
+      </div>
+      <div>
+        <h3 class="text-lg font-black text-gray-900">{{ selectedUserStats.firstName }} {{ selectedUserStats.lastName }}</h3>
+        <p class="text-xs text-gray-400 font-medium italic">{{ selectedUserStats.email }} • Rôle global : {{ selectedUserStats.role }}</p>
+      </div>
+    </div>
+    <button (click)="closeUserFilter.emit()" 
+            class="p-2 hover:bg-gray-50 text-gray-400 hover:text-gray-600 rounded-xl transition-all cursor-pointer"
+            title="Fermer le filtre">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Numerical recap card grid -->
+  <div class="space-y-4">
+    <h4 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Actions & Modifications</h4>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="bg-gray-50/50 p-3 rounded-2xl border border-gray-50 text-center">
+        <span class="block text-xl font-black text-gray-900">{{ selectedUserStats.createdTasks }}</span>
+        <span class="text-[9px] text-gray-400 font-bold uppercase">Créations</span>
+      </div>
+      <div class="bg-gray-50/50 p-3 rounded-2xl border border-gray-50 text-center">
+        <span class="block text-xl font-black text-gray-900">{{ selectedUserStats.comments }}</span>
+        <span class="text-[9px] text-gray-400 font-bold uppercase">Commentaires</span>
+      </div>
+      <div class="bg-gray-50/50 p-3 rounded-2xl border border-gray-50 text-center">
+        <span class="block text-xl font-black text-gray-900">{{ selectedUserStats.attachments }}</span>
+        <span class="text-[9px] text-gray-400 font-bold uppercase">Fichiers</span>
+      </div>
+      <div class="bg-gray-50/50 p-3 rounded-2xl border border-gray-50 text-center">
+        <span class="block text-xl font-black text-gray-900">{{ selectedUserStats.statusChanges }}</span>
+        <span class="text-[9px] text-gray-400 font-bold uppercase">Statuts</span>
+      </div>
+      <div class="bg-gray-50/50 p-3 rounded-2xl border border-gray-50 text-center">
+        <span class="block text-xl font-black text-gray-900">{{ selectedUserStats.updates }}</span>
+        <span class="text-[9px] text-gray-400 font-bold uppercase">Modifs</span>
+      </div>
+      <div class="bg-gray-50/50 p-3 rounded-2xl border border-gray-50 text-center">
+        <span class="block text-xl font-black text-gray-900">{{ selectedUserStats.filteredActionsCount }}</span>
+        <span class="text-[9px] text-gray-400 font-bold uppercase">Filtres Actifs</span>
+      </div>
+    </div>
+
+    <!-- Details of consultations (reads) breakdown -->
+    <div *ngIf="selectedUserStats.consultations > 0" class="pt-3 border-t border-gray-100">
+      <h4 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Précision des consultations ({{ selectedUserStats.consultations }} lectures)</h4>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="bg-gray-50/30 p-2.5 rounded-xl border border-gray-50 text-center">
+          <span class="block text-sm font-black text-gray-600">{{ selectedUserStats.taskConsultations }}</span>
+          <span class="text-[8px] text-gray-400 font-bold uppercase">Tâches</span>
+        </div>
+        <div class="bg-gray-50/30 p-2.5 rounded-xl border border-gray-50 text-center">
+          <span class="block text-sm font-black text-gray-600">{{ selectedUserStats.organConsultations }}</span>
+          <span class="text-[8px] text-gray-400 font-bold uppercase">Organes</span>
+        </div>
+        <div class="bg-gray-50/30 p-2.5 rounded-xl border border-gray-50 text-center">
+          <span class="block text-sm font-black text-gray-600">{{ selectedUserStats.projectConsultations }}</span>
+          <span class="text-[8px] text-gray-400 font-bold uppercase">Projet</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Header log status label with Dynamic Sorting selector -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-100 pb-3 gap-3">
+  <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">
+    {{ selectedUserUuid ? "Journal des actions de l'utilisateur" : "Flux d'activité général du projet" }}
+  </h3>
+  
+  <div class="flex flex-wrap items-center gap-3.5 sm:justify-end">
+    <!-- Dynamic sorting selector -->
+    <div class="flex items-center gap-2">
+      <span class="text-[10px] text-gray-400 font-black uppercase tracking-wider">Trier par :</span>
+      <select [ngModel]="auditSortType"
+              (ngModelChange)="sortTypeChange.emit($event)"
+              class="bg-white border border-gray-200/70 focus:border-bubblegum focus:ring-0 rounded-xl text-[10px] font-bold text-gray-600 py-1.5 pl-3.5 pr-8 cursor-pointer outline-none shadow-2xs transition-all">
+        <option value="date_desc">Date (Récent en premier)</option>
+        <option value="date_asc">Date (Ancien en premier)</option>
+        <option value="action_asc">Type d'action (A-Z)</option>
+        <option value="user_asc">Utilisateur (A-Z)</option>
+        <option value="organ_asc">Organe (A-Z)</option>
+      </select>
+    </div>
+    
+    <span class="text-[10px] text-gray-400 font-bold italic shrink-0">
+      {{ filteredLogs.length }} événement(s) affiché(s)
+    </span>
+  </div>
+</div>
+
+<!-- Logs Timeline List -->
+<div *ngIf="auditIsLoading" class="space-y-3.5">
+  <div *ngFor="let i of [1,2,3]" class="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-2xs flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5 w-full">
+      <app-shimmer width="36px" height="36px" className="rounded-xl"></app-shimmer>
+      <div class="space-y-2 w-1/2">
+        <app-shimmer width="100%" height="16px" className="rounded"></app-shimmer>
+        <app-shimmer width="60%" height="12px" className="rounded"></app-shimmer>
+      </div>
+    </div>
+    <app-shimmer width="80px" height="20px" className="rounded-lg"></app-shimmer>
+  </div>
+</div>
+
+<div *ngIf="!auditIsLoading && filteredLogs.length === 0" class="py-16 text-center bg-gray-50 rounded-[2.5rem] border-2 border-dashed border-gray-200">
+  <p class="text-gray-400 text-sm font-semibold italic">Aucun événement enregistré pour cette période ou ces critères.</p>
+</div>
+
+<div *ngIf="!auditIsLoading && filteredLogs.length > 0" 
+     class="space-y-3.5 max-h-[600px] overflow-y-auto pr-1 custom-scrollbar" 
+     [style.--highlight-color]="getProjectColorHex()">
+  <div *ngFor="let log of filteredLogs" 
+       class="bg-white rounded-2xl p-4.5 border border-gray-100 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:shadow-xs transition-shadow">
+    <div class="flex items-start gap-3.5 min-w-0">
+      <!-- Action visual icon -->
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+           [ngClass]="{
+             'bg-blue-50 text-blue-600': log.actionType === 'CREATE',
+             'bg-emerald-50 text-emerald-600': log.actionType === 'STATUS_CHANGE',
+             'bg-purple-50 text-purple-600': log.actionType === 'COMMENT_ADD' || log.actionType === 'ATTACHMENT_ADD',
+             'bg-amber-50 text-amber-600': log.actionType === 'UPDATE',
+             'bg-red-50 text-red-600': log.actionType === 'HARD_DELETE',
+             'bg-gray-100 text-gray-500': log.actionType === 'CONSULTATION'
+           }">
+        <ng-container [ngSwitch]="log.actionType">
+          <svg *ngSwitchCase="'CREATE'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4.5 h-4.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          <svg *ngSwitchCase="'STATUS_CHANGE'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4.5 h-4.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+          <svg *ngSwitchCase="'COMMENT_ADD'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4.5 h-4.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v5.779z" />
+          </svg>
+          <svg *ngSwitchCase="'ATTACHMENT_ADD'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4.5 h-4.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+          </svg>
+          <svg *ngSwitchCase="'UPDATE'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4.5 h-4.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+          </svg>
+          <svg *ngSwitchCase="'HARD_DELETE'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4.5 h-4.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+          </svg>
+          <svg *ngSwitchDefault xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4.5 h-4.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0zm-9-3.75h.008v.008H12V8.25z" />
+          </svg>
+        </ng-container>
+      </div>
+      
+      <div class="min-w-0">
+        <p class="text-xs font-semibold text-gray-800 leading-snug break-words">
+          {{ log | auditAction }}
+        </p>
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[10px] text-gray-400 font-bold">
+          <!-- User name (only shown when looking at all members) -->
+          <span *ngIf="selectedUserUuid === null" class="text-gray-500">
+            {{ log.user ? log.user.firstName + ' ' + log.user.lastName : 'Système' }}
+          </span>
+          <span *ngIf="selectedUserUuid === null">•</span>
+          <span>
+            {{ log.createdAt | formatDate:'audit' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Organ affiliation badge -->
+    <span *ngIf="log.organTitle" class="px-2.5 py-1 bg-gray-50 border border-gray-100 text-gray-400 rounded-lg text-[9px] font-black self-start sm:self-auto shrink-0 uppercase tracking-wider">
+      {{ log.organTitle }}
+    </span>
+  </div>
+</div>
+
+<!-- Pagination Controls (only on global view) -->
+<div *ngIf="selectedUserUuid === null && !auditIsLoading && filteredLogs.length > 0" 
+     class="flex items-center justify-between mt-6">
+  <button (click)="prevPage.emit()"
+          [disabled]="auditOffset === 0"
+          class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold rounded-xl text-xs transition-all active:scale-95 cursor-pointer shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed">
+    Précédent
+  </button>
+  
+  <span class="text-[9px] text-gray-400 font-black uppercase tracking-widest">
+    Page {{ (auditOffset / auditLimit) + 1 }}
+  </span>
+
+  <button (click)="nextPage.emit()"
+          [disabled]="filteredLogs.length < auditLimit"
+          class="px-5 py-2.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold rounded-xl text-xs transition-all active:scale-95 cursor-pointer shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed">
+    Suivant
+  </button>
+</div>

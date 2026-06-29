@@ -1,0 +1,37 @@
+<!-- TOP SCROLL SYNC (mirrors kanban horizontal scroll) -->
+<div #topScrollContainer
+     class="overflow-x-auto py-1 custom-scrollbar"
+     [style.--highlight-color]="highlightColor">
+    <div #topScrollThumb class="h-px"></div>
+</div>
+
+<div #kanbanContainer
+     class="overflow-x-auto py-12 custom-scrollbar"
+     [style.--highlight-color]="highlightColor">
+    <div class="flex gap-8 min-w-max pr-8">
+        
+        <!-- Kanban Columns -->
+        <ng-container *ngFor="let col of [
+                    {status: 'TODO', label: 'À Faire', dot: 'bg-slate-300'},
+                    {status: 'IN_PROGRESS', label: 'En Cours', dot: 'bg-[var(--highlight-color)]'},
+                    {status: 'WAITING', label: 'En Attente', dot: 'bg-amber-400'},
+                    {status: 'DONE', label: 'Terminé', dot: 'bg-green-400'},
+                    {status: 'CANCELED', label: 'Annulé', dot: 'bg-rose-400'}
+                 ]">
+            <app-kanban-column
+                 *ngIf="selectedStatuses.length === 0 || selectedStatuses.includes(col.status)"
+                 [column]="col"
+                 [tasks]="getTasksByStatus(col.status)"
+                 [allTasks]="allTasks"
+                 [highlightColor]="highlightColor"
+                 [hasTaskEditAll]="hasTaskEditAll"
+                 [currentUserId]="currentUserId"
+                 [activeDragOverColumn]="activeDragOverColumn"
+                 (taskClicked)="taskClicked.emit($event)"
+                 (taskStatusChanged)="taskStatusChanged.emit($event)"
+                 (dragEnterColumn)="activeDragOverColumn = $event"
+                 (dragLeaveColumn)="activeDragOverColumn = null">
+            </app-kanban-column>
+        </ng-container>
+    </div>
+</div>

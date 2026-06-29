@@ -1,0 +1,129 @@
+<section id="about" class="py-24 bg-white overflow-hidden">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Section Title -->
+        <div class="mb-20">
+            <h2 class="text-bubblegum font-bold tracking-widest uppercase text-sm mb-3">{{ 'about.badge'|trans({}, 'landing') }}</h2>
+            <h3 class="text-4xl lg:text-5xl font-extrabold text-black">{{ 'about.title'|trans({}, 'landing') }}</h3>
+        </div>
+
+        <!-- Row 1: The 3 Students -->
+        <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-24 mb-32">
+            <div class="lg:w-1/2 grid grid-cols-2 gap-4 relative">
+                <div class="absolute -inset-4 bg-bubblegum/5 rounded-3xl -rotate-2 -z-10"></div>
+                
+                <!-- Student 1 -->
+                <div class="bg-white p-4 rounded-2xl shadow-md border border-gray-100 transform -rotate-3">
+                    <div class="w-10 h-10 bg-bubblegum/20 rounded-full mb-3 flex items-center justify-center text-xl">🎨</div>
+                    <p class="font-bold text-sm">{{ 'about.student1.role'|trans({}, 'landing') }}</p>
+                    <p class="text-[10px] text-gray-400">{{ 'about.student1.quote'|trans({}, 'landing') }}</p>
+                </div>
+                <!-- Student 2 -->
+                <div class="bg-white p-4 rounded-2xl shadow-md border border-gray-100 transform rotate-2 translate-y-4">
+                    <div class="w-10 h-10 bg-highlight/20 rounded-full mb-3 flex items-center justify-center text-xl">⚙️</div>
+                    <p class="font-bold text-sm">{{ 'about.student2.role'|trans({}, 'landing') }}</p>
+                    <p class="text-[10px] text-gray-400">{{ 'about.student2.quote'|trans({}, 'landing') }}</p>
+                </div>
+                <!-- Student 3 -->
+                <div class="col-span-2 bg-white p-4 rounded-2xl shadow-md border border-gray-100 transform -rotate-1 mx-auto w-2/3">
+                    <div class="w-10 h-10 bg-background-blue/20 rounded-full mb-3 flex items-center justify-center text-xl">⚡</div>
+                    <p class="font-bold text-sm">{{ 'about.student3.role'|trans({}, 'landing') }}</p>
+                    <p class="text-[10px] text-gray-400">{{ 'about.student3.quote'|trans({}, 'landing') }}</p>
+                </div>
+            </div>
+            <div class="lg:w-1/2">
+                <h4 class="text-3xl font-bold text-black mb-6 italic leading-tight">{{ 'about.origin.title'|trans({}, 'landing') }}</h4>
+                <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                    {{ 'about.origin.p1'|trans({}, 'landing') }} 
+                </p>
+                <p class="text-lg text-gray-600 leading-relaxed">
+                    {{ 'about.origin.p2'|trans({}, 'landing')|raw }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Row 2: The Evolution of Organization (Infographic) -->
+        <div class="relative py-16 my-16 lg:py-24 lg:my-24">
+            
+            <div class="max-w-6xl mx-auto px-4 sm:px-6">
+                <div class="text-center mb-16">
+                    <h4 class="text-3xl md:text-4xl font-extrabold text-black tracking-tight">{{ 'about.classic_tools.title'|trans({}, 'landing') }}</h4>
+                    <p class="text-gray-500 mt-4 text-lg">{{ 'about.classic_tools.subtitle'|trans({}, 'landing') }}</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
+                    
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-gray/5 transition-all group flex flex-col items-center text-center">
+                        <div class="w-20 h-20 mb-8 flex flex-col justify-center gap-2.5 opacity-40">
+                            <div class="h-2 w-full bg-gray-600 rounded-full"></div>
+                            <div class="h-2 w-5/6 bg-gray-600 rounded-full"></div>
+                            <div class="h-2 w-full bg-gray-600 rounded-full"></div>
+                            <div class="h-2 w-3/4 bg-gray-600 rounded-full"></div>
+                            <div class="h-2 w-4/5 bg-gray-600 rounded-full"></div>
+                        </div>
+                        <h5 class="text-xl font-bold text-gray-800 mb-3">{{ 'about.classic_tools.item1.title'|trans({}, 'landing') }}</h5>
+                        <p class="text-gray-500 text-sm leading-relaxed">{{ 'about.classic_tools.item1.desc'|trans({}, 'landing') }}</p>
+                    </div>
+
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl hover:shadow-gray/5 transition-all group flex flex-col items-center text-center">
+                        <div class="w-20 h-20 mb-8 relative flex items-center justify-center opacity-40">
+                            <div class="absolute inset-1 border-2 border-gray-600 rounded-xl"></div>
+                            <div class="absolute inset-4 border-2 border-gray-600 rounded-lg"></div>
+                            <div class="absolute inset-7 border-2 border-gray-600 rounded-md"></div>
+                            <div class="w-2 h-2 bg-gray-600 rounded-full"></div>
+                        </div>
+                        <h5 class="text-xl font-bold text-gray-800 mb-3">{{ 'about.classic_tools.item2.title'|trans({}, 'landing') }}</h5>
+                        <p class="text-gray-500 text-sm leading-relaxed">{{ 'about.classic_tools.item2.desc'|trans({}, 'landing') }}</p>
+                    </div>
+
+                    <div class="bg-white rounded-3xl p-8 border-2 border-bubblegum/20 shadow-xl shadow-bubblegum/10 flex flex-col items-center text-center relative overflow-hidden transform lg:-translate-y-4">
+                        <div class="absolute -top-10 -right-10 w-32 h-32 bg-bubblegum/10 rounded-full blur-3xl z-0"></div>
+                        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-highlight/10 rounded-full blur-3xl z-0"></div>
+                        
+                        <div class="w-24 h-24 mb-8 flex flex-col items-center justify-center relative z-10">
+                            <div class="w-10 h-8 bg-black rounded-lg shadow-md z-10 flex items-center justify-center">
+                                <div class="w-4 h-1 bg-white/20 rounded-full"></div>
+                            </div>
+                            <div class="flex gap-8 items-start relative -mt-1 z-0">
+                                <div class="absolute top-0 left-1/2 w-1/2 h-6 border-l-2 border-t-2 border-gray-200 rounded-tl-lg -translate-x-full"></div>
+                                <div class="absolute top-0 right-1/2 w-1/2 h-6 border-r-2 border-t-2 border-gray-200 rounded-tr-lg translate-x-full"></div>
+                                <div class="w-8 h-6 bg-bubblegum rounded-md shadow-sm border border-bubblegum/20 mt-5 z-10"></div>
+                                <div class="w-8 h-6 bg-highlight rounded-md shadow-sm border border-highlight/20 mt-5 z-10"></div>
+                            </div>
+                        </div>
+                        <h5 class="text-xl font-bold text-bubblegum mb-3 relative z-10">{{ 'about.classic_tools.item3.title'|trans({}, 'landing') }}</h5>
+                        <p class="text-black font-semibold text-sm mb-2 relative z-10">{{ 'about.classic_tools.item3.quote'|trans({}, 'landing') }}</p>
+                        <p class="text-gray-500 text-sm relative z-10">{{ 'about.classic_tools.item3.desc'|trans({}, 'landing') }}</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3: The Philosophy (Refined) -->
+        <div class="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+            <div class="lg:w-1/2 relative">
+                <div class="absolute -inset-4 bg-highlight/5 rounded-3xl rotate-2"></div>
+                <div class="relative bg-white aspect-video rounded-2xl overflow-hidden shadow-2xl border-4 border-white flex flex-col items-center justify-center p-8">
+                   <div class="flex items-center gap-4 mb-6">
+                       <div class="w-16 h-16 bg-bubblegum rounded-full flex items-center justify-center text-white text-3xl">👤</div>
+                       <div class="text-2xl">➕</div>
+                       <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-3xl">📂</div>
+                   </div>
+                   <p class="text-center font-bold text-gray-800">{{ 'about.philosophy.visual.storage'|trans({}, 'landing') }}</p>
+                   <p class="text-center text-xs text-gray-400 mt-2">{{ 'about.philosophy.visual.subtext'|trans({}, 'landing') }}</p>
+                </div>
+            </div>
+            <div class="lg:w-1/2">
+                <h4 class="text-3xl font-bold text-black mb-6 italic leading-tight">{{ 'about.philosophy.title'|trans({}, 'landing') }}</h4>
+                <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                    {{ 'about.philosophy.p1'|trans({}, 'landing') }} 
+                </p>
+                <p class="text-lg text-gray-600 leading-relaxed">
+                    {{ 'about.philosophy.p2'|trans({}, 'landing')|raw }}
+                </p>
+            </div>
+        </div>
+
+    </div>
+</section>

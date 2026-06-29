@@ -1,0 +1,419 @@
+{% extends "layouts/logged/navbar_layout.html.twig" %}
+
+{% block hide_mobile_menu %}true{% endblock %}
+
+{% block title %}
+    {{ organ ? 'organ.edit.title'|trans : 'organ.create.title'|trans }}
+{% endblock %}
+
+{% block body_attrs %}
+      data-controller="organ-create"
+      data-organ-create-api-url-value="/api"
+      data-organ-create-project-uuid-value="{{ project.uuid }}"
+      data-organ-create-project-members-value="{{ members|json_encode }}"
+      data-organ-create-available-permissions-value="{{ availablePermissions|default([])|json_encode }}"
+      {% if organ %}data-organ-create-organ-value="{{ organ|json_encode }}"{% endif %}
+      data-organ-create-user-permissions-value="{{ userPermissions|default([])|json_encode }}"
+{% endblock %}
+
+{% block content %}
+{% set project_color = project.color|default('#FF7EB6') %}
+{% set can_edit_info = not organ or ('ORGAN_EDIT' in userPermissions or 'ALL' in userPermissions) %}
+{# Couple Roles and Members management access #}
+{% set has_structure_auth = not organ or ('ORGAN_MANAGE_ROLES' in userPermissions or 'ORGAN_MANAGE_MEMBERS' in userPermissions or 'ALL' in userPermissions) %}
+{% set can_manage_roles = has_structure_auth %}
+{% set can_manage_members = has_structure_auth %}
+{% set can_delete_organ = organ and (
+    'ALL' in userPermissions or (
+        'ORGAN_EDIT' in userPermissions and 
+        'ORGAN_LINK_MANAGE' in userPermissions and 
+        'ORGAN_MANAGE_MEMBERS' in userPermissions and 
+        'ORGAN_MANAGE_ROLES' in userPermissions
+    )
+) %}
+
+<div class="max-w-4xl mx-auto py-8"
+     style="--project-color: {{ project_color }}; --project-color-light: {{ project_color }}1a; --project-color-semi: {{ project_color }}33;">
+
+    <div class="mb-8 px-4">
+        {% if organ %}
+            <a href="{{ path('app_organ_show', {projectUuid: project.uuid, organUuid: organ.uuid}) }}"
+               class="text-sm font-medium text-gray-500 transition-colors flex items-center gap-2 hover:opacity-80"
+               style="color: var(--project-color)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                {{ 'organ.edit.back_to_organ'|trans }}
+            </a>
+        {% else %}
+            <a href="{{ path('app_project_show', {uuid: project.uuid}) }}"
+               class="text-sm font-medium text-gray-500 transition-colors flex items-center gap-2 hover:opacity-80"
+               style="color: var(--project-color)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                {{ 'organ.create.back_to_project'|trans }}
+            </a>
+        {% endif %}
+        <h1 class="text-4xl font-bold text-gray-900 mt-4">
+            {{ organ ? 'organ.edit.title'|trans : 'organ.create.title'|trans }}
+        </h1>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 space-y-12">
+        {# --- SECTION 1: INFORMATIONS DE BASE --- #}
+        <div class="space-y-8 {{ not can_edit_info ? 'opacity-50 pointer-events-none grayscale-[0.5]' : '' }}">
+            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
+                      style="background-color: var(--project-color-light); color: var(--project-color)">1</span>
+                Informations générales
+                {% if not can_edit_info %}
+                    <span class="text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 px-2 py-1 rounded ml-2">Lecture seule</span>
+                {% endif %}
+            </h3>
+
+            {# Nom de l'organ #}
+            <div class="space-y-2">
+                <label for="name" class="block text-sm font-semibold text-gray-700">{{ 'organ.create.form.name.label'|trans }}</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                    </div>
+                    <input type="text" id="name" data-organ-create-target="name"
+                           {{ not can_edit_info ? 'readonly' : '' }}
+                           class="block w-full pl-11 pr-4 py-4 bg-gray-50 border-transparent focus:border-bubblegum focus:bg-white focus:ring-0 rounded-2xl text-gray-900 placeholder-gray-400 transition-all font-medium"
+                           placeholder="{{ 'organ.create.form.name.placeholder'|trans }}"
+                           value="{{ organ.title|default('') }}">
+                </div>
+            </div>
+
+            {# Description #}
+            <div class="space-y-2">
+                <label for="description" class="block text-sm font-semibold text-gray-700">{{ 'organ.create.form.description.label'|trans }}</label>
+                <textarea id="description" data-organ-create-target="description" rows="3"
+                          {{ not can_edit_info ? 'readonly' : '' }}
+                          class="block w-full px-4 py-4 bg-gray-50 border-transparent focus:border-bubblegum focus:bg-white focus:ring-0 rounded-2xl text-gray-900 placeholder-gray-400 transition-all font-medium resize-none"
+                          placeholder="{{ 'organ.create.form.description.placeholder'|trans }}">{{ organ.description|default('') }}</textarea>
+            </div>
+
+            {# Identité visuelle #}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                {# COULEUR #}
+                <div class="space-y-4">
+                    <label class="block text-sm font-semibold text-gray-700">Couleur d'accentuation</label>
+                    <div class="flex flex-wrap gap-3 items-center">
+                        {% set colors = ['#FF7EB6', '#4ADE80', '#60A5FA', '#FBBF24', '#A78BFA', '#FF5722', '#3F51B5'] %}
+                        {% set current_color = organ.highlightColor|default(colors[0]) %}
+                        {% set is_custom = organ is defined and organ.highlightColor is defined and (organ.highlightColor not in colors) %}
+
+                        {% for color in colors %}
+                            <label class="relative cursor-pointer group">
+                                <input type="radio" name="organ_color" value="{{ color }}" class="sr-only peer" 
+                                       data-organ-create-target="colorInputs" data-action="change->organ-create#handleColorChange" 
+                                       {{ current_color == color ? 'checked' : '' }}>
+                                <div class="w-10 h-10 rounded-full border-2 border-transparent peer-checked:border-black transition-all group-hover:scale-110" style="background-color: {{ color }};"></div>
+                            </label>
+                        {% endfor %}
+                        
+                        <label class="relative cursor-pointer group">
+                            <input type="radio" name="organ_color" value="custom" id="customColorRadio" class="sr-only peer" 
+                                   data-organ-create-target="colorInputs" data-action="change->organ-create#handleColorChange" 
+                                   {{ is_custom ? 'checked' : '' }}>
+                            <input type="color" id="customColorPicker" data-organ-create-target="customColorPicker" class="sr-only" 
+                                   value="{{ is_custom ? organ.highlightColor : '#000000' }}" 
+                                   data-action="input->organ-create#handleCustomColorInput">
+                            <div data-organ-create-target="customColorDisplay" data-action="click->organ-create#triggerColorPicker"
+                                 class="w-10 h-10 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 peer-checked:border-black peer-checked:border-solid flex items-center justify-center text-gray-500 transition-all group-hover:scale-110"
+                                 style="{{ is_custom ? 'background-color: ' ~ organ.highlightColor : '' }}">
+                                <svg data-organ-create-target="customColorIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="{{ is_custom ? 'hidden' : '' }}"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {# ICON #}
+                <div class="space-y-4">
+                    <label class="block text-sm font-semibold text-gray-700">Icône de l'organ</label>
+                    
+                    <div class="flex flex-wrap gap-2 p-1 bg-gray-50 rounded-xl w-fit">
+                        {% set icon_mode = organ.iconType|default('BLOB') %}
+                        <button type="button" data-action="click->organ-create#switchIconMode" data-mode="BLOB" 
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ icon_mode == 'BLOB' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900' }}" data-organ-create-target="modeBtn">Image</button>
+                        <button type="button" data-action="click->organ-create#switchIconMode" data-mode="EMOJI" 
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ icon_mode == 'EMOJI' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900' }}" data-organ-create-target="modeBtn">Emoji</button>
+                        <button type="button" data-action="click->organ-create#switchIconMode" data-mode="SVG" 
+                                class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all {{ icon_mode == 'SVG' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900' }}" data-organ-create-target="modeBtn">SVG</button>
+                    </div>
+
+                    {# Image Upload #}
+                    <div data-organ-create-target="iconSection" data-mode="BLOB" class="{{ icon_mode == 'BLOB' ? '' : 'hidden' }}">
+                        <label class="flex items-center justify-center w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl cursor-pointer hover:border-bubblegum transition-all group overflow-hidden">
+                            <input type="file" data-organ-create-target="imageInput" class="sr-only" accept="image/*" data-action="change->organ-create#handleImagePreview">
+                            <div data-organ-create-target="imagePlaceholder" class="text-center {{ (organ and icon_mode == 'BLOB' and organ.iconData is not empty) ? 'hidden' : '' }}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-8 w-8 text-gray-400 group-hover:text-bubblegum" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                <span class="mt-2 block text-xs font-semibold text-gray-400 group-hover:text-bubblegum">Upload</span>
+                            </div>
+                            <img data-organ-create-target="imagePreview" src="{{ (organ and icon_mode == 'BLOB' and organ.iconData is not empty) ? organ.iconData : '' }}" class="{{ (organ and icon_mode == 'BLOB' and organ.iconData is not empty) ? '' : 'hidden' }} w-full h-full object-cover">
+                        </label>
+                    </div>
+
+                    {# Emoji Input #}
+                    <div data-organ-create-target="iconSection" data-mode="EMOJI" class="{{ icon_mode == 'EMOJI' ? '' : 'hidden' }}">
+                        <div class="flex items-center gap-4">
+                            <input type="text" data-organ-create-target="emojiInput" data-action="input->organ-create#validateEmojiInput"
+                                   class="w-16 h-16 text-3xl text-center bg-gray-50 border-2 border-dashed border-gray-200 focus:border-bubblegum focus:bg-white rounded-2xl outline-none transition-all"
+                                   placeholder="🚀" maxlength="2" value="{{ (organ and icon_mode == 'EMOJI') ? organ.iconData : '' }}">
+                        </div>
+                    </div>
+
+                    {# Custom SVG #}
+                    <div data-organ-create-target="iconSection" data-mode="SVG" class="{{ icon_mode == 'SVG' ? '' : 'hidden' }} space-y-3">
+                        <textarea data-organ-create-target="customSvgInput" rows="3"
+                                  class="block w-full px-4 py-3 bg-gray-50 border-2 border-dashed border-gray-200 focus:border-bubblegum focus:bg-white rounded-2xl text-xs font-mono transition-all resize-none"
+                                  placeholder="<svg ...>...</svg>">{{ (organ and icon_mode == 'SVG') ? organ.iconData : '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# --- SECTION 2: ROLES & PERMISSIONS --- #}
+        <div class="space-y-8 {{ not can_manage_roles ? 'opacity-50 pointer-events-none grayscale-[0.5]' : '' }}">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
+                          style="background-color: var(--project-color-light); color: var(--project-color)">2</span>
+                    Rôles et Permissions
+                    {% if not can_manage_roles %}
+                        <span class="text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 px-2 py-1 rounded ml-2">Lecture seule</span>
+                    {% endif %}
+                </h3>
+                {% if can_manage_roles %}
+                    <button type="button" data-action="click->organ-create#addRole"
+                            class="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-xl hover:bg-gray-800 transition-all active:scale-95 cursor-pointer">
+                        + Nouveau rôle
+                    </button>
+                {% endif %}
+            </div>
+
+            <p class="text-xs text-gray-500 font-medium">
+                Définissez les rôles disponibles dans cet organ. Cliquez sur un rôle pour configurer ses permissions.
+            </p>
+
+            {# Presets de rôles #}
+            {% if can_manage_roles %}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {% set role_presets = {
+                        'responsible': '👑',
+                        'manager': '📂',
+                        'participant': '👨‍💻',
+                        'reviewer': '✅',
+                        'tester': '🔍',
+                        'observer': '👁️',
+                        'guest': '✉️'
+                    } %}
+                    {% for key, emoji in role_presets %}
+                        <button type="button" data-action="click->organ-create#addPresetRole" data-preset="{{ key }}"
+                                class="p-4 bg-white border border-gray-100 rounded-2xl text-left hover:border-bubblegum/50 hover:bg-bubblegum/[0.02] transition-all group cursor-pointer flex flex-col justify-between h-full min-h-[140px] shadow-sm hover:shadow-md">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg">{{ emoji }}</span>
+                                    <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-bubblegum transition-colors">{{ ('organ.role_presets.' ~ key ~ '.name')|trans }}</p>
+                                </div>
+                                <p class="text-[10px] leading-relaxed text-gray-400 font-medium group-hover:text-gray-500 transition-colors line-clamp-3">
+                                    {{ ('organ.role_presets.' ~ key ~ '.description')|trans }}
+                                </p>
+                            </div>
+                            <div class="mt-4 pt-3 border-t border-gray-50 flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-gray-900 group-hover:text-bubblegum">Ajouter</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-gray-300 group-hover:text-bubblegum transition-all translate-x-[-4px] group-hover:translate-x-0 opacity-0 group-hover:opacity-100"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                            </div>
+                        </button>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" data-organ-create-target="roleList">
+                {# JS Rendered Roles #}
+            </div>
+        </div>
+
+        {# --- SECTION 3: MEMBRES --- #}
+        <div class="space-y-8 {{ not can_manage_members ? 'opacity-50 pointer-events-none grayscale-[0.5]' : '' }}">
+            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <span class="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
+                      style="background-color: var(--project-color-light); color: var(--project-color)">3</span>
+                Membres de l'Organ
+                {% if not can_manage_members %}
+                    <span class="text-[10px] font-black uppercase tracking-widest bg-gray-100 text-gray-400 px-2 py-1 rounded ml-2">Lecture seule</span>
+                {% endif %}
+            </h3>
+
+            {% if can_manage_members %}
+                <div class="flex gap-3">
+                    <select data-organ-create-target="memberSelect"
+                            class="flex-grow h-14 px-6 bg-gray-50 border-transparent focus:border-bubblegum focus:bg-white focus:ring-0 rounded-2xl text-gray-900 font-medium transition-all appearance-none">
+                        <option value="">Sélectionner un membre du projet...</option>
+                        {% for member in members %}
+                            <option value="{{ member.user.uuid }}">{{ member.user.firstName }} {{ member.user.lastName }} ({{ member.user.email }})</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" data-action="click->organ-create#addMember"
+                            class="px-8 bg-gray-900 text-white font-bold rounded-2xl hover:bg-gray-800 transition-all active:scale-95 cursor-pointer">
+                        Ajouter
+                    </button>
+                </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" data-organ-create-target="organMemberList">
+                {# JS Rendered Members #}
+            </div>
+        </div>
+
+        <div class="pt-8 border-t border-gray-100 flex items-center justify-end gap-4">
+            <div data-organ-create-target="error" class="hidden text-red-500 font-medium text-sm mr-auto"></div>
+            
+            <a href="{{ organ ? path('app_organ_show', {projectUuid: project.uuid, organUuid: organ.uuid}) : path('app_project_show', {uuid: project.uuid}) }}"
+               class="px-8 py-4 bg-white border border-gray-200 text-gray-900 font-bold rounded-2xl hover:bg-gray-50 transition-all active:scale-95">
+                {{ 'generic.cancel'|trans }}
+            </a>
+            
+            <button type="button" data-organ-create-target="submitBtn" data-action="click->organ-create#submit"
+                    class="px-10 py-4 text-white font-bold rounded-2xl transition-all shadow-lg active:scale-95 flex items-center gap-3 cursor-pointer shadow-current/20"
+                    style="background-color: var(--project-color)">
+                <span data-organ-create-target="spinner" class="hidden animate-spin">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                </span>
+                {{ organ ? 'organ.edit.form.actions.submit'|trans|default('Mettre à jour') : 'organ.create.form.actions.submit'|trans }}
+            </button>
+        </div>
+
+        {# --- LOADING OVERLAY --- #}
+        <div data-organ-create-target="loadingOverlay" class="hidden fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white/60 backdrop-blur-md transition-all duration-300">
+            <div class="relative">
+                <div class="w-24 h-24 border-4 rounded-full animate-spin" style="border-color: var(--project-color-light); border-top-color: var(--project-color)"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-3xl">🏗️</span>
+                </div>
+            </div>
+            <p class="mt-8 text-xl font-black text-gray-900 tracking-tight animate-pulse" data-organ-create-target="loadingText">
+                {{ organ ? 'Mise à jour de l\'organ en cours...' : 'Création de l\'organ en cours...' }}
+            </p>
+            <p class="mt-2 text-sm text-gray-400 font-bold uppercase tracking-widest">Étape de configuration finale</p>
+        </div>
+
+    </div>
+
+        {# --- SECTION 4: ZONE DE DANGER --- #}
+        {% if can_delete_organ %}
+            <div class="mt-20 border-t-2 border-red-50/50 px-4">
+                <div class="bg-red-50/30 rounded-3xl border border-red-100 p-8 space-y-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-red-600 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="m4.84 19 8.16-14 8.16 14H4.84Z"/></svg>
+                            Zone de danger
+                        </h3>
+                        <p class="text-sm text-red-500/70 font-medium mt-1">Actions irréversibles pour cet organ</p>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-2xl border border-red-100/50 shadow-sm">
+                        <div class="space-y-1">
+                            <p class="font-bold text-gray-900">Supprimer cet organ</p>
+                            <p class="text-xs text-gray-500 leading-relaxed">Une fois supprimé, l'organ et ses tâches ne seront plus accessibles. <br>Cette action peut être annulée depuis la corbeille du projet.</p>
+                        </div>
+                        <button type="button" data-action="click->organ-create#openDeleteModal"
+                                class="px-6 py-3 bg-red-50 text-red-600 font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-red-600 hover:text-white transition-all active:scale-95 border border-red-100 cursor-pointer whitespace-nowrap">
+                            Supprimer l'organ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+</div>
+{% endblock %}
+
+{% block modals %}
+    {# --- MODAL POUR ÉDITER UN RÔLE (Permissions) --- #}
+    <div data-organ-create-target="roleModal" class="hidden fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-black/20 backdrop-blur-md transition-opacity cursor-pointer" data-action="click->organ-create#closeRoleModal"></div>
+
+            <div class="relative z-10 bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden border border-gray-100 transform transition-all">
+                <div class="p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-black text-gray-900">Configurer le rôle</h3>
+                        <button type="button" data-action="click->organ-create#closeRoleModal" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="col-span-1 space-y-2">
+                                <label class="text-sm font-bold text-gray-700">Icône</label>
+                                <input type="text" data-organ-create-target="modalRoleEmoji" 
+                                       data-action="input->organ-create#validateEmojiInput"
+                                       class="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:ring-0 rounded-xl text-center text-xl font-medium transition-all"
+                                       onfocus="this.style.borderColor= 'var(--project-color)'"
+                                       onblur="this.style.borderColor='transparent'"
+                                       placeholder="👤" maxlength="2">
+                            </div>
+                            <div class="col-span-3 space-y-2">
+                                <label class="text-sm font-bold text-gray-700">Nom du rôle</label>
+                                <input type="text" data-organ-create-target="modalRoleName" 
+                                       class="w-full px-4 py-3 bg-gray-50 border-2 border-transparent focus:bg-white focus:ring-0 rounded-xl text-gray-900 font-medium transition-all"
+                                       onfocus="this.style.borderColor= 'var(--project-color)'"
+                                       onblur="this.style.borderColor='transparent'"
+                                       placeholder="Nom du rôle">
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <label class="text-sm font-bold text-gray-700">Permissions</label>
+                            <div class="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar" data-organ-create-target="permissionList">
+                                {# JS Rendered Permissions #}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 px-8 py-6 flex justify-end gap-3">
+                    <button type="button" data-action="click->organ-create#closeRoleModal" class="px-6 py-3 font-bold text-gray-500 hover:text-gray-700 cursor-pointer">{{ 'generic.cancel'|trans }}</button>
+                    <button type="button" data-action="click->organ-create#saveRole" class="px-8 py-3 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 active:scale-95 transition-all cursor-pointer">{{ 'generic.save'|trans }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# --- MODAL DE SUPPRESSION DE L'ORGAN --- #}
+    <div data-organ-create-target="deleteModal" class="hidden fixed inset-0 z-[110] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-red-900/10 backdrop-blur-sm transition-opacity cursor-pointer" data-action="click->organ-create#closeDeleteModal"></div>
+
+            <div class="relative z-10 bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden border border-red-50 transform transition-all">
+                <div class="p-10 text-center">
+                    <div class="w-20 h-20 bg-red-50 rounded-3xl flex items-center justify-center text-red-500 mx-auto mb-6 border border-red-100/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </div>
+                    
+                    <h3 class="text-2xl font-black text-gray-900 mb-4">Supprimer cet organ ?</h3>
+                    <p class="text-gray-500 font-medium leading-relaxed mb-8">
+                        Êtes-vous sûr de vouloir supprimer l'organ <span class="font-bold text-gray-900">"{{ organ.title|default('') }}"</span> ? 
+                        Toutes les tâches rattachées seront également envoyées à la corbeille.
+                    </p>
+
+                    <div class="flex flex-col gap-3">
+                        <button type="button" data-organ-create-target="deleteSubmitBtn" data-action="click->organ-create#deleteOrgan"
+                                class="w-full py-4 bg-red-600 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-lg shadow-red-600/20 hover:bg-red-700 active:scale-[0.98] transition-all flex items-center justify-center gap-3 cursor-pointer">
+                            <span data-organ-create-target="deleteSpinner" class="hidden animate-spin">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                            </span>
+                            {{ 'generic.confirm_delete'|trans }}
+                        </button>
+                        <button type="button" data-action="click->organ-create#closeDeleteModal"
+                                class="w-full py-4 bg-gray-50 text-gray-500 font-bold rounded-2xl hover:bg-gray-100 transition-all cursor-pointer">
+                            {{ 'generic.cancel'|trans }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

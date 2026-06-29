@@ -1,0 +1,19 @@
+{% extends "layouts/landing_layout.html.twig" %}
+
+{% block title %}{{ 'meta.title'|trans({}, 'landing') }}{% endblock %}
+
+{% block body %}
+    
+    <twig:Landing:Hero />
+
+    <twig:Landing:Features />
+
+    <twig:Landing:Collaboration />
+
+    <twig:Landing:UseCases />
+
+    <twig:Landing:About />
+
+    <twig:Landing:SocialProof />
+
+{% endblock %}

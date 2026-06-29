@@ -1,0 +1,214 @@
+<div class="min-h-screen relative" 
+     [style.--project-color]="projectColor()" 
+     [style.--highlight-color]="highlightColor()" 
+     [style.--highlight]="highlightColor()">
+    
+    <!-- Background Glow -->
+    <div class="fixed top-0 right-0 w-[600px] h-[600px] rounded-full opacity-[0.05] pointer-events-none blur-[120px] -z-10" 
+         [style.backgroundColor]="highlightColor()"></div>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+        
+        <!-- Error alert -->
+        <div *ngIf="errorMessage()" class="p-6 bg-rose-50 text-rose-600 rounded-3xl border border-rose-100 mb-6 font-bold text-center">
+            {{ errorMessage() }}
+        </div>
+
+        <!-- Shimmer loading state -->
+        <div *ngIf="isLoading() && !errorMessage()" class="flex flex-col gap-12">
+            <!-- Header Shimmer -->
+            <div class="flex items-center gap-6">
+                <app-shimmer width="64px" height="64px" className="rounded-2xl"></app-shimmer>
+                <div class="flex-1 space-y-3">
+                    <app-shimmer width="200px" height="28px" className="rounded-lg"></app-shimmer>
+                    <app-shimmer width="350px" height="16px" className="rounded"></app-shimmer>
+                </div>
+            </div>
+
+            <!-- Tabs and Filters Shimmer -->
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex gap-2">
+                    <app-shimmer width="120px" height="40px" className="rounded-xl"></app-shimmer>
+                    <app-shimmer width="120px" height="40px" className="rounded-xl"></app-shimmer>
+                </div>
+                <app-shimmer width="280px" height="40px" className="rounded-xl"></app-shimmer>
+            </div>
+
+            <!-- Kanban Columns Shimmer -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div *ngFor="let col of [1, 2, 3]" class="bg-gray-50/50 p-5 rounded-3xl border border-gray-100/50 space-y-4">
+                    <app-shimmer width="100px" height="20px" className="rounded mb-2"></app-shimmer>
+                    <div *ngFor="let card of [1, 2]" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-2xs space-y-3">
+                        <app-shimmer width="40px" height="12px" className="rounded"></app-shimmer>
+                        <app-shimmer width="80%" height="18px" className="rounded"></app-shimmer>
+                        <app-shimmer width="100%" height="12px" className="rounded"></app-shimmer>
+                        <div class="flex justify-between items-center pt-2">
+                            <app-shimmer width="32px" height="32px" className="rounded-full"></app-shimmer>
+                            <app-shimmer width="60px" height="14px" className="rounded"></app-shimmer>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="!errorMessage() && !isLoading()">
+            <!-- HEADER -->
+            <header class="flex flex-col gap-12">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="flex items-center gap-6">
+                        <!-- Icon -->
+                        <div class="w-16 h-16 rounded-2xl shadow-sm border-2 flex items-center justify-center overflow-hidden shrink-0"
+                             [style.borderColor]="highlightColor()"
+                             [style.backgroundColor]="organData()?.iconData ? 'white' : highlightColor()">
+                            <ng-container *ngIf="organData()?.iconData" [ngSwitch]="organData()?.iconType">
+                                <span *ngSwitchCase="'EMOJI'" class="text-3xl">{{ organData()?.iconData }}</span>
+                                <div *ngSwitchCase="'SVG'" class="w-8 h-8 flex items-center justify-center" [innerHTML]="safeSvg(organData()?.iconData)"></div>
+                                <img *ngSwitchCase="'BLOB'" [src]="organData()?.iconData" [alt]="organData()?.title" class="w-full h-full object-cover">
+                                <div *ngSwitchDefault class="w-full h-full" [style.backgroundColor]="highlightColor()"></div>
+                            </ng-container>
+                        </div>
+
+                        <!-- Title & Description -->
+                        <div>
+                            <h1 class="text-3xl font-black text-black mb-1">{{ organData()?.title }}</h1>
+                            <div class="flex items-center gap-3">
+                                <a [routerLink]="['/project', projectUuid]"
+                                   class="px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg hover:underline transition-all"
+                                   [style.backgroundColor]="projectColor() + '1a'" 
+                                   [style.color]="projectColor()">
+                                    {{ projectTitle() }}
+                                </a>
+                                <p *ngIf="organData()?.description" class="text-xs text-gray-400 font-medium italic leading-relaxed">{{ organData()?.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Button -->
+                    <div class="flex items-center gap-3 self-end md:self-auto">
+                        <a *ngIf="hasPermission('ORGAN_EDIT') || hasPermission('ORGAN_MANAGE_MEMBERS') || hasPermission('ORGAN_MANAGE_ROLES')" 
+                           [routerLink]="['/project', projectUuid, 'organ', organUuid, 'settings']" 
+                           class="px-5 py-3 bg-black text-white font-bold rounded-2xl transition-all hover:bg-black/90 active:scale-95 shadow-lg flex items-center gap-2 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-white">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/>
+                            </svg>
+                            Configuration
+                        </a>
+                    </div>
+                </div>
+
+                <!-- ACTION BAR -->
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between bg-white/50 backdrop-blur-sm p-4 rounded-3xl border border-gray-100/50 shadow-sm gap-4">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <!-- View Toggle Group -->
+                        <div class="flex p-1 bg-gray-100/80 rounded-2xl shrink-0">
+                            <button (click)="toggleView('kanban')" 
+                                    class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer"
+                                    [class.text-white]="activeView === 'kanban'"
+                                    [class.shadow-sm]="activeView === 'kanban'"
+                                    [class.text-gray-500]="activeView !== 'kanban'"
+                                    [class.hover:text-gray-900]="activeView !== 'kanban'"
+                                    [style.backgroundColor]="activeView === 'kanban' ? highlightColor() : ''">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2m0 10V7"></path></svg>
+                                Kanban
+                            </button>
+                            <button (click)="toggleView('list')" 
+                                    class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer"
+                                    [class.text-white]="activeView === 'list'"
+                                    [class.shadow-sm]="activeView === 'list'"
+                                    [class.text-gray-500]="activeView !== 'list'"
+                                    [class.hover:text-gray-900]="activeView !== 'list'"
+                                    [style.backgroundColor]="activeView === 'list' ? highlightColor() : ''">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                                Liste
+                            </button>
+                        </div>
+
+                        <!-- Filter Component -->
+                        <app-organ-filters
+                          [highlightColor]="highlightColor()"
+                          [sortBy]="sortBy()"
+                          [sortOrder]="sortOrder()"
+                          [filterMe]="filterMe()"
+                          [minPriority]="minPriority()"
+                          [selectedStatuses]="selectedStatuses()"
+                          (filterMeChange)="onFilterMeChange($event)"
+                          (minPriorityChange)="onMinPriorityChange($event)"
+                          (selectedStatusesChange)="onSelectedStatusesChange($event)"
+                          (sortChange)="onSortChange($event)"
+                          (resetFilters)="onResetFilters()">
+                        </app-organ-filters>
+ 
+                        <!-- Links Toggle Button -->
+                        <button (click)="linksPanel.toggleLinksPanel()"
+                                class="px-5 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-700 hover:bg-gray-50 transition-all shadow-sm cursor-pointer group flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gray-400 group-hover:text-[var(--highlight-color)] transition-colors" [style.--highlight-color]="highlightColor()" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+                            Liens
+                        </button>
+ 
+                        <!-- Trash Button -->
+                        <a *ngIf="hasPermission('ORGAN_EDIT') || hasPermission('ORGAN_MANAGE_ROLES') || hasPermission('TASK_DELETE_OWN') || hasPermission('TASK_DELETE_ALL')" 
+                           [routerLink]="['/organ', projectUuid, organUuid, 'trash']" 
+                           class="flex items-center gap-2 px-5 py-3 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all shadow-sm cursor-pointer group">
+                            <svg class="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Corbeille
+                        </a>
+                    </div>
+
+                    <!-- Add Task Button -->
+                    <div class="flex items-center gap-3">
+                        <button *ngIf="hasPermission('TASK_CREATE')" 
+                                (click)="openTaskCreate()" 
+                                class="px-6 py-3 bg-black text-white font-bold rounded-2xl transition-all hover:scale-105 active:scale-95 shadow-lg flex items-center gap-2 cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                            Ajouter une tâche
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Links Component -->
+                <app-organ-links
+                  #linksPanel
+                  [projectUuid]="projectUuid!"
+                  [organUuid]="organUuid!"
+                  [links]="links()"
+                  [highlightColor]="highlightColor()"
+                  [canManageLinks]="hasPermission('ORGAN_LINK_MANAGE')"
+                  [isSavingLink]="isSavingLink()"
+                  (panelOpened)="loadLinks()"
+                  (addLink)="onAddLink($event)"
+                  (updateLink)="onUpdateLink($event)"
+                  (linksChanged)="loadLinks()">
+                </app-organ-links>
+            </header>
+
+            <!-- VIEWS CONTENT -->
+            <!-- Kanban View -->
+            <app-kanban-view *ngIf="activeView === 'kanban'"
+                             [tasks]="filteredTasks()"
+                             [allTasks]="allTasks()"
+                             [highlightColor]="highlightColor()"
+                             [selectedStatuses]="selectedStatuses()"
+                             [hasTaskEditAll]="hasPermission('TASK_EDIT_ALL')"
+                             [currentUserId]="authService.currentUser()?.uuid"
+                             (taskClicked)="openTaskEdit($event)"
+                             (taskStatusChanged)="onTaskStatusChanged($event)"></app-kanban-view>
+
+            <!-- List View -->
+            <app-list-view *ngIf="activeView === 'list'"
+                           [tasks]="filteredTasks()"
+                           [highlightColor]="highlightColor()"
+                           (taskClicked)="openTaskEdit($event)"></app-list-view>
+
+        </div>
+    </main>
+
+    <!-- Task Modal Sub-component -->
+    <app-task-modal #taskModal 
+                    [projectUuid]="projectUuid!" 
+                    [organUuid]="organUuid!"
+                    [highlightColor]="highlightColor()"
+                    (taskSaved)="loadTasks()"></app-task-modal>
+</div>

@@ -1,0 +1,14 @@
+{% extends "layouts/empty_layout.html.twig" %}
+
+{% block content_layout %}
+	{% set hide_mobile_menu_val = block('hide_mobile_menu') is defined ? block('hide_mobile_menu')|trim : 'false' %}
+	<div class="flex flex-col h-screen overflow-hidden bg-off-white">
+		<twig:Dashboard:Navbar 
+			hide_mobile_menu="{{ hide_mobile_menu_val == 'true' ? true : false }}"
+		/>
+
+		<main class="flex-grow overflow-y-auto px-4 py-4 pb-12">
+			{% block content %}{% endblock %}
+		</main>
+	</div>
+{% endblock %}

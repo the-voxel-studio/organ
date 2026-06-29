@@ -1,0 +1,29 @@
+{% extends "layouts/base_layout.html.twig" %}
+
+{% block title %}{{ 'legal_notice.title'|trans({}, 'legal') }} - Organ{% endblock %}
+
+{% block body %}
+    <h1 class="text-5xl font-black mb-16 tracking-tight">{{ 'legal_notice.title'|trans({}, 'legal') }}</h1>
+
+    <div class="space-y-16">
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'legal_notice.editor.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'legal_notice.editor.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'legal_notice.hosting.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'legal_notice.hosting.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'legal_notice.intellectual_property.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'legal_notice.intellectual_property.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'legal_notice.responsibility.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'legal_notice.responsibility.content'|trans({}, 'legal') }}</p>
+        </section>
+    </div>
+{% endblock %}

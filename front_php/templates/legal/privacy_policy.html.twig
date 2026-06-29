@@ -1,0 +1,57 @@
+{% extends "layouts/base_layout.html.twig" %}
+
+{% block title %}{{ 'privacy_policy.title'|trans({}, 'legal') }} - Organ{% endblock %}
+
+{% block body %}
+    <h1 class="text-5xl font-black mb-10 tracking-tight">{{ 'privacy_policy.title'|trans({}, 'legal') }}</h1>
+
+    <p class="text-xl text-gray-500 font-medium mb-16 leading-relaxed">
+        {{ 'privacy_policy.intro'|trans({}, 'legal') }}
+    </p>
+
+    <div class="space-y-16">
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'privacy_policy.controller.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'privacy_policy.controller.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'privacy_policy.data_collected.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg mb-4">{{ 'privacy_policy.data_collected.content'|trans({}, 'legal') }}</p>
+            <div class="prose prose-bubblegum max-w-none text-gray-600 list-disc pl-5 space-y-2">
+                {{ 'privacy_policy.data_collected.list'|trans({}, 'legal')|raw }}
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'privacy_policy.purposes.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg mb-4">{{ 'privacy_policy.purposes.content'|trans({}, 'legal') }}</p>
+            <div class="prose prose-bubblegum max-w-none text-gray-600 list-disc pl-5 space-y-2">
+                {{ 'privacy_policy.purposes.list'|trans({}, 'legal')|raw }}
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'privacy_policy.rights.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg mb-4">{{ 'privacy_policy.rights.content'|trans({}, 'legal') }}</p>
+            <div class="prose prose-bubblegum max-w-none text-gray-600 list-disc pl-5 space-y-2">
+                {{ 'privacy_policy.rights.list'|trans({}, 'legal')|raw }}
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'privacy_policy.retention.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'privacy_policy.retention.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'privacy_policy.google.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'privacy_policy.google.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'privacy_policy.contact.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'privacy_policy.contact.content'|trans({}, 'legal') }}</p>
+        </section>
+    </div>
+{% endblock %}

@@ -1,0 +1,71 @@
+<section>
+  <div class="flex items-center gap-4 mb-8">
+    <div class="p-3 bg-bubblegum/10 rounded-2xl text-bubblegum">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"/>
+      </svg>
+    </div>
+    <div>
+      <h2 class="text-xl font-bold text-black">Tâches prioritaires</h2>
+      <p class="text-sm text-gray-500 font-medium">Les tâches qui requièrent votre attention immédiate.</p>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="p-8">
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="border-b border-gray-50">
+              <th class="text-left pb-4 px-4 text-xs font-black text-gray-400 uppercase tracking-widest">Tâche</th>
+              <th class="text-left pb-4 px-4 text-xs font-black text-gray-400 uppercase tracking-widest">Échéance</th>
+              <th class="text-left pb-4 px-4 text-xs font-black text-gray-400 uppercase tracking-widest">Projet / Organe</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            @for (task of tasks; track task.uuid) {
+              <tr class="group hover:bg-gray-50/80 transition-colors cursor-pointer" 
+                  [routerLink]="['/organ', task.projectUuid, task.organUuid]" 
+                  [fragment]="'task-' + task.uuid">
+                <td class="py-5 px-4 max-w-[300px]">
+                  <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-6 h-6 rounded-lg text-[10px] font-black shrink-0"
+                         [ngClass]="{
+                           'bg-red-500 text-white animate-pulse': task.priority >= 4,
+                           'bg-amber-400 text-white': task.priority === 3,
+                           'bg-gray-100 text-gray-500': task.priority < 3
+                         }">
+                      {{ task.priority }}
+                    </div>
+                    <span class="font-bold text-gray-900 group-hover:text-highlight transition-colors truncate" [title]="task.title">
+                      {{ task.title }}
+                    </span>
+                  </div>
+                </td>
+                <td class="py-5 px-4 text-sm font-medium text-gray-500">
+                  {{ formatDate(task.expiresAt) }}
+                </td>
+                <td class="py-5 px-4">
+                  <div class="flex flex-col gap-1">
+                    <span class="px-3 py-1 bg-gray-100 text-gray-600 text-[10px] font-black uppercase tracking-widest rounded-lg w-fit">
+                      {{ task.projectName }}
+                    </span>
+                    <span class="px-3 py-1 bg-highlight/10 text-highlight text-[9px] font-bold uppercase tracking-tight rounded-lg w-fit">
+                      {{ task.organName }}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3" class="py-12 text-center text-gray-500 font-medium italic">
+                  Aucune tâche prioritaire assignée pour le moment.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,48 @@
+{% extends "layouts/base_layout.html.twig" %}
+
+{% block title %}{{ 'terms.title'|trans({}, 'legal') }} - Organ{% endblock %}
+
+{% block body %}
+    <h1 class="text-5xl font-black mb-10 tracking-tight">{{ 'terms.title'|trans({}, 'legal') }}</h1>
+
+    <p class="text-xl text-gray-500 font-medium mb-16 leading-relaxed">
+        {{ 'terms.intro'|trans({}, 'legal') }}
+    </p>
+
+    <div class="space-y-16">
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'terms.service.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'terms.service.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'terms.access.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'terms.access.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'terms.responsibility_user.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'terms.responsibility_user.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'terms.responsibility_editor.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'terms.responsibility_editor.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'terms.property.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'terms.property.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'terms.termination.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'terms.termination.content'|trans({}, 'legal') }}</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-black uppercase tracking-widest text-bubblegum mb-6">{{ 'terms.law.title'|trans({}, 'legal') }}</h2>
+            <p class="text-gray-600 leading-relaxed text-lg">{{ 'terms.law.content'|trans({}, 'legal') }}</p>
+        </section>
+    </div>
+{% endblock %}

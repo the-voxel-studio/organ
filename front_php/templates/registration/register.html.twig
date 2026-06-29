@@ -1,0 +1,159 @@
+{% extends 'layouts/auth_layout.html.twig' %}
+
+{% block title %}{{ 'register.submit'|trans({}, 'auth') }} - Organ{% endblock %}
+
+{% block auth_slogan %}{{ 'slogan.register'|trans({}, 'auth')|raw }}{% endblock %}
+
+{% block auth_content %}
+    <div data-controller="auth-form google-auth" 
+         data-auth-form-url-value="/api/auth/register" 
+         data-auth-form-redirect-url-value="{{ path('app_login') }}"
+         data-auth-form-type-value="register"
+         data-google-auth-client-id-value="{{ google_client_id }}"
+         data-google-auth-login-url-value="/api/auth/login/google"
+         data-google-auth-redirect-url-value="{{ path('app_dashboard') }}"
+         data-action="google-auth:error->auth-form#showErrorFromEvent">
+
+        <div class="mb-10">
+            <h1 class="text-3xl font-black text-black mb-2">{{ 'register.title'|trans({}, 'auth') }}</h1>
+            <p class="text-gray-500 font-medium">{{ 'register.subtitle'|trans({}, 'auth') }}</p>
+        </div>
+
+        <!-- Error Zone -->
+        <div data-auth-form-target="error" class="hidden mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-bold rounded-r-xl">
+            <span data-auth-form-target="errorMessage"></span>
+        </div>
+
+        <form data-auth-form-target="form" data-action="submit->auth-form#submit">
+            <div class="space-y-6">
+                <!-- Name Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="registration_firstname" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-widest">{{ 'register.firstname_label'|trans({}, 'auth') }}</label>
+                        <input type="text" name="firstname" id="registration_firstname" maxlength="50" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none" required placeholder="{{ 'register.firstname_placeholder'|trans({}, 'auth') }}">
+                    </div>
+                    <div>
+                        <label for="registration_lastname" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-widest">{{ 'register.lastname_label'|trans({}, 'auth') }}</label>
+                        <input type="text" name="lastname" id="registration_lastname" maxlength="50" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none" required placeholder="{{ 'register.lastname_placeholder'|trans({}, 'auth') }}">
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="registration_email" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-widest">{{ 'register.email_label'|trans({}, 'auth') }}</label>
+                    <input type="email" name="email" id="registration_email" maxlength="180" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none" required placeholder="{{ 'register.email_placeholder'|trans({}, 'auth') }}">
+                </div>
+
+                <!-- Password -->
+                <div data-controller="password-visibility" class="relative">
+                    <label for="registration_password" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-widest">{{ 'register.password_label'|trans({}, 'auth') }}</label>
+                    <div class="relative">
+                        <input type="password" name="password" id="registration_password" data-password-visibility-target="input" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none" required placeholder="••••••••">
+                        <button type="button" data-action="click->password-visibility#toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors p-2 cursor-pointer">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div data-controller="password-visibility" class="relative">
+                    <label for="registration_confirm_password" class="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-widest">{{ 'register.confirm_password_label'|trans({}, 'auth') }}</label>
+                    <div class="relative">
+                        <input type="password" name="confirm_password" id="registration_confirm_password" data-password-visibility-target="input" class="w-full px-5 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-bubblegum focus:ring-4 focus:ring-bubblegum/10 transition-all outline-none" required placeholder="••••••••">
+                        <button type="button" data-action="click->password-visibility#toggle" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors p-2 cursor-pointer">
+                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Agreement -->
+                <div class="flex items-center justify-center py-2">
+                    <label class="relative flex items-center group cursor-pointer">
+                        <input type="checkbox" id="agreement" 
+                               data-auth-form-target="agreement"
+                               data-google-auth-target="agreement"
+                               class="peer sr-only">
+                        
+                        <!-- Custom Checkbox -->
+                        <div class="w-5 h-5 border-2 border-gray-300 rounded-md bg-white transition-all duration-200 
+                                    peer-checked:bg-bubblegum peer-checked:border-bubblegum 
+                                    peer-focus:ring-2 peer-focus:ring-bubblegum/20
+                                    group-hover:border-bubblegum/50 flex items-center justify-center shrink-0">
+                            <svg class="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+
+                        <!-- Label Text (Full Legal Version) -->
+                        <span class="ml-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-relaxed select-none group-hover:text-gray-600 transition-colors">
+                            {{ 'register.agreement_prefix'|trans({}, 'auth') }}
+                            <a href="{{ path('app_terms') }}" class="text-bubblegum hover:underline decoration-2 underline-offset-4 transition-all">
+                                {{ 'register.agreement_link_terms'|trans({}, 'auth') }}
+                            </a>
+                            {{ 'register.agreement_and'|trans({}, 'auth') }}
+                            <a href="{{ path('app_privacy_policy') }}" class="text-bubblegum hover:underline decoration-2 underline-offset-4 transition-all">
+                                {{ 'register.agreement_link_privacy'|trans({}, 'auth') }}
+                            </a>
+                        </span>
+
+                    </label>
+                </div>
+
+                <button type="submit" data-auth-form-target="submitButton" class="w-full py-4 bg-bubblegum hover:bg-bubblegum/90 text-white font-black text-lg rounded-2xl shadow-xl shadow-bubblegum/20 transition-all transform hover:-translate-y-1 active:scale-[0.98] uppercase tracking-widest cursor-pointer flex items-center justify-center gap-3">
+                    <svg data-auth-form-target="spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>{{ 'register.submit'|trans({}, 'auth') }}</span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Separator -->
+        <div class="relative my-10">
+            <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gray-100"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+                <span class="px-4 bg-white text-gray-400 font-bold uppercase tracking-widest text-[10px]">{{ 'register.or_divider'|trans({}, 'auth') }}</span>
+            </div>
+        </div>
+
+        <!-- Social Login -->
+        <div class="relative mb-10">
+            <!-- Hidden official Google button to handle security -->
+            <div data-google-auth-target="buttonContainer" class="hidden"></div>
+            
+            <!-- Your custom styled button -->
+            <button type="button" 
+                    data-google-auth-target="button"
+                    data-action="click->google-auth#login" 
+                    class="w-full flex items-center justify-center gap-3 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-gray-700 hover:bg-gray-50 transition-all cursor-pointer">
+                
+                <svg data-google-auth-target="spinner" class="hidden animate-spin h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+
+                <svg data-google-auth-target="icon" class="w-5 h-5" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                <span>{{ 'login.google_button'|trans({}, 'auth') }}</span>
+            </button>
+        </div>
+
+        <p class="text-center text-gray-500 font-medium">
+            {{ 'register.already_account'|trans({}, 'auth') }} 
+            <a href="{{ path('app_login') }}" class="text-bubblegum font-black hover:underline decoration-2 underline-offset-4 transition-all">{{ 'register.login_link'|trans({}, 'auth') }}</a>
+        </p>
+    </div>
+{% endblock %}

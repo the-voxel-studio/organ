@@ -1,0 +1,17 @@
+{% extends "base.html.twig" %}
+
+{% block title %}{{ 'meta.title'|trans({}, 'landing') }}{% endblock %}
+
+{% block body_class %}min-h-screen bg-white text-gray-900 font-sans antialiased selection:bg-bubblegum/30{% endblock %}
+
+{% block layout %}
+    
+    <twig:Landing:Navbar />
+
+    <main>
+        {% block body %}{% endblock %}
+    </main>
+
+    <twig:Landing:Footer />
+
+{% endblock %}

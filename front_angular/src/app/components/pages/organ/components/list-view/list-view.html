@@ -1,0 +1,61 @@
+<div class="bg-white rounded-[3rem] shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-gray-50/50 border-b border-gray-100">
+                <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Tâche</th>
+                <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Statut</th>
+                <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Priorité</th>
+                <th class="px-8 py-5 text-[10px] font-black uppercase tracking-widest text-gray-400">Date d'échéance</th>
+                <th class="px-8 py-5"></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let task of tasks" 
+                (click)="onTaskClick(task.uuid)"
+                class="hover:bg-gray-50/50 transition-colors cursor-pointer group border-b border-gray-50 last:border-0">
+                
+                <td class="px-8 py-5">
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-sm font-bold text-gray-900 group-hover:text-black truncate" [title]="task.title">{{ task.title }}</span>
+                        <span class="text-[10px] text-gray-400 font-medium">{{ task.uuid.substring(0, 8) }}</span>
+                    </div>
+                </td>
+                
+                <td class="px-8 py-5">
+                    <span *ngIf="task.status === 'IN_PROGRESS'" 
+                          class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider" 
+                          [style.backgroundColor]="highlightColor + '1a'" 
+                          [style.color]="highlightColor">En cours</span>
+                    <span *ngIf="task.status === 'TODO'" class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-600">À faire</span>
+                    <span *ngIf="task.status === 'WAITING'" class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-600">En attente</span>
+                    <span *ngIf="task.status === 'DONE'" class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-green-100 text-green-600">Terminé</span>
+                    <span *ngIf="task.status === 'CANCELED'" class="px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-600">Annulé</span>
+                </td>
+                
+                <td class="px-8 py-5">
+                    <span class="text-xs font-bold text-gray-600">Priorité {{ task.priority }}</span>
+                </td>
+                
+                <td class="px-8 py-5">
+                    <div *ngIf="task.expiresAt" class="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-rose-500">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 00-2 2z" /></svg>
+                        {{ formatDate(task.expiresAt) }}
+                    </div>
+                    <span *ngIf="!task.expiresAt" class="text-[10px] font-black uppercase tracking-widest text-gray-300">-</span>
+                </td>
+                
+                <td class="px-8 py-5 text-right">
+                    <button class="p-2 text-gray-400 hover:text-gray-900 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                </td>
+            </tr>
+            
+            <tr *ngIf="tasks.length === 0">
+                <td colspan="5" class="px-8 py-20 text-center text-sm text-gray-400 italic font-medium">
+                    Aucune tâche à afficher.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
