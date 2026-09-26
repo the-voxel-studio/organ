@@ -1,95 +1,305 @@
-# Organ : Gestion de Projets Collaboratifs
+# Organ: Collaborative Project & Organ Management Platform
 
-Organ est une application de gestion de projets collaboratifs dont la principale caractéristique est un système de permissions hautement granulaire et personnalisable.
+**English** | [Français](README.fr.md)
 
-## Fonctionnalités Clés
-
-### Fonctionnalités Principales
-*   **Gestion Avancée des Permissions et des Rôles :** Un contrôle fin des droits au niveau des sous-projets (appelés "Organ"). Les administrateurs peuvent définir des rôles sur mesure à partir d'une liste détaillée de permissions (par exemple, valider, créer, modifier ou supprimer des tâches pour soi-même ou pour d'autres).
-*   **Gestion de Tâches Sophistiquée :** Définissez des tâches avec un nom, une échéance, un statut (en attente, en cours, terminée) et une échelle de priorité de 1 à 10. Un filtre dédié permet de trier par priorité et par statut.
-*   **Outils d'Organisation et de Suivi :** Gérez un calendrier avec des échéances et une intégration potentielle avec Google Calendar. Toutes les notifications sont gérées en interne dans l'application.
-
-### Expérience Utilisateur (UX)
-*   **Tableau de Bord :** Le tableau de bord principal met en évidence les tâches urgentes et utilise un dégradé de couleurs (du rose au rouge) pour représenter visuellement les priorités des projets.
-*   **Authentification Sécurisée :** Hachage de mot de passe standard et une option de connexion avec Google.
-*   **Panneau de Navigation :** Un panneau de navigation unique comprend des outils et une liste de liens externes.
-
-### Fonctionnalités Techniques
-*   **Gestion des Comptes Utilisateurs :** Opérations CRUD (Créer, Lire, Mettre à jour, Supprimer) complètes pour les comptes utilisateurs.
-*   **Sécurité :** La communication sécurisée avec la base de données et le hachage des mots de passe sont mis en œuvre.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![PHP](https://img.shields.io/badge/PHP-8.4-777BB4.svg?logo=php&logoColor=white)](https://www.php.net/)
+[![Symfony](https://img.shields.io/badge/Symfony-8.0-black.svg?logo=symfony&logoColor=white)](https://symfony.com/)
+[![Angular](https://img.shields.io/badge/Angular-21-DD0031.svg?logo=angular&logoColor=white)](https://angular.dev/)
+[![Android](https://img.shields.io/badge/Android-Jetpack%20Compose-3DDC84.svg?logo=android&logoColor=white)](https://developer.android.com/compose)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1.svg?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-7.0-47A248.svg?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Valkey](https://img.shields.io/badge/Valkey-7.2-CC342D.svg?logo=redis&logoColor=white)](https://valkey.io/)
+[![Mercure](https://img.shields.io/badge/Mercure-Realtime-00A389.svg)](https://mercure.rocks/)
 
 ---
 
-## Architecture Technique
+## 📖 Table of Contents
 
-L'application est composée de plusieurs microservices orchestrés par Docker Compose. Chaque service s'exécute dans son propre conteneur et communique sur un réseau partagé.
-
-*   **Frontend PHP (`front-nginx`, `front-php`) :** L'interface utilisateur historique construite avec Symfony (Twig) et JavaScript (Stimulus/Tailwind). Elle est accessible sur [http://localhost:8000](http://localhost:8000).
-*   **Frontend Angular (`front-angular`) :** Le nouveau frontend moderne construit avec Angular, accessible sur [http://localhost:4200](http://localhost:4200).
-*   **Backend (`api-nginx`, `api-php`) :** Le cœur de l'application, une API Symfony qui gère la logique métier, les données et l'authentification des utilisateurs. Accessible sur [http://localhost:8001](http://localhost:8001).
-*   **Base de Données relationnelle (`database`) :** Une base de données MySQL pour la persistance des données relationnelles structurées.
-*   **Base de Données NoSQL (`mongodb`) :** Une base de données MongoDB pour stocker l'historique, les données analytiques et les fichiers.
-*   **Cache (`valkey`) :** Un système de stockage de données en mémoire utilisé pour la mise en cache, basé sur Valkey (un fork de Redis).
-*   **Hub Temps Réel (`mercure`) :** Un hub Mercure pour pousser des mises à jour en temps réel aux clients.
-*   **Admin Base de Données (`phpmyadmin`) :** Une interface web pour gérer la base de données MySQL.
-
-### Schéma du Backend
-
-Le diagramme suivant illustre l'architecture générale de l'API backend :
-
-![Schéma du Backend](docs/Backend.png)
+1. [What is Organ?](#-what-is-organ)
+   * [Origins and Philosophy](#origins-and-philosophy)
+   * [The Tripartite Hierarchy: Project > Organ > Task](#the-tripartite-hierarchy-project--organ--task)
+   * [Storage Freedom: BYOS ("Bring Your Own Storage")](#storage-freedom-byos-bring-your-own-storage)
+   * [Security & Granular Permissions (RBAC)](#security--granular-permissions-rbac)
+   * [Urgency Management & Chromatic Scale](#urgency-management--chromatic-scale)
+   * [Traceability, Audit Log & Analytics](#traceability-audit-log--analytics)
+   * [Context-Aware Integrated AI Assistant](#context-aware-integrated-ai-assistant)
+   * [Multi-Platform Ecosystem](#multi-platform-ecosystem)
+2. [Technical Architecture & Microservices](#-technical-architecture--microservices)
+   * [Service Mapping](#service-mapping)
+   * [Architecture Diagram](#architecture-diagram)
+3. [Environment Configuration](#-environment-configuration)
+   * [1. Project Root (`.env`)](#1-project-root-env)
+   * [2. Backend API (`api/.env`)](#2-backend-api-apienv)
+   * [3. Angular Frontend (`front_angular/.env`)](#3-angular-frontend-front_angularenv)
+   * [4. Legacy PHP Frontend (`front_php/.env`)](#4-legacy-php-frontend-front_phpenv)
+4. [Tutorial: Google Cloud Setup (OAuth 2.0 & Drive)](#-tutorial-google-cloud-setup-oauth-20--drive)
+5. [Installation & Quick Start](#-installation--quick-start)
+6. [Android Mobile Application](#-android-mobile-application)
+7. [Demo Data (Seed) & Test Accounts](#-demo-data-seed--test-accounts)
+8. [Testing & Code Quality](#-testing--code-quality)
+9. [License](#-license)
 
 ---
 
-## Configuration de l'Environnement
+## 💡 What is Organ?
 
-Le projet nécessite quatres fichiers `.env`. **Ne réfléchissez pas trop :** les valeurs ci-dessous sont des exemples valides pour le développement local. Copiez-collez sans crainte.
+### Origins and Philosophy
 
-> **Important :** Dans les exemples ci-dessous, les valeurs entourées de `< >` (ex: `<VOTRE_ID_CLIENT>`) doivent être remplacées par vos propres valeurs réelles obtenues lors de la configuration de vos services (Google Cloud, etc.) ou des placeholders valides.
+**Organ** was conceived by three computer science students with distinct organizational workflows: the creative thinker driven by visual hierarchy, the rigorous planner focused on structure, and the pragmatist seeking immediate execution.
 
-> **Règle d'or des secrets :** Pour `APP_SECRET`, `JWT_PASSPHRASE` et surtout `MERCURE_JWT_SECRET`, utilisez des chaînes de caractères **longues (min. 32 caractères)**. Une clé trop courte (ex: "123") fera planter le serveur API sans message d'erreur explicite.
+Analyzing existing project management solutions revealed two common pitfalls:
+* **The "Wall of Tasks":** Flat to-do lists that start out simple, but quickly morph into endless, anxiety-inducing scroll fields devoid of context.
+* **The "Labyrinth":** Over-nested documentation systems (infinite sub-pages inside sub-pages) where teams spend more time filing and searching than executing.
 
-### 1. Racine du projet (`.env`)
-Configure les identifiants techniques pour Docker.
+Organ was designed to bridge this divide: **delivering a clean, human-centered, and deeply secure organizational structure** without compromising on visual clarity or speed of execution.
+
+---
+
+### The Tripartite Hierarchy: Project > Organ > Task
+
+Organ eliminates cognitive overload through a strict 3-tier structure:
+
+```text
+📁 PROJECT (Strategic Vision & Global Team)
+│
+├── 🫀 ORGAN A (Autonomous business module, team, sprint, or sub-project)
+│    ├── 📋 Task 1 (Priority 8/10, deadline, review/validation required)
+│    ├── 📋 Task 2 (Blocked by Task 1 dependency)
+│    └── 📋 Task 3
+│
+└── 🫀 ORGAN B (External module exposed safely to contractors or clients)
+     ├── 📋 Task 4
+     └── 📋 Task 5
+```
+
+1. **Project:** The high-level umbrella (title, description, visual identity color, custom icon/emoji, associated Google Drive storage, and global team members).
+2. **Organ:** An autonomous functional unit within the project. An Organ represents a business area (*Design*, *Backend*, *Marketing*), a project milestone (*Phase 1*, *Sprint 3*), or a dedicated outsourced space. Each Organ possesses its own **Kanban board**, contextual quick links panel, and, crucially, its own **local role and permission system**.
+3. **Task:** The atomic unit of work, enriched with comprehensive attributes:
+   * Dynamic status (`TODO`, `IN_PROGRESS`, `WAITING`, `DONE`, `CANCELED`) with an explicit status message.
+   * Fine-grained priority rating from 1 to 10.
+   * Start and due dates with hourly time estimations.
+   * Designated task actors: Creator, Technical Manager, and Official Validator (*sign-off*).
+   * Intelligent dependency management: a task clearly indicates if it is blocked by prerequisite tasks.
+   * Cross-cutting project tags, team discussion comments, and file attachments.
+
+---
+
+### Storage Freedom: BYOS ("Bring Your Own Storage")
+
+Unlike traditional SaaS tools that leverage vendor lock-in and charge monthly markups per gigabyte, Organ embraces the **Bring Your Own Storage (BYOS)** paradigm:
+
+* **Zero Cloud Storage Markups:** Connect your own **Google Drive** account directly to any Organ project. Project files and assets remain securely within your own cloud infrastructure, under your legal and operational control.
+* **Hybrid Storage Architecture:** Task attachments can be stored either on Organ's internal infrastructure (**MongoDB GridFS/Documents**) or within your personal/enterprise **Google Drive** (`drive://<fileId>`).
+* **Integrity & Versioning:** Every uploaded asset is tracked with an automatic **SHA-256** checksum, MIME-type, file size verification, and incremental version number.
+
+---
+
+### Security & Granular Permissions (RBAC)
+
+Organ features an enterprise-grade Role-Based Access Control (RBAC) engine built to safely accommodate hybrid teams (internal employees, freelancers, agencies, and external clients):
+
+* **Strict Organ-Level Isolation:** A collaborator invited to a project can be restricted exclusively to a single Organ. All other Organs within that project remain completely invisible to them.
+* **Global vs. Local Roles:**
+  * *Global Project Roles:* `ADMIN`, `MANAGER`, `MEMBER`.
+  * *Local Organ Roles:* Fully customizable roles defined per Organ with custom names and icons.
+* **Over 40 Unit Permissions:**
+  * *Organ Management:* View, edit, manage local members, configure custom roles, manage external links.
+  * *Task Operations:* Create tasks, edit own vs. all tasks, soft delete vs. hard delete, change status, adjust priority, schedule start/due dates, edit hourly estimates.
+  * *Workflow & Assignments:* Self-assign, assign others, officially validate tasks (`TASK_VALIDATE`).
+  * *Associated Resources:* Attachments, Web links, project tags, and task dependencies.
+  * *Comments:* Post, edit own comments vs. moderate all comments.
+* **Hardened Security Protections:** The API enforces comprehensive protection against IDOR (*Insecure Direct Object Reference*), mass-assignment exploits, and automatic cache invalidation upon privilege modification.
+* **Two-Level Soft Delete & Trash:** Safely recover deleted items from either the local Organ trash or the global Project trash, backed by separate permissions for permanent data destruction.
+
+---
+
+### Urgency Management & Chromatic Scale
+
+Organ combats mental fatigue through immediate visual cues:
+* A calibrated urgency rating from **1 (lowest priority) to 10 (critical / urgent)**.
+* A dynamic chromatic gradient transitioning from soft bubblegum pink to crimson red: dashboards and task cards highlight immediate priorities at a glance without tedious scanning.
+* Clear visual alerts for blocked tasks so contributors instantly recognize blockers before joining unnecessary status syncs.
+
+---
+
+### Traceability, Audit Log & Analytics
+
+All workspace mutations are permanently recorded in a dedicated **MongoDB AuditLog collection**:
+* Comprehensive event logging: creation, status updates, date rescheduling, manager reassignments, and attachment uploads.
+* Timeline view integrated directly within each task detail modal.
+* Automated daily stats aggregation (`DailyStat`) via cron or manual dispatch, providing the frontend with:
+  * Overall project activity velocity curves.
+  * Task distribution doughnut charts by status.
+  * Workload distribution bar charts across Organs.
+  * Consultation and team engagement indicators.
+
+---
+
+### Context-Aware Integrated AI Assistant
+
+Organ includes an intelligent virtual assistant powered by state-of-the-art LLMs via **NVIDIA AI Foundation Endpoints** (*Mistral AI*):
+* **Contextual Awareness:** The assistant detects the user's active route, accessible projects, Organs, and available team members.
+* **Step-by-Step Onboarding:** Provides guided assistance through business logic (e.g. how to invite an external partner into a specific Organ).
+* **Action Triggering:** Seamlessly triggers client-side actions and navigation routes directly from the chat interface.
+
+---
+
+### Multi-Platform Ecosystem
+
+Organ provides seamless collaboration across modern interfaces:
+
+* **Modern Web Frontend (Angular 21 - Primary):**
+  * High-performance Single Page Application powered by **Angular 21** and **Tailwind CSS 4**.
+  * GSAP animations, interactive drag-and-drop Kanban boards, Chart.js analytics, role administration panels, and the integrated AI chat assistant.
+* **Native Android Application:**
+  * Built from scratch in **Kotlin** with declarative **Jetpack Compose** and Material Design 3.
+  * One-tap login with **Google Identity Credential Manager**, secure token storage via `EncryptedSharedPreferences`, and native task/trash screens.
+* **Legacy Web Frontend (Symfony Twig / PHP):**
+  * Historical frontend based on Symfony Twig, Stimulus, and Tailwind CSS (maintained for backwards compatibility, currently deprecated in favor of Angular).
+* **Real-Time Push (Mercure Hub):**
+  * Server-Sent Events (SSE) delivering live push notifications for status shifts, task assignments, manager nominations, and comments.
+
+---
+
+## 🏗 Technical Architecture & Microservices
+
+Organ uses a modular microservices architecture orchestrated via **Docker Compose**. Each service runs in an isolated container over an internal private network.
+
+### Service Mapping
+
+| Docker Service | Technology | Role & Responsibility | External Port |
+| :--- | :--- | :--- | :--- |
+| `front-angular` | **Angular 21 / Node.js** | Modern Web SPA Frontend | [http://localhost:4200](http://localhost:4200) |
+| `api-nginx` | **Nginx Alpine** | HTTP reverse proxy and web termination for API | [http://localhost:8001](http://localhost:8001) |
+| `api-php` | **PHP 8.4-FPM / Symfony 8** | Core API backend, REST controllers, JWT & RBAC engine | Internal (FastCGI) |
+| `database` | **MySQL 8.0** | Relational DB (Users, Projects, Organs, Roles, Tasks) | `3306` |
+| `mongodb` | **MongoDB 7.0** | NoSQL DB (Audit logs, daily stats, GridFS files) | `27017` |
+| `valkey` | **Valkey 7.2** | High-performance in-memory cache (Redis fork) | `6379` |
+| `mercure` | **Mercure Hub** | Real-time Server-Sent Events (SSE) hub | [http://localhost:9090](http://localhost:9090) |
+| `phpmyadmin` | **phpMyAdmin** | Web management UI for MySQL database | [http://localhost:8080](http://localhost:8080) |
+| `front-nginx` | **Nginx Alpine** | Web server for the legacy PHP frontend | [http://localhost:8000](http://localhost:8000) |
+| `front-php` | **PHP 8.4-FPM** | Legacy Symfony Twig frontend (deprecated) | Internal (FastCGI) |
+| `android` | **Kotlin / Jetpack Compose** | Native Android application (in `android/`) | Standalone |
+
+---
+
+### Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph Clients["User Clients"]
+        ANG["Angular 21 Frontend<br/>:4200"]
+        AND["Android Native App<br/>(Jetpack Compose)"]
+        PHP_F["Legacy PHP Twig<br/>(Deprecated :8000)"]
+    end
+
+    subgraph Ingress["Web Ingress & Proxy"]
+        API_NGX["api-nginx<br/>:8001"]
+    end
+
+    subgraph CoreBackend["Backend Core"]
+        API_PHP["api-php (Symfony 8 / PHP 8.4)<br/>- Lexik JWT & Refresh Tokens<br/>- RBAC Permission Engine<br/>- Doctrine ORM & ODM<br/>- Mistral AI Integration"]
+    end
+
+    subgraph DataStorage["Persistence & Cache"]
+        MYSQL[("MySQL 8.0<br/>Relational Data<br/>Projects, Organs, Tasks, Roles")]
+        MONGO[("MongoDB 7.0<br/>AuditLog, DailyStat,<br/>GridFS Files")]
+        VALKEY[("Valkey 7.2<br/>Application Cache & Sessions")]
+    end
+
+    subgraph Realtime["Realtime Engine"]
+        MERCURE["Mercure Hub :9090<br/>Server-Sent Events (SSE)"]
+    end
+
+    subgraph ExternalServices["External Cloud Services"]
+        GOOGLE["Google Cloud APIs<br/>- OAuth 2.0 Identity<br/>- Google Drive API"]
+        NVIDIA["NVIDIA AI Endpoints<br/>Mistral AI LLM"]
+    end
+
+    ANG -->|HTTP REST / JWT| API_NGX
+    AND -->|HTTP REST / JWT| API_NGX
+    PHP_F -->|HTTP REST| API_NGX
+    ANG -.->|SSE Subscription| MERCURE
+
+    API_NGX -->|FastCGI| API_PHP
+
+    API_PHP -->|SQL / Doctrine ORM| MYSQL
+    API_PHP -->|BSON / Doctrine ODM| MONGO
+    API_PHP -->|Redis Protocol| VALKEY
+    API_PHP -->|Publish SSE| MERCURE
+    API_PHP -->|OAuth & BYOS Files| GOOGLE
+    API_PHP -->|AI Inference Requests| NVIDIA
+```
+
+#### Detailed Backend Schema
+![Backend Schema](docs/Backend.png)
+
+---
+
+## ⚙️ Environment Configuration
+
+Running Organ locally requires four `.env` configuration files.
+
+> [!IMPORTANT]
+> **Secret Key Policy:** For `APP_SECRET`, `JWT_PASSPHRASE`, and specifically `MERCURE_JWT_SECRET`, you **must** provide random strings of **at least 32 characters**. Using shorter keys will cause the API container to fail immediately without an explicit error trace.
+
+---
+
+### 1. Project Root (`.env`)
+Configures the Docker Compose orchestration layer:
 ```dotenv
-# Identifiants pour le service MySQL
+# ==========================================
+# MYSQL DATABASE CREDENTIALS
+# ==========================================
 MYSQL_ROOT_PASSWORD=root_password
 MYSQL_DATABASE=app_database
 MYSQL_USER=app_user
 MYSQL_PASSWORD=app_password
 
-# Identifiants pour le service phpMyAdmin
+# ==========================================
+# PHPMYADMIN
+# ==========================================
 PMA_USER=root
 PMA_PASSWORD=root_password
 
-# Mercure Realtime Hub
+# ==========================================
+# MERCURE REALTIME HUB (Min 32 chars)
+# ==========================================
 MERCURE_JWT_SECRET=!ChangeThisMercureHubJWTSecretKey!
 
-# Identifiants pour le service MongoDB
+# ==========================================
+# MONGODB NOSQL DATABASE
+# ==========================================
 MONGODB_ROOT_USER=root
 MONGODB_ROOT_PASSWORD=mongodb_root_password
 MONGODB_DATABASE=organ
 
-# Identifiants Google
-GOOGLE_CLIENT_ID=<VOTRE_ID_CLIENT>.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=<VOTRE_SECRET_CLIENT>
+# ==========================================
+# GOOGLE CLOUD CREDENTIALS (OAuth & Drive)
+# ==========================================
+GOOGLE_CLIENT_ID=<YOUR_CLIENT_ID>.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=<YOUR_CLIENT_SECRET>
 ```
 
-### 2. API Backend (`api/.env`)
+---
+
+### 2. Backend API (`api/.env`)
+Configures the Symfony backend core:
 ```dotenv
 ###> SYMFONY CORE ###
 APP_ENV=dev
-# IMPORTANT: 32 caractères minimum
 APP_SECRET=a_very_long_random_string_of_at_least_32_chars
 APP_SHARE_DIR=var/share
 DEFAULT_URI=http://localhost
 ###< SYMFONY CORE ###
 
-###> INFRASTRUCTURE ###
+###> INFRASTRUCTURE & NETWORK ###
 TRUSTED_PROXIES=127.0.0.1,REMOTE_ADDR
 TRUSTED_HEADERS=x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port
 CORS_ALLOW_ORIGIN='^https?://(localhost|127\.0\.0\.1):(8000|8001|4200)$'
-###< INFRASTRUCTURE ###
+###< INFRASTRUCTURE & NETWORK ###
 
 ###> DATABASE & CACHE ###
 DATABASE_URL="mysql://app_user:app_password@database:3306/app_database?serverVersion=8.0.32&charset=utf8mb4"
@@ -98,31 +308,40 @@ MONGODB_URI="mongodb://root:mongodb_root_password@mongodb:27017/?authSource=admi
 MONGODB_DB="organ_dev"
 ###< DATABASE & CACHE ###
 
-###> AUTHENTICATION ###
+###> AUTHENTICATION & SECURITY ###
 JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
 JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
-# IMPORTANT: 32 caractères minimum
 JWT_PASSPHRASE=another_long_random_passphrase_for_jwt
-GOOGLE_CLIENT_ID=<VOTRE_ID_CLIENT>.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=<VOTRE_SECRET_CLIENT>
+GOOGLE_CLIENT_ID=<YOUR_CLIENT_ID>.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=<YOUR_CLIENT_SECRET>
 COOKIE_SECURE=false
-###< AUTHENTICATION ###
+###< AUTHENTICATION & SECURITY ###
 
-###> REALTIME (Mercure) ###
+###> REALTIME (MERCURE) ###
 MERCURE_URL=http://mercure/.well-known/mercure
 MERCURE_PUBLIC_URL=http://localhost:8000/hub
-# IMPORTANT: 32 caractères minimum obligatoire (doit être identique à la racine)
 MERCURE_JWT_SECRET=!ChangeThisMercureHubJWTSecretKey!
 NOTIFICATION_BASE_URL=http://localhost:8000
 ###< REALTIME ###
 
-###> NVIDIA AI CHATBOT ###
-NVIDIA_API_KEY=<nvapi-clé_api>
-NVIDIA_MODEL=mistralai/mistral-medium-3.5-128b #Model avec Free Endpoints (Overkill pour l'utilisation)
-###< NVIDIA AI CHATBOT ###
+###> NVIDIA AI ASSISTANT ###
+NVIDIA_API_KEY=<nvapi-api_key>
+NVIDIA_MODEL=mistralai/mistral-medium-3.5-128b
+###< NVIDIA AI ASSISTANT ###
 ```
 
-### 3. Frontend PHP (`front_php/.env`)
+---
+
+### 3. Angular Frontend (`front_angular/.env`)
+Configures the modern Angular Web client:
+```dotenv
+NG_APP_GOOGLE_CLIENT_ID=<YOUR_CLIENT_ID>.apps.googleusercontent.com
+```
+
+---
+
+### 4. Legacy PHP Frontend (`front_php/.env`)
+Configures the deprecated Twig web interface:
 ```dotenv
 ###> SYMFONY CORE ###
 APP_ENV=dev
@@ -133,113 +352,185 @@ APP_SECRET=another_secret_for_the_front_app
 DEFAULT_URI=http://localhost:8000
 ###< SYMFONY ROUTING ###
 
-###> Configuration API ###
+###> API CONFIGURATION ###
 API_URL=http://api-nginx
-###< Configuration API ###
+###< API CONFIGURATION ###
 
 ###> AUTHENTICATION ###
-GOOGLE_CLIENT_ID=<VOTRE_ID_CLIENT>.apps.googleusercontent.com
+GOOGLE_CLIENT_ID=<YOUR_CLIENT_ID>.apps.googleusercontent.com
 ###< AUTHENTICATION ###
 ```
-### 4. Frontend Angular (`front_angular/.env`)
-```dotenv
-NG_APP_GOOGLE_CLIENT_ID=<VOTRE_ID_CLIENT>.apps.googleusercontent.com
+
+---
+
+## 🛠 Tutorial: Google Cloud Setup (OAuth 2.0 & Drive)
+
+To enable Google Sign-In and decentralized project storage with Google Drive:
+
+1. **Open Google Cloud Console:** Navigate to [console.cloud.google.com](https://console.cloud.google.com).
+2. **Create a Project:** Create a new project (e.g., `Organ-Dev`).
+3. **Enable Google Drive API:** In *APIs & Services* > *Library*, search for **Google Drive API** and click **Enable**.
+4. **Configure OAuth Consent Screen:**
+   * User Type: **External**.
+   * Fill in basic app information (`Organ`) and your developer email.
+   * **Scopes:** Add the required scope:
+     ```text
+     https://www.googleapis.com/auth/drive.file
+     ```
+     *(This scope strictly restricts Organ to accessing only files created or explicitly opened by the application, ensuring user privacy).*
+   * **Test Users:** While in testing status, add the Gmail addresses of testing team members.
+5. **Generate Credentials:**
+   * Go to *Credentials* > *Create Credentials* > *OAuth Client ID*.
+   * Application Type: **Web application**.
+   * **Authorized JavaScript Origins:**
+     * `http://localhost:4200`
+     * `http://localhost:8000`
+     * `http://localhost:8001`
+   * **Authorized Redirect URIs:**
+     * `http://localhost:8000/login/google/check`
+     * `http://localhost:4200/login`
+6. **Save Secrets:** Copy the generated **Client ID** and **Client Secret** into your `.env` configuration files.
+
+---
+
+## 🚀 Installation & Quick Start
+
+> [!NOTE]
+> The `docker-compose.yml` file enforces `linux/amd64` platform compatibility to ensure seamless parity across macOS (Apple Silicon), Windows (WSL2), and Linux.
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/the-voxel-studio/organ.git
+cd organ
 ```
 
----
+### 2. Configure Environment Files
+Create `.env`, `api/.env`, `front_angular/.env`, and `front_php/.env` following the templates provided above.
 
-## 🛠 Tuto : Configurer Google Cloud (OAuth & Drive)
+### 3. Build and launch Docker containers
+```bash
+docker compose build
+docker compose up -d
+```
 
-Pour que la connexion Google et l'export Drive fonctionnent, vous devez créer une "Application" chez Google :
+### 4. Initialize Dependencies & Security Keys
+Install backend Composer dependencies and generate asymmetric RSA keys for Lexik JWT authentication:
+```bash
+# Symfony API Dependencies
+docker compose exec api-php composer install
 
-1.  **Console Google Cloud :** Allez sur [console.cloud.google.com](https://console.cloud.google.com).
-2.  **Projet :** Créez un nouveau projet (bouton en haut à gauche).
-3.  **Bibliothèque API :** Cherchez "Google Drive API" et cliquez sur **Activer**.
-4.  **Écran de consentement OAuth :**
-    *   Type : **Externe**.
-    *   **Infos de base :** Donnez un nom ("Organ Dev") et votre mail de support.
-    *   **Scopes (Champs d'application) :** Cliquez sur "Ajouter ou supprimer des champs". Ajoutez manuellement le scope : `https://www.googleapis.com/auth/drive.file` (C'est lui qui permet de gérer les fichiers créés par l'app).
-    *   **Utilisateurs de test :** Ajoutez votre adresse Gmail. Sans cela, vous ne pourrez pas vous connecter.
-5.  **Identifiants :**
-    *   Cliquez sur "Créer des identifiants" -> **ID de client OAuth**.
-    *   Type : **Application Web**.
-    *   **Origines JavaScript autorisées :** `http://localhost:8000` et `http://localhost:8001`.
-    *   **URIs de redirection autorisés :** `http://localhost:8000/login/google/check`.
-6.  **Récupération :** Copiez l'**ID Client** et le **Secret Client** dans vos fichiers `.env`.
+# Legacy PHP Frontend Dependencies
+docker compose exec front-php composer install
 
----
+# Generate JWT cryptographic keypair
+docker compose exec api-php php bin/console lexik:jwt:generate-keypair
+```
 
-## Installation et Lancement
+### 5. Build Tailwind Assets (Legacy PHP Frontend only)
+*The Angular frontend handles styling automatically.* For the legacy PHP frontend:
+```bash
+docker compose exec front-php php bin/console tailwind:build
+```
 
-> **Architecture AMD64 :** Le projet force la plateforme `linux/amd64` dans Docker pour garantir que Composer fonctionne sur Mac et PC de la même manière.
-
-1.  **Clonez le dépôt :**
-    ```bash
-    git clone <repository-url>
-    cd organ
-    ```
-
-2.  **Configurez les fichiers `.env`** comme décrit ci-dessus.
-
-3.  **Construisez et Démarrez les Conteneurs :**
-    ```bash
-    docker-compose build
-    docker-compose up -d
-    ```
-
-4.  **Installation des dépendances et initialisation :**
-
-    *   **Installer Composer pour les deux services :**
-        ```bash
-        docker-compose exec api-php composer install
-        docker-compose exec front-php composer install
-        ```
-
-    *   **Générer les clés JWT (API) :**
-        ```bash
-        docker-compose exec api-php php bin/console lexik:jwt:generate-keypair
-        ```
-        
-5.  **Build des Assets (Tailwind) :**
-    Si vous êtes sur Windows ou si le mode `watch` ne fonctionne pas, vous devez recompiler manuellement les styles Tailwind après chaque modification CSS :
-    ```bash
-    docker-compose exec front-php php bin/console tailwind:build
-    ```
-6.  **Astuce Cache Symfony (Le message KO) :**
-    Si vous lancez un `cache:clear` (ou n'importe quelle commande Symfony) et qu'elle renvoie un message **KO** (ex: "Directory not empty") :
-    **C'est normal.** Symfony essaie de supprimer des dossiers pendant qu'il écrit dedans. 
-    **Solution :** Relancez simplement la commande `docker-compose exec container php bin/console cache:clear` jusqu'à ce que le message disparaisse.
-
-### Accès aux Services :
-*   **Application PHP:** [http://localhost:8000](http://localhost:8000)
-*   **Application Angular:** [http://localhost:4200](http://localhost:4200)
-*   **Documentation API :** [http://localhost:8001/api/docs](http://localhost:8001/api/docs)
+> [!TIP]
+> **Handling the `Directory not empty` message during cache:clear:**
+> When manually clearing Symfony cache (`php bin/console cache:clear`), Symfony may output a non-blocking `Directory not empty` notice while simultaneously reading and writing cache artifacts. Simply re-run the command once to confirm completion.
 
 ---
 
-## Données de Test (Seed)
+### 🌐 Service Access URLs
 
-Pour faciliter le développement, un fichier `seed.sql` est disponible à la racine du projet. Il contient des utilisateurs, des projets, des Organs et des tâches de démonstration.
+| Component | URL | Description |
+| :--- | :--- | :--- |
+| **Angular Web App** | [http://localhost:4200](http://localhost:4200) | Primary modern web frontend (recommended) |
+| **API Swagger Docs** | [http://localhost:8001/api/docs](http://localhost:8001/api/docs) | Interactive OpenAPI / Swagger UI documentation |
+| **phpMyAdmin Database Manager** | [http://localhost:8080](http://localhost:8080) | Web management interface for MySQL |
+| **Mercure Realtime Hub** | [http://localhost:9090](http://localhost:9090) | Server-Sent Events hub |
+| **Legacy PHP App** | [http://localhost:8000](http://localhost:8000) | Legacy Twig interface (deprecated) |
 
-### 1. Import via phpMyAdmin
-1.  Accédez à phpMyAdmin : [http://localhost:8080](http://localhost:8080).
-2.  Connectez-vous avec les identifiants définis dans votre fichier `.env` (par défaut `root` / `root_password`).
-3.  Sélectionnez la base de données `app_database` dans la colonne de gauche.
-4.  Cliquez sur l'onglet **Importer** en haut de la page.
-5.  Choisissez le fichier `seed.sql` présent à la racine du projet.
-6.  Cliquez sur **Importer** en bas de page.
+---
 
-### 2. Import MongoDb
-A la racine du projet, executez cette commande : 
+## 📱 Android Mobile Application
+
+The repository includes a modern native Android application located in the `android/` directory.
+
+### Mobile Technical Highlights
+* **Language & Architecture:** 100% Kotlin with **Jetpack Compose** and **Material 3**.
+* **Modern Auth:** Native **Google Identity Credential Manager** (`androidx.credentials`) integration for streamlined one-tap authentication.
+* **Networking:** Retrofit 2, OkHttp 3, Coroutines, and Flow for asynchronous communication with the Organ REST API.
+* **Local Security:** Session tokens and refresh tokens stored in hardware-backed keystores via `EncryptedSharedPreferences`.
+* **Visuals:** Lottie vector animations, dynamic theme selectors, and `colorpicker-compose`.
+
+### Build & Run
+1. Open the `android/` folder in **Android Studio** (Koala or newer, JDK 17+).
+2. Configure your target API endpoint (use `http://10.0.2.2:8001` if using the standard Android emulator to target your host machine).
+3. Run the application directly from Android Studio or build the debug APK via Gradle:
+   ```bash
+   cd android
+   ./gradlew assembleDebug
+   ```
+
+---
+
+## 🧪 Demo Data (Seed) & Test Accounts
+
+To immediately test all features (populated Kanban boards, analytical KPI charts, Organ structures), a comprehensive dataset is provided.
+
+### 1. Import MySQL Seed Data
+* **Option A (phpMyAdmin):**
+  1. Open [http://localhost:8080](http://localhost:8080).
+  2. Log in with `root` / `root_password`.
+  3. Select `app_database` in the left sidebar.
+  4. Navigate to the **Import** tab, choose the `seed.sql` file from the project root, and execute.
+* **Option B (Docker CLI):**
+  ```bash
+  docker compose exec -T database mysql -uapp_user -papp_password app_database < seed.sql
+  ```
+
+### 2. Seed MongoDB Analytics Data
+To populate activity timelines and daily analytics graphs:
 ```bash
 docker compose exec -T api-php php bin/console app:seed:mock-analytics
 ```
 
-### 3. Comptes de Test
-Tous les comptes ci-dessous utilisent le mot de passe : `password`
+### 3. Preconfigured Test Accounts
+All demonstration accounts use the password: `password`
 
-*   **Administrateur :** `admin@organ.com` (Jean Dupont)
-*   **Manager :** `manager@organ.com` (Marie Curie)
-*   **Développeur :** `dev@organ.com` (Albert Einstein)
-*   **Utilisateur :** `user@organ.com` (Nikola Tesla)
-*   **Membre :** `grace@organ.com` (Grace Hopper)
+| Role | Name | Email | Password |
+| :--- | :--- | :--- | :--- |
+| **Administrator** | Jean Dupont | `admin@organ.com` | `password` |
+| **Manager** | Marie Curie | `manager@organ.com` | `password` |
+| **Developer** | Albert Einstein | `dev@organ.com` | `password` |
+| **User** | Nikola Tesla | `user@organ.com` | `password` |
+| **Member** | Grace Hopper | `grace@organ.com` | `password` |
+
+---
+
+## 🧪 Testing & Code Quality
+
+Organ prioritizes data security and permission isolation with comprehensive automated test suites.
+
+### Backend Tests (Symfony & PHPUnit)
+Covers unit, functional, and security scenarios (IDOR prevention, mass assignment, cache pollution, granular task and organ permissions):
+```bash
+docker compose exec api-php bin/phpunit
+```
+
+### Frontend Tests (Angular & Vitest)
+```bash
+cd front_angular
+npm test
+```
+
+### Mobile Android Tests
+```bash
+cd android
+./gradlew test
+```
+
+---
+
+## 📄 License
+
+This project is licensed under the **GNU General Public License v3 (GPLv3)**.  
+See the [LICENSE](LICENSE) file for complete terms and conditions.
