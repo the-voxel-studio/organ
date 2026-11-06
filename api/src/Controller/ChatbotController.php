@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Project;
-use App\Entity\Organ;
 use App\Entity\ProjectMember;
 use App\Entity\User;
+use App\Service\ChatbotContextBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,7 +17,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/chatbot', name: 'api_chatbot_')]
 class ChatbotController extends AbstractController
 {
-    public function __construct() {}
+    public function __construct(
+        private readonly ChatbotContextBuilder $contextBuilder
+    ) {}
 
     #[Route('/message', name: 'message', methods: ['POST'])]
     public function handleMessage(Request $request, EntityManagerInterface $entityManager): JsonResponse
@@ -61,62 +62,10 @@ class ChatbotController extends AbstractController
             }
         }
 
-        // 3. Charger les organes du projet courant
-        $availableOrgans = [];
-        $projectUuid = null;
-
-        if (preg_match('/\/project\/([a-fA-F0-9-]{36})/', $currentRoute, $matches)) {
-            $projectUuid = $matches[1];
-        } elseif (preg_match('/\/organ\/([a-fA-F0-9-]{36})\/([a-fA-F0-9-]{36})/', $currentRoute, $matches)) {
-            $projectUuid = $matches[1];
-        }
-
-        $availableMembers = [];
-        if ($projectUuid) {
-            $project = $entityManager->getRepository(Project::class)->findOneBy([
-                'uuid' => $projectUuid,
-                'deletedAt' => null
-            ]);
-            if ($project) {
-                $organs = $entityManager->getRepository(Organ::class)->findBy([
-                    'project' => $project,
-                    'deletedAt' => null
-                ]);
-                foreach ($organs as $organ) {
-                    $roles = $entityManager->getRepository(\App\Entity\OrganRole::class)->findBy([
-                        'organ' => $organ,
-                        'deletedAt' => null
-                    ]);
-                    $organRoles = [];
-                    foreach ($roles as $role) {
-                        $organRoles[] = [
-                            'uuid' => $role->getUuid(),
-                            'name' => $role->getName()
-                        ];
-                    }
-                    $availableOrgans[] = [
-                        'uuid' => $organ->getUuid(),
-                        'title' => $organ->getTitle(),
-                        'roles' => $organRoles
-                    ];
-                }
-
-                $projectMembers = $entityManager->getRepository(ProjectMember::class)->findBy([
-                    'project' => $project,
-                    'deletedAt' => null
-                ]);
-                foreach ($projectMembers as $pm) {
-                    $u = $pm->getUser();
-                    if ($u) {
-                        $availableMembers[] = [
-                            'uuid' => $u->getUuid(),
-                            'name' => $u->getFirstName() . ' ' . $u->getLastName(),
-                            'email' => $u->getEmail()
-                        ];
-                    }
-                }
-            }
-        }
+        // 3. Charger les Organs, rôles et membres du projet courant (avec contrôle d'accès)
+        $projectContext = $this->contextBuilder->buildProjectContext($user, $currentRoute);
+        $availableOrgans = $projectContext['organs'];
+        $availableMembers = $projectContext['members'];
 
         $currentUserInfo = [
             'uuid' => $user->getUuid(),
@@ -126,7 +75,7 @@ class ChatbotController extends AbstractController
 
         // 4. Récupérer les clés d'API depuis .env
         $apiKey = $_ENV['NVIDIA_API_KEY'] ?? '';
-        $model = $_ENV['NVIDIA_MODEL'] ?? 'mistralai/mixtral-8x22b-instruct-v0.1';
+        $model = $_ENV['NVIDIA_MODEL'] ?? 'mistralai/mistral-medium-3.5-128b';
 
         if (empty($apiKey) || str_contains($apiKey, 'your-real-key-here')) {
             return $this->json([
@@ -262,7 +211,9 @@ Tu dois ABSOLUMENT répondre sous la forme d'un objet JSON strict valide contena
 
         $historySlice = array_slice($history, -10);
         foreach ($historySlice as $msg) {
-            $role = ($msg['role'] === 'user' || $msg['role'] === 'system' || $msg['role'] === 'assistant') ? $msg['role'] : 'user';
+            // Le rôle 'system' est réservé au serveur : un client ne doit pas pouvoir
+            // injecter ses propres instructions système via l'historique.
+            $role = (($msg['role'] ?? '') === 'assistant') ? 'assistant' : 'user';
             $messages[] = [
                 'role' => $role,
                 'content' => $msg['content'] ?? ''

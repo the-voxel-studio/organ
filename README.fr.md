@@ -278,7 +278,7 @@ sequenceDiagram
 
     U->>F: "/create un projet Marketing avec 3 tâches"
     F->>A: POST /api/chatbot/message<br/>{history, context: route, commande, actionsEnabled}
-    A->>DB: Projets de l'utilisateur + Organs, rôles, membres du projet de la route
+    A->>DB: Contexte filtré par le RBAC<br/>(projets, Organs, rôles, membres)
     A->>L: System prompt géant + contexte JSON + 10 derniers messages
     L-->>A: {"message": "...", "actions": [ ... ]}
     A->>A: Extraction / réparation du JSON
@@ -296,7 +296,7 @@ sequenceDiagram
 L'utilisateur choisit une commande : `/ask` (par défaut, explication), `/create`, `/edit` ou `/role`. Le service envoie l'historique de conversation et un petit contexte : la route courante, la commande et l'état de l'interrupteur « actions autorisées ».
 
 **2. Le backend construit le contexte et le prompt** (`api/src/Controller/ChatbotController.php`)
-* Il charge depuis la base les **projets accessibles** à l'utilisateur et, si la route contient un UUID de projet, les **Organs, leurs rôles et les membres** de ce projet.
+* Il charge depuis la base les **projets accessibles** à l'utilisateur et, si la route contient un UUID de projet, les **Organs, leurs rôles et les membres** de ce projet. Ce chargement passe par `ChatbotContextBuilder` (`api/src/Service/ChatbotContextBuilder.php`), qui applique les mêmes règles d'accès que l'API REST.
 * Il assemble un **system prompt** de plus d'une centaine de lignes : description fonctionnelle, plan du site, règles métier, règles de branding, liste des 30+ permissions, **schéma JSON de chaque action possible**, règles de concision et de budget de tokens. Une consigne propre à la commande choisie y est ajoutée.
 * Il envoie le tout, avec les **10 derniers messages**, à l'API NVIDIA NIM (`temperature: 0.2`, `max_tokens: 1024`, `response_format: json_object`). Le modèle est configurable via `NVIDIA_MODEL`.
 
@@ -329,7 +329,8 @@ Les actions sont jouées **séquentiellement**, via **les mêmes services REST**
 * **L'IA n'a pas plus de droits que l'utilisateur.** Les actions passent par l'API REST standard avec le JWT de l'utilisateur, donc **tout le moteur RBAC s'applique**. Une action interdite à l'utilisateur échoue aussi pour l'IA.
 * **Aucune suppression possible.** C'est interdit dans le prompt, mais surtout **le type d'action n'existe pas dans l'exécuteur**. La protection est structurelle, elle ne repose pas seulement sur l'obéissance du modèle.
 * **Mode lecture seule.** Un interrupteur dans le panneau coupe l'exécution. La consigne est envoyée au modèle **et** appliquée côté client : même si le modèle renvoie des actions, elles sont ignorées.
-* **Liste des projets limitée** à ceux dont l'utilisateur est membre (mais voir la limite n°11 pour le reste du contexte).
+* **Un contexte soumis au RBAC.** `ChatbotContextBuilder` ne fait pas confiance à la route envoyée par le client : rien n'est injecté si l'utilisateur n'est pas membre du projet, un simple membre ne voit que les Organs pour lesquels il a `ORGAN_VIEW`, et les rôles ne sont listés qu'avec `ORGAN_MANAGE_ROLES`. Ces règles sont couvertes par des tests (`api/tests/Service/ChatbotContextBuilderTest.php`). Voir la limite n°11 pour l'historique de cette correction.
+* **Le rôle `system` est réservé au serveur.** Les messages d'historique envoyés par le client ne peuvent être que `user` ou `assistant` : impossible d'y glisser de fausses instructions système.
 * **Sortie contrainte** : JSON imposé, température basse.
 
 ### Les limites : un aller simple, sans retour
@@ -367,8 +368,9 @@ Le system prompt est rempli de « CRITIQUE », « ABSOLUMENT », « IMPÉRATIVEM
 **10. Une dépendance forte au fournisseur.**
 Le modèle utilisé au départ (*Mixtral 8x22B*) a été retiré du catalogue de l'API NVIDIA, ce qui nous a obligés à passer à *Mistral Medium 3.5*. Or le prompt avait été mis au point avec le premier modèle, et rien ne garantit qu'un autre modèle se comporte de la même façon. Sans jeu de tests ou d'évaluation des réponses, impossible de vérifier que l'assistant fonctionne toujours aussi bien après le changement.
 
-**11. Un contexte qui contourne le cloisonnement.**
-Le projet dont on charge les Organs, les rôles et les membres est déduit de la route **envoyée par le client**, et le contrôleur ne vérifie pas que l'utilisateur est membre de ce projet. Il injecte aussi **tous** les Organs du projet, y compris ceux auxquels l'utilisateur n'a pas accès. Ces informations, e-mails des membres compris, se retrouvent dans le prompt et peuvent ressortir dans la réponse du modèle. Ça contredit le cloisonnement par Organ que le moteur RBAC garantit partout ailleurs, et c'est typiquement le genre de faille qu'introduit une IA branchée sur les données sans passer par les mêmes contrôles d'accès que le reste de l'API.
+**11. Une faille de cloisonnement, découverte puis corrigée.**
+Dans sa première version, le contrôleur déduisait le projet de la route **envoyée par le client**, sans vérifier que l'utilisateur en était membre. Il injectait aussi **tous** les Organs du projet, y compris ceux auxquels l'utilisateur n'avait pas accès, ainsi que leurs rôles. En forgeant une route, on pouvait donc faire entrer dans le prompt les Organs et les **e-mails des membres** d'un projet étranger, puis les obtenir en interrogeant le modèle. Le client pouvait en plus envoyer des messages avec le rôle `system` pour réécrire les consignes.
+Les deux failles sont corrigées (voir les garde-fous ci-dessus). Nous les avons découvertes en relisant le code pour rédiger cette documentation, et la leçon dépasse ce projet : **une IA branchée sur les données est un nouveau chemin d'accès à ces données**. Elle doit passer par exactement les mêmes contrôles que le reste de l'API, sinon elle contourne silencieusement tout le moteur de permissions.
 
 ### Ce qu'il faudrait pour un vrai agent
 
@@ -377,7 +379,7 @@ Le projet dont on charge les Organs, les rôles et les membres est déduit de la
 | JSON libre dans le texte, réparé à la main | **Tool calling natif** (*function calling*) avec des schémas validés |
 | Plan complet écrit d'avance | **Boucle** *raisonner → appeler un outil → observer → continuer*, avec un nombre maximal d'itérations |
 | Exécution côté client, résultat jamais remonté | Exécution **côté serveur**, avec le résultat (UUID, erreur) **renvoyé au modèle** à chaque étape |
-| Tout le contexte injecté dans le prompt, sans contrôle d'accès | **Outils de lecture** (`list_tasks`, `get_organ`…) passant par les mêmes vérifications RBAC que l'API : le modèle va chercher ce dont il a besoin, et seulement ce qu'il a le droit de voir |
+| Tout le contexte pré-chargé dans le prompt (filtré par le RBAC) | **Outils de lecture** (`list_tasks`, `get_organ`…) passant par les mêmes vérifications RBAC que l'API : le modèle va chercher ce dont il a besoin, et seulement ce qu'il a le droit de voir |
 | Variables temporaires `proj1` | De vrais UUID, puisque chaque création est observée avant la suivante |
 | Erreur = arrêt + toast | Erreur = **observation** : le modèle peut corriger, réessayer ou expliquer |
 | Pas d'annulation | **Aperçu du plan et confirmation** avant écriture, transaction ou actions de compensation |

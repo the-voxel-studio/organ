@@ -278,7 +278,7 @@ sequenceDiagram
 
     U->>F: "/create a Marketing project with 3 tasks"
     F->>A: POST /api/chatbot/message<br/>{history, context: route, command, actionsEnabled}
-    A->>DB: User's projects + Organs, roles, members of the route's project
+    A->>DB: RBAC-filtered context<br/>(projects, Organs, roles, members)
     A->>L: Huge system prompt + JSON context + last 10 messages
     L-->>A: {"message": "...", "actions": [ ... ]}
     A->>A: JSON extraction / repair
@@ -296,7 +296,7 @@ sequenceDiagram
 The user picks a command: `/ask` (default, explanation), `/create`, `/edit` or `/role`. The service sends the conversation history plus a small context: the current route, the command, and the state of the "actions allowed" toggle.
 
 **2. The backend builds the context and the prompt** (`api/src/Controller/ChatbotController.php`)
-* It loads the user's **accessible projects** from the database and, if the route contains a project UUID, that project's **Organs, their roles, and its members**.
+* It loads the user's **accessible projects** from the database and, if the route contains a project UUID, that project's **Organs, their roles, and its members**. This goes through `ChatbotContextBuilder` (`api/src/Service/ChatbotContextBuilder.php`), which applies the same access rules as the REST API.
 * It assembles a **system prompt** of more than a hundred lines: functional overview, sitemap, business rules, branding rules, the list of 30+ permissions, **the JSON schema of every possible action**, and rules on brevity and token budget. A directive specific to the chosen command is appended.
 * It sends everything, with the **last 10 messages**, to the NVIDIA NIM API (`temperature: 0.2`, `max_tokens: 1024`, `response_format: json_object`). The model is configurable through `NVIDIA_MODEL`.
 
@@ -329,7 +329,8 @@ Actions run **sequentially**, through **the same REST services** as the regular 
 * **The AI has no more rights than the user.** Actions go through the standard REST API with the user's JWT, so **the whole RBAC engine applies**. An action the user is not allowed to perform fails for the AI too.
 * **No deletion possible.** It is forbidden in the prompt, and, more importantly, **the action type does not exist in the executor**. The protection is structural; it does not depend only on the model obeying.
 * **Read-only mode.** A toggle in the panel disables execution. The instruction is sent to the model **and** enforced client-side: even if the model returns actions, they are ignored.
-* **Project list restricted** to projects the user is a member of (but see limitation #11 for the rest of the context).
+* **Context subject to RBAC.** `ChatbotContextBuilder` does not trust the route sent by the client: nothing is injected if the user is not a member of the project, a plain member only sees Organs they have `ORGAN_VIEW` on, and roles are only listed with `ORGAN_MANAGE_ROLES`. These rules are covered by tests (`api/tests/Service/ChatbotContextBuilderTest.php`). See limitation #11 for the history of this fix.
+* **The `system` role is reserved to the server.** History messages sent by the client can only be `user` or `assistant`, so no fake system instructions can be slipped in.
 * **Constrained output:** enforced JSON, low temperature.
 
 ### Limitations: A One-Way Trip
@@ -367,8 +368,9 @@ Every message resends the full prompt, the project list, and **members' names an
 **10. Strong dependency on the provider.**
 The model we started with (*Mixtral 8x22B*) was removed from NVIDIA's API catalog, which forced us to switch to *Mistral Medium 3.5*. But the prompt had been developed against the first model, and nothing guarantees another model behaves the same way. Without a test or evaluation set for the responses, there is no way to check that the assistant still works as well after the switch.
 
-**11. Context that bypasses isolation.**
-The project whose Organs, roles and members get loaded is derived from the route **sent by the client**, and the controller does not check that the user is a member of that project. It also injects **every** Organ of the project, including those the user has no access to. That information, members' emails included, ends up in the prompt and can surface in the model's answer. This contradicts the Organ-level isolation the RBAC engine enforces everywhere else, and it is exactly the kind of hole an AI introduces when it is wired to the data without going through the same access controls as the rest of the API.
+**11. An isolation flaw, found and then fixed.**
+In its first version, the controller derived the project from the route **sent by the client**, without checking that the user was a member. It also injected **every** Organ of the project, including those the user had no access to, along with their roles. By forging a route, one could pull a foreign project's Organs and **members' emails** into the prompt, then get them out by asking the model. On top of that, the client could send messages with the `system` role to rewrite the instructions.
+Both flaws are now fixed (see the safeguards above). We found them while reviewing the code to write this documentation, and the lesson goes beyond this project: **an AI wired to the data is a new access path to that data**. It must go through exactly the same checks as the rest of the API, otherwise it silently bypasses the whole permission engine.
 
 ### What a Real Agent Would Need
 
@@ -377,7 +379,7 @@ The project whose Organs, roles and members get loaded is derived from the route
 | Free-form JSON inside text, repaired by hand | **Native tool calling** (*function calling*) with validated schemas |
 | Whole plan written upfront | A **loop**: *reason → call a tool → observe → continue*, with a max iteration count |
 | Client-side execution, results never reported back | **Server-side** execution, with each result (UUID, error) **fed back to the model** |
-| All context stuffed into the prompt, with no access checks | **Read tools** (`list_tasks`, `get_organ`…) going through the same RBAC checks as the API, so the model fetches what it needs, and only what it is allowed to see |
+| All context preloaded into the prompt (RBAC-filtered) | **Read tools** (`list_tasks`, `get_organ`…) going through the same RBAC checks as the API, so the model fetches what it needs, and only what it is allowed to see |
 | Temporary `proj1` variables | Real UUIDs, since each creation is observed before the next one |
 | Error = stop + toast | Error = **observation**: the model can fix, retry, or explain |
 | No undo | **Plan preview and confirmation** before writes, transactions or compensating actions |
