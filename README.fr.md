@@ -1,4 +1,4 @@
-# Organ : Plateforme Collaborative de Gestion de Projets & d'Organes
+# Organ : Plateforme Collaborative de Gestion de Projets & d'Organs
 
 [English](README.md) | **Français**
 
@@ -19,7 +19,7 @@
 
 1. [Qu'est-ce qu'Organ ?](#-quest-ce-quorgan-)
    * [Genèse et Philosophie](#genèse-et-philosophie)
-   * [Le Modèle Tripartite : Projet > Organe > Tâche](#le-modèle-tripartite--projet--organe--tâche)
+   * [Le Modèle Tripartite : Projet > Organ > Tâche](#le-modèle-tripartite--projet--organ--tâche)
    * [Liberté de Stockage : BYOS ("Bring Your Own Storage")](#liberté-de-stockage--byos-bring-your-own-storage)
    * [Sécurité & Permissions Granulaires (RBAC)](#sécurité--permissions-granulaires-rbac)
    * [Gestion de l'Urgence & Échelle Chromatique](#gestion-de-lurgence--échelle-chromatique)
@@ -29,17 +29,23 @@
 2. [Architecture Technique & Microservices](#-architecture-technique--microservices)
    * [Cartographie des Services](#cartographie-des-services)
    * [Schéma de l'Architecture](#schéma-de-larchitecture)
-3. [Configuration de l'Environnement](#-configuration-de-lenvironnement)
+3. [L'Assistant IA : une expérimentation semi-agentique](#-lassistant-ia--une-expérimentation-semi-agentique)
+   * [Pourquoi « semi-agent » ?](#pourquoi--semi-agent--)
+   * [Comment ça marche](#comment-ça-marche)
+   * [Les garde-fous en place](#les-garde-fous-en-place)
+   * [Les limites : un aller simple, sans retour](#les-limites--un-aller-simple-sans-retour)
+   * [Ce qu'il faudrait pour un vrai agent](#ce-quil-faudrait-pour-un-vrai-agent)
+4. [Configuration de l'Environnement](#-configuration-de-lenvironnement)
    * [1. Racine du projet (`.env`)](#1-racine-du-projet-env)
    * [2. API Backend (`api/.env`)](#2-api-backend-apienv)
    * [3. Frontend Angular (`front_angular/.env`)](#3-frontend-angular-front_angularenv)
    * [4. Frontend Historique PHP (`front_php/.env`)](#4-frontend-historique-php-front_phpenv)
-4. [Tutoriel : Configuration Google Cloud (OAuth 2.0 & Drive)](#-tutoriel--configuration-google-cloud-oauth-20--drive)
-5. [Installation et Lancement](#-installation-et-lancement)
-6. [Application Mobile Android](#-application-mobile-android)
-7. [Données de Démonstration (Seed) & Comptes de Test](#-données-de-démonstration-seed--comptes-de-test)
-8. [Tests & Qualité du Code](#-tests--qualité-du-code)
-9. [Licence](#-licence)
+5. [Tutoriel : Configuration Google Cloud (OAuth 2.0 & Drive)](#-tutoriel--configuration-google-cloud-oauth-20--drive)
+6. [Installation et Lancement](#-installation-et-lancement)
+7. [Application Mobile Android](#-application-mobile-android)
+8. [Données de Démonstration (Seed) & Comptes de Test](#-données-de-démonstration-seed--comptes-de-test)
+9. [Tests & Qualité du Code](#-tests--qualité-du-code)
+10. [Licence](#-licence)
 
 ---
 
@@ -57,25 +63,25 @@ Organ a été conçu pour réconcilier ces approches : **fournir une structure h
 
 ---
 
-### Le Modèle Tripartite : Projet > Organe > Tâche
+### Le Modèle Tripartite : Projet > Organ > Tâche
 
 Organ repose sur une hiérarchie stricte à 3 niveaux qui élimine le désordre cognitif :
 
 ```text
 📁 PROJET (Vision Stratégique & Équipe Globale)
 │
-├── 🫀 ORGANE A (Module métier, pôle, sprint ou sous-projet dédié)
+├── 🫀 ORGAN A (Module métier, pôle, sprint ou sous-projet dédié)
 │    ├── 📋 Tâche 1 (Priorité 8/10, échéance, validation requise)
 │    ├── 📋 Tâche 2 (Dépendance : bloquée par la Tâche 1)
 │    └── 📋 Tâche 3
 │
-└── 🫀 ORGANE B (Module externe accessible à des prestataires ou clients)
+└── 🫀 ORGAN B (Module externe accessible à des prestataires ou clients)
      ├── 📋 Tâche 4
      └── 📋 Tâche 5
 ```
 
 1. **Le Projet :** L'enveloppe globale de haut niveau (titre, description, code couleur d'identité, icône ou emoji personnalisé, stockage Google Drive associé et équipe globale).
-2. **L'Organe (Organ) :** L'unité fonctionnelle autonome au sein du projet. Un Organe peut représenter un pôle métier (*Design*, *Backend*, *Marketing*), un jalon (*Phase 1*, *Sprint 3*), ou un espace de sous-traitance dédié. Chaque Organe dispose de son propre **tableau Kanban**, de son panneau de liens Web rapides et surtout de son **système de rôles et de permissions local**.
+2. **L'Organ :** L'unité fonctionnelle autonome au sein du projet. Un Organ peut représenter un pôle métier (*Design*, *Backend*, *Marketing*), un jalon (*Phase 1*, *Sprint 3*), ou un espace de sous-traitance dédié. Chaque Organ dispose de son propre **tableau Kanban**, de son panneau de liens Web rapides et surtout de son **système de rôles et de permissions local**.
 3. **La Tâche (Task) :** La brique de travail atomique, enrichie pour une efficacité maximale :
    * Statut dynamique (`À faire`, `En cours`, `En attente`, `Terminé`, `Annulé`) avec message explicatif d'état.
    * Évaluation de priorité de 1 à 10.
@@ -100,18 +106,18 @@ Contrairement aux applications SaaS traditionnelles qui exploitent l'effet de ve
 
 Organ dispose d'un moteur de permissions parmi les plus complets du secteur, conçu pour collaborer en toute confiance avec des équipes mixtes (salariés, freelances, clients, sous-traitants) :
 
-* **Cloisonnement strict par Organe :** Un utilisateur invité sur un projet peut n'avoir accès qu'à un seul Organe spécifique. L'existence des autres Organes du projet lui demeure totalement invisible.
+* **Cloisonnement strict par Organ :** Un utilisateur invité sur un projet peut n'avoir accès qu'à un seul Organ spécifique. L'existence des autres Organs du projet lui demeure totalement invisible.
 * **Rôles Globaux vs Rôles Locaux :**
   * *Rôles globaux de projet* : `ADMIN`, `MANAGER`, `MEMBER`.
-  * *Rôles locaux d'Organe* : définis sur-mesure par les gestionnaires de l'Organe avec un nom et une icône dédiée.
+  * *Rôles locaux d'Organ* : définis sur-mesure par les gestionnaires de l'Organ avec un nom et une icône dédiée.
 * **Plus de 40 permissions unitaires paramétrables :**
-  * *Gestion de l'Organe* : consultation, modification, gestion des membres locaux, configuration des rôles, gestion des liens.
+  * *Gestion de l'Organ* : consultation, modification, gestion des membres locaux, configuration des rôles, gestion des liens.
   * *Gestion des Tâches* : création, modification (uniquement les siennes vs toutes), suppression logique (*soft delete*) ou définitive (*hard delete*), changement de statut, modification de priorité, planification des dates, modification des estimations d'heures.
   * *Affectation et Workflow* : s'auto-assigner, assigner des tiers, valider officiellement une tâche (`TASK_VALIDATE`).
   * *Ressources liées* : gestion des pièces jointes, des liens Web, des tags et des dépendances entre tâches.
   * *Commentaires* : rédaction, édition de ses propres commentaires vs modération de tous les messages.
 * **Protection renforcée contre les failles d'accès :** L'API intègre une vérification systématique contre les IDOR (*Insecure Direct Object Reference*), le *mass assignment*, et garantit l'invalidation automatique du cache en cas de révocation de droits.
-* **Cycle de vie sécurisé (Corbeille à 2 niveaux) :** Suppression douce (*soft delete*) permettant la restauration depuis la corbeille locale d'un Organe ou la corbeille globale d'un projet, avec séparation stricte des droits de purge définitive.
+* **Cycle de vie sécurisé (Corbeille à 2 niveaux) :** Suppression douce (*soft delete*) permettant la restauration depuis la corbeille locale d'un Organ ou la corbeille globale d'un projet, avec séparation stricte des droits de purge définitive.
 
 ---
 
@@ -132,17 +138,20 @@ Toutes les actions clés réalisées au sein de l'espace de travail sont histori
 * Agrégation quotidienne de KPI (`DailyStat`) exécutée par commande cron ou déclenchement manuel, permettant d'afficher sur le frontend :
   * Un graphique linéaire d'activité globale du projet.
   * Un diagramme en anneau (*doughnut chart*) de répartition des statuts de tâches.
-  * Un diagramme en barres de la charge de travail par Organe.
+  * Un diagramme en barres de la charge de travail par Organ.
   * Des métriques clés de consultation et d'engagement de l'équipe.
 
 ---
 
 ### Assistant IA Contextuel Intégré
 
-Organ intègre un tuteur et assistant virtuel propulsé par les modèles d'intelligence artificielle de pointe via **NVIDIA AI Foundation Endpoints** (modèles *Mistral AI*) :
-* **Conscience contextuelle complète :** L'assistant sait en temps réel où se trouve l'utilisateur dans l'application, quels projets, Organes et membres composent son environnement.
-* **Accompagnement pédagogique :** Explications détaillées pas-à-pas des processus métier (par exemple, comment onboarder un nouveau collaborateur extérieur dans un Organe).
-* **Déclenchement d'actions :** L'assistant est interfacé avec le frontend pour guider la navigation ou proposer la création directe de structures adaptées.
+Organ intègre un assistant virtuel branché sur un LLM *Mistral AI* via **NVIDIA NIM** (API compatible OpenAI). Il ne se contente pas de répondre : il peut **produire une suite d'actions** (créer un projet, des Organs, des rôles, des tâches, naviguer) que l'application exécute ensuite pour l'utilisateur.
+* **Contexte injecté :** page courante, projets accessibles, Organs, rôles et membres du projet ouvert.
+* **Mode pédagogique (`/ask`) :** explique pas à pas comment faire soi-même (par exemple inviter un collaborateur externe dans un Organ).
+* **Modes actifs (`/create`, `/edit`, `/role`) :** génère un plan d'actions exécuté automatiquement, avec un interrupteur « lecture seule » pour le désactiver.
+
+> [!NOTE]
+> C'est une **expérimentation étudiante**, une première approche, encore rudimentaire, de l'IA agentique. Son fonctionnement et ses défauts (importants) sont détaillés dans la section [L'Assistant IA : une expérimentation semi-agentique](#-lassistant-ia--une-expérimentation-semi-agentique).
 
 ---
 
@@ -174,7 +183,7 @@ Organ repose sur une architecture orientée microservices conteneurisée via **D
 | `front-angular` | **Angular 21 / Node.js** | Frontend Web moderne, SPA réactive | [http://localhost:4200](http://localhost:4200) |
 | `api-nginx` | **Nginx Alpine** | Reverse proxy HTTP & terminaison web pour l'API | [http://localhost:8001](http://localhost:8001) |
 | `api-php` | **PHP 8.4-FPM / Symfony 8** | Cœur applicatif, logique métier, contrôleurs REST, JWT & RBAC | Interne (FastCGI) |
-| `database` | **MySQL 8.0** | Base relationnelle (utilisateurs, projets, organes, permissions, tâches) | `3306` |
+| `database` | **MySQL 8.0** | Base relationnelle (utilisateurs, projets, Organs, permissions, tâches) | `3306` |
 | `mongodb` | **MongoDB 7.0** | Base NoSQL (journaux d'audit, statistiques quotidiennes, fichiers) | `27017` |
 | `valkey` | **Valkey 7.2** | Cache mémoire ultra-rapide (fork moderne de Redis) | `6379` |
 | `mercure` | **Mercure Hub** | Hub de diffusion d'événements temps réel (Server-Sent Events) | [http://localhost:9090](http://localhost:9090) |
@@ -235,6 +244,148 @@ flowchart TB
 
 #### Schéma Détaillé de l'API Backend
 ![Schéma du Backend](docs/Backend.png)
+
+---
+
+## 🤖 L'Assistant IA : une expérimentation semi-agentique
+
+> [!IMPORTANT]
+> **Un travail étudiant, et une première fois.** Organ est un projet étudiant, et le cahier des charges ne demandait aucune IA. L'assistant est un **ajout volontaire**, en plus du reste. C'est aussi la **toute première fois** que nous intégrions un LLM dans une application, **sans connaissance approfondie du sujet** au départ. Cette section ne vend donc pas une fonctionnalité aboutie : elle documente **une première expérimentation**, ce qu'elle fait, comment elle le fait, et surtout **ce qu'elle nous a appris par ses défauts**.
+
+### Pourquoi « semi-agent » ?
+
+On peut situer un assistant IA sur trois paliers :
+
+| Palier | Ce que fait le modèle | Exemple |
+| :--- | :--- | :--- |
+| **Chatbot** | Il répond par du texte, c'est tout. | FAQ conversationnelle |
+| **Semi-agent** *(Organ)* | Il **produit un plan d'actions** que l'application exécute, mais **en une seule passe et sans jamais voir le résultat**. | « Crée-moi un projet Marketing avec 3 tâches » |
+| **Agent** | Il agit, **observe le résultat**, corrige et recommence **en boucle** jusqu'à atteindre l'objectif. | Agents de code, assistants à outils |
+
+L'assistant d'Organ fait plus que parler : il agit réellement sur les données. Mais il agit **à l'aveugle**. Il écrit tout son plan d'un coup, avant que quoi que ce soit ne soit exécuté, puis il n'a plus aucun moyen de savoir ce qui s'est passé. C'est un **aller simple** (*one-way trip*, *one pass*), un état **préliminaire** de l'IA agentique, auquel manque ce qui fait un agent : **la boucle d'observation**.
+
+### Comment ça marche
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Utilisateur
+    participant F as Angular<br/>(ChatbotService)
+    participant A as API Symfony<br/>(ChatbotController)
+    participant DB as MySQL
+    participant L as LLM Mistral<br/>(NVIDIA NIM)
+    participant E as Angular<br/>(ActionExecutor)
+
+    U->>F: "/create un projet Marketing avec 3 tâches"
+    F->>A: POST /api/chatbot/message<br/>{history, context: route, commande, actionsEnabled}
+    A->>DB: Projets de l'utilisateur + Organs, rôles, membres du projet de la route
+    A->>L: System prompt géant + contexte JSON + 10 derniers messages
+    L-->>A: {"message": "...", "actions": [ ... ]}
+    A->>A: Extraction / réparation du JSON
+    A-->>F: message + plan d'actions
+    F->>E: executeActions(actions)
+    loop Pour chaque action, dans l'ordre
+        E->>A: Appel REST classique (JWT de l'utilisateur)
+        A-->>E: Ressource créée (UUID)
+    end
+    E-->>U: Toast récapitulatif + rafraîchissement
+    Note over L,E: Le LLM n'est jamais informé du résultat des actions
+```
+
+**1. Le frontend prépare la demande** (`front_angular/src/app/services/chatbot/chatbot.service.ts`)
+L'utilisateur choisit une commande : `/ask` (par défaut, explication), `/create`, `/edit` ou `/role`. Le service envoie l'historique de conversation et un petit contexte : la route courante, la commande et l'état de l'interrupteur « actions autorisées ».
+
+**2. Le backend construit le contexte et le prompt** (`api/src/Controller/ChatbotController.php`)
+* Il charge depuis la base les **projets accessibles** à l'utilisateur et, si la route contient un UUID de projet, les **Organs, leurs rôles et les membres** de ce projet.
+* Il assemble un **system prompt** de plus d'une centaine de lignes : description fonctionnelle, plan du site, règles métier, règles de branding, liste des 30+ permissions, **schéma JSON de chaque action possible**, règles de concision et de budget de tokens. Une consigne propre à la commande choisie y est ajoutée.
+* Il envoie le tout, avec les **10 derniers messages**, à l'API NVIDIA NIM (`temperature: 0.2`, `max_tokens: 1024`, `response_format: json_object`). Le modèle est configurable via `NVIDIA_MODEL`.
+
+**3. Le modèle répond par un plan**
+Le LLM doit renvoyer un objet JSON strict :
+
+```json
+{
+  "message": "Je crée le projet **Marketing** avec un Organ *Campagnes* et 2 tâches.",
+  "actions": [
+    { "type": "create_project", "id": "proj1", "payload": { "title": "Marketing", "color": "#FF7DD4", "iconType": "EMOJI", "iconData": "📣" } },
+    { "type": "create_organ", "id": "org1", "projectUuid": "proj1", "payload": { "title": "Campagnes", "highlightColor": "#355EE4", "iconType": "EMOJI", "iconData": "🎯" } },
+    { "type": "create_task", "id": "task1", "projectUuid": "proj1", "organUuid": "org1", "payload": { "title": "Définir la cible", "priority": 7 } },
+    { "type": "create_task", "projectUuid": "proj1", "organUuid": "org1", "payload": { "title": "Rédiger les visuels", "priority": 5, "dependencyUuids": ["task1"] } },
+    { "type": "navigate", "path": "/organ/proj1/org1" }
+  ]
+}
+```
+
+Les identifiants `proj1`, `org1`, `task1` sont des **variables temporaires** : le modèle ne connaît pas encore les vrais UUID, puisque rien n'a encore été créé. Vocabulaire disponible : `navigate`, `create_project`, `create_organ`, `create_role`, `copy_role`, `paste_role`, `create_task`, `update_task`.
+
+**4. Le backend « répare » la réponse si besoin**
+Les LLM ne respectent pas toujours le format. Le contrôleur extrait le texte entre la première `{` et la dernière `}`, corrige les retours à la ligne illégaux et, si la réponse a été **tronquée** par la limite de tokens, `repairTruncatedJson()` parcourt le texte caractère par caractère pour **récupérer uniquement les actions complètes**.
+
+**5. Le frontend exécute le plan** (`front_angular/src/app/services/chatbot/chatbot-action-executor.service.ts`)
+Les actions sont jouées **séquentiellement**, via **les mêmes services REST** que l'interface classique. À chaque création, le vrai UUID renvoyé par l'API est associé à sa variable temporaire, et cette correspondance est substituée dans les actions suivantes. `copy_role` / `paste_role` passent par le `localStorage`. À la fin, un toast récapitule ce qui a été créé et la page est rafraîchie.
+
+### Les garde-fous en place
+
+* **L'IA n'a pas plus de droits que l'utilisateur.** Les actions passent par l'API REST standard avec le JWT de l'utilisateur, donc **tout le moteur RBAC s'applique**. Une action interdite à l'utilisateur échoue aussi pour l'IA.
+* **Aucune suppression possible.** C'est interdit dans le prompt, mais surtout **le type d'action n'existe pas dans l'exécuteur**. La protection est structurelle, elle ne repose pas seulement sur l'obéissance du modèle.
+* **Mode lecture seule.** Un interrupteur dans le panneau coupe l'exécution. La consigne est envoyée au modèle **et** appliquée côté client : même si le modèle renvoie des actions, elles sont ignorées.
+* **Liste des projets limitée** à ceux dont l'utilisateur est membre (mais voir la limite n°11 pour le reste du contexte).
+* **Sortie contrainte** : JSON imposé, température basse.
+
+### Les limites : un aller simple, sans retour
+
+C'est la partie la plus instructive de l'expérience. Mis à l'usage, le système montre des défauts **majeurs**, qui ont presque tous la même cause : **l'absence de boucle de rétroaction**.
+
+**1. Une seule passe, plan figé à l'avance.**
+Un message déclenche **un seul appel** au LLM. Le plan complet est écrit **avant** toute exécution, sur la base d'un monde qui n'existe pas encore (d'où les variables `proj1`, `task1`…). Le modèle ne peut pas adapter l'étape 3 au résultat de l'étape 2.
+
+**2. Aucune observation des erreurs.**
+Si une action échoue (permission refusée, champ invalide, UUID inexistant), l'exécuteur affiche un toast d'erreur et s'arrête. Le modèle **n'en est jamais informé** : l'historique ne conserve que le *texte* de ses messages, ni les actions qu'il a émises ni leur résultat. Au tour suivant, il « croit » avoir réussi, puisque son propre message disait « Je crée… ». Il ne peut ni se corriger, ni réessayer, ni même expliquer l'échec.
+
+**3. Pas de retour arrière.**
+Les actions ne forment pas une transaction. Si la 4ᵉ action échoue, les 3 premières restent créées. L'utilisateur se retrouve avec un état **partiel** et doit faire le ménage lui-même.
+
+**4. Le succès est annoncé avant d'avoir eu lieu.**
+Le `message` affiché est rédigé par le modèle **avant** l'exécution : il décrit une *intention*, pas un résultat. Le toast final « opération terminée avec succès » compte seulement les réponses HTTP 2xx. Rien ne vérifie que ce qui a été créé correspond à la demande.
+
+**5. Un contexte en partie aveugle, sans moyen d'en demander plus.**
+Le modèle ne voit que ce qu'on injecte dans le prompt. Or la **liste des tâches n'y figure pas** : pour `/edit` (`update_task`), il lui faut un `taskUuid` qu'il ne connaît pas, et il est alors tenté d'en inventer un. Faute d'outils de lecture, il ne peut pas aller chercher l'information manquante. Tout doit être deviné ou pré-chargé.
+
+**6. Troncature et exécution partielle silencieuse.**
+Avec 1024 tokens de sortie, un plan ambitieux est coupé en plein milieu. Le mécanisme de réparation sauve les actions complètes, ce qui veut dire qu'**une partie du plan est exécutée sans prévenir**, parfois sans la navigation finale. Les règles du prompt (« 3 ou 4 tâches maximum », « descriptions d'une phrase ») sont des **rustines** contre ce problème, pas une solution.
+
+**7. Un contrôle uniquement par le prompt.**
+Le system prompt est rempli de « CRITIQUE », « ABSOLUMENT », « IMPÉRATIVEMENT », « Ne dis JAMAIS ». C'est le symptôme d'un système qui ne peut **qu'espérer** que le modèle obéisse : aucune validation de schéma n'est faite sur les actions avant exécution, et un type inconnu est simplement ignoré avec un `console.warn`.
+
+**8. Des mécanismes fragiles.**
+* La substitution des variables temporaires est un `replaceAll` sur **toutes** les chaînes : `task1` est aussi remplacé à l'intérieur de `task10`, ou dans un titre qui contiendrait ce texte.
+* L'extraction du JSON repose sur des heuristiques (première et dernière accolade, regex de réparation).
+
+**9. Coût, latence et confidentialité.**
+À chaque message, le prompt complet, la liste des projets et les **noms et e-mails des membres** sont renvoyés à un fournisseur tiers. Il n'y a pas de streaming : l'utilisateur attend la réponse entière, puis l'exécution.
+
+**10. Une dépendance forte au fournisseur.**
+Le modèle utilisé au départ (*Mixtral 8x22B*) a été retiré du catalogue de l'API NVIDIA, ce qui nous a obligés à passer à *Mistral Medium 3.5*. Or le prompt avait été mis au point avec le premier modèle, et rien ne garantit qu'un autre modèle se comporte de la même façon. Sans jeu de tests ou d'évaluation des réponses, impossible de vérifier que l'assistant fonctionne toujours aussi bien après le changement.
+
+**11. Un contexte qui contourne le cloisonnement.**
+Le projet dont on charge les Organs, les rôles et les membres est déduit de la route **envoyée par le client**, et le contrôleur ne vérifie pas que l'utilisateur est membre de ce projet. Il injecte aussi **tous** les Organs du projet, y compris ceux auxquels l'utilisateur n'a pas accès. Ces informations, e-mails des membres compris, se retrouvent dans le prompt et peuvent ressortir dans la réponse du modèle. Ça contredit le cloisonnement par Organ que le moteur RBAC garantit partout ailleurs, et c'est typiquement le genre de faille qu'introduit une IA branchée sur les données sans passer par les mêmes contrôles d'accès que le reste de l'API.
+
+### Ce qu'il faudrait pour un vrai agent
+
+| Organ aujourd'hui | Ce que ferait une approche agentique |
+| :--- | :--- |
+| JSON libre dans le texte, réparé à la main | **Tool calling natif** (*function calling*) avec des schémas validés |
+| Plan complet écrit d'avance | **Boucle** *raisonner → appeler un outil → observer → continuer*, avec un nombre maximal d'itérations |
+| Exécution côté client, résultat jamais remonté | Exécution **côté serveur**, avec le résultat (UUID, erreur) **renvoyé au modèle** à chaque étape |
+| Tout le contexte injecté dans le prompt, sans contrôle d'accès | **Outils de lecture** (`list_tasks`, `get_organ`…) passant par les mêmes vérifications RBAC que l'API : le modèle va chercher ce dont il a besoin, et seulement ce qu'il a le droit de voir |
+| Variables temporaires `proj1` | De vrais UUID, puisque chaque création est observée avant la suivante |
+| Erreur = arrêt + toast | Erreur = **observation** : le modèle peut corriger, réessayer ou expliquer |
+| Pas d'annulation | **Aperçu du plan et confirmation** avant écriture, transaction ou actions de compensation |
+| Historique textuel seulement | Historique incluant **les appels d'outils et leurs résultats** |
+
+### Ce que nous en retenons
+
+Ce module n'était pas attendu, et il reste imparfait. Il nous a pourtant permis de comprendre concrètement la différence entre **un modèle qui génère des instructions** et **un agent qui poursuit un objectif**, et cette différence, c'est **la boucle**. Presque tout ce que nous avons dû bricoler (réparation de JSON, plafonds de tâches, règles en majuscules, variables temporaires) compense l'absence de retour d'information. Le panneau d'aide de l'assistant le reconnaît d'ailleurs : il conseille à l'utilisateur de formuler ses demandes « étape par étape » et de « vérifier le résultat » avant de continuer. Autrement dit, **c'est l'humain qui joue le rôle de la boucle** que le système ne sait pas faire. C'est à notre sens la principale leçon de cette expérimentation, et ce sera le point de départ d'une prochaine version.
 
 ---
 
@@ -474,7 +625,7 @@ Le dépôt héberge une application native Android moderne située dans le répe
 
 ## 🧪 Données de Démonstration (Seed) & Comptes de Test
 
-Pour explorer immédiatement toutes les fonctionnalités (tableaux Kanban garnis, indicateurs statistiques, arborescence d'Organes), le projet fournit un jeu de données complet.
+Pour explorer immédiatement toutes les fonctionnalités (tableaux Kanban garnis, indicateurs statistiques, arborescence d'Organs), le projet fournit un jeu de données complet.
 
 ### 1. Importation des Données MySQL
 * **Option A (phpMyAdmin) :**

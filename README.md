@@ -29,17 +29,23 @@
 2. [Technical Architecture & Microservices](#-technical-architecture--microservices)
    * [Service Mapping](#service-mapping)
    * [Architecture Diagram](#architecture-diagram)
-3. [Environment Configuration](#-environment-configuration)
+3. [The AI Assistant: A Semi-Agentic Experiment](#-the-ai-assistant-a-semi-agentic-experiment)
+   * [Why "semi-agent"?](#why-semi-agent)
+   * [How It Works](#how-it-works)
+   * [Safeguards in Place](#safeguards-in-place)
+   * [Limitations: A One-Way Trip](#limitations-a-one-way-trip)
+   * [What a Real Agent Would Need](#what-a-real-agent-would-need)
+4. [Environment Configuration](#-environment-configuration)
    * [1. Project Root (`.env`)](#1-project-root-env)
    * [2. Backend API (`api/.env`)](#2-backend-api-apienv)
    * [3. Angular Frontend (`front_angular/.env`)](#3-angular-frontend-front_angularenv)
    * [4. Legacy PHP Frontend (`front_php/.env`)](#4-legacy-php-frontend-front_phpenv)
-4. [Tutorial: Google Cloud Setup (OAuth 2.0 & Drive)](#-tutorial-google-cloud-setup-oauth-20--drive)
-5. [Installation & Quick Start](#-installation--quick-start)
-6. [Android Mobile Application](#-android-mobile-application)
-7. [Demo Data (Seed) & Test Accounts](#-demo-data-seed--test-accounts)
-8. [Testing & Code Quality](#-testing--code-quality)
-9. [License](#-license)
+5. [Tutorial: Google Cloud Setup (OAuth 2.0 & Drive)](#-tutorial-google-cloud-setup-oauth-20--drive)
+6. [Installation & Quick Start](#-installation--quick-start)
+7. [Android Mobile Application](#-android-mobile-application)
+8. [Demo Data (Seed) & Test Accounts](#-demo-data-seed--test-accounts)
+9. [Testing & Code Quality](#-testing--code-quality)
+10. [License](#-license)
 
 ---
 
@@ -139,10 +145,13 @@ All workspace mutations are permanently recorded in a dedicated **MongoDB AuditL
 
 ### Context-Aware Integrated AI Assistant
 
-Organ includes an intelligent virtual assistant powered by state-of-the-art LLMs via **NVIDIA AI Foundation Endpoints** (*Mistral AI*):
-* **Contextual Awareness:** The assistant detects the user's active route, accessible projects, Organs, and available team members.
-* **Step-by-Step Onboarding:** Provides guided assistance through business logic (e.g. how to invite an external partner into a specific Organ).
-* **Action Triggering:** Seamlessly triggers client-side actions and navigation routes directly from the chat interface.
+Organ includes a virtual assistant backed by a *Mistral AI* LLM served through **NVIDIA NIM** (OpenAI-compatible API). It does more than answer: it can **produce a sequence of actions** (create a project, Organs, roles, tasks, navigate) that the application then executes on the user's behalf.
+* **Injected context:** current page, accessible projects, and the Organs, roles and members of the open project.
+* **Teaching mode (`/ask`):** explains step by step how to do something yourself (e.g. invite an external collaborator into an Organ).
+* **Action modes (`/create`, `/edit`, `/role`):** generate an action plan that is executed automatically, with a "read-only" toggle to switch it off.
+
+> [!NOTE]
+> This is a **student experiment**, a first and still rudimentary take on agentic AI. How it works, and its (significant) flaws, are described in [The AI Assistant: A Semi-Agentic Experiment](#-the-ai-assistant-a-semi-agentic-experiment).
 
 ---
 
@@ -235,6 +244,148 @@ flowchart TB
 
 #### Detailed Backend Schema
 ![Backend Schema](docs/Backend.png)
+
+---
+
+## 🤖 The AI Assistant: A Semi-Agentic Experiment
+
+> [!IMPORTANT]
+> **Student work, and a first attempt.** Organ is a student project, and the specification did not call for any AI. The assistant is a **voluntary addition** on top of the required scope. It is also the **very first time** we integrated an LLM into an application, starting **without in-depth knowledge of the subject**. So this section does not advertise a finished feature: it documents **a first experiment**, what it does, how it does it, and above all **what its flaws taught us**.
+
+### Why "semi-agent"?
+
+An AI assistant can be placed on one of three levels:
+
+| Level | What the model does | Example |
+| :--- | :--- | :--- |
+| **Chatbot** | It replies with text, and that's it. | Conversational FAQ |
+| **Semi-agent** *(Organ)* | It **produces an action plan** that the application executes, but **in a single pass and without ever seeing the outcome**. | "Create a Marketing project with 3 tasks" |
+| **Agent** | It acts, **observes the result**, corrects itself and repeats **in a loop** until the goal is reached. | Coding agents, tool-using assistants |
+
+Organ's assistant does more than talk: it really changes data. But it acts **blindly**. It writes its whole plan at once, before anything is executed, and then has no way of knowing what happened. It is a **one-way trip** (*one pass*), a **preliminary** stage of agentic AI, missing the one thing that makes an agent: **the observation loop**.
+
+### How It Works
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant F as Angular<br/>(ChatbotService)
+    participant A as Symfony API<br/>(ChatbotController)
+    participant DB as MySQL
+    participant L as Mistral LLM<br/>(NVIDIA NIM)
+    participant E as Angular<br/>(ActionExecutor)
+
+    U->>F: "/create a Marketing project with 3 tasks"
+    F->>A: POST /api/chatbot/message<br/>{history, context: route, command, actionsEnabled}
+    A->>DB: User's projects + Organs, roles, members of the route's project
+    A->>L: Huge system prompt + JSON context + last 10 messages
+    L-->>A: {"message": "...", "actions": [ ... ]}
+    A->>A: JSON extraction / repair
+    A-->>F: message + action plan
+    F->>E: executeActions(actions)
+    loop For each action, in order
+        E->>A: Regular REST call (user's JWT)
+        A-->>E: Created resource (UUID)
+    end
+    E-->>U: Summary toast + page refresh
+    Note over L,E: The LLM is never told how the actions turned out
+```
+
+**1. The frontend prepares the request** (`front_angular/src/app/services/chatbot/chatbot.service.ts`)
+The user picks a command: `/ask` (default, explanation), `/create`, `/edit` or `/role`. The service sends the conversation history plus a small context: the current route, the command, and the state of the "actions allowed" toggle.
+
+**2. The backend builds the context and the prompt** (`api/src/Controller/ChatbotController.php`)
+* It loads the user's **accessible projects** from the database and, if the route contains a project UUID, that project's **Organs, their roles, and its members**.
+* It assembles a **system prompt** of more than a hundred lines: functional overview, sitemap, business rules, branding rules, the list of 30+ permissions, **the JSON schema of every possible action**, and rules on brevity and token budget. A directive specific to the chosen command is appended.
+* It sends everything, with the **last 10 messages**, to the NVIDIA NIM API (`temperature: 0.2`, `max_tokens: 1024`, `response_format: json_object`). The model is configurable through `NVIDIA_MODEL`.
+
+**3. The model answers with a plan**
+The LLM must return a strict JSON object:
+
+```json
+{
+  "message": "I'm creating the **Marketing** project with a *Campaigns* Organ and 2 tasks.",
+  "actions": [
+    { "type": "create_project", "id": "proj1", "payload": { "title": "Marketing", "color": "#FF7DD4", "iconType": "EMOJI", "iconData": "📣" } },
+    { "type": "create_organ", "id": "org1", "projectUuid": "proj1", "payload": { "title": "Campaigns", "highlightColor": "#355EE4", "iconType": "EMOJI", "iconData": "🎯" } },
+    { "type": "create_task", "id": "task1", "projectUuid": "proj1", "organUuid": "org1", "payload": { "title": "Define the audience", "priority": 7 } },
+    { "type": "create_task", "projectUuid": "proj1", "organUuid": "org1", "payload": { "title": "Design the visuals", "priority": 5, "dependencyUuids": ["task1"] } },
+    { "type": "navigate", "path": "/organ/proj1/org1" }
+  ]
+}
+```
+
+`proj1`, `org1` and `task1` are **temporary variables**: the model cannot know the real UUIDs yet, since nothing has been created. Available vocabulary: `navigate`, `create_project`, `create_organ`, `create_role`, `copy_role`, `paste_role`, `create_task`, `update_task`.
+
+**4. The backend "repairs" the answer when needed**
+LLMs don't always respect the format. The controller extracts the text between the first `{` and the last `}`, escapes illegal line breaks, and if the response was **truncated** by the token limit, `repairTruncatedJson()` scans the text character by character to **salvage only the complete actions**.
+
+**5. The frontend executes the plan** (`front_angular/src/app/services/chatbot/chatbot-action-executor.service.ts`)
+Actions run **sequentially**, through **the same REST services** as the regular UI. After each creation, the real UUID returned by the API is mapped to its temporary variable and substituted into the following actions. `copy_role` / `paste_role` go through `localStorage`. At the end, a toast summarizes what was created and the page refreshes.
+
+### Safeguards in Place
+
+* **The AI has no more rights than the user.** Actions go through the standard REST API with the user's JWT, so **the whole RBAC engine applies**. An action the user is not allowed to perform fails for the AI too.
+* **No deletion possible.** It is forbidden in the prompt, and, more importantly, **the action type does not exist in the executor**. The protection is structural; it does not depend only on the model obeying.
+* **Read-only mode.** A toggle in the panel disables execution. The instruction is sent to the model **and** enforced client-side: even if the model returns actions, they are ignored.
+* **Project list restricted** to projects the user is a member of (but see limitation #11 for the rest of the context).
+* **Constrained output:** enforced JSON, low temperature.
+
+### Limitations: A One-Way Trip
+
+This is the most instructive part of the experiment. In real use, the system shows **major** flaws, and almost all of them come from the same root cause: **there is no feedback loop**.
+
+**1. A single pass, with the plan fixed in advance.**
+One message triggers **one** LLM call. The whole plan is written **before** any execution, against a world that does not exist yet (hence `proj1`, `task1`…). The model cannot adapt step 3 to the outcome of step 2.
+
+**2. Errors are never observed.**
+If an action fails (permission denied, invalid field, non-existent UUID), the executor shows an error toast and stops. The model **is never told**: the history keeps only the *text* of its messages, not the actions it emitted nor their results. On the next turn, it "believes" it succeeded, since its own message said "I'm creating…". It cannot correct itself, retry, or even explain the failure.
+
+**3. No rollback.**
+Actions are not a transaction. If the 4th action fails, the first 3 remain. The user is left with a **partial** state to clean up by hand.
+
+**4. Success is announced before it happens.**
+The displayed `message` is written by the model **before** execution: it describes an *intention*, not a result. The final "operation completed successfully" toast only counts HTTP 2xx responses. Nothing checks that what was created matches the request.
+
+**5. A partly blind context, with no way to ask for more.**
+The model only sees what is injected into the prompt, and **the task list is not included**: for `/edit` (`update_task`) it needs a `taskUuid` it doesn't know, which tempts it to invent one. Without read tools, it cannot fetch missing information. Everything must be guessed or preloaded.
+
+**6. Truncation and silent partial execution.**
+With 1024 output tokens, an ambitious plan gets cut off mid-way. The repair mechanism salvages complete actions, which means **part of the plan runs without warning**, sometimes without the final navigation. Prompt rules like "3 or 4 tasks max" or "one-sentence descriptions" are **workarounds** for this, not a solution.
+
+**7. Control through the prompt only.**
+The system prompt is full of "CRITIQUE", "ABSOLUMENT", "IMPÉRATIVEMENT", "Ne dis JAMAIS" (CRITICAL, ABSOLUTELY, NEVER). That is the symptom of a system that can only **hope** the model complies: actions are not schema-validated before execution, and an unknown type is just skipped with a `console.warn`.
+
+**8. Fragile mechanisms.**
+* Temporary variable substitution is a `replaceAll` over **every** string: `task1` also gets replaced inside `task10`, or inside a title containing that text.
+* JSON extraction relies on heuristics (first and last brace, repair regexes).
+
+**9. Cost, latency and privacy.**
+Every message resends the full prompt, the project list, and **members' names and emails** to a third-party provider. There is no streaming: the user waits for the full response, then for execution.
+
+**10. Strong dependency on the provider.**
+The model we started with (*Mixtral 8x22B*) was removed from NVIDIA's API catalog, which forced us to switch to *Mistral Medium 3.5*. But the prompt had been developed against the first model, and nothing guarantees another model behaves the same way. Without a test or evaluation set for the responses, there is no way to check that the assistant still works as well after the switch.
+
+**11. Context that bypasses isolation.**
+The project whose Organs, roles and members get loaded is derived from the route **sent by the client**, and the controller does not check that the user is a member of that project. It also injects **every** Organ of the project, including those the user has no access to. That information, members' emails included, ends up in the prompt and can surface in the model's answer. This contradicts the Organ-level isolation the RBAC engine enforces everywhere else, and it is exactly the kind of hole an AI introduces when it is wired to the data without going through the same access controls as the rest of the API.
+
+### What a Real Agent Would Need
+
+| Organ today | An agentic approach |
+| :--- | :--- |
+| Free-form JSON inside text, repaired by hand | **Native tool calling** (*function calling*) with validated schemas |
+| Whole plan written upfront | A **loop**: *reason → call a tool → observe → continue*, with a max iteration count |
+| Client-side execution, results never reported back | **Server-side** execution, with each result (UUID, error) **fed back to the model** |
+| All context stuffed into the prompt, with no access checks | **Read tools** (`list_tasks`, `get_organ`…) going through the same RBAC checks as the API, so the model fetches what it needs, and only what it is allowed to see |
+| Temporary `proj1` variables | Real UUIDs, since each creation is observed before the next one |
+| Error = stop + toast | Error = **observation**: the model can fix, retry, or explain |
+| No undo | **Plan preview and confirmation** before writes, transactions or compensating actions |
+| Text-only history | History that includes **tool calls and their results** |
+
+### What We Take Away
+
+This module was not required, and it remains imperfect. Still, it made concrete for us the difference between **a model that generates instructions** and **an agent that pursues a goal**, and that difference is **the loop**. Almost everything we had to patch together (JSON repair, task caps, all-caps rules, temporary variables) compensates for the missing feedback. The assistant's own help panel admits as much: it advises users to phrase requests "step by step" and to "check the result" before going further. In other words, **the human plays the role of the loop** that the system cannot perform itself. To us, that is the main lesson of this experiment, and the starting point for a next version.
 
 ---
 
